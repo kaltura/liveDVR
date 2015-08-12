@@ -1,0 +1,16 @@
+{
+    "name": "my-project-name",
+    "version": "0.1.0",
+    "devDependencies": {
+        "grunt": "~0.4.5",
+        "grunt-contrib-jshint": "~0.10.0",
+        "grunt-contrib-nodeunit": "~0.4.1",
+        "matchdep" : "0.3.0",
+        "grunt-mocha-test": "0.9.3",
+        "jshint-junit-reporter": "0.0.6",
+        "matchdep": "~0.3.0",
+        "mocha-html-reporter": "0.0.1",
+        "sinon": "1.9.0",
+        "sinon-chai": "2.5.0"
+    }
+}
