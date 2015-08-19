@@ -15,7 +15,7 @@ describe('M3U8 Generator tests', function() {
             item.set('duration', 30.0);
             item.set('uri', "uriName");
             return m3u8Generator.update([item]);
-        })
+        });
         promise.done(function()
         {
             done();
