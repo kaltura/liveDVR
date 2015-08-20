@@ -14,7 +14,7 @@ PlaylistItem = require('m3u8/m3u/PlaylistItem');
 
 describe('M3U8 Generator tests', function() {
 
-    function createManifestGenerator(customizeMocks)
+    function createManifestGenerator(customizeMocks, dvrWindowSize)
     {
         var qioMock = {
             exists : sinon.stub().returns(Q(true)),
@@ -50,7 +50,8 @@ describe('M3U8 Generator tests', function() {
             customizeMocks(mocks);
         }
 
-        var m3u8Generator = proxyquire('../lib/M3U8Generator',mocks)("c:\\somePath\\", "manifest.m3u8");
+        var windowSize = dvrWindowSize ? dvrWindowSize: 60*60*2; // 2 Hours
+        var m3u8Generator = proxyquire('../lib/M3U8Generator',mocks)("c:\\somePath\\", "manifest.m3u8", windowSize);
         return m3u8Generator;
     }
 
@@ -67,20 +68,6 @@ describe('M3U8 Generator tests', function() {
         });
     });
 
-    /*it('Should reject reading an invalid M3U8', function (done) {
-
-        var updateMocks = function(mocks) {
-            mocks['fs'].fileToRead =  __dirname + '/resources/erronousManifest.m3u8';
-        };
-
-        var m3u8Generator = createManifestGenerator(updateMocks);
-        var promise = m3u8Generator.init();
-        promise.done(function(currentManifest)
-        {
-            done();
-        });
-    }); */
-
     it('Should create a new manifest upon initialization (if one does not already exist)', function (done) {
 
         var expectedManifest = fs.readFileSync(__dirname + '/resources/simpleManifest.m3u8', 'utf8');
@@ -95,6 +82,41 @@ describe('M3U8 Generator tests', function() {
         {
             expect(currentManifest.items.PlaylistItem.length).to.eql(0);
             expect(currentManifest.properties.mediaSequence).to.eql(0);
+            done();
+        });
+    });
+
+    it('Should advance DVR window when total content duration exceeds DVR window size', function (done) {
+
+        var mocks;
+        var updateMocks = function(m)
+        {
+            mocks = m;
+        };
+
+        var m3u8Generator = createManifestGenerator(updateMocks, 30);
+
+        var promise = m3u8Generator.init();
+        promise.then(function(currentManifest)
+        {
+            var item1 = new PlaylistItem();
+            item1.set('duration', 13.3);
+            item1.set('uri', "uriName1");
+
+            var item2 = new PlaylistItem();
+            item2.set('duration', 12.3);
+            item2.set('uri', "uriName2");
+
+            var item3 = new PlaylistItem();
+            item3.set('duration', 4);
+            item3.set('uri', "uriName3");
+
+            return m3u8Generator.update([item1, item2, item3]);
+
+        }).done(function(){
+            var expectedManifest = fs.readFileSync(__dirname + '/resources/updatedManifest1.m3u8', 'utf8');
+            var lastWriteArgs = mocks['q-io/fs'].write.lastCall.args;
+            expect(lastWriteArgs[1]).to.eql(expectedManifest);
             done();
         });
     });
