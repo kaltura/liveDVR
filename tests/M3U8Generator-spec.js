@@ -22,11 +22,14 @@ describe('M3U8 Generator tests', function() {
         };
 
         var fsMock = {
+
+            fileToRead : __dirname + '/resources/simpleManifest.m3u8',
+
             createReadStream : function() {
                 var Stream = require('stream');
                 var stream = new Stream();
 
-                var content = fs.readFileSync(__dirname + '/resources/simpleManifest.m3u8');
+                var content = fs.readFileSync(this.fileToRead);
 
                 stream.pipe = function(dest) {
                     dest.write(content);
@@ -64,6 +67,20 @@ describe('M3U8 Generator tests', function() {
         });
     });
 
+    /*it('Should reject reading an invalid M3U8', function (done) {
+
+        var updateMocks = function(mocks) {
+            mocks['fs'].fileToRead =  __dirname + '/resources/erronousManifest.m3u8';
+        };
+
+        var m3u8Generator = createManifestGenerator(updateMocks);
+        var promise = m3u8Generator.init();
+        promise.done(function(currentManifest)
+        {
+            done();
+        });
+    }); */
+
     it('Should create a new manifest upon initialization (if one does not already exist)', function (done) {
 
         var expectedManifest = fs.readFileSync(__dirname + '/resources/simpleManifest.m3u8', 'utf8');
@@ -82,8 +99,7 @@ describe('M3U8 Generator tests', function() {
         });
     });
 
-     it('should update correctly with new chunks', function (done) {
-
+     it('should update chunk list correctly with new chunks', function (done) {
          var mocks;
          var updateMocks = function(m)
          {
@@ -112,6 +128,8 @@ describe('M3U8 Generator tests', function() {
                  'uriName1'+ '\n' +
                  '#EXTINF:23.4000,' + '\n' +
                  'uriName2'+ '\n';
+
+             expectedManifest = expectedManifest.replace('EXT-X-TARGETDURATION:13', 'EXT-X-TARGETDURATION:24');
 
              expect(lastWriteArgs[1]).to.eql(expectedManifest);
              done();
