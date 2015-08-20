@@ -17,6 +17,8 @@
         "mocha" : "2.2.5",
         "q" : "1.4.1",
         "underscore" : "1.8.3",
-        "proxyquire" : "1.7.0"
+        "proxyquire" : "1.7.0",
+        "grunt-mocha-istanbul" : "3.0.1",
+        "istanbul" : "0.3.18"
     }
 }
