@@ -59,7 +59,7 @@ describe('M3U8 Generator tests', function() {
         var promise = m3u8Generator.init();
         promise.done(function(currentManifest)
         {
-            expect(currentManifest.toString()).to.eql(expectedManifest);
+            expect(currentManifest.toString()).to.eql(expectedManifest.replace(/[\r\n]/g, '\n'));
             done();
         });
     });
