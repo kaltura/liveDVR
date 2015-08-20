@@ -116,7 +116,7 @@ describe('M3U8 Generator tests', function() {
         }).done(function(){
             var expectedManifest = fs.readFileSync(__dirname + '/resources/updatedManifest1.m3u8', 'utf8');
             var lastWriteArgs = mocks['q-io/fs'].write.lastCall.args;
-            expect(lastWriteArgs[1]).to.eql(expectedManifest);
+            expect(lastWriteArgs[1]).to.eql(expectedManifest.replace(/[\r]/g, ''));
             done();
         });
     });
