@@ -19,6 +19,7 @@
     "proxyquire": "1.7.0"
   },
   "dependencies": {
-    "request": "^2.61.0"
+    "request": "^2.61.0",
+    "winston": "^1.0.1"
   }
 }
