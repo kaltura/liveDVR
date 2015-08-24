@@ -11,39 +11,26 @@ var chai = require('chai');
 var expect = chai.expect;
 var path = require('path');
 PlaylistItem = require('m3u8/m3u/PlaylistItem');
+var m3u8Parser = require('../lib/promise-m3u8');
 
 describe('M3U8 Generator tests', function() {
 
     function createManifestGenerator(customizeMocks, dvrWindowSize)
     {
+        var expectedManifest = fs.readFileSync(__dirname + '/resources/simpleManifest.m3u8', 'utf8');
+
         var qioMock = {
             exists : sinon.stub().returns(Q(true)),
             write : sinon.stub().returns(Q())
         };
 
-        var fsMock = {
-
-            fileToRead : __dirname + '/resources/simpleManifest.m3u8',
-
-            createReadStream : function() {
-                var Stream = require('stream');
-                var stream = new Stream();
-
-                var content = fs.readFileSync(this.fileToRead);
-
-                stream.pipe = function(dest) {
-                    dest.write(content);
-                    dest.end();
-                    return dest;
-                };
-
-                return stream;
-            }
+        var m3u8Mock = {
+            'parseM3U8' : sinon.stub().returns(m3u8Parser.parseM3U8(expectedManifest, {'verbatim' : true}))
         };
 
         var mocks = {
-            'fs' : fsMock,
-            'q-io/fs' : qioMock
+            'q-io/fs' : qioMock,
+            './promise-m3u8' : m3u8Mock
         };
 
         if (customizeMocks) {
@@ -51,7 +38,7 @@ describe('M3U8 Generator tests', function() {
         }
 
         var windowSize = dvrWindowSize ? dvrWindowSize: 60*60*2; // 2 Hours
-        var m3u8Generator = proxyquire('../lib/M3U8Generator',mocks)("c:\\somePath\\", "manifest.m3u8", windowSize);
+        var m3u8Generator = proxyquire('../lib/ChunklistManifestGenerator',mocks)("c:\\somePath\\", "manifest.m3u8", windowSize);
         return m3u8Generator;
     }
 
