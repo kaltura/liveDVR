@@ -16,7 +16,7 @@ describe('Promise m3u8 spec', function() {
         var expectedManifest = fs.readFileSync(path.join(__dirname, '/resources/simpleManifest.m3u8'), 'utf8');
 
         m3u8Parser.parseM3U8(path.join(__dirname, '/resources/simpleManifest.m3u8')).then(function(manifest){
-            expect(manifest.toString()).to.eql(expectedManifest);
+            expect(manifest.toString()).to.eql(expectedManifest.replace(/[\r]/g, ''));
         }).done(function(){
             done();
         });
@@ -33,7 +33,7 @@ describe('Promise m3u8 spec', function() {
         s.push(null); // Stream end
 
         m3u8Parser.parseM3U8(s).then(function(manifest){
-            expect(manifest.toString()).to.eql(expectedManifest);
+            expect(manifest.toString()).to.eql(expectedManifest.replace(/[\r]/g, ''));
         }).done(function(){
             done();
         });
