@@ -31,7 +31,7 @@ describe('MasterManifestGenerator spec', function() {
             mocks = m;
         });
         masterManifestCreator.getManifest('mbr').done(function() {
-            expect(mocks['q-http'].read.firstCall.args[0]).to.eql("http://localhost:1935/test/smil:12345_mbr.smil/playlist.m3u8");
+            expect(mocks['./NetworkClientFactory'].getNetworkClient().read.firstCall.args[0]).to.eql("http://localhost:1935/test/smil:12345_mbr.smil/playlist.m3u8");
             done();
         });
     });
@@ -47,7 +47,7 @@ describe('MasterManifestGenerator spec', function() {
         var masterManifestCreator = createMasterManifestGenerator(customizeMocksFunction, customizeCtorParamsFunction);
 
         masterManifestCreator.getManifest('mbr').done(function() {
-            expect(mocks['q-http'].read.firstCall.args[0]).to.eql("http://localhost/test/smil:12345_mbr.smil/playlist.m3u8");
+            expect(mocks['./NetworkClientFactory'].getNetworkClient().read.firstCall.args[0]).to.eql("http://localhost/test/smil:12345_mbr.smil/playlist.m3u8");
             done();
         });
     });
@@ -60,7 +60,7 @@ describe('MasterManifestGenerator spec', function() {
         };
         var masterManifestCreator = createMasterManifestGenerator(customizeMocksFunction);
         masterManifestCreator.getManifest().done(function() {
-            expect(mocks['q-http'].read.firstCall.args[0]).to.eql("http://localhost:1935/test/smil:12345_all.smil/playlist.m3u8");
+            expect(mocks['./NetworkClientFactory'].getNetworkClient().read.firstCall.args[0]).to.eql("http://localhost:1935/test/smil:12345_all.smil/playlist.m3u8");
             done();
         });
     });
@@ -89,12 +89,18 @@ describe('MasterManifestGenerator spec', function() {
               '#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=679936' + '\n' +
               'http://kalsegsec-a.akamaihd.net/dc-1/m/ny-live-publish1/kLive/smil:1_oorxcge2_publish.smil/chunklist_b679936.m3u8';
 
-        var qHttpMock = {
+
+        var networkClientStub = {
             read: sinon.stub().returns(Q(m3u8))
+        };
+        var networkClientFactoryMock = {
+            getNetworkClient : function() {
+                return networkClientStub;
+            }
         };
 
         var mocks = {
-            'q-http' : qHttpMock
+            './NetworkClientFactory' : networkClientFactoryMock
         };
 
         if (customizeMocks) {

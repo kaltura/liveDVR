@@ -2,7 +2,6 @@
  * Created by elad.benedict on 8/23/2015.
  */
 
-
 var proxyquire = require('proxyquire');
 var fs = require('fs');
 var chai = require('chai');
