@@ -1,0 +1,9 @@
+#EXTM3U
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=475136,RESOLUTION=480x270
+http://kalsegsec-a.akamaihd.net/dc-0/m/pa-live-publish2/kLive/smil:0_81ybcbwq_all.smil/chunklist_b475136.m3u8
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=679936,RESOLUTION=640x360
+http://kalsegsec-a.akamaihd.net/dc-0/m/pa-live-publish2/kLive/smil:0_81ybcbwq_all.smil/chunklist_b679936.m3u8
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=987136,RESOLUTION=640x360
+http://kalsegsec-a.akamaihd.net/dc-0/m/pa-live-publish2/kLive/smil:0_81ybcbwq_all.smil/chunklist_b987136.m3u8
+#EXT-X-STREAM-INF:PROGRAM-ID=1,BANDWIDTH=1120000,RESOLUTION=1280x720
+http://kalsegsec-a.akamaihd.net/dc-0/m/pa-live-publish2/kLive/smil:0_81ybcbwq_all.smil/chunklist_b1120000.m3u8
