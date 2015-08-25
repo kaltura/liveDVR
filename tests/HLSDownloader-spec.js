@@ -13,6 +13,15 @@ var path = require('path');
 
 describe('M3U8 Generator tests', function() {
 
+    var clock;
+    beforeEach(function(){
+        clock = sinon.useFakeTimers();
+    });
+
+    afterEach(function(){
+        clock.restore();
+    });
+
     function createHLSDownloader(customizeMocks) {
         var downloadUtilsMock = {
             downloadFile : sinon.stub().returns(Q.reject(new Error("oops!")))
@@ -38,9 +47,10 @@ describe('M3U8 Generator tests', function() {
             mocks = m;
         });
         downloader.start();
-        Q.delay(1000).done(function(){
-            expect(mocks['./DownloadUtils'].downloadFile.callCount).to.be.at.least(2);
-            done();
-        });
+        clock.tick(9000);
+        expect(mocks['./DownloadUtils'].downloadFile.callCount).to.equal(1);
+        clock.tick(2000);
+        expect(mocks['./DownloadUtils'].downloadFile.callCount).to.equal(2);
+        done();
     });
 });
