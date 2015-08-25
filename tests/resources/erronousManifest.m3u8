@@ -1,0 +1,25 @@
+#EXTM3U
+#EXT-X-VERSION:3
+#EXT-X-ALLOW-CACHE:NO
+#EXT-X-TARGETDURATION:13
+#EXT-X-MEDIA-SEQUENCE:11
+#EXTINF:8.9990,
+media-uefvqmelj_b1017600_11.ts
+#EXTINF:11.9990,
+media-uefvqmelj_b1017600_12.ts
+#EXTINF **** ERROR *** :9.0000,
+media-uefvqmelj_b1017600_13.ts
+#EXTINF:8.9990,
+media-uefvqmelj_b1017600_14.ts
+#EXTINF:11.9990,
+media-uefvqmelj_b1017600_15.ts
+#EXTINF:8.9990,
+media-uefvqmelj_b1017600_16.ts
+#EXTINF:9.0000,
+media-uefvqmelj_b1017600_17.ts
+#EXTINF:11.9990,
+media-uefvqmelj_b1017600_18.ts
+#EXTINF:8.9990,
+media-uefvqmelj_b1017600_19.ts
+#EXTINF:8.9990,
+media-uefvqmelj_b1017600_20.ts
