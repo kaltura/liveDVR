@@ -1,0 +1,26 @@
+{
+    "name": "my-project-name",
+    "version": "0.1.0",
+    "devDependencies": {
+        "grunt": "~0.4.5",
+        "grunt-contrib-jshint": "~0.10.0",
+        "grunt-contrib-nodeunit": "~0.4.1",
+        "matchdep" : "0.3.0",
+        "grunt-mocha-test": "0.9.3",
+        "jshint-junit-reporter": "0.0.6",
+        "matchdep": "~0.3.0",
+        "mocha-html-reporter": "0.0.1",
+        "sinon": "1.9.0",
+        "sinon-chai": "2.5.0",
+        "m3u8" : "0.0.6",
+        "q-io" : "1.13.1",
+        "mocha" : "2.2.5",
+        "q" : "1.4.1",
+        "underscore" : "1.8.3",
+        "proxyquire" : "1.7.0",
+        "grunt-mocha-istanbul" : "3.0.1",
+        "istanbul" : "0.3.18",
+        "q-http" : "0.1.16",
+        "nconf" : "0.7.2"
+    }
+}
