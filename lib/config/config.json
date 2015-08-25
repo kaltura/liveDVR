@@ -1,3 +1,6 @@
 {
-  "mockNetwork" : true
+  "mockNetwork" : false,
+  "requestTimeout" : 10000,
+  "pollingInterval" : 10000,
+  "dvrWindow" : 432000
 }
