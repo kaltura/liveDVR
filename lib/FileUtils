@@ -1,0 +1,33 @@
+/**
+ * Created by AsherS on 8/20/15.
+ */
+
+var fs = require('fs');
+var Q = require('q');
+
+var FileUtils = (function(){
+
+    function FileUtils(){
+
+    }
+
+    FileUtils.listDirFiles = function(path) {
+        var deferred = Q.defer();
+        fs.readdir(path, function (err, files) {
+            if (err) {
+                console.log('ERROR: ' + err);   //TODO ERROR LOG
+                deferred.reject(err);
+            }
+            deferred.resolve(files);
+        });
+        return deferred.promise;
+    };
+
+    return FileUtils;
+
+})();
+
+module.exports = FileUtils;
+
+
+
