@@ -1,4 +1,5 @@
 {
   "mockNetwork" : true,
-  "mockBackend" : true
+  "mockBackend" : true,
+  "backendPollingInterval" : 3000
 }
