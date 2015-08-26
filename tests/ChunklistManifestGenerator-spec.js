@@ -55,6 +55,21 @@ describe('M3U8 Generator tests', function() {
         });
     });
 
+    it('Should get the current manifest', function (done) {
+
+        var expectedManifest = fs.readFileSync(__dirname + '/resources/simpleManifest.m3u8', 'utf8');
+
+        var m3u8Generator = createManifestGenerator();
+        var promise = m3u8Generator.init();
+        promise.then(function()
+        {
+            var currentManifest = m3u8Generator.getCurrentManifest();
+            expect(currentManifest.toString()).to.eql(expectedManifest.replace(/[\r]/g, ''));
+            done();
+        });
+    });
+
+
     it('Should create a new manifest upon initialization (if one does not already exist)', function (done) {
 
         var expectedManifest = fs.readFileSync(__dirname + '/resources/simpleManifest.m3u8', 'utf8');
