@@ -18,9 +18,9 @@ describe('MasterManifestGenerator spec', function() {
         var masterManifestCreator = createMasterManifestGenerator();
         masterManifestCreator.getManifest('mbr').done(function(m3u){
             expect(m3u.items.StreamItem.length).to.equal(3);
-            expect(m3u.items.StreamItem[0].get('uri')).to.eql('http://basePath/12345/475136');
-            expect(m3u.items.StreamItem[1].get('uri')).to.eql('http://basePath/12345/555555');
-            expect(m3u.items.StreamItem[2].get('uri')).to.eql('http://basePath/12345/679936');
+            expect(m3u.items.StreamItem[0].get('uri')).to.eql('/basePath/12345/475136');
+            expect(m3u.items.StreamItem[1].get('uri')).to.eql('/basePath/12345/555555');
+            expect(m3u.items.StreamItem[2].get('uri')).to.eql('/basePath/12345/679936');
             done();
         });
     });
@@ -107,7 +107,7 @@ describe('MasterManifestGenerator spec', function() {
             customizeMocks(mocks);
         }
 
-        ctorParams = ['12345', 'localhost', 1935, 'test', 'http://basePath'];
+        ctorParams = ['12345', 'localhost', 1935, 'test', '/basePath'];
 
         if (customizeCtorParams){
             ctorParams = customizeCtorParams();
