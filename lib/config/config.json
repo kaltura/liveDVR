@@ -1,3 +1,4 @@
 {
-  "mockNetwork" : true
+  "mockNetwork" : true,
+  "mockBackend" : true
 }
