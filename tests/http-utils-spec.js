@@ -14,7 +14,7 @@ var qio = require('q-io/fs');
 
 describe('http-utils tests', function() {
 
-    var httpUtils = '../lib/utils/HTTPUtils';
+    var httpUtils = '../lib/utils/http-utils';
 
     function getNetworkClientMock(func) {
         var networkClientStub = {
@@ -50,7 +50,7 @@ describe('http-utils tests', function() {
                         expect(data).to.equal(text);
                         done();
                     });
-            })
+            });
     });
 
     it('should fail due to rejected promise', function (done) {
@@ -78,10 +78,6 @@ describe('http-utils tests', function() {
 
         var qfsMock = {
             write: sinon.stub().returns(Q.reject("should fail on rejected write"))
-        };
-
-        var mocks = {
-            'q-io/fs' : qfsMock
         };
 
         var mocks = getNetworkClientMock(func);
