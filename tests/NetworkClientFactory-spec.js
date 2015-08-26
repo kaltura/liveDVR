@@ -1,0 +1,75 @@
+/**
+ * Created by elad.benedict on 8/26/2015.
+ */
+/*jshint -W030 */ // Ignore "Expected an assignment or function call and instead saw an expression" warning wrongfully raised for chai expectations
+
+var proxyquire = require('proxyquire');
+var fs = require('fs');
+var chai = require('chai');
+var expect = chai.expect;
+var path = require('path');
+var sinon = require('sinon');
+
+describe('Network client factory spec', function() {
+
+    var createNetworkClientFactory = function(customizeMocks){
+
+        configurationMock = {
+            get : sinon.stub()
+        };
+
+        var mocks = {
+            './Configuration' : configurationMock
+        };
+
+        if (customizeMocks) {
+            customizeMocks(mocks);
+        }
+
+        var networkClientFactoryCtor = proxyquire('../lib/NetworkClientFactory', mocks);
+        return networkClientFactoryCtor;
+    };
+
+    it('should return mock in case configuration mandates so', function()
+    {
+        var mocks;
+        var networkClientFactory = createNetworkClientFactory(function(m){
+            mocks = m;
+        });
+
+        mocks['./Configuration'].get.withArgs('mockNetwork').returns(true);
+        var networkClient = networkClientFactory.getNetworkClient();
+        expect(networkClient.read).to.not.be.undefined;
+
+    });
+
+    it('should return real client in case configuration mandates so', function()
+    {
+        var mocks;
+        var networkClientFactory = createNetworkClientFactory(function(m){
+            mocks = m;
+        });
+
+        mocks['./Configuration'].get.withArgs('mockNetwork').returns(false);
+
+        var networkClient = networkClientFactory.getNetworkClient();
+        expect(networkClient.read).to.not.be.undefined;
+    });
+
+    it('should correctly read from a stream', function(done)
+    {
+        var m3u8Parser = require('../lib/promise-m3u8');
+        var expectedManifest = fs.readFileSync(path.join(__dirname, '/resources/simpleManifest.m3u8'), 'utf8');
+
+        var Readable = require('stream').Readable;
+        var s = new Readable();
+        s.push(expectedManifest);
+        s.push(null); // Stream end
+
+        m3u8Parser.parseM3U8(s).then(function(manifest){
+            expect(manifest.toString()).to.eql(expectedManifest.replace(/[\r]/g, ''));
+        }).done(function(){
+            done();
+        });
+    });
+});
