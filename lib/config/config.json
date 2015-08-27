@@ -10,5 +10,8 @@
     "hostname" : "localhost",
     "port" : "1935",
     "applicationName" : "kLive"
+  },
+  "webServerParams" : {
+    "applicationName" : "kLiveDVR"
   }
 }
