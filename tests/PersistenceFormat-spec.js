@@ -13,16 +13,14 @@ var path = require('path');
 
 describe('PersistenceFormat spec', function() {
     it('should get a path for an entry', function(){
-        var persistenceFormatCreator = require('../lib/PersistenceFormat');
-        var persistenceFormat = persistenceFormatCreator("/basePath");
+        var persistenceFormat = require('../lib/PersistenceFormat');
         var entryDestPath = persistenceFormat.getEntryDestPath('1_bla');
-        expect(entryDestPath).to.equal(path.join('/basePath', '1_bla'));
+        expect(entryDestPath).to.equal(path.join('/home/dev/DVR', '1_bla'));
     });
 
     it('should get a path for a flavor', function(){
-        var persistenceFormatCreator = require('../lib/PersistenceFormat');
-        var persistenceFormat = persistenceFormatCreator("/basePath");
+        var persistenceFormat = require('../lib/PersistenceFormat');
         var entryDestPath = persistenceFormat.getFlavorDestPath('1_bla', 400000);
-        expect(entryDestPath).to.equal(path.join('/basePath', '1_bla', '400000'));
+        expect(entryDestPath).to.equal(path.join('/home/dev/DVR', '1_bla', '400000'));
     });
 });
