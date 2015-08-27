@@ -1,5 +1,8 @@
 {
-  "mockNetwork" : true,
-  "mockBackend" : true,
-  "backendPollingInterval" : 3000
+  "mockNetwork" : false,
+  "requestTimeout" : 10000,
+  "pollingInterval" : 10000,
+  "dvrWindow" : 7200,
+  "logLevel" : "debug",
+  "logFileName" : "logs/filelog-info.log"
 }
