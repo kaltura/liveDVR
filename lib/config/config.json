@@ -4,5 +4,10 @@
   "pollingInterval" : 10000,
   "dvrWindow" : 7200,
   "logLevel" : "debug",
-  "logFileName" : "logs/filelog-info.log"
+  "logFileName" : "logs/filelog-info.log",
+  "mediaServer" : {
+    "hostname" : "localhost",
+    "port" : "1935",
+    "applicationName" : "kLive"
+  }
 }
