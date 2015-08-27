@@ -1,5 +1,6 @@
 {
   "mockNetwork" : false,
+  "rootFolderPath" : "/home/dev/DVR",
   "requestTimeout" : 10000,
   "pollingInterval" : 10000,
   "dvrWindow" : 7200,
