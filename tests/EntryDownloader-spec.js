@@ -17,7 +17,8 @@ describe('Entry downloader spec', function() {
         var loggerMock = {
             info : sinon.stub(),
             error : sinon.stub(),
-            debug : sinon.stub()
+            debug : sinon.stub(),
+            warn : sinon.stub(),
         };
 
         flavorDownloaderMock = {
