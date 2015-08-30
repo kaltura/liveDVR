@@ -4,10 +4,8 @@
 /*jshint -W030 */ // Ignore "Expected an assignment or function call and instead saw an expression" warning wrongfully raised for chai expectations
 
 var proxyquire = require('proxyquire');
-var fs = require('fs');
 var chai = require('chai');
 var expect = chai.expect;
-var path = require('path');
 var sinon = require('sinon');
 
 describe('Backend client factory spec', function() {
