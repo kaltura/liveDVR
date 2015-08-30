@@ -9,6 +9,8 @@ var Q = require('Q');
 var path = require('path');
 PlaylistItem = require('m3u8/m3u/PlaylistItem');
 var m3u8Parser = require('../lib/promise-m3u8');
+var chai = require('chai');
+var expect = chai.expect;
 
 describe('M3U8 Generator tests', function() {
 
