@@ -171,7 +171,7 @@ describe('flavor-downloader tests', function() {
         flavorDwonloader.on("iteration-start", iterationStartStub);
 
         flavorDwonloader.start();
-        flavorDwonloader.on("iteration-error", function (err) {
+        flavorDwonloader.on("iteration-error", function () {
             expect(mocks['./utils/http-utils'].downloadFile.callCount).to.eql(6);
             expect(iterationStartStub.callCount).to.eql(1);
             clock.tick(10000);

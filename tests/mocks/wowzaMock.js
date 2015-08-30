@@ -6,8 +6,6 @@ var fs = require('fs');
 var path = require('path');
 var _ = require('underscore');
 var Q = require('q');
-var qio = require('q-io/fs');
-var sinon = require('sinon');
 
 module.exports = function(networkClientMock) {
 

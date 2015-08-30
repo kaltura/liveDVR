@@ -3,10 +3,8 @@
  */
 
 var proxyquire = require('proxyquire');
-var fs = require('fs');
 var chai = require('chai');
 var expect = chai.expect;
-var path = require('path');
 var sinon = require('sinon');
 var Q = require('Q');
 
@@ -85,21 +83,21 @@ describe('Entry downloader spec', function() {
         var entryDownloader = createEntryDownloader(injectMock);
         entryDownloader.start().then(function(){
             done(new Error('Start should fail'));
-        }, function (err){
+        }, function (){
             done();
         });
     });
 
     it('should fail starting if all of the downloaders fail to start', function (done) {
 
-        var injectMock = function(mocks){
+        var injectMock = function(){
             flavorDownloaderMock.start.returns(Q.reject());
         };
 
         var entryDownloader = createEntryDownloader(injectMock);
         entryDownloader.start().then(function(){
             done(new Error('Start should fail'));
-        }).done(null, function(err){
+        }).done(null, function(){
             expect(flavorDownloaderMock.start.callCount).to.equal(3);
             done();
         });

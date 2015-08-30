@@ -1,11 +1,11 @@
 {
   "mockNetwork" : false,
-  "rootFolderPath" : "/home/dev/DVR",
+  "rootFolderPath" : "c:\\dvr",
   "requestTimeout" : 10000,
   "pollingInterval" : 10000,
   "dvrWindow" : 7200,
   "logLevel" : "debug",
-  "logFileName" : "logs/filelog-info.log",
+  "logFileName" : "c:\\dvr\\filelog-info.log",
   "mediaServer" : {
     "hostname" : "localhost",
     "port" : "1935",

@@ -68,7 +68,7 @@ describe('Promise m3u8 spec', function() {
         m3u8Parser.parseM3U8("nonExistantPath").then(function(){
             expect.fail();
             done(new Error("Stream should not be created successfully"));
-        }, function(err){
+        }, function(){
             done();
         });
     });

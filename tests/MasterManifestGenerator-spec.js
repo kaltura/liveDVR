@@ -3,13 +3,10 @@
  */
 
 var proxyquire = require('proxyquire');
-var m3u8Parser = require('../lib/promise-m3u8');
-var fs = require('fs');
 var sinon = require('sinon');
 var Q = require('Q');
 var chai = require('chai');
 var expect = chai.expect;
-var path = require('path');
 PlaylistItem = require('m3u8/m3u/PlaylistItem');
 
 describe('MasterManifestGenerator spec', function() {

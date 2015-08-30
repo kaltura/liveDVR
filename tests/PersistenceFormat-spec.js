@@ -2,11 +2,6 @@
  * Created by elad.benedict on 8/23/2015.
  */
 
-var proxyquire = require('proxyquire');
-var m3u8 = require('m3u8');
-var fs = require('fs');
-var sinon = require('sinon');
-var Q = require('Q');
 var chai = require('chai');
 var expect = chai.expect;
 var path = require('path');
