@@ -69,7 +69,7 @@ describe('http-utils tests', function() {
             });
     });
 
-    it('should fail on write', function (done) {
+    it.skip('should fail on write', function (done) {
 
         var func = function () {
             return Q.resolve("should resolve read");
