@@ -12,6 +12,8 @@ var Q = require('Q');
 
 describe('Entry downloader spec', function() {
 
+    var flavorDownloaderMock;
+
     var createEntryDownloader = function (customizeMocks) {
 
         var loggerMock = {
@@ -48,7 +50,7 @@ describe('Entry downloader spec', function() {
             ]))
         };
 
-        var masterManifestGeneratorCreatorMock = sinon.stub().returns(masterManifestGeneratorMock)
+        var masterManifestGeneratorCreatorMock = sinon.stub().returns(masterManifestGeneratorMock);
 
         var mocks = {
             './logger/logger' : loggerMock,
@@ -78,36 +80,36 @@ describe('Entry downloader spec', function() {
 
         var injectMock = function(){
             masterManifestGeneratorMock.getAllFlavors = sinon.stub().returns(Q.reject());
-        }
+        };
 
         var entryDownloader = createEntryDownloader(injectMock);
         entryDownloader.start().then(function(){
             done(new Error('Start should fail'));
         }, function (err){
-            done()
-        })
+            done();
+        });
     });
 
     it('should fail starting if all of the downloaders fail to start', function (done) {
 
-        var injectMock = function(){
+        var injectMock = function(mocks){
             flavorDownloaderMock.start.returns(Q.reject());
-        }
+        };
 
         var entryDownloader = createEntryDownloader(injectMock);
         entryDownloader.start().then(function(){
-            expect(flavorDownloaderMock.start.callCount).to.equal(3);
             done(new Error('Start should fail'));
         }).done(null, function(err){
+            expect(flavorDownloaderMock.start.callCount).to.equal(3);
             done();
-        })
+        });
     });
 
     it('should succeed starting if one of the downloader fails to start', function (done) {
 
         var injectMock = function(){
             flavorDownloaderMock.start.onSecondCall().returns(Q.reject());
-        }
+        };
 
         var entryDownloader = createEntryDownloader(injectMock);
         entryDownloader.start().then(function(){
@@ -118,5 +120,17 @@ describe('Entry downloader spec', function() {
         });
     });
 
+    it('should succeed stopping if all the downloaders succeed to stop', function (done) {
+
+        var entryDownloader = createEntryDownloader();
+        entryDownloader.start().then(function(){
+            entryDownloader.stop();
+        }).then(function(){
+            expect(flavorDownloaderMock.stop.callCount).to.equal(3);
+            done();
+        }).done(null, function(err){
+            done(err);
+        });
+    });
 });
 
