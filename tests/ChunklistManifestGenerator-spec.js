@@ -3,15 +3,14 @@
  */
 
 var proxyquire = require('proxyquire');
-var m3u8 = require('m3u8');
 var fs = require('fs');
 var sinon = require('sinon');
 var Q = require('Q');
-var chai = require('chai');
-var expect = chai.expect;
 var path = require('path');
 PlaylistItem = require('m3u8/m3u/PlaylistItem');
 var m3u8Parser = require('../lib/promise-m3u8');
+var chai = require('chai');
+var expect = chai.expect;
 
 describe('M3U8 Generator tests', function() {
 
@@ -72,8 +71,6 @@ describe('M3U8 Generator tests', function() {
 
     it('Should create a new manifest upon initialization (if one does not already exist)', function (done) {
 
-        var expectedManifest = fs.readFileSync(__dirname + '/resources/simpleManifest.m3u8', 'utf8');
-
         var updateMocks = function(mocks) {
             mocks['q-io/fs'].exists = sinon.stub().returns(Q(false));
         };
@@ -99,7 +96,7 @@ describe('M3U8 Generator tests', function() {
         var m3u8Generator = createManifestGenerator(updateMocks, 30);
 
         var promise = m3u8Generator.init();
-        promise.then(function(currentManifest)
+        promise.then(function()
         {
             var item1 = new PlaylistItem();
             item1.set('duration', 13.3);

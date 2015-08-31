@@ -81,7 +81,7 @@ describe('flavor-downloader tests', function() {
         return flavorDownloader;
     }
 
-    it.skip('should download all files successfully', function (done) {
+    it('should download all files successfully', function (done) {
         var flavorDownloader = getFlavorDownloader();
         flavorDownloader.on("iteration-end", function() {
             try {
@@ -95,7 +95,7 @@ describe('flavor-downloader tests', function() {
         flavorDownloader.start();
     });
 
-    it.skip('should try to download failed ts again', function (done) {
+    it('should try to download failed ts again', function (done) {
         var listOfFiles = ['media-uefvqmelj_b1017600_11.ts', 'media-uefvqmelj_b1017600_12.ts', 'media-uefvqmelj_b1017600_13.ts', 'media-uefvqmelj_b1017600_15.ts'];
         var flavorDwonloader = getFlavorDownloader(function (mocks) {
             mocks['q-io/fs'] = generateQioMock(listOfFiles);
@@ -112,7 +112,7 @@ describe('flavor-downloader tests', function() {
         });
     });
 
-    it.skip('should shutdown downloader after 1 iteration', function (done) {
+    it('should shutdown downloader after 1 iteration', function (done) {
         var flavorDownloader = getFlavorDownloader();
         flavorDownloader.start();
         var iterationEndStub = sinon.stub();
@@ -171,7 +171,7 @@ describe('flavor-downloader tests', function() {
         flavorDwonloader.on("iteration-start", iterationStartStub);
 
         flavorDwonloader.start();
-        flavorDwonloader.on("iteration-error", function (err) {
+        flavorDwonloader.on("iteration-error", function () {
             expect(mocks['./utils/http-utils'].downloadFile.callCount).to.eql(6);
             expect(iterationStartStub.callCount).to.eql(1);
             clock.tick(10000);

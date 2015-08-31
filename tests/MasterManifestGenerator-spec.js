@@ -3,13 +3,10 @@
  */
 
 var proxyquire = require('proxyquire');
-var m3u8Parser = require('../lib/promise-m3u8');
-var fs = require('fs');
 var sinon = require('sinon');
 var Q = require('Q');
 var chai = require('chai');
 var expect = chai.expect;
-var path = require('path');
 PlaylistItem = require('m3u8/m3u/PlaylistItem');
 
 describe('MasterManifestGenerator spec', function() {
@@ -36,7 +33,7 @@ describe('MasterManifestGenerator spec', function() {
         });
     });
 
-    it('should use port 1935 if port is not supplied', function(done){
+    it('should not use any port if port is not supplied', function(done){
         var mocks;
         var customizeMocksFunction = function(m){
             mocks = m;
@@ -47,7 +44,7 @@ describe('MasterManifestGenerator spec', function() {
         var masterManifestCreator = createMasterManifestGenerator(customizeMocksFunction, customizeCtorParamsFunction);
 
         masterManifestCreator.getManifest('http://someRequestedPath', 'mbr').done(function() {
-            expect(mocks['./NetworkClientFactory'].getNetworkClient().read.firstCall.args[0]).to.eql("http://localhost:1935/test/smil:12345_mbr.smil/playlist.m3u8");
+            expect(mocks['./NetworkClientFactory'].getNetworkClient().read.firstCall.args[0]).to.eql("http://localhost/test/smil:12345_mbr.smil/playlist.m3u8");
             done();
         });
     });

@@ -23,6 +23,7 @@
     "underscore": "1.8.3",
     "request": "^2.61.0",
     "winston": "^1.0.1",
-    "nconf" : "0.7.2"
+    "nconf" : "0.7.2",
+    "mkdirp" : "0.5.1"
   }
 }
