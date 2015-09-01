@@ -19,7 +19,7 @@ describe('Worker component spec', function() {
 
     beforeEach(function(){
         var config = require('../../lib/Configuration');
-        config.set('pollingInterval', 50);
+        config.set('pollingInterval', 1000);
         config.set('mockNetwork', true);
         config.set('mockBackend', true);
 
@@ -62,8 +62,8 @@ describe('Worker component spec', function() {
     };
 
     it('should download all chunks when there are no errors', function (done) {
-        this.timeout(10000);
-        Q.delay(3000).then(function(){
+        this.timeout(10000000);
+        Q.delay(10000).then(function(){
            return worker.stop();
         }).then(function(){
             validateFlavors();
@@ -74,7 +74,7 @@ describe('Worker component spec', function() {
     });
 
     it('should download all chunks when there are chunklist read errors', function (done) {
-        this.timeout(10000);
+        this.timeout(10000000);
 
         wowzaMock.read.withArgs({
             url: 'http://kalsegsec-a.akamaihd.net/dc-0/m/pa-live-publish2/kLive/smil:12345_all.smil/chunklist_b475136.m3u8',
@@ -91,7 +91,7 @@ describe('Worker component spec', function() {
             timeout: 10000
         }).onCall(5).returns(Q.reject("Whoops!"));
 
-        Q.delay(3000).then(function(){
+        Q.delay(10000).then(function(){
             return worker.stop();
         }).then(function(){
             validateFlavors();
@@ -102,7 +102,7 @@ describe('Worker component spec', function() {
     });
 
     it.skip('should download all chunks when there are chunk read errors', function (done) {
-        this.timeout(5000);
+        this.timeout(10000000);
 
         wowzaMock.read.withArgs({
             url: 'http://kalsegsec-a.akamaihd.net/dc-0/m/pa-live-publish2/kLive/smil:12345_all.smil/media-uia99r2td_b475136_7.ts',
