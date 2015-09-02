@@ -19,7 +19,7 @@ describe('Worker component spec', function() {
 
     beforeEach(function(){
         var config = require('../../lib/Configuration');
-        config.set('pollingInterval', 1000);
+        config.set('pollingInterval', 100);
         config.set('mockNetwork', true);
         config.set('mockBackend', true);
 
@@ -40,9 +40,6 @@ describe('Worker component spec', function() {
     });
 
     afterEach(function(){
-        delete require.cache[require.resolve('../../lib/Configuration')];
-        delete require.cache[require.resolve('../../lib/PersistenceFormat')];
-        delete require.cache[require.resolve('../../lib/Worker')];
         delete require.cache[require.resolve('../../lib/mocks/NetworkClientMock')];
     })
 
@@ -62,7 +59,7 @@ describe('Worker component spec', function() {
     };
 
     it('should download all chunks when there are no errors', function (done) {
-        this.timeout(10000000);
+        this.timeout(100000);
         Q.delay(10000).then(function(){
            return worker.stop();
         }).then(function(){
@@ -74,7 +71,7 @@ describe('Worker component spec', function() {
     });
 
     it('should download all chunks when there are chunklist read errors', function (done) {
-        this.timeout(10000000);
+        this.timeout(100000);
 
         wowzaMock.read.withArgs({
             url: 'http://kalsegsec-a.akamaihd.net/dc-0/m/pa-live-publish2/kLive/smil:12345_all.smil/chunklist_b475136.m3u8',
@@ -101,8 +98,8 @@ describe('Worker component spec', function() {
         });
     });
 
-    it.skip('should download all chunks when there are chunk read errors', function (done) {
-        this.timeout(10000000);
+    it('should download all chunks when there are chunk read errors', function (done) {
+        this.timeout(100000);
 
         wowzaMock.read.withArgs({
             url: 'http://kalsegsec-a.akamaihd.net/dc-0/m/pa-live-publish2/kLive/smil:12345_all.smil/media-uia99r2td_b475136_7.ts',
