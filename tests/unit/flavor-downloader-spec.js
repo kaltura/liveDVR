@@ -10,7 +10,7 @@ var chai = require('chai');
 var expect = chai.expect;
 var path = require('path');
 
-describe.skip('flavor-downloader tests', function() {
+describe('flavor-downloader tests', function() {
 
     var mocks;
     var clock;
@@ -24,7 +24,10 @@ describe.skip('flavor-downloader tests', function() {
     });
 
     function generateHttpUtilsMock(isReject) {
-        var func = isReject ? Q.reject : Q.resolve;
+        var reject = function(){
+            return Q.reject(new Error());
+        }
+        var func = isReject ? reject : Q.resolve;
         var httpUtilsMock = {
             downloadFile: sinon.stub().returns(func())
         };
@@ -62,7 +65,7 @@ describe.skip('flavor-downloader tests', function() {
         mockObjects['./utils/http-utils'] = generateHttpUtilsMock();
         mockObjects['q-io/fs'] = generateQioMock([]);
         mockObjects['./ChunklistManifestGenerator'] = generateChunklistM3umGeneratorMock();
-        mockObjects['./promise-m3u8'] = generatePromiseM3u8Mock(path.join(__dirname, '/resources/flavor-downloader-data/simpleManifest.m3u8'));
+        mockObjects['./promise-m3u8'] = generatePromiseM3u8Mock(path.join(__dirname, '/../resources/flavor-downloader-data/simpleManifest.m3u8'));
         mockObjects['./logger/logger'] = {
             info: sinon.stub(),
             error: sinon.stub(),
@@ -97,12 +100,11 @@ describe.skip('flavor-downloader tests', function() {
 
     it('should try to download failed ts again', function (done) {
         var listOfFiles = ['media-uefvqmelj_b1017600_11.ts', 'media-uefvqmelj_b1017600_12.ts', 'media-uefvqmelj_b1017600_13.ts', 'media-uefvqmelj_b1017600_15.ts'];
-        var flavorDwonloader = getFlavorDownloader(function (mocks) {
+        var flavorDownloader = getFlavorDownloader(function (mocks) {
             mocks['q-io/fs'] = generateQioMock(listOfFiles);
         });
 
-        flavorDwonloader.start();
-        flavorDwonloader.on("iteration-end", function () {
+        flavorDownloader.on("iteration-end", function () {
             try {
                 expect(mocks['./utils/http-utils'].downloadFile.callCount).to.eql(2);
                 done();
@@ -110,37 +112,38 @@ describe.skip('flavor-downloader tests', function() {
                 done(e);
             }
         });
+
+        flavorDownloader.start();
     });
 
     it('should shutdown downloader after 1 iteration', function (done) {
         var flavorDownloader = getFlavorDownloader();
-        flavorDownloader.start();
-        var iterationEndStub = sinon.stub();
-        flavorDownloader.on("iteration-start", iterationEndStub);
+        var iterationStartCallback = sinon.stub();
+        flavorDownloader.on("iteration-start", iterationStartCallback);
         flavorDownloader.on("iteration-end", function () {
-            expect(iterationEndStub.callCount).to.eql(1);
-            expect(mocks['./utils/http-utils'].downloadFile.callCount).to.eql(6);
-            flavorDownloader.stop();
-            clock.tick(10000);
             try {
-                expect(iterationEndStub.callCount).to.eql(1);
-                done();
-            } catch (e) {
-                done(e);
+                expect(iterationStartCallback.callCount).to.eql(1);
+                expect(mocks['./utils/http-utils'].downloadFile.callCount).to.eql(6);
+                flavorDownloader.stop();
+                clock.tick(10000);
+                expect(iterationStartCallback.callCount).to.eql(1);
+                done()
             }
+             catch (e) {
+                 done(e);
+             }
         });
+        flavorDownloader.start();
     });
 
     it('should recover after failed manifest download', function (done) {
-        var flavorDwonloader = getFlavorDownloader(function (mocks) {
+        var flavorDownloader = getFlavorDownloader(function (mocks) {
             mocks['./utils/http-utils'] = generateHttpUtilsMock(true);
         });
 
         var iterationStartStub = sinon.stub();
-        flavorDwonloader.on("iteration-start", iterationStartStub);
-
-        flavorDwonloader.start();
-        flavorDwonloader.on("iteration-error", function () {
+        flavorDownloader.on("iteration-start", iterationStartStub);
+        flavorDownloader.on("iteration-end", function () {
             expect(mocks['./utils/http-utils'].downloadFile.callCount).to.eql(1);
             expect(iterationStartStub.callCount).to.eql(1);
             clock.tick(10000);
@@ -152,6 +155,7 @@ describe.skip('flavor-downloader tests', function() {
                 done(e);
             }
         });
+        flavorDownloader.start();
     });
 
     it('should recover after failed ts download', function (done) {
@@ -163,15 +167,13 @@ describe.skip('flavor-downloader tests', function() {
             downloadFile: stub
         };
 
-        var flavorDwonloader = getFlavorDownloader(function (mocks) {
+        var flavorDownloader = getFlavorDownloader(function (mocks) {
             mocks['./utils/http-utils'] = httpUtilsMock;
         });
 
         var iterationStartStub = sinon.stub();
-        flavorDwonloader.on("iteration-start", iterationStartStub);
-
-        flavorDwonloader.start();
-        flavorDwonloader.on("iteration-error", function () {
+        flavorDownloader.on("iteration-start", iterationStartStub);
+        flavorDownloader.on("iteration-end", function () {
             expect(mocks['./utils/http-utils'].downloadFile.callCount).to.eql(6);
             expect(iterationStartStub.callCount).to.eql(1);
             clock.tick(10000);
@@ -182,5 +184,8 @@ describe.skip('flavor-downloader tests', function() {
                 done(e);
             }
         });
+
+        flavorDownloader.start();
     });
 });
+
