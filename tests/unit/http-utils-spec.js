@@ -13,7 +13,7 @@ var qio = require('q-io/fs');
 
 describe('http-utils tests', function() {
 
-    var httpUtils = '../lib/utils/http-utils';
+    var httpUtils = '../../lib/utils/http-utils';
 
     function getNetworkClientMock(func) {
         var networkClientStub = {

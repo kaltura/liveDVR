@@ -8,9 +8,9 @@ var chai = require('chai');
 var expect = chai.expect;
 var sinon = require('sinon');
 
-describe('Network client factory spec', function() {
+describe('Backend client factory spec', function() {
 
-    var createNetworkClientFactory = function(customizeMocks){
+    var createBackendClientFactory = function(customizeMocks){
 
         configurationMock = {
             get : sinon.stub()
@@ -24,32 +24,32 @@ describe('Network client factory spec', function() {
             customizeMocks(mocks);
         }
 
-        var networkClientFactoryCtor = proxyquire('../lib/NetworkClientFactory', mocks);
-        return networkClientFactoryCtor;
+        var backendClientFactoryCtor = proxyquire('../../lib/BackendClientFactory', mocks);
+        return backendClientFactoryCtor;
     };
 
     it('should return mock in case configuration mandates so', function()
     {
         var mocks;
-        var networkClientFactory = createNetworkClientFactory(function(m){
+        var backendClientFactory = createBackendClientFactory(function(m){
             mocks = m;
         });
 
-        mocks['./Configuration'].get.withArgs('mockNetwork').returns(true);
-        var networkClient = networkClientFactory.getNetworkClient();
-        expect(networkClient.read).to.not.be.undefined;
+        mocks['./Configuration'].get.withArgs('mockBackend').returns(true);
+        var backendClient = backendClientFactory.getBackendClient();
+        expect(backendClient.getLiveEntriesForMediaServer).to.not.be.undefined;
     });
 
     it('should return real client in case configuration mandates so', function()
     {
         var mocks;
-        var networkClientFactory = createNetworkClientFactory(function(m){
+        var backendClientFactory = createBackendClientFactory(function(m){
             mocks = m;
         });
 
-        mocks['./Configuration'].get.withArgs('mockNetwork').returns(false);
+        mocks['./Configuration'].get.withArgs('mockBackend').returns(false);
 
-        var networkClient = networkClientFactory.getNetworkClient();
-        expect(networkClient.read).to.not.be.undefined;
+        var backendClient = backendClientFactory.getBackendClient();
+        expect(backendClient.getLiveEntriesForMediaServer).to.not.be.undefined;
     });
 });

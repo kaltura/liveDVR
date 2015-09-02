@@ -19,13 +19,13 @@ describe('PersistenceFormat spec', function() {
     };
 
     it('should get a path for an entry', function(){
-        var persistenceFormat = proxyquire('../lib/PersistenceFormat', mocks);
+        var persistenceFormat = proxyquire('../../lib/PersistenceFormat', mocks);
         var entryDestPath = persistenceFormat.getEntryFullPath('1_bla');
         expect(entryDestPath).to.equal(path.join('/home/dev/DVR', '1_bla'));
     });
 
     it('should get a path for a flavor', function(){
-        var persistenceFormat = proxyquire('../lib/PersistenceFormat', mocks);
+        var persistenceFormat = proxyquire('../../lib/PersistenceFormat', mocks);
         var entryDestPath = persistenceFormat.getFlavorFullPath('1_bla', 400000);
         expect(entryDestPath).to.equal(path.join('/home/dev/DVR', '1_bla', '400000'));
     });
