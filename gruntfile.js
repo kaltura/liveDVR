@@ -15,5 +15,5 @@ module.exports = function (grunt) {
     grunt.loadTasks('./lib/grunt/config');
 
     // Default task(s).
-    grunt.registerTask('default', ['jshint','unit-test', 'mocha_istanbul']);
+    grunt.registerTask('default', ['jshint:dev','unit-test:dev', 'component-test:dev', 'mocha_istanbul:dev']);
 };

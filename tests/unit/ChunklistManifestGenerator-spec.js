@@ -8,7 +8,7 @@ var sinon = require('sinon');
 var Q = require('Q');
 var path = require('path');
 PlaylistItem = require('m3u8/m3u/PlaylistItem');
-var m3u8Parser = require('../lib/promise-m3u8');
+var m3u8Parser = require('../../lib/promise-m3u8');
 var chai = require('chai');
 var expect = chai.expect;
 
@@ -16,7 +16,7 @@ describe('M3U8 Generator tests', function() {
 
     function createManifestGenerator(customizeMocks, dvrWindowSize)
     {
-        var expectedManifest = fs.readFileSync(__dirname + '/resources/simpleManifest.m3u8', 'utf8');
+        var expectedManifest = fs.readFileSync(__dirname + '/../resources/simpleManifest.m3u8', 'utf8');
 
         var qioMock = {
             exists : sinon.stub().returns(Q(true)),
@@ -37,13 +37,13 @@ describe('M3U8 Generator tests', function() {
         }
 
         var windowSize = dvrWindowSize ? dvrWindowSize: 60*60*2; // 2 Hours
-        var m3u8Generator = proxyquire('../lib/ChunklistManifestGenerator',mocks)("c:\\somePath\\", "manifest.m3u8", windowSize);
+        var m3u8Generator = proxyquire('../../lib/ChunklistManifestGenerator',mocks)("c:\\somePath\\", "manifest.m3u8", windowSize);
         return m3u8Generator;
     }
 
     it('Should read the existing manifest upon initialization (if there is one)', function (done) {
 
-        var expectedManifest = fs.readFileSync(__dirname + '/resources/simpleManifest.m3u8', 'utf8');
+        var expectedManifest = fs.readFileSync(__dirname + '/../resources/simpleManifest.m3u8', 'utf8');
 
         var m3u8Generator = createManifestGenerator();
         var promise = m3u8Generator.init();
@@ -56,7 +56,7 @@ describe('M3U8 Generator tests', function() {
 
     it('Should get the current manifest', function (done) {
 
-        var expectedManifest = fs.readFileSync(__dirname + '/resources/simpleManifest.m3u8', 'utf8');
+        var expectedManifest = fs.readFileSync(__dirname + '/../resources/simpleManifest.m3u8', 'utf8');
 
         var m3u8Generator = createManifestGenerator();
         var promise = m3u8Generator.init();
@@ -113,7 +113,7 @@ describe('M3U8 Generator tests', function() {
             return m3u8Generator.update([item1, item2, item3]);
 
         }).done(function(){
-            var expectedManifest = fs.readFileSync(__dirname + '/resources/updatedManifest1.m3u8', 'utf8');
+            var expectedManifest = fs.readFileSync(__dirname + '/../resources/updatedManifest1.m3u8', 'utf8');
             var lastWriteArgs = mocks['q-io/fs'].write.lastCall.args;
             expect(lastWriteArgs[1]).to.eql(expectedManifest.replace(/[\r]/g, ''));
             done();
