@@ -14,7 +14,7 @@ var rimraf = require('rimraf');
 describe('Worker component spec', function() {
 
     var networkClientMock;
-    var tmpFolderObj;
+    var tmpFoldersToDelete = [];
     var wowzaMock;
     var worker;
 
@@ -23,6 +23,20 @@ describe('Worker component spec', function() {
     before(function(){
         var logger = require('../../lib/logger/logger');
         logger.transports = [];
+    });
+
+    // Delete all temp folders
+    after(function(done){
+        Q.delay(1000).then(function(){
+            _.each(tmpFoldersToDelete, function(f){
+                rimraf.sync(f);
+            });
+        }).done(function(){
+            done();
+        }, function(err){
+            done(err);
+        });
+
     });
 
     beforeEach(function(){
@@ -35,6 +49,7 @@ describe('Worker component spec', function() {
         config.set("applicationName", "kLive");
 
         tmpFolderObj = tmp.dirSync({keep : true});
+        tmpFoldersToDelete.push(tmpFolderObj.name);
         config.set('rootFolderPath', tmpFolderObj.name);
         config.set('logFileName', path.join(tmpFolderObj.name, 'filelog-info.log'));
 
@@ -47,7 +62,6 @@ describe('Worker component spec', function() {
 
     afterEach(function(){
         delete require.cache[require.resolve('../../lib/mocks/NetworkClientMock')];
-        rimraf.sync(tmpFolderObj.name);
     });
 
     var validateFlavor = function(flavor){
