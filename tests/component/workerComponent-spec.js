@@ -27,16 +27,17 @@ describe('Worker component spec', function() {
 
     // Delete all temp folders
     after(function(done){
-        Q.delay(1000).then(function(){
-            _.each(tmpFoldersToDelete, function(f){
-                rimraf.sync(f);
+        var promiseRimraf = Q.denodeify(rimraf);
+        Q.fcall(function(){
+            var promises = _.each(tmpFoldersToDelete, function(f){
+                return promiseRimraf(f);
             });
+            return Q.all(promises);
         }).done(function(){
             done();
         }, function(err){
             done(err);
         });
-
     });
 
     beforeEach(function(){
@@ -66,16 +67,18 @@ describe('Worker component spec', function() {
 
     var validateFlavor = function(flavor){
         var flavorDir = path.join(tmpFolderObj.name, '12345', flavor);
-        var filesInFlavorFolder = fs.readdirSync(flavorDir);
-        var expectedFileNamePattern = new RegExp(flavor + ".*\.ts$");
-        var tsFiles = _.filter(filesInFlavorFolder, function(f){
-            return f.match(expectedFileNamePattern);
+        var promiseReaddir = Q.denodeify(fs.readdirSync);
+        return promiseReaddir(flavorDir).then(function(files){
+            var expectedFileNamePattern = new RegExp(flavor + ".*\.ts$");
+            var tsFiles = _.filter(files, function(f){
+                return f.match(expectedFileNamePattern);
+            });
+            expect(tsFiles.length).to.be.equal(24);
         });
-        expect(tsFiles.length).to.be.equal(24);
     };
 
     var validateFlavors = function(){
-        _.each(['475136', '987136', '679936'], validateFlavor);
+        return _.map(['475136', '987136', '679936'], validateFlavor);
     };
 
     it('should download all chunks when there are no errors', function (done) {
@@ -83,7 +86,8 @@ describe('Worker component spec', function() {
         Q.delay(3000).then(function(){
            return worker.stop();
         }).then(function(){
-            validateFlavors();
+            return validateFlavors();
+        }).then(function(){
             done();
         }).done(null, function(err){
             done(err);
@@ -110,7 +114,8 @@ describe('Worker component spec', function() {
         Q.delay(3000).then(function(){
             return worker.stop();
         }).then(function(){
-            validateFlavors();
+            return validateFlavors();
+        }).then(function(){
             done();
         }).done(null, function(err){
             done(err);
@@ -137,7 +142,8 @@ describe('Worker component spec', function() {
         Q.delay(3000).then(function(){
             return worker.stop();
         }).then(function(){
-            validateFlavors();
+            return validateFlavors();
+        }).then(function(){
             done();
         }).done(null, function(err){
             done(err);
