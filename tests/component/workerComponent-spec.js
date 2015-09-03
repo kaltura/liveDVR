@@ -9,6 +9,7 @@ var tmp = require('tmp');
 var path = require('path');
 var _ = require('underscore');
 var fs = require('fs');
+var rimraf = require('rimraf');
 
 describe('Worker component spec', function() {
 
@@ -17,9 +18,16 @@ describe('Worker component spec', function() {
     var wowzaMock;
     var worker;
 
+    // HACK: grunt-mocha-test seems to ignore its option's "quiet" param which ignores console output
+    // remove all logger transports to ensure nothing is written to console
+    before(function(){
+        var logger = require('../../lib/logger/logger');
+        logger.transports = [];
+    });
+
     beforeEach(function(){
         var config = require('../../lib/Configuration');
-        config.set('pollingInterval', 100);
+        config.set('pollingInterval', 50);
         config.set('mockNetwork', true);
         config.set('mockBackend', true);
 
@@ -27,9 +35,7 @@ describe('Worker component spec', function() {
         config.set("applicationName", "kLive");
 
         tmpFolderObj = tmp.dirSync({keep : true});
-        console.log(tmpFolderObj.name)
         config.set('rootFolderPath', tmpFolderObj.name);
-        console.log(config.get('rootFolderPath'));
         config.set('logFileName', path.join(tmpFolderObj.name, 'filelog-info.log'));
 
         networkClientMock = require('../../lib/NetworkClientFactory').getNetworkClient();
@@ -41,12 +47,12 @@ describe('Worker component spec', function() {
 
     afterEach(function(){
         delete require.cache[require.resolve('../../lib/mocks/NetworkClientMock')];
-    })
+        rimraf.sync(tmpFolderObj.name);
+    });
 
     var validateFlavor = function(flavor){
         var flavorDir = path.join(tmpFolderObj.name, '12345', flavor);
         var filesInFlavorFolder = fs.readdirSync(flavorDir);
-        console.log("Validating content of " + flavorDir);
         var expectedFileNamePattern = new RegExp(flavor + ".*\.ts$");
         var tsFiles = _.filter(filesInFlavorFolder, function(f){
             return f.match(expectedFileNamePattern);
@@ -59,8 +65,8 @@ describe('Worker component spec', function() {
     };
 
     it('should download all chunks when there are no errors', function (done) {
-        this.timeout(100000);
-        Q.delay(10000).then(function(){
+        this.timeout(4000);
+        Q.delay(3000).then(function(){
            return worker.stop();
         }).then(function(){
             validateFlavors();
@@ -71,8 +77,7 @@ describe('Worker component spec', function() {
     });
 
     it('should download all chunks when there are chunklist read errors', function (done) {
-        this.timeout(100000);
-
+        this.timeout(4000);
         wowzaMock.read.withArgs({
             url: 'http://kalsegsec-a.akamaihd.net/dc-0/m/pa-live-publish2/kLive/smil:12345_all.smil/chunklist_b475136.m3u8',
             timeout: 10000
@@ -88,7 +93,7 @@ describe('Worker component spec', function() {
             timeout: 10000
         }).onCall(5).returns(Q.reject("Whoops!"));
 
-        Q.delay(10000).then(function(){
+        Q.delay(3000).then(function(){
             return worker.stop();
         }).then(function(){
             validateFlavors();
@@ -99,8 +104,7 @@ describe('Worker component spec', function() {
     });
 
     it('should download all chunks when there are chunk read errors', function (done) {
-        this.timeout(100000);
-
+        this.timeout(4000);
         wowzaMock.read.withArgs({
             url: 'http://kalsegsec-a.akamaihd.net/dc-0/m/pa-live-publish2/kLive/smil:12345_all.smil/media-uia99r2td_b475136_7.ts',
             timeout: 10000

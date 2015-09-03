@@ -26,7 +26,7 @@ describe('flavor-downloader tests', function() {
     function generateHttpUtilsMock(isReject) {
         var reject = function(){
             return Q.reject(new Error());
-        }
+        };
         var func = isReject ? reject : Q.resolve;
         var httpUtilsMock = {
             downloadFile: sinon.stub().returns(func())
@@ -127,7 +127,7 @@ describe('flavor-downloader tests', function() {
                 flavorDownloader.stop();
                 clock.tick(10000);
                 expect(iterationStartCallback.callCount).to.eql(1);
-                done()
+                done();
             }
              catch (e) {
                  done(e);

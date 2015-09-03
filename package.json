@@ -15,7 +15,8 @@
     "istanbul" : "0.3.18",
     "grunt-mocha-istanbul" : "3.0.1",
     "proxyquire": "1.7.0",
-    "tmp" : "0.0.27"
+    "tmp" : "0.0.27",
+    "rimraf" : "2.4.3"
   },
   "dependencies": {
     "m3u8": "0.0.6",
