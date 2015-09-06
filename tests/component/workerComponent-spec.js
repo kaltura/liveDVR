@@ -40,7 +40,7 @@ describe('Worker component spec', function() {
         });
     });
 
-    beforeEach(function(){
+    beforeEach(function(done){
         var config = require('../../lib/Configuration');
         config.set('pollingInterval', 50);
         config.set('mockNetwork', true);
@@ -49,16 +49,22 @@ describe('Worker component spec', function() {
         config.set("mediaServer:hostname", "mediaServerHost");
         config.set("applicationName", "kLive");
 
-        tmpFolderObj = tmp.dirSync({keep : true});
-        tmpFoldersToDelete.push(tmpFolderObj.name);
-        config.set('rootFolderPath', tmpFolderObj.name);
-        config.set('logFileName', path.join(tmpFolderObj.name, 'filelog-info.log'));
+        var promiseTmp = Q.denodeify(tmp.dir);
+        promiseTmp({keep : true}).then(function(tmpResult){
+            tmpFolderPath = tmpResult[0];
+            tmpFoldersToDelete.push();
+            config.set('rootFolderPath', tmpFolderPath);
+            config.set('logFileName', path.join(tmpFolderPath, 'filelog-info.log'));
 
-        networkClientMock = require('../../lib/NetworkClientFactory').getNetworkClient();
-        wowzaMock = require('../mocks/wowzaMock')(networkClientMock);
-        workerCtor = require('../../lib/Worker');
-        worker = new workerCtor();
-        worker.start();
+            networkClientMock = require('../../lib/NetworkClientFactory').getNetworkClient();
+            wowzaMock = require('../mocks/wowzaMock')(networkClientMock);
+            workerCtor = require('../../lib/Worker');
+            worker = new workerCtor();
+            worker.start();
+            done();
+        }).done(null, function(err){
+            done(err);
+        });
     });
 
     afterEach(function(){
@@ -66,8 +72,9 @@ describe('Worker component spec', function() {
     });
 
     var validateFlavor = function(flavor){
-        var flavorDir = path.join(tmpFolderObj.name, '12345', flavor);
-        var promiseReaddir = Q.denodeify(fs.readdirSync);
+        var persistenceFormat = require('../../lib/PersistenceFormat');
+        var flavorDir = persistenceFormat.getFlavorFullPath('12345', flavor.toString());
+        var promiseReaddir = Q.denodeify(fs.readdir);
         return promiseReaddir(flavorDir).then(function(files){
             var expectedFileNamePattern = new RegExp(flavor + ".*\.ts$");
             var tsFiles = _.filter(files, function(f){
@@ -78,7 +85,8 @@ describe('Worker component spec', function() {
     };
 
     var validateFlavors = function(){
-        return _.map(['475136', '987136', '679936'], validateFlavor);
+        var promises = _.map(['475136', '987136', '679936'], validateFlavor);
+        return Q.all(promises);
     };
 
     it('should download all chunks when there are no errors', function (done) {

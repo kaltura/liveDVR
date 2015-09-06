@@ -6,6 +6,7 @@
   "pollingInterval" : 10000,
   "backendPollingInterval" : 3000,
   "dvrWindow" : 7200,
+  "sessionDuration" : 180000,
   "logLevel" : "debug",
   "logFileName" : "c:\\dvr\\filelog-info.log",
   "mediaServer" : {
