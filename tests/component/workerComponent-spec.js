@@ -10,6 +10,7 @@ var path = require('path');
 var _ = require('underscore');
 var fs = require('fs');
 var rimraf = require('rimraf');
+var config = require('../../lib/Configuration');
 
 describe('Worker component spec', function() {
 
@@ -41,7 +42,6 @@ describe('Worker component spec', function() {
     });
 
     beforeEach(function(){
-        var config = require('../../lib/Configuration');
         config.set('pollingInterval', 50);
         config.set('mockNetwork', true);
         config.set('mockBackend', true);
@@ -67,7 +67,7 @@ describe('Worker component spec', function() {
 
     var validateFlavor = function(flavor){
         var flavorDir = path.join(tmpFolderObj.name, '12345', flavor);
-        var promiseReaddir = Q.denodeify(fs.readdirSync);
+        var promiseReaddir = Q.denodeify(fs.readdir);
         return promiseReaddir(flavorDir).then(function(files){
             var expectedFileNamePattern = new RegExp(flavor + ".*\.ts$");
             var tsFiles = _.filter(files, function(f){
@@ -78,7 +78,8 @@ describe('Worker component spec', function() {
     };
 
     var validateFlavors = function(){
-        return _.map(['475136', '987136', '679936'], validateFlavor);
+        var validationPromises = _.map(['475136', '987136', '679936'], validateFlavor);
+        return Q.all(validationPromises);
     };
 
     it('should download all chunks when there are no errors', function (done) {
@@ -146,6 +147,36 @@ describe('Worker component spec', function() {
         }).then(function(){
             done();
         }).done(null, function(err){
+            done(err);
+        });
+    });
+
+    it('should download all chunks when stopped in mid broadcast and starting a new worker', function (done) {
+        this.timeout(4000);
+        var newWorker;
+        Q.delay(250).then(function () {
+            return worker.stop();
+        }).then(function () {
+            return validateFlavors().then(function () {
+                // Validation should not pass at this (early) stage
+                done(new Error('validation should NOT pass'));
+            }, function () {
+                // Validation failure is expected - carry on
+            });
+        }).then(function () {
+            workerCtor = require('../../lib/Worker');
+            newWorker = new workerCtor();
+            return newWorker.start();
+        }).then(function () {
+            return Q.delay(3000);
+        }).then(function () {
+            return worker.stop();
+        }).then(function () {
+            console.log("Stopped!");
+            return validateFlavors();
+        }).then(function () {
+            done();
+        }).done(null, function (err) {
             done(err);
         });
     });
