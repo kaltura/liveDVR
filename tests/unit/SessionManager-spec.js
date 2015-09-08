@@ -55,8 +55,8 @@ describe('Session manager spec', function() {
     it('should return false when there are several manifests, one of which was created recently', function(done)
     {
         var stat = sinon.stub();
-        stat.withArgs('1').returns(Q({node : { mtime : 10000}}));
-        stat.withArgs('2').returns(Q({node : { mtime : 20000}}));
+        stat.withArgs('1').returns(Q({node : { mtime : new Date(10000)}}));
+        stat.withArgs('2').returns(Q({node : { mtime : new Date(20000)}}));
 
         var sm = createSessionManager(function(mocks){
             mocks.glob = sinon.stub().callsArgWith(2, null, ['1', '2']);
@@ -76,8 +76,8 @@ describe('Session manager spec', function() {
     it('should return true when there are several manifests, all were created in the (distant) past', function(done)
     {
         var stat = sinon.stub();
-        stat.withArgs('1').returns(Q({node : { mtime : 10000}}));
-        stat.withArgs('2').returns(Q({node : { mtime : 20000}}));
+        stat.withArgs('1').returns(Q({node : { mtime : new Date(10000)}}));
+        stat.withArgs('2').returns(Q({node : { mtime : new Date(20000)}}));
 
         var sm = createSessionManager(function(mocks){
             mocks.glob = sinon.stub().callsArgWith(2, null, ['1', '2']);
