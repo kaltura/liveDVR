@@ -1,15 +1,17 @@
 {
   "mockNetwork" : false,
   "mockBackend" : true,
+  "readMockBackendResponseFromFile" : false,
   "rootFolderPath" : "c:\\dvr",
   "requestTimeout" : 10000,
   "pollingInterval" : 10000,
   "backendPollingInterval" : 3000,
   "dvrWindow" : 7200,
+  "sessionDuration" : 180000,
   "logLevel" : "debug",
   "logFileName" : "c:\\dvr\\filelog-info.log",
   "mediaServer" : {
-    "hostname" : "kalsegsec-a.akamaihd.net/dc-1/m/ny-live-publish1",
+    "hostname" : "dev-backend26.dev.kaltura.com",
     "applicationName" : "kLive"
   },
   "webServerParams" : {
