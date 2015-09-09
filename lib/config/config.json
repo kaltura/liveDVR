@@ -18,9 +18,10 @@
   "webServerParams" : {
     "applicationName" : "kLiveDVR"
   },
-  "adminSecret" :"admin secret",
-  "partnerId" : "partner Id (integer)",
-  "mediaServerHostname" : "media server hostname",
-  "serviceUrl" : "back end service url",
-  "backendClientSessionDurationMinutes" : 60
+  "backendClient" : {
+    "adminSecret" :"admin secret",
+    "partnerId" : "partner Id (integer)",
+    "serviceUrl" : "back end service url",
+    "backendClientSessionDurationMinutes" : 60
+  }
 }
