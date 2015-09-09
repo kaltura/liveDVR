@@ -7,6 +7,8 @@ var chai = require('chai');
 var expect = chai.expect;
 var sinon = require('sinon');
 var Q = require('q');
+var config = require('../../lib/Configuration');
+var path = require('path');
 
 describe('Session manager spec', function() {
 
@@ -25,7 +27,9 @@ describe('Session manager spec', function() {
     var createSessionManager = function(customizeMocks){
 
         var mocks = {
-            'q-io/fs' : {},
+            'q-io/fs' : {
+                exists : sinon.stub().returns(Q(true))
+            },
             'glob' : {},
             'config' : {}
         };
@@ -41,7 +45,7 @@ describe('Session manager spec', function() {
     it('should return true when there is no folder of the entry', function(done)
     {
         var sm = createSessionManager(function(mocks){
-            mocks.glob = sinon.stub().callsArgWith(2, null, []);
+            mocks['q-io/fs'].exists = sinon.stub().returns(Q(false));
         });
         sm.isNewSession('1111').then(function(result){
             expect(result).to.equal(true);
@@ -49,21 +53,20 @@ describe('Session manager spec', function() {
         }).done(null, function(err){
             done(err);
         });
-
     });
 
-    it('should return false when there are several manifests, one of which was created recently', function(done)
+    it('should return false when the timestamp is recent', function(done)
     {
         var stat = sinon.stub();
-        stat.withArgs('1').returns(Q({node : { mtime : new Date(10000)}}));
-        stat.withArgs('2').returns(Q({node : { mtime : new Date(20000)}}));
+        config.set('sessionDuration', 100000);
+        var rootFolder = config.get('rootFolderPath');
+        timestampPath = path.join(rootFolder, '1111', 'sessionTimestamp');
+        stat.withArgs(timestampPath).returns(Q({node : { mtime : new Date(10000)}}));
 
         var sm = createSessionManager(function(mocks){
             mocks.glob = sinon.stub().callsArgWith(2, null, ['1', '2']);
             mocks['q-io/fs'].stat = stat;
         });
-
-        clock.tick(21000);
 
         sm.isNewSession('1111').then(function(result){
             expect(result).to.equal(false);
