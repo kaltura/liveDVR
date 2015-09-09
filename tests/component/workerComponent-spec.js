@@ -22,7 +22,7 @@ describe('Worker component spec', function() {
     // HACK: grunt-mocha-test seems to ignore its option's "quiet" param which ignores console output
     // remove all logger transports to ensure nothing is written to console
     before(function(){
-        var logger = require('../../lib/logger/logger');
+        var logger = require('../../lib/logger/logger')(module);
         logger.transports = [];
     });
 
