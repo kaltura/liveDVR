@@ -202,13 +202,7 @@ describe('EndListAppender spec', function() {
         var endlistAppender = createEndListAppender(customizeMocks);
         endlistAppender.init().then(function() {
             expect(endlistAppender._entriesToProcess['1']).not.to.be.an('undefined');
-            try {
-                endlistAppender.removeEntry('1');
-            }
-            catch(err)
-            {
-                // Sinon's fake timer doesn't return a valid object upon setTimeout...
-            }
+            endlistAppender.removeEntry('1');
             expect(endlistAppender._entriesToProcess['someEntryId']).to.be.an('undefined');
             done();
         }).done(null, function(err){

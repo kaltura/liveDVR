@@ -45,8 +45,9 @@ describe('Worker component spec', function() {
         config.set('pollingInterval', 50);
         config.set('mockNetwork', true);
         config.set('mockBackend', true);
-
+        config.set('readMockBackendResponseFromFile', false);
         config.set("mediaServer:hostname", "mediaServerHost");
+        config.set("mediaServer:port", null);
         config.set("applicationName", "kLive");
 
         var promiseTmp = Q.denodeify(tmp.dir);
