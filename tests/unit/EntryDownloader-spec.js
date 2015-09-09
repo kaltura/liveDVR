@@ -60,7 +60,7 @@ describe('Entry downloader spec', function() {
             customizeMocks(mocks);
         }
 
-        var entryDownloaderCtor = proxyquire('../lib/EntryDownloader', mocks);
+        var entryDownloaderCtor = proxyquire('../../lib/EntryDownloader', mocks);
         return new entryDownloaderCtor('12345', 'host', 8888, 'appName');
     };
 

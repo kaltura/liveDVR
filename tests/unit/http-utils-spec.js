@@ -13,7 +13,7 @@ var qio = require('q-io/fs');
 
 describe('http-utils tests', function() {
 
-    var httpUtils = '../lib/utils/http-utils';
+    var httpUtils = '../../lib/utils/http-utils';
 
     function getNetworkClientMock(func) {
         var networkClientStub = {
@@ -69,7 +69,7 @@ describe('http-utils tests', function() {
             });
     });
 
-    it.skip('should fail on write', function (done) {
+    it('should fail on write', function (done) {
 
         var func = function () {
             return Q.resolve("should resolve read");
@@ -86,8 +86,7 @@ describe('http-utils tests', function() {
         proxyHttpUtils.downloadFile('some_url', "some_dest", 2000)
             .done(function success() {
                 throw new Error("Promise is fulfilled instead of rejected");
-            }, function failure(err) {
-                console.log(err);
+            }, function failure() {
                 done();
             });
     });

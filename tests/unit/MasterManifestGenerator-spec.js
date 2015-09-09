@@ -124,7 +124,7 @@ describe('MasterManifestGenerator spec', function() {
             ctorParams = customizeCtorParams();
         }
 
-        var proxyquireMasterManifestCtor = proxyquire('../lib/MasterManifestGenerator', mocks);
+        var proxyquireMasterManifestCtor = proxyquire('../../lib/MasterManifestGenerator', mocks);
         var masterManifestGenerator = proxyquireMasterManifestCtor.apply(null, ctorParams);
         return masterManifestGenerator;
     }
