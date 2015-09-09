@@ -22,6 +22,6 @@
     "adminSecret" :"admin secret",
     "partnerId" : "partner Id (integer)",
     "serviceUrl" : "back end service url",
-    "backendClientSessionDurationMinutes" : 60
+    "ksSessionRefreshIntervalMinutes" : 60
   }
 }
