@@ -66,12 +66,12 @@ describe('flavor-downloader tests', function() {
         mockObjects['q-io/fs'] = generateQioMock([]);
         mockObjects['./ChunklistManifestGenerator'] = generateChunklistM3umGeneratorMock();
         mockObjects['./promise-m3u8'] = generatePromiseM3u8Mock(path.join(__dirname, '/../resources/flavor-downloader-data/simpleManifest.m3u8'));
-        mockObjects['./logger/logger'] = {
+        mockObjects['./logger/logger'] = sinon.stub().returns({
             info: sinon.stub(),
             error: sinon.stub(),
             warn: sinon.stub(),
             debug: sinon.stub()
-        };
+        });
 
         if (updateMocks) {
             updateMocks(mockObjects);
