@@ -18,7 +18,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.static(config.get('rootFolderPath')));
+app.use('/' + config.get('webServerParams:applicationName'),express.static(config.get('rootFolderPath')));
 
 // express-winston logger makes sense BEFORE the router.
 app.use(logger.consoleLogger);
