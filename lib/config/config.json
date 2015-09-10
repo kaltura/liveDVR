@@ -8,6 +8,7 @@
   "backendPollingInterval" : 3000,
   "dvrWindow" : 7200,
   "sessionDuration" : 180000,
+  "liveDvrWindow" : 100,
   "logLevel" : "debug",
   "logFileName" : "c:\\dvr\\filelog-info.log",
   "mediaServer" : {
@@ -16,5 +17,11 @@
   },
   "webServerParams" : {
     "applicationName" : "kLiveDVR"
+  },
+  "backendClient" : {
+    "adminSecret" :"admin secret",
+    "partnerId" : "partner Id (integer)",
+    "serviceUrl" : "back end service url",
+    "ksSessionRefreshIntervalMinutes" : 60
   }
 }

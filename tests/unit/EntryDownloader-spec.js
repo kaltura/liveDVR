@@ -51,7 +51,7 @@ describe('Entry downloader spec', function() {
         var masterManifestGeneratorCreatorMock = sinon.stub().returns(masterManifestGeneratorMock);
 
         var mocks = {
-            './logger/logger' : loggerMock,
+            './logger/logger' : sinon.stub().returns(loggerMock),
             './FlavorDownloader' : flavorDownloaderCtorMock,
             './MasterManifestGenerator' : masterManifestGeneratorCreatorMock
         };
