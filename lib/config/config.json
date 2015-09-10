@@ -12,7 +12,7 @@
   "logLevel" : "debug",
   "logFileName" : "c:\\dvr\\filelog-info.log",
   "mediaServer" : {
-    "hostname" : "dev-backend26.dev.kaltura.com",
+    "hostname" : "mediaserverhost",
     "applicationName" : "kLive"
   },
   "webServerParams" : {
