@@ -13,6 +13,9 @@ var app = express();
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
+// sets port 8080 to default or unless otherwise specified in the environment
+app.set('port', config.get('webServerParams:port') || 8080);
+
 //app.use(logger('dev'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -58,5 +61,7 @@ app.use(function(err, req, res, next) {
     error: {}
   });
 });
+
+app.listen(app.get('port'));
 
 module.exports = app;
