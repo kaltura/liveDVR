@@ -10,7 +10,7 @@ var path = require('path');
 var _ = require('underscore');
 var fs = require('fs');
 var rimraf = require('rimraf');
-var config = require('../../lib/Configuration');
+var config = require('../../common/Configuration');
 
 describe('Worker component spec', function() {
 
