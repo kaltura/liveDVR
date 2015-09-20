@@ -7,7 +7,7 @@ var chai = require('chai');
 var expect = chai.expect;
 var sinon = require('sinon');
 var Q = require('q');
-var config = require('../../lib/Configuration');
+var config = require('../../common/Configuration');
 var path = require('path');
 
 describe('Session manager spec', function() {

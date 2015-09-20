@@ -12,16 +12,20 @@
   "logLevel" : "debug",
   "logFileName" : "c:\\dvr\\filelog-info.log",
   "mediaServer" : {
-    "hostname" : "mediaserverhost",
-    "applicationName" : "kLive"
+    "hostname" : "pa-live-publish-lab1.kaltura.com",
+    "applicationName" : "kLive",
+    "port" : 1935
   },
   "webServerParams" : {
-    "applicationName" : "kLiveDVR"
+    "applicationName" : "kLive",
+    "port" : 8081,
+    "logLevel" : "debug",
+    "logFileName" : "c:\\dvr\\ws.log"
   },
   "backendClient" : {
     "adminSecret" :"admin secret",
-    "partnerId" : "partner Id (integer)",
-    "serviceUrl" : "back end service url",
-    "ksSessionRefreshIntervalMinutes" : 60
+    "partnerId" : 12345,
+    "serviceUrl" : "service url",
+    "ksSessionRefreshIntervalMinutes" : 720
   }
 }
