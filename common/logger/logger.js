@@ -8,6 +8,7 @@ var config = require('../Configuration');
 winston.emitErrs = true;
 var path = require('path');
 var mkdirp = require('mkdirp');
+var util = require('util');
 
 var logPath = config.get('logFileName');
 var logFullPath = path.resolve('.', logPath);
@@ -21,28 +22,33 @@ var getLabel = function(callingModule) {
 };
 
 
-var logger = function (file, level, callingModule) {
+var logger = function (file, level, logToConsole, callingModule) {
+
+    var transports = [];
+    transports.push(new (winston.transports.File)({
+        name: 'info-file',
+        filename: file,
+        level: level,
+        json: false,
+        colorize: false,
+        handleExceptions: true,
+        humanReadableUnhandledException: true,
+        label: getLabel(callingModule)
+    }));
+
+    if (logToConsole){
+        transports.push(new winston.transports.Console({
+            level: config.get("logLevel"),
+            handleExceptions: true,
+            json: false,
+            colorize: true,
+            label: getLabel(callingModule),
+            humanReadableUnhandledException: true,
+        }));
+    }
+
     return new winston.Logger({
-        transports: [
-            new (winston.transports.File)({
-                name: 'info-file',
-                filename: file,
-                level: level,
-                json: false,
-                colorize: false,
-                handleExceptions: true,
-                humanReadableUnhandledException: true,
-                label: getLabel(callingModule)
-            }),
-            new winston.transports.Console({
-                level: config.get("logLevel"),
-                handleExceptions: true,
-                json: false,
-                colorize: true,
-                label: getLabel(callingModule),
-                humanReadableUnhandledException: true,
-            })
-        ],
+        transports: transports,
         exitOnError: false
     });
 };

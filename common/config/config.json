@@ -10,6 +10,7 @@
   "sessionDuration" : 180000,
   "liveDvrWindow" : 100,
   "logLevel" : "debug",
+  "logToConsole" : true,
   "logFileName" : "c:\\dvr\\filelog-info.log",
   "mediaServer" : {
     "hostname" : "pa-live-publish-lab1.kaltura.com",
@@ -20,7 +21,8 @@
     "applicationName" : "kLive",
     "port" : 8081,
     "logLevel" : "debug",
-    "logFileName" : "c:\\dvr\\ws.log"
+    "logFileName" : "c:\\dvr\\ws.log",
+    "logToConsole" : true
   },
   "backendClient" : {
     "adminSecret" :"admin secret",
