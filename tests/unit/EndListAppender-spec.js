@@ -27,7 +27,8 @@ describe('EndListAppender spec', function() {
     var createEndListAppender = function(customizeMocks){
         var loggerMock = {
             info : sinon.stub(),
-            error : sinon.stub()
+            error : sinon.stub(),
+            debug : sinon.stub()
         };
 
         var expectedManifestContent = fs.readFileSync(__dirname + '/../resources/simpleManifest.m3u8', 'utf8');

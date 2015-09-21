@@ -26,12 +26,19 @@ describe('Session manager spec', function() {
 
     var createSessionManager = function(customizeMocks){
 
+        var loggerMock = sinon.stub().returns({
+            info: sinon.stub(),
+            error: sinon.stub(),
+            debug: sinon.stub()
+        });
+
         var mocks = {
             'q-io/fs' : {
                 exists : sinon.stub().returns(Q(true))
             },
             'glob' : {},
-            'config' : {}
+            'config' : {},
+            './logger/logger' : loggerMock
         };
 
         if (customizeMocks) {
