@@ -4,11 +4,10 @@ var MasterManifestCreator = require('../../lib/MasterManifestGenerator');
 var config = require('../../common/Configuration');
 var logger = require('../logger/logger')(module);
 
-router.get('/:app_name/smil::entrySmil.smil/playlist.m3u8', function(req, res, next) {
-
+router.get(/\/smil\:([^\\/]+?)\.smil\/playlist\.m3u8(?:\/(?=$))?$/i, function(req, res, next) {
     var fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
 
-    var entrySmil = req.params['entrySmil'];
+    var entrySmil = req.params[0];
     var tagIndex = entrySmil.lastIndexOf("_");
     var entryId = entrySmil.substring(0, tagIndex);
     var tag = entrySmil.substring(tagIndex + 1);
