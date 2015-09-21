@@ -15,7 +15,7 @@ describe('PersistenceFormat spec', function() {
     };
 
     var mocks = {
-        './Configuration' : configMock
+        './../common/Configuration' : configMock
     };
 
     it('should get a path for an entry', function(){

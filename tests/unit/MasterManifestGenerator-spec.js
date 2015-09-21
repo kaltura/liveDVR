@@ -13,7 +13,7 @@ describe('MasterManifestGenerator spec', function() {
 
     it('should get master manifest', function(done){
         var masterManifestCreator = createMasterManifestGenerator();
-        masterManifestCreator.getManifest('http://wowza:1935/kLiveDVR/smil:testStream.smil/playlist.m3u8', 'mbr').done(function(m3u){
+        masterManifestCreator.getManifest('http://wowza:1935/kLive/smil:testStream.smil/playlist.m3u8', 'mbr').done(function(m3u){
             expect(m3u.items.StreamItem.length).to.equal(3);
             expect(m3u.items.StreamItem[0].get('uri')).to.eql('../../kLiveDVR/12345/475136/manifest.m3u8');
             expect(m3u.items.StreamItem[1].get('uri')).to.eql('../../kLiveDVR/12345/555555/manifest.m3u8');

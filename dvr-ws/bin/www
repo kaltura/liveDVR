@@ -7,13 +7,14 @@
 var app = require('../app');
 var debug = require('debug')('dvr-ws:server');
 var http = require('http');
+var config = require('../../common/Configuration');
 
 /**
  * Get port from environment and store in Express.
  */
 
-var port = normalizePort(process.env.PORT || '8080');
-app.set('port', port);
+// sets port 8080 to default or unless otherwise specified in the environment
+app.set('port', config.get('webServerParams:port') || 8080);
 
 /**
  * Create HTTP server.
@@ -25,7 +26,7 @@ var server = http.createServer(app);
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
+server.listen(app.get('port'));
 server.on('error', onError);
 server.on('listening', onListening);
 
