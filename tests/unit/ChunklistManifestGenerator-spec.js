@@ -27,10 +27,19 @@ describe('M3U8 Generator tests', function() {
             'parseM3U8' : sinon.stub().returns(m3u8Parser.parseM3U8(expectedManifest, {'verbatim' : true}))
         };
 
+        var loggerMock = sinon.stub().returns({
+            info: sinon.stub(),
+            error: sinon.stub(),
+            debug: sinon.stub()
+        });
+
         var mocks = {
             'q-io/fs' : qioMock,
-            './promise-m3u8' : m3u8Mock
+            './promise-m3u8' : m3u8Mock,
+            './logger/logger' : loggerMock
         };
+
+
 
         if (customizeMocks) {
             customizeMocks(mocks);

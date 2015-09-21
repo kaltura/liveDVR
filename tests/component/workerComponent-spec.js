@@ -2,6 +2,7 @@
  * Created by elad.benedict on 8/31/2015.
  */
 
+var config = require('../../common/Configuration');
 var chai = require('chai');
 var expect = chai.expect;
 var Q = require('Q');
@@ -10,7 +11,7 @@ var path = require('path');
 var _ = require('underscore');
 var fs = require('fs');
 var rimraf = require('rimraf');
-var config = require('../../common/Configuration');
+
 
 describe('Worker component spec', function() {
 
@@ -180,7 +181,6 @@ describe('Worker component spec', function() {
         }).then(function () {
             return worker.stop();
         }).then(function () {
-            console.log("Stopped!");
             return validateFlavors();
         }).then(function () {
             done();

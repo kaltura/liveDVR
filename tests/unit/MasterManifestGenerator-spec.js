@@ -110,8 +110,15 @@ describe('MasterManifestGenerator spec', function() {
             }
         };
 
+        var loggerMock = sinon.stub().returns({
+            info: sinon.stub(),
+            error: sinon.stub(),
+            debug: sinon.stub()
+        });
+
         var mocks = {
-            './NetworkClientFactory' : networkClientFactoryMock
+            './NetworkClientFactory' : networkClientFactoryMock,
+            './logger/logger' : loggerMock
         };
 
         if (customizeMocks) {
