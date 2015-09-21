@@ -4,6 +4,7 @@ var expresslogger = require('./expressLogger/logger');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var config = require('../common/Configuration');
+var logger = require('./logger/logger')(module);
 
 var routes = require('./routes/index');
 
@@ -17,6 +18,11 @@ app.set('view engine', 'jade');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+app.use(function(req, res, next){
+  logger.info(JSON.stringify(req.url));
+  next();
+})
 
 // express-winston logger makes sense BEFORE the router.
 app.use(expresslogger.consoleLogger);
