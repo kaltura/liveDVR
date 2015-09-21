@@ -58,7 +58,7 @@ describe('EndListAppender spec', function() {
             './promise-m3u8' : parserMock,
             './SessionManager' : sessionManagerMock,
             'q-io/fs' : qioMock,
-            './PersistenceFormat' : persistenceFormatMock,
+            './../common/PersistenceFormat' : persistenceFormatMock,
             'glob' : globMock
 
         };
@@ -74,7 +74,7 @@ describe('EndListAppender spec', function() {
 
     it('should scan all entries upon init', function(done){
         var customizeMocks = function(mocks){
-            mocks['./PersistenceFormat'].getAllStoredEntries.returns(Q(['1','2','3']));
+            mocks['./../common/PersistenceFormat'].getAllStoredEntries.returns(Q(['1','2','3']));
         };
 
         var endlistAppender = createEndListAppender(customizeMocks);
@@ -92,8 +92,8 @@ describe('EndListAppender spec', function() {
 
         var customizeMocks = function(mocks){
             qioMock = mocks['q-io/fs'];
-            mocks['./PersistenceFormat'].getAllStoredEntries.returns(Q(['1']));
-            mocks['./PersistenceFormat'].getEntryFullPath.returns('/fullPath/1');
+            mocks['./../common/PersistenceFormat'].getAllStoredEntries.returns(Q(['1']));
+            mocks['./../common/PersistenceFormat'].getEntryFullPath.returns('/fullPath/1');
             mocks['glob'] = sinon.stub().callsArgWith(2, null, ['/fullPath/1/a/m.m3u8']);
         };
 
@@ -124,8 +124,8 @@ describe('EndListAppender spec', function() {
 
         var customizeMocks = function(mocks){
             qioMock = mocks['q-io/fs'];
-            mocks['./PersistenceFormat'].getAllStoredEntries.returns(Q(['1']));
-            mocks['./PersistenceFormat'].getEntryFullPath.returns('/fullPath/1');
+            mocks['./../common/PersistenceFormat'].getAllStoredEntries.returns(Q(['1']));
+            mocks['./../common/PersistenceFormat'].getEntryFullPath.returns('/fullPath/1');
             mocks['glob'] = sinon.stub().callsArgWith(2, null, ['/fullPath/1/a/m.m3u8']);
             mocks['./promise-m3u8'] = parserMock;
         };
@@ -150,8 +150,8 @@ describe('EndListAppender spec', function() {
 
         var customizeMocks = function(mocks){
             qioMock = mocks['q-io/fs'];
-            mocks['./PersistenceFormat'].getAllStoredEntries.returns(Q(['1']));
-            mocks['./PersistenceFormat'].getEntryFullPath.returns('/fullPath/1');
+            mocks['./../common/PersistenceFormat'].getAllStoredEntries.returns(Q(['1']));
+            mocks['./../common/PersistenceFormat'].getEntryFullPath.returns('/fullPath/1');
             mocks['glob'] = sinon.stub().callsArgWith(2, null, ['/fullPath/1/a/m.m3u8']);
         };
 
@@ -171,8 +171,8 @@ describe('EndListAppender spec', function() {
 
         var customizeMocks = function(mocks){
             qioMock = mocks['q-io/fs'];
-            mocks['./PersistenceFormat'].getAllStoredEntries.returns(Q(['1']));
-            mocks['./PersistenceFormat'].getEntryFullPath.returns('/fullPath/1');
+            mocks['./../common/PersistenceFormat'].getAllStoredEntries.returns(Q(['1']));
+            mocks['./../common/PersistenceFormat'].getEntryFullPath.returns('/fullPath/1');
             mocks['glob'] = sinon.stub().callsArgWith(2, null, ['/fullPath/1/a/m.m3u8']);
         };
 
@@ -194,8 +194,8 @@ describe('EndListAppender spec', function() {
 
         var customizeMocks = function(mocks){
             qioMock = mocks['q-io/fs'];
-            mocks['./PersistenceFormat'].getAllStoredEntries.returns(Q(['1']));
-            mocks['./PersistenceFormat'].getEntryFullPath.returns('/fullPath/1');
+            mocks['./../common/PersistenceFormat'].getAllStoredEntries.returns(Q(['1']));
+            mocks['./../common/PersistenceFormat'].getEntryFullPath.returns('/fullPath/1');
             mocks['glob'] = sinon.stub().callsArgWith(2, null, ['/fullPath/1/a/m.m3u8']);
         };
 
@@ -216,8 +216,8 @@ describe('EndListAppender spec', function() {
 
         var customizeMocks = function(mocks){
             qioMock = mocks['q-io/fs'];
-            mocks['./PersistenceFormat'].getAllStoredEntries.returns(Q(['1']));
-            mocks['./PersistenceFormat'].getEntryFullPath.returns('/fullPath/1');
+            mocks['./../common/PersistenceFormat'].getAllStoredEntries.returns(Q(['1']));
+            mocks['./../common/PersistenceFormat'].getEntryFullPath.returns('/fullPath/1');
             mocks['glob'] = sinon.stub().callsArgWith(2, null, ['/fullPath/1/a/m.m3u8']);
         };
 
