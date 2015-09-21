@@ -10,7 +10,7 @@ var Q = require('q');
 module.exports = {
 
     getAllStoredEntries : function(){
-        var config = require('./../common/Configuration');
+        var config = require('./Configuration');
         var rootFolder = config.get('rootFolderPath');
 
         return qio.list(rootFolder).then(function(files){
@@ -34,7 +34,7 @@ module.exports = {
     },
 
     getEntryFullPath: function (entryId) {
-        var config = require('./../common/Configuration');
+        var config = require('./Configuration');
         return path.join(config.get('rootFolderPath'), entryId);
     },
 
@@ -43,7 +43,7 @@ module.exports = {
     },
 
     getFlavorFullPath: function (entryId, bitrate) {
-        var config = require('./../common/Configuration');
+        var config = require('./Configuration');
         return path.join(config.get('rootFolderPath'), entryId, bitrate.toString());
     },
 
@@ -53,5 +53,9 @@ module.exports = {
 
     getManifestName: function () {
         return 'manifest.m3u8';
+    },
+
+    getMasterManifestName: function () {
+        return 'playlist.m3u8';
     }
 };

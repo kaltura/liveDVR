@@ -73,7 +73,7 @@ describe('Worker component spec', function() {
     });
 
     var validateFlavor = function(flavor){
-    	var persistenceFormat = require('../../lib/PersistenceFormat');
+    	var persistenceFormat = require('../../common/PersistenceFormat');
         var flavorDir = persistenceFormat.getFlavorFullPath('12345', flavor.toString());
         var promiseReaddir = Q.denodeify(fs.readdir);
 
