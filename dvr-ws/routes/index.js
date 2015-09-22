@@ -18,7 +18,7 @@ router.get(/\/smil\:([^\\/]+?)\.smil\/playlist\.m3u8(?:\/(?=$))?$/i, function(re
     logger.info('Received play manifest request with entry ' + entryId + ' and tag ' + tag);
 
     var entryFolder = persistenceFormat.getEntryFullPath(entryId);
-    var masterManifestPath = path.join(entryFolder, persistenceFormat.getMasterManifestName());
+    var masterManifestPath = path.join(entryFolder, tag +  '_' + persistenceFormat.getMasterManifestName());
     qio.exists(masterManifestPath).then(function(exists) {
         if (exists) {
             qio.read(masterManifestPath).then(function (masterManifestContent) {
