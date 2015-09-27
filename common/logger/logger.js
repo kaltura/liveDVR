@@ -10,19 +10,15 @@ var path = require('path');
 var mkdirp = require('mkdirp');
 var util = require('util');
 
-var logPath = config.get('logFileName');
-var logFullPath = path.resolve('.', logPath);
-
-//create logs dir:
-mkdirp.sync(path.dirname(logFullPath));
-
 var getLabel = function(callingModule) {
     var parts = callingModule.filename.split('/');
     return parts[parts.length - 2] + '/' + parts.pop();
 };
 
-
 var logger = function (file, level, logToConsole, callingModule) {
+
+    var logFullPath = path.resolve(file);
+    mkdirp.sync(path.dirname(logFullPath));
 
     var transports = [];
     transports.push(new (winston.transports.File)({
