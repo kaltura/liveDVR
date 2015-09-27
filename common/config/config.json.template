@@ -1,8 +1,8 @@
 {
   "mockNetwork" : false,
-  "mockBackend" : true,
+  "mockBackend" : false,
   "readMockBackendResponseFromFile" : false,
-  "rootFolderPath" : "c:\\dvr",
+  "rootFolderPath" : "/dvrContentRootPath",
   "requestTimeout" : 10000,
   "pollingInterval" : 10000,
   "backendPollingInterval" : 3000,
@@ -11,9 +11,9 @@
   "liveDvrWindow" : 100,
   "logLevel" : "debug",
   "logToConsole" : true,
-  "logFileName" : "c:\\dvr\\filelog-info.log",
+  "logFileName" : "../logs/dvr.log",
   "mediaServer" : {
-    "hostname" : "pa-live-publish-lab1.kaltura.com",
+    "hostname" : "@HOSTNAME@",
     "applicationName" : "kLive",
     "port" : 1935
   },
@@ -21,13 +21,13 @@
     "applicationName" : "kLive",
     "port" : 8081,
     "logLevel" : "debug",
-    "logFileName" : "c:\\dvr\\ws.log",
+    "logFileName" : "../logs/ws.log",
     "logToConsole" : true
   },
   "backendClient" : {
     "adminSecret" :"admin secret",
     "partnerId" : 12345,
-    "serviceUrl" : "service url",
+    "serviceUrl" : "http://serviceURL",
     "ksSessionRefreshIntervalMinutes" : 720
   }
 }
