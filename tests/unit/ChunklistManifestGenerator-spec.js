@@ -31,14 +31,12 @@ describe('M3U8 Generator tests', function() {
             info: sinon.stub(),
             error: sinon.stub(),
             debug: sinon.stub()
-        }
+        };
 
         var mocks = {
             'q-io/fs' : qioMock,
             './promise-m3u8' : m3u8Mock
         };
-
-
 
         if (customizeMocks) {
             customizeMocks(mocks);
