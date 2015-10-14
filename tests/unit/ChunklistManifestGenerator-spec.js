@@ -27,16 +27,15 @@ describe('M3U8 Generator tests', function() {
             'parseM3U8' : sinon.stub().returns(m3u8Parser.parseM3U8(expectedManifest, {'verbatim' : true}))
         };
 
-        var loggerMock = sinon.stub().returns({
+        var loggerMock = {
             info: sinon.stub(),
             error: sinon.stub(),
             debug: sinon.stub()
-        });
+        }
 
         var mocks = {
             'q-io/fs' : qioMock,
-            './promise-m3u8' : m3u8Mock,
-            './logger/logger' : loggerMock
+            './promise-m3u8' : m3u8Mock
         };
 
 
@@ -46,7 +45,7 @@ describe('M3U8 Generator tests', function() {
         }
 
         var windowSize = dvrWindowSize ? dvrWindowSize: 60*60*2; // 2 Hours
-        var m3u8Generator = proxyquire('../../lib/ChunklistManifestGenerator',mocks)("c:\\somePath\\", "manifest.m3u8", windowSize);
+        var m3u8Generator = proxyquire('../../lib/ChunklistManifestGenerator',mocks)("c:\\somePath\\", "manifest.m3u8", windowSize, loggerMock);
         return m3u8Generator;
     }
 
