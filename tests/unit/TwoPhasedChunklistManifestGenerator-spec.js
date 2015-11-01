@@ -140,7 +140,5 @@ describe('Two phased chunklist manifest generator spec', function() {
             done(err);
         });
     });
-
-
 });
 
