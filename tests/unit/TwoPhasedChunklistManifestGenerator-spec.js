@@ -23,26 +23,26 @@ describe('Two phased chunklist manifest generator spec', function() {
             debug : sinon.stub(),
             info : sinon.stub(),
             error : sinon.stub()
-        }
+        };
 
         intermediateManifest = new M3U();
         intermediateChunklistManifestGenerator = {
             init : sinon.stub().returns(Q()),
             update : function(items) {
-                return Q(this.getCurrentManifest().items.PlaylistItem.concat(items))
+                return Q(this.getCurrentManifest().items.PlaylistItem.concat(items));
             },
             getCurrentManifest : sinon.stub().returns(intermediateManifest)
-        }
+        };
         sinon.spy(intermediateChunklistManifestGenerator, 'update');
 
         externalManifest = new M3U();
         externallyVisibleManifestGenerator = {
             init : sinon.stub().returns(Q()),
             update : function(items) {
-                return Q(this.getCurrentManifest().items.PlaylistItem.concat(items))
+                return Q(this.getCurrentManifest().items.PlaylistItem.concat(items));
             },
             getCurrentManifest : sinon.stub().returns(externalManifest)
-        }
+        };
         sinon.spy(externallyVisibleManifestGenerator, 'update');
 
         var chunklistManifestGeneratorStub = sinon.stub();
@@ -51,7 +51,7 @@ describe('Two phased chunklist manifest generator spec', function() {
 
         qioMock = {
             list : sinon.stub()
-        }
+        };
 
         var mocks = {
             './ChunklistManifestGenerator' : chunklistManifestGeneratorStub,
@@ -59,9 +59,9 @@ describe('Two phased chunklist manifest generator spec', function() {
                 return logger;
             },
             'q-io/fs' : qioMock,
-            './PtsAlligner' : {
-                process : sinon.stub()
-            }
+            './PtsAlligner' : sinon.stub().returns({
+                process : sinon.stub().returns(Q())
+            })
         };
 
         if (customizeMocks) {
@@ -86,14 +86,14 @@ describe('Two phased chunklist manifest generator spec', function() {
         item3.set('uri', name + "3");
 
         return [item1, item2, item3];
-    }
+    };
 
     it('should successfully init when underlying manifest generators init correctly', function (done) {
         var manifestGenerator = createTwoPhasedChunklistManifestGenerator();
         manifestGenerator.init().then(function(){
             done();
         }, function(err){
-            done(err)
+            done(err);
         });
     });
 
@@ -101,17 +101,17 @@ describe('Two phased chunklist manifest generator spec', function() {
         var updateMocks = function(mocks) {
             mocks['./ChunklistManifestGenerator'] = sinon.stub().returns({
                 init : sinon.stub().returns(Q.reject(new Error())),
-            })
-        }
+            });
+        };
         var manifestGenerator = createTwoPhasedChunklistManifestGenerator(updateMocks);
         manifestGenerator.init().then(function(){
             done(new Error("should have failed"));
         }, function(){
-            done()
+            done();
         });
     });
 
-    it.only('should update correctly when .......', function (done) {
+    it('should update correctly', function (done) {
 
         var newItems = createArrayOfPlaylistItems("new");
         var previousItems = createArrayOfPlaylistItems("previous");
@@ -122,20 +122,23 @@ describe('Two phased chunklist manifest generator spec', function() {
 
         var updateMocks = function(mocks) {
             mocks['q-io/fs'].list.returns(['unrelatedFile1', 'unrelatedFile2'].concat(downloadedItemsNames));
-        }
+        };
 
         var manifestGenerator = createTwoPhasedChunklistManifestGenerator(updateMocks);
 
         intermediateManifest.items.PlaylistItem = previousItems;
 
         //var externalManifestLengthBeforeUpdate = externallyVisibleManifestGenerator.getCurrentManifest().PlaylistItem.length;
-        manifestGenerator.update(newItems).then(function(){
-            expect(intermediateChunklistManifestGenerator.update.getCall(0).args[0]).to.eql(newItems);
+        manifestGenerator.init().then(function(){
+            return manifestGenerator.update(newItems);
+        })
+            .then(function(){
+                expect(intermediateChunklistManifestGenerator.update.getCall(0).args[0]).to.eql(newItems);
             expect(externallyVisibleManifestGenerator.update.getCall(0).args[0]).to.eql(downloadedItemsList);
             done();
         }).catch(function(err){
             done(err);
-        })
+        });
     });
 
 
