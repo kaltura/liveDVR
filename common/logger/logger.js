@@ -48,4 +48,12 @@ var logger = function (file, level, logToConsole, callingModule) {
         exitOnError: false
     });
 };
-module.exports = logger;
+var messageDecoration = function(msg) {
+    return "[PID="+process.pid+"] "+ msg;
+};
+var loggerDecorator = require('../../lib/utils/log-decorator');
+module.exports=function(file, level, logToConsole, callingModule){
+    return loggerDecorator(logger(file, level, logToConsole, callingModule),messageDecoration);
+};
+
+//module.exports = logger;
