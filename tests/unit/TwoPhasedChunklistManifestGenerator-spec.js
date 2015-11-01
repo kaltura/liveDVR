@@ -58,7 +58,10 @@ describe('Two phased chunklist manifest generator spec', function() {
             './utils/log-decorator' : function(logger) {
                 return logger;
             },
-            'q-io/fs' : qioMock
+            'q-io/fs' : qioMock,
+            './PtsAlligner' : {
+                process : sinon.stub()
+            }
         };
 
         if (customizeMocks) {
