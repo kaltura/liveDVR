@@ -55,5 +55,3 @@ var loggerDecorator = require('../../lib/utils/log-decorator');
 module.exports=function(file, level, logToConsole, callingModule){
     return loggerDecorator(logger(file, level, logToConsole, callingModule),messageDecoration);
 };
-
-//module.exports = logger;
