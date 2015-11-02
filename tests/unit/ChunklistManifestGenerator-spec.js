@@ -114,7 +114,7 @@ describe('M3U8 Generator tests', function() {
             return m3u8Generator.update([item1, item2, item3]);
 
         }).done(function () {
-            var expectedManifest = fs.readFileSync(__dirname + '/../resources/updatedManifest1.m3u8', 'utf8');
+            var expectedManifest = fs.readFileSync(__dirname + '/../resources/updatedManifest1_withoutDiscontinuity.m3u8', 'utf8');
             var lastWriteArgs = mocks['q-io/fs'].write.lastCall.args;
             expect(lastWriteArgs[1]).to.eql(expectedManifest.replace(/[\r]/g, ''));
             done();
@@ -144,7 +144,7 @@ describe('M3U8 Generator tests', function() {
             expect(lastWriteArgs[0]).to.eql(path.join("c:\\somePath\\", "manifest.m3u8"));
 
             var expectedManifest = manifestBeforeUpdate +
-                '#EXT-X-DISCONTINUITY' + '\n' +
+                //'#EXT-X-DISCONTINUITY' + '\n' + // Until DISCONTINUITY is restored
                 '#EXTINF:12.3000,' + '\n' +
                 'uriName1' + '\n' +
                 '#EXTINF:23.4000,' + '\n' +
@@ -178,7 +178,7 @@ describe('M3U8 Generator tests', function() {
         }).done(function () {
             var lastWriteArgs = mocks['q-io/fs'].write.lastCall.args;
             var expectedManifest = manifestBeforeUpdate +
-                '#EXT-X-DISCONTINUITY' + '\n' +
+                //'#EXT-X-DISCONTINUITY' + '\n' + // Until DISCONTINUITY is restored
                 '#EXTINF:12.3000,' + '\n' +
                 'uriName1.ts' + '\n';
             expect(lastWriteArgs[1]).to.eql(expectedManifest);
