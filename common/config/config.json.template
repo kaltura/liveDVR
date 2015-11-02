@@ -4,7 +4,7 @@
   "readMockBackendResponseFromFile" : false,
   "rootFolderPath" : "/dvrContentRootPath",
   "requestTimeout" : 10000,
-  "pollingInterval" : 10000,
+  "pollingInterval" : 2000,
   "backendPollingInterval" : 3000,
   "dvrWindow" : 7200,
   "sessionDuration" : 180000,
