@@ -14,8 +14,7 @@
   "logFileName" : "/var/log/dvr_worker.log",
   "mediaServer" : {
     "hostname" : "@HOSTNAME@",
-    "applicationName" : "kLive",
-    "port" : 1935
+    "applicationName" : "kLive"
   },
   "webServerParams" : {
     "applicationName" : "kLive",
