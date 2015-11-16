@@ -20,17 +20,21 @@ var logger = function (file, level, logToConsole, callingModule) {
     var logFullPath = path.resolve(file);
     mkdirp.sync(path.dirname(logFullPath));
 
+    var createFileTransport = function() {
+        return new (winston.transports.File)({
+            name: 'info-file',
+            filename: file,
+            level: level,
+            json: false,
+            colorize: false,
+            handleExceptions: true,
+            humanReadableUnhandledException: true,
+            label: getLabel(callingModule)
+        });
+    }
+
     var transports = [];
-    transports.push(new (winston.transports.File)({
-        name: 'info-file',
-        filename: file,
-        level: level,
-        json: false,
-        colorize: false,
-        handleExceptions: true,
-        humanReadableUnhandledException: true,
-        label: getLabel(callingModule)
-    }));
+    transports.push(createFileTransport());
 
     if (logToConsole){
         transports.push(new winston.transports.Console({
@@ -43,10 +47,21 @@ var logger = function (file, level, logToConsole, callingModule) {
         }));
     }
 
-    return new winston.Logger({
+    var logger = new winston.Logger({
         transports: transports,
         exitOnError: false
     });
+
+    // Support log rotate - this is the signal that is used
+    process.on('SIGUSR1', function() {
+        // Remove reference to old file
+        logger.remove('info-file');
+
+        // Create a reference to the new file
+        logger.add(createFileTransport(), null, true);
+    });
+
+    return logger;
 };
 var messageDecoration = function(msg) {
     return "[PID="+process.pid+"] "+ msg;
