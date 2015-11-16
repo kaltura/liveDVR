@@ -11,7 +11,6 @@ var expect = chai.expect;
 var path = require('path');
 
 describe('flavor-downloader tests', function() {
-
     var mocks;
     var clock;
 
@@ -64,7 +63,7 @@ describe('flavor-downloader tests', function() {
         var mockObjects = {};
         mockObjects['./utils/http-utils'] = generateHttpUtilsMock();
         mockObjects['q-io/fs'] = generateQioMock([]);
-        mockObjects['./ChunklistManifestGenerator'] = generateChunklistM3umGeneratorMock();
+        mockObjects['./TwoPhasedChunklistManifestGenerator'] = generateChunklistM3umGeneratorMock();
         mockObjects['./promise-m3u8'] = generatePromiseM3u8Mock(path.join(__dirname, '/../resources/flavor-downloader-data/simpleManifest.m3u8'));
         mockObjects['./logger/logger'] = sinon.stub().returns({
             info: sinon.stub(),
@@ -129,13 +128,12 @@ describe('flavor-downloader tests', function() {
                 expect(iterationStartCallback.callCount).to.eql(1);
                 done();
             }
-             catch (e) {
-                 done(e);
-             }
+            catch (e) {
+                done(e);
+            }
         });
         flavorDownloader.start();
     });
-
     it('should recover after failed manifest download', function (done) {
         var flavorDownloader = getFlavorDownloader(function (mocks) {
             mocks['./utils/http-utils'] = generateHttpUtilsMock(true);
@@ -187,5 +185,24 @@ describe('flavor-downloader tests', function() {
 
         flavorDownloader.start();
     });
-});
 
+    it('should fail after m3u8generator.init() failed', function (done) {
+        var flavorDownloader = getFlavorDownloader(function (mocks) {
+            mocks['./TwoPhasedChunklistManifestGenerator']= sinon.stub().returns(m3u8Mock);
+        });
+        var m3u8Mock = {
+            init: sinon.stub().returns(Q.reject(new Error()))
+        };
+            flavorDownloader.start()
+                .then(
+                function(){
+                    done("Promise should failed")
+                }
+                ,
+                function(){
+        done()
+                }
+            )
+    });
+
+});
