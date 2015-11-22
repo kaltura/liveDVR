@@ -11,16 +11,16 @@
   "liveDvrWindow" : 100,
   "logLevel" : "debug",
   "logToConsole" : true,
-  "logFileName" : "/var/log/dvr_worker.log",
+  "logFileName" : "/var/log/kDvrWorker.log",
   "mediaServer" : {
     "hostname" : "@HOSTNAME@",
     "applicationName" : "kLive"
   },
   "webServerParams" : {
     "applicationName" : "kLive",
-    "port" : 8081,
+    "port" : 8080,
     "logLevel" : "debug",
-    "logFileName" : "/var/log/dvr_ws.log",
+    "logFileName" : "/var/log/kDvrWebServer.log",
     "logToConsole" : true
   },
   "backendClient" : {
