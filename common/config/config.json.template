@@ -29,4 +29,8 @@
     "serviceUrl" : "http://serviceURL",
     "ksSessionRefreshIntervalMinutes" : 720
   }
+  "HeapDumpParams" : { 
+    "timeInterval":9000000,
+     "windowSize":3
+     }
 }
