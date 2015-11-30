@@ -28,5 +28,10 @@
     "partnerId" : 12345,
     "serviceUrl" : "http://serviceURL",
     "ksSessionRefreshIntervalMinutes" : 720
+  },
+  "heapDumpParams" : {
+    "timeInterval" : 9000000,
+    "windowSize" : 3,
+    "enabled" : false
   }
 }

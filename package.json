@@ -12,25 +12,26 @@
     "sinon": "1.9.0",
     "sinon-chai": "2.5.0",
     "mocha": "2.2.5",
-    "istanbul" : "0.3.18",
-    "grunt-mocha-istanbul" : "3.0.1",
+    "istanbul": "0.3.18",
+    "grunt-mocha-istanbul": "3.0.1",
     "proxyquire": "1.7.0",
-    "tmp" : "0.0.27",
-    "rimraf" : "2.4.3"
+    "tmp": "0.0.27",
+    "rimraf": "2.4.3"
   },
   "dependencies": {
-    "forever" : "0.15.1",
+    "curry": "1.2.0",
+    "forever": "0.15.1",
+    "glob": "5.0.14",
+    "heapdump": "^0.3.7",
     "m3u8": "git://github.com/eladBenedict/node-m3u8.git#master",
-    "q-io": "1.13.1",
+    "mkdirp": "0.5.1",
+    "nconf": "0.7.2",
     "q": "1.4.1",
-    "underscore": "1.8.3",
+    "q-io": "1.13.1",
     "request": "^2.61.0",
-    "winston": "^1.0.1",
-    "nconf" : "0.7.2",
-    "mkdirp" : "0.5.1",
-    "glob" : "5.0.14",
-    "touch" : "1.0.0",
-    "curry" : "1.2.0",
-    "shelljs" : "0.5.3"
+    "shelljs": "0.5.3",
+    "touch": "1.0.0",
+    "underscore": "1.8.3",
+    "winston": "^1.0.1"
   }
 }
