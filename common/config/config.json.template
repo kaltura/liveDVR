@@ -30,7 +30,7 @@
     "ksSessionRefreshIntervalMinutes" : 720
   },
   "heapDumpParams" : {
-    "timeInterval" : 9000000,
+    "timeInterval" : 900000,
     "windowSize" : 3,
     "enabled" : false
   }
