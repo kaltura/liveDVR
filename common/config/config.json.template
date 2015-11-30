@@ -2,7 +2,7 @@
   "mockNetwork" : false,
   "mockBackend" : false,
   "readMockBackendResponseFromFile" : false,
-  "rootFolderPath" : "/dvrContentRootPath",
+  "rootFolderPath" : "c:\\del",
   "requestTimeout" : 10000,
   "pollingInterval" : 2000,
   "backendPollingInterval" : 3000,
@@ -28,9 +28,10 @@
     "partnerId" : 12345,
     "serviceUrl" : "http://serviceURL",
     "ksSessionRefreshIntervalMinutes" : 720
+  },
+  "heapDumpParams" : {
+    "timeInterval" : 9000000,
+    "windowSize" : 3,
+    "enabled" : false
   }
-  "HeapDumpParams" : { 
-    "timeInterval":9000000,
-     "windowSize":3
-     }
 }
