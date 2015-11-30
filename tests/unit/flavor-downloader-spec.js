@@ -28,9 +28,9 @@ describe('flavor-downloader tests', function() {
             return Q.reject(new Error());
         };
         var func = isReject ? reject : Q.resolve;
-        var httpUtilsMock = {
+        var httpUtilsMock = sinon.stub().returns({
             downloadFile: sinon.stub().returns(func())
-        };
+        });
 
         return httpUtilsMock;
     }
@@ -88,7 +88,7 @@ describe('flavor-downloader tests', function() {
         var flavorDownloader = getFlavorDownloader();
         flavorDownloader.on("iteration-end", function() {
             try {
-                expect(mocks['./utils/http-utils'].downloadFile.callCount).to.eql(6);
+                expect(mocks['./utils/http-utils']().downloadFile.callCount).to.eql(6);
                 done();
             }
             catch (err) {
@@ -106,7 +106,7 @@ describe('flavor-downloader tests', function() {
 
         flavorDownloader.on("iteration-end", function () {
             try {
-                expect(mocks['./utils/http-utils'].downloadFile.callCount).to.eql(2);
+                expect(mocks['./utils/http-utils']().downloadFile.callCount).to.eql(2);
                 done();
             } catch (e) {
                 done(e);
@@ -123,7 +123,7 @@ describe('flavor-downloader tests', function() {
         flavorDownloader.on("iteration-end", function () {
             try {
                 expect(iterationStartCallback.callCount).to.eql(1);
-                expect(mocks['./utils/http-utils'].downloadFile.callCount).to.eql(6);
+                expect(mocks['./utils/http-utils']().downloadFile.callCount).to.eql(6);
                 flavorDownloader.stop();
                 clock.tick(10000);
                 expect(iterationStartCallback.callCount).to.eql(1);
@@ -144,11 +144,11 @@ describe('flavor-downloader tests', function() {
         var iterationStartStub = sinon.stub();
         flavorDownloader.on("iteration-start", iterationStartStub);
         flavorDownloader.on("iteration-end", function () {
-            expect(mocks['./utils/http-utils'].downloadFile.callCount).to.eql(1);
+            expect(mocks['./utils/http-utils']().downloadFile.callCount).to.eql(1);
             expect(iterationStartStub.callCount).to.eql(1);
             clock.tick(10000);
             try {
-                expect(mocks['./utils/http-utils'].downloadFile.callCount).to.eql(2);
+                expect(mocks['./utils/http-utils']().downloadFile.callCount).to.eql(2);
                 expect(iterationStartStub.callCount).to.eql(2);
                 done();
             } catch (e) {
@@ -163,9 +163,9 @@ describe('flavor-downloader tests', function() {
         stub.onCall(3).returns(Q.reject());
         stub.returns(Q.resolve());
 
-        var httpUtilsMock = {
+        var httpUtilsMock = sinon.stub().returns({
             downloadFile: stub
-        };
+        });
 
         var flavorDownloader = getFlavorDownloader(function (mocks) {
             mocks['./utils/http-utils'] = httpUtilsMock;
@@ -174,7 +174,7 @@ describe('flavor-downloader tests', function() {
         var iterationStartStub = sinon.stub();
         flavorDownloader.on("iteration-start", iterationStartStub);
         flavorDownloader.on("iteration-end", function () {
-            expect(mocks['./utils/http-utils'].downloadFile.callCount).to.eql(6);
+            expect(mocks['./utils/http-utils']().downloadFile.callCount).to.eql(6);
             expect(iterationStartStub.callCount).to.eql(1);
             clock.tick(10000);
             try {
