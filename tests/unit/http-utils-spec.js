@@ -15,6 +15,16 @@ describe('http-utils tests', function() {
 
     var httpUtils = '../../lib/utils/http-utils';
 
+    var createHttpUtils = function(mocks){
+        var loggerStub = {
+            info : sinon.stub(),
+            debug : sinon.stub(),
+            error : sinon.stub()
+        }
+
+        return proxyquire(httpUtils, mocks)(loggerStub);
+    }
+
     function getNetworkClientMock(func) {
         var networkClientStub = {
             read: sinon.stub().returns(func())
@@ -39,7 +49,7 @@ describe('http-utils tests', function() {
         };
 
         var mocks = getNetworkClientMock(func);
-        var proxyHttpUtils = proxyquire(httpUtils, mocks);
+        var proxyHttpUtils = createHttpUtils(mocks);
         var destinationFile = path.join(os.tmpdir(), "tmp_test_file.txt");
 
         proxyHttpUtils.downloadFile('some_url', destinationFile ,10000)
@@ -58,7 +68,7 @@ describe('http-utils tests', function() {
         };
 
         var mocks = getNetworkClientMock(func);
-        var proxyHttpUtils = proxyquire(httpUtils, mocks);
+        var proxyHttpUtils = createHttpUtils(mocks);
         var destinationFile = path.join(os.tmpdir(), "tmp_test_file.txt");
 
         proxyHttpUtils.downloadFile('some_url', destinationFile, 10000)
@@ -81,7 +91,7 @@ describe('http-utils tests', function() {
 
         var mocks = getNetworkClientMock(func);
         mocks['q-io/fs'] = qfsMock;
-        var proxyHttpUtils = proxyquire(httpUtils, mocks);
+        var proxyHttpUtils = createHttpUtils(mocks);
 
         proxyHttpUtils.downloadFile('some_url', "some_dest", 2000)
             .done(function success() {

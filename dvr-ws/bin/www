@@ -7,7 +7,10 @@
 var app = require('../app');
 var debug = require('debug')('dvr-ws:server');
 var http = require('http');
+// Since node v0.10 sets this to 5 by default
+http.globalAgent.maxSockets = Infinity;
 var config = require('../../common/Configuration');
+var logger = require('../logger/logger')(module);
 
 /**
  * Get port from environment and store in Express.
@@ -29,6 +32,7 @@ var server = http.createServer(app);
 server.listen(app.get('port'));
 server.on('error', onError);
 server.on('listening', onListening);
+logger.info("Listening on port " + app.get('port'));
 
 /**
  * Normalize a port into a number, string, or false.
