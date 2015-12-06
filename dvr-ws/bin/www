@@ -10,7 +10,7 @@ var http = require('http');
 // Since node v0.10 sets this to 5 by default
 http.globalAgent.maxSockets = Infinity;
 var config = require('../../common/Configuration');
-var logger = require('../logger/logger')(module);
+var logger = require('../logger/logger');
 
 /**
  * Get port from environment and store in Express.
