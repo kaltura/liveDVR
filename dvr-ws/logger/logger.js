@@ -3,8 +3,7 @@
  */
 
 var commonLogger = require('../../common/logger/logger');
-var curry = require('curry');
 var config = require('../../common/Configuration');
-var logger = curry(commonLogger)(config.get('webServerParams:logFileName'), config.get('webServerParams:logLevel'), config.get('webServerParams:logToConsole'));
+var logger = commonLogger(config.get('webServerParams:logFileName'), config.get('webServerParams:logLevel'), config.get('webServerParams:logToConsole'));
 
 module.exports = logger;

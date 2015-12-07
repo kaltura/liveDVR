@@ -4,7 +4,7 @@ var expresslogger = require('./expressLogger/logger');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var config = require('../common/Configuration');
-var logger = require('./logger/logger')(module);
+var logger = require('./logger/logger');
 
 var routes = require('./routes/index');
 
@@ -26,6 +26,7 @@ app.use(function(req, res, next){
 
 // express-winston logger makes sense BEFORE the router.
 app.use(expresslogger.consoleLogger);
+
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/' + config.get('webServerParams:applicationName'),express.static(config.get('rootFolderPath')));

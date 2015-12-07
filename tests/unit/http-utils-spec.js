@@ -20,10 +20,10 @@ describe('http-utils tests', function() {
             info : sinon.stub(),
             debug : sinon.stub(),
             error : sinon.stub()
-        }
+        };
 
         return proxyquire(httpUtils, mocks)(loggerStub);
-    }
+    };
 
     function getNetworkClientMock(func) {
         var networkClientStub = {

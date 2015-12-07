@@ -11,12 +11,7 @@ var mkdirp = require('mkdirp');
 var util = require('util');
 var momentTz = require('moment-timezone');
 
-var getLabel = function(callingModule) {
-    var parts = callingModule.filename.split('/');
-    return parts[parts.length - 2] + '/' + parts.pop();
-};
-
-var logger = function (file, level, logToConsole, callingModule) {
+var logger = function (file, level, logToConsole) {
 
     var logFullPath = path.resolve(file);
     mkdirp.sync(path.dirname(logFullPath));
@@ -30,7 +25,6 @@ var logger = function (file, level, logToConsole, callingModule) {
             colorize: false,
             handleExceptions: true,
             humanReadableUnhandledException: true,
-            label: getLabel(callingModule),
             timestamp: function() { return momentTz().tz('America/New_York').format(); }
         });
     }
@@ -44,7 +38,6 @@ var logger = function (file, level, logToConsole, callingModule) {
             handleExceptions: true,
             json: false,
             colorize: true,
-            label: getLabel(callingModule),
             humanReadableUnhandledException: true,
             timestamp: function() { return momentTz().tz('America/New_York').format(); }
         }));
