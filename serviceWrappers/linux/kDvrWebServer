@@ -20,7 +20,7 @@
 ### END INIT INFO
 
 NAME="kDVR Web Server"
-KDVR_WEB_SERVER_PREFIX="/opt/liveDVR"
+KDVR_WEB_SERVER_PREFIX="/opt/kaltura/liveDVR"
 NODE_PATH="$KDVR_WEB_SERVER_PREFIX/node_modules"
 APPLICATION_PATH="$KDVR_WEB_SERVER_PREFIX/dvr-ws/bin/www"
 LOG_DIR="/var/log"
