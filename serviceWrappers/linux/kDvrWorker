@@ -20,9 +20,9 @@
 ### END INIT INFO
 
 NAME="kDVR Worker"
-KDVR_WEB_SERVER_PREFIX="/opt/liveDVR"
-NODE_PATH="$KDVR_WEB_SERVER_PREFIX/node_modules"
-APPLICATION_PATH="$KDVR_WEB_SERVER_PREFIX/lib/Driver.js"
+KDVR_WORKER_PREFIX="/opt/kaltura/liveDVR"
+NODE_PATH="$KDVR_WORKER_PREFIX/node_modules"
+APPLICATION_PATH="$KDVR_WORKER_PREFIX/lib/Driver.js"
 LOG_DIR="/var/log"
 PIDFILE="$LOG_DIR/kDvrWorker.pid"
 LOGFILE="$LOG_DIR/kDvrWorker-forever.log"
