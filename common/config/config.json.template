@@ -8,7 +8,7 @@
   "backendPollingInterval" : 3000,
   "dvrWindow" : 7200,
   "sessionDuration" : 180000,
-  "liveDvrWindow" : 100,
+  "liveDvrWindow" : 150,
   "logLevel" : "debug",
   "logToConsole" : true,
   "logFileName" : "/var/log/kDvrWorker.log",
