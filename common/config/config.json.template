@@ -8,10 +8,10 @@
   "backendPollingInterval" : 3000,
   "dvrWindow" : 7200,
   "sessionDuration" : 180000,
-  "liveDvrWindow" : 100,
+  "liveDvrWindow" : 150,
   "logLevel" : "debug",
   "logToConsole" : true,
-  "logFileName" : "/var/log/kDvrWorker.log",
+  "logFileName" : "/var/log/liveDVR/kDvrWorker.log",
   "mediaServer" : {
     "hostname" : "@HOSTNAME@",
     "applicationName" : "kLive"
@@ -20,7 +20,7 @@
     "applicationName" : "kLive",
     "port" : 8080,
     "logLevel" : "debug",
-    "logFileName" : "/var/log/kDvrWebServer.log",
+    "logFileName" : "/var/log/liveDVR/kDvrWebServer.log",
     "logToConsole" : true
   },
   "backendClient" : {
