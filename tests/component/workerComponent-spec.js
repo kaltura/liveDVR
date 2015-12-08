@@ -24,6 +24,7 @@ describe('Worker component spec', function() {
     // remove all logger transports to ensure nothing is written to console
     before(function(){
         config.set('logToConsole', false);
+        config.set('flavorDownloaderTeardownInterval', 0);
     });
 
     // Delete all temp folders

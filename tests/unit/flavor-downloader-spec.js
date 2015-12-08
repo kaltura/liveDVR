@@ -116,26 +116,6 @@ describe('flavor-downloader tests', function() {
         flavorDownloader.start();
     });
 
-    it('should shutdown downloader after 1 iteration', function (done) {
-        var flavorDownloader = getFlavorDownloader();
-        var iterationStartCallback = sinon.stub();
-        flavorDownloader.on("iteration-start", iterationStartCallback);
-        flavorDownloader.on("iteration-end", function () {
-            try {
-                expect(iterationStartCallback.callCount).to.eql(1);
-                expect(mocks['./utils/http-utils']().downloadFile.callCount).to.eql(6);
-                flavorDownloader.stop();
-                clock.tick(10000);
-                expect(iterationStartCallback.callCount).to.eql(1);
-                done();
-            }
-             catch (e) {
-                 done(e);
-             }
-        });
-        flavorDownloader.start();
-    });
-
     it('should recover after failed manifest download', function (done) {
         var flavorDownloader = getFlavorDownloader(function (mocks) {
             mocks['./utils/http-utils'] = generateHttpUtilsMock(true);
