@@ -9,6 +9,7 @@
   "dvrWindow" : 7200,
   "sessionDuration" : 180000,
   "liveDvrWindow" : 150,
+  "flavorDownloaderTeardownInterval" : 15000,
   "logLevel" : "debug",
   "logToConsole" : true,
   "logFileName" : "/var/log/liveDVR/kDvrWorker.log",
