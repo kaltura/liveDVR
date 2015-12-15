@@ -8,6 +8,7 @@ var config = require('../../common/Configuration')
 var chai = require('chai');
 var expect = chai.expect;
 var _ = require('underscore');
+var Q = require('q');
 
 describe.only('DB component tests', function(){
 
@@ -20,6 +21,7 @@ describe.only('DB component tests', function(){
                 done(err);
             }
             config.set('nedbFilesFolderPath', path);
+            config.set('sessionDuration', 1000);
             cleanupCallbackFunc = cleanupCallback
 
             delete require.cache[require.resolve('../../lib/StorageClientFactory.js')]
@@ -119,6 +121,28 @@ describe.only('DB component tests', function(){
         }).done(null, function(){
             done();
         });
+    });
+
+    it('should return false for isNewSession after a short period', function(done){
+        storageClient.addEntry('1', []).then(function(){
+            return Q.delay(500).then(function(){
+                return storageClient.isNewSession('1').then(function(res) {
+                    expect(res).to.eql(false);
+                    done();
+                });
+            });
+        }).done(null, done);
+    });
+
+    it('should return false for isNewSession after a short period', function(done){
+        storageClient.addEntry('1', []).then(function(){
+            return Q.delay(1000).then(function(){
+                return storageClient.isNewSession('1', 1000).then(function(res) {
+                    expect(res).to.eql(true);
+                    done();
+                });
+            });
+        }).done(null, done);
     });
 
     it('should fetch an added entry correctly', function(done) {
