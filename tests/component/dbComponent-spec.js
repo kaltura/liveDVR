@@ -21,6 +21,7 @@ describe.only('DB component tests', function(){
                 done(err);
             }
             config.set('nedbFilesFolderPath', path);
+            console.log(path);
             config.set('sessionDuration', 1000);
             cleanupCallbackFunc = cleanupCallback
 
@@ -68,10 +69,10 @@ describe.only('DB component tests', function(){
 
     it("should successfully add chunks to the list of chunks to download", function(done){
         storageClient.addEntry('1', []).then(function(){
-            return storageClient.addToListOfChunksToDownload('1', ['chunk1', 'chunk2']).then(function() {
-                return storageClient.addToListOfChunksToDownload('1', ['chunk3', 'chunk4']).then(function() {
+            return storageClient.addToListOfChunksToDownload('1', '12345', ['chunk1', 'chunk2']).then(function() {
+                return storageClient.addToListOfChunksToDownload('1', '12345',['chunk3', 'chunk4']).then(function() {
                     return storageClient.getEntry('1').then(function (entry) {
-                        expect(entry.chunksToDownload).to.eql(['chunk1', 'chunk2', 'chunk3', 'chunk4']);
+                        expect(entry.chunksToDownload['12345']).to.eql(['chunk1', 'chunk2', 'chunk3', 'chunk4']);
                         done();
                     })
                 });
@@ -81,11 +82,11 @@ describe.only('DB component tests', function(){
 
     it("should successfully mark chunks as downloaded", function(done){
         storageClient.addEntry('1', []).then(function(){
-            return storageClient.addToListOfChunksToDownload('1', ['chunk1', 'chunk2']).then(function() {
-                return storageClient.markChunksAsDownloaded('1', ['chunk1']).then(function() {
+            return storageClient.addToListOfChunksToDownload('1', '12345', ['chunk1', 'chunk2']).then(function() {
+                return storageClient.markChunksAsDownloaded('1', '12345', ['chunk1']).then(function() {
                     return storageClient.getEntry('1').then(function (entry) {
-                        expect(entry.chunksToDownload).to.eql(['chunk2']);
-                        expect(entry.downloadedChunks).to.eql(['chunk1']);
+                        expect(entry.chunksToDownload['12345']).to.eql(['chunk2']);
+                        expect(entry.downloadedChunks['12345']).to.eql(['chunk1']);
                         done();
                     })
                 });
@@ -134,7 +135,7 @@ describe.only('DB component tests', function(){
         }).done(null, done);
     });
 
-    it('should return false for isNewSession after a short period', function(done){
+    it('should return true for isNewSession after a long (enough) period', function(done){
         storageClient.addEntry('1', []).then(function(){
             return Q.delay(1000).then(function(){
                 return storageClient.isNewSession('1', 1000).then(function(res) {
@@ -146,13 +147,9 @@ describe.only('DB component tests', function(){
     });
 
     it('should fetch an added entry correctly', function(done) {
-        storageClient.addEntry('1', ['2', '3']).then(function () {
+        storageClient.addEntry('1').then(function () {
             storageClient.getEntry('1').then(function (doc) {
-                expect(_.omit(doc, 'lastUpdatedAt')).to.eql({
-                    _id : '1',
-                    id : '1',
-                    flavors: ['2', '3']
-                });
+                expect(doc.id).to.eql("1");
                 done();
             }).done(null, done);
         });
