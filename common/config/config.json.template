@@ -3,6 +3,7 @@
   "mockBackend" : false,
   "readMockBackendResponseFromFile" : false,
   "rootFolderPath" : "/dvrContentRootPath",
+  "oldContentFolderPath" : "/dvrOldContentRootPath",
   "requestTimeout" : 10000,
   "pollingInterval" : 2000,
   "backendPollingInterval" : 3000,
