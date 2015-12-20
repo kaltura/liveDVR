@@ -14,7 +14,7 @@ var expect = chai.expect;
 
 describe('M3U8 Generator tests', function() {
 
-    function createManifestGenerator(customizeMocks, dvrWindowSize) {
+    function createManifestGenerator(customizeMocks, dvrWindowSize, maxChunkCount) {
         var expectedManifest = fs.readFileSync(__dirname + '/../resources/simpleManifest.m3u8', 'utf8');
 
         var qioMock = {
@@ -42,7 +42,8 @@ describe('M3U8 Generator tests', function() {
         }
 
         var windowSize = dvrWindowSize ? dvrWindowSize : 60 * 60 * 2; // 2 Hours
-        var m3u8Generator = proxyquire('../../lib/ChunklistManifestGenerator', mocks)("c:\\somePath\\", "manifest.m3u8", windowSize, loggerMock);
+        var maxChunks = maxChunkCount ? maxChunkCount : 1000;
+        var m3u8Generator = proxyquire('../../lib/ChunklistManifestGenerator', mocks)("c:\\somePath\\", "manifest.m3u8", windowSize, maxChunks, loggerMock);
         return m3u8Generator;
     }
 

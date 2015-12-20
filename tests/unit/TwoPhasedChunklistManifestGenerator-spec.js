@@ -17,7 +17,7 @@ describe('Two phased chunklist manifest generator spec', function() {
     var externalManifest;
     var intermediateManifest;
 
-    var createTwoPhasedChunklistManifestGenerator = function (customizeMocks) {
+    var createTwoPhasedChunklistManifestGenerator = function (customizeMocks, customizeDownloadedFilesGetter) {
 
         var logger = {
             debug : sinon.stub(),
@@ -49,16 +49,11 @@ describe('Two phased chunklist manifest generator spec', function() {
         chunklistManifestGeneratorStub.onCall(0).returns(intermediateChunklistManifestGenerator);
         chunklistManifestGeneratorStub.onCall(1).returns(externallyVisibleManifestGenerator);
 
-        qioMock = {
-            list : sinon.stub()
-        };
-
         var mocks = {
             './ChunklistManifestGenerator' : chunklistManifestGeneratorStub,
             './utils/log-decorator' : function(logger) {
                 return logger;
             },
-            'q-io/fs' : qioMock,
             './PtsAlligner' : sinon.stub().returns({
                 process : sinon.stub().returns(Q())
             })
@@ -69,7 +64,8 @@ describe('Two phased chunklist manifest generator spec', function() {
         }
 
         var manifestGeneratorCreator = proxyquire('../../lib/TwoPhasedChunklistManifestGenerator.js', mocks);
-        return manifestGeneratorCreator('outputFolderPath', 'filename', '7200', logger);
+        var getter = customizeDownloadedFilesGetter ? customizeDownloadedFilesGetter : sinon.stub().returns([]);
+        return manifestGeneratorCreator(getter, 'outputFolderPath', 'filename', 7200, 1000, logger);
     };
 
     var createArrayOfPlaylistItems = function(name) {
@@ -120,11 +116,8 @@ describe('Two phased chunklist manifest generator spec', function() {
             return item.get('uri');
         });
 
-        var updateMocks = function(mocks) {
-            mocks['q-io/fs'].list.returns(['unrelatedFile1', 'unrelatedFile2'].concat(downloadedItemsNames));
-        };
-
-        var manifestGenerator = createTwoPhasedChunklistManifestGenerator(updateMocks);
+        var downloadedFilesGetterStub = sinon.stub().returns(['unrelatedFile1', 'unrelatedFile2'].concat(downloadedItemsNames));
+        var manifestGenerator = createTwoPhasedChunklistManifestGenerator(null, downloadedFilesGetterStub);
 
         intermediateManifest.items.PlaylistItem = previousItems;
 

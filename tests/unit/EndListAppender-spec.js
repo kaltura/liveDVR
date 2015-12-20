@@ -25,11 +25,11 @@ describe('EndListAppender spec', function() {
     });
 
     var createEndListAppender = function(customizeMocks){
-        var loggerMock = {
+        var loggerMock = sinon.stub().returns({
             info : sinon.stub(),
             error : sinon.stub(),
             debug : sinon.stub()
-        };
+        });
 
         var expectedManifestContent = fs.readFileSync(__dirname + '/../resources/simpleManifest.m3u8', 'utf8');
 
@@ -44,7 +44,9 @@ describe('EndListAppender spec', function() {
         };
 
         var qioMock = {
-            write : sinon.stub().returns(Q())
+            write : sinon.stub().returns(Q()),
+            exists : sinon.stub().returns(Q(true)),
+            read : sinon.stub().returns(Q('["1"]'))
         };
 
         var persistenceFormatMock = {
@@ -75,7 +77,8 @@ describe('EndListAppender spec', function() {
 
     it('should scan all entries upon init', function(done){
         var customizeMocks = function(mocks){
-            mocks['./../common/PersistenceFormat'].getAllStoredEntries.returns(Q(['1','2','3']));
+            mocks['q-io/fs'].exists.returns(Q(true));
+            mocks['q-io/fs'].read.returns(Q('["1","2","3"]'));
         };
 
         var endlistAppender = createEndListAppender(customizeMocks);
@@ -93,7 +96,8 @@ describe('EndListAppender spec', function() {
 
         var customizeMocks = function(mocks){
             qioMock = mocks['q-io/fs'];
-            mocks['./../common/PersistenceFormat'].getAllStoredEntries.returns(Q(['1']));
+            qioMock.exists.returns(Q(true));
+            qioMock.read.returns(Q('["1"]'));
             mocks['./../common/PersistenceFormat'].getEntryFullPath.returns('/fullPath/1');
             mocks['glob'] = sinon.stub().callsArgWith(2, null, ['/fullPath/1/a/m.m3u8']);
         };
@@ -125,7 +129,8 @@ describe('EndListAppender spec', function() {
 
         var customizeMocks = function(mocks){
             qioMock = mocks['q-io/fs'];
-            mocks['./../common/PersistenceFormat'].getAllStoredEntries.returns(Q(['1']));
+            qioMock.exists.returns(Q(true));
+            qioMock.read.returns(Q('["1"]'));
             mocks['./../common/PersistenceFormat'].getEntryFullPath.returns('/fullPath/1');
             mocks['glob'] = sinon.stub().callsArgWith(2, null, ['/fullPath/1/a/m.m3u8']);
             mocks['./promise-m3u8'] = parserMock;
@@ -133,6 +138,7 @@ describe('EndListAppender spec', function() {
 
         var endlistAppender = createEndListAppender(customizeMocks);
         endlistAppender.init().then(function() {
+            qioMock.write.reset(); // We only care about writes after init();
             endlistAppender.on('entryProcessingCompleted', function () {
                 m3u8ObjPromise.then(function () {
                     expect(qioMock.write.callCount).to.equal(0);
@@ -158,9 +164,10 @@ describe('EndListAppender spec', function() {
 
         var endlistAppender = createEndListAppender(customizeMocks);
         endlistAppender.init().then(function() {
-            endlistAppender.addEntry('someEntryId');
-            expect(endlistAppender._entriesToProcess['someEntryId']).not.to.be.an('undefined');
-            done();
+            return endlistAppender.addEntry('someEntryId').then(function(){
+                expect(endlistAppender._entriesToProcess['someEntryId']).not.to.be.an('undefined');
+                done();
+            });
         }).done(null, function(err){
             done(err);
         });

@@ -44,6 +44,7 @@ describe('Worker component spec', function() {
 
     beforeEach(function(done){
         config.set('pollingInterval', 50);
+        config.set('sessionDuration', 180000);
         config.set('mockNetwork', true);
         config.set('mockBackend', true);
         config.set('readMockBackendResponseFromFile', false);
@@ -56,6 +57,7 @@ describe('Worker component spec', function() {
             tmpFolderPath = tmpResult[0];
             tmpFoldersToDelete.push();
             config.set('rootFolderPath', tmpFolderPath);
+            config.set('oldContentFolderPath', tmpFolderPath);
             config.set('logFileName', path.join(tmpFolderPath, 'filelog-info.log'));
 
             networkClientMock = require('../../lib/NetworkClientFactory').getNetworkClient();
@@ -164,7 +166,7 @@ describe('Worker component spec', function() {
     it('should download all chunks when stopped in mid broadcast and starting a new worker', function (done) {
         this.timeout(4000);
         var newWorker;
-        Q.delay(250).then(function () {
+        Q.delay(1500).then(function () {
             return worker.stop();
         }).then(function () {
             return validateFlavors().then(function () {
@@ -178,7 +180,7 @@ describe('Worker component spec', function() {
             newWorker = new workerCtor();
             return newWorker.start();
         }).then(function () {
-            return Q.delay(3000);
+            return Q.delay(1500);
         }).then(function () {
             return worker.stop();
         }).then(function () {
