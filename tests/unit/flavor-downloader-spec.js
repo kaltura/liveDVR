@@ -17,10 +17,12 @@ describe('flavor-downloader tests', function() {
 
     beforeEach(function () {
         clock = sinon.useFakeTimers();
+        sinon.stub(process, 'nextTick').yields();
     });
 
     afterEach(function () {
         clock.restore();
+        process.nextTick.restore();
     });
 
     function generateHttpUtilsMock(isReject) {
@@ -42,9 +44,8 @@ describe('flavor-downloader tests', function() {
         return m3u8Mock;
     }
 
-    function generateQioMock(listOfFiles) {
+    function generateQioMock() {
         var qioMock = {
-            list: sinon.stub().returns(Q.resolve(listOfFiles)),
             makeTree: sinon.stub().returns(Q.resolve())
         };
         return qioMock;
@@ -64,8 +65,9 @@ describe('flavor-downloader tests', function() {
         var mockObjects = {};
         mockObjects['./utils/http-utils'] = generateHttpUtilsMock();
         mockObjects['q-io/fs'] = generateQioMock([]);
-        mockObjects['./ChunklistManifestGenerator'] = generateChunklistM3umGeneratorMock();
+        mockObjects['./TwoPhasedChunklistManifestGenerator'] = generateChunklistM3umGeneratorMock();
         mockObjects['./promise-m3u8'] = generatePromiseM3u8Mock(path.join(__dirname, '/../resources/flavor-downloader-data/simpleManifest.m3u8'));
+        mockObjects['glob'] = sinon.stub().callsArgWith(1, null, []);
         mockObjects['./logger/logger'] = sinon.stub().returns({
             info: sinon.stub(),
             error: sinon.stub(),
@@ -80,7 +82,7 @@ describe('flavor-downloader tests', function() {
         mocks = mockObjects;
 
         var flavorDownloaderCtor = proxyquire('../../lib/FlavorDownloader', mockObjects);
-        var flavorDownloader = new flavorDownloaderCtor('m3u8Url', 'destPath', 'entryId', 'flavor', 'newPlaylistName');
+        var flavorDownloader = new flavorDownloaderCtor('m3u8Url', 'destPath', 'entryId', 'flavor', 'newPlaylistName', 7200, 1000);
         return flavorDownloader;
     }
 
@@ -101,7 +103,8 @@ describe('flavor-downloader tests', function() {
     it('should try to download failed ts again', function (done) {
         var listOfFiles = ['media-uefvqmelj_b1017600_11.ts', 'media-uefvqmelj_b1017600_12.ts', 'media-uefvqmelj_b1017600_13.ts', 'media-uefvqmelj_b1017600_15.ts'];
         var flavorDownloader = getFlavorDownloader(function (mocks) {
-            mocks['q-io/fs'] = generateQioMock(listOfFiles);
+            mocks['q-io/fs'] = generateQioMock();
+            mocks['glob'] = sinon.stub().callsArgWith(1, null, listOfFiles);
         });
 
         flavorDownloader.on("iteration-end", function () {
@@ -122,17 +125,24 @@ describe('flavor-downloader tests', function() {
         });
 
         var iterationStartStub = sinon.stub();
+        var callNum = 0;
         flavorDownloader.on("iteration-start", iterationStartStub);
         flavorDownloader.on("iteration-end", function () {
-            expect(mocks['./utils/http-utils']().downloadFile.callCount).to.eql(1);
-            expect(iterationStartStub.callCount).to.eql(1);
-            clock.tick(10000);
-            try {
-                expect(mocks['./utils/http-utils']().downloadFile.callCount).to.eql(2);
-                expect(iterationStartStub.callCount).to.eql(2);
-                done();
-            } catch (e) {
-                done(e);
+            if (callNum ===0)
+            {
+                expect(mocks['./utils/http-utils']().downloadFile.callCount).to.eql(1);
+                expect(iterationStartStub.callCount).to.eql(1);
+                callNum++;
+                clock.tick(10000);
+            }
+            else {
+                try {
+                    expect(mocks['./utils/http-utils']().downloadFile.callCount).to.eql(2);
+                    expect(iterationStartStub.callCount).to.eql(2);
+                    done();
+                } catch (e) {
+                    done(e);
+                }
             }
         });
         flavorDownloader.start();
