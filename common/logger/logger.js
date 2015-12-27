@@ -36,7 +36,7 @@ var logger = function (file, level, logToConsole) {
 
     var log4jsConfiguration = {
         "appenders": appenders,
-        "replaceConsole": true,
+        "replaceConsole": false,
         "levels" : {
             "newHLS": level
         }

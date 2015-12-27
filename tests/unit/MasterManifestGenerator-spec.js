@@ -126,7 +126,7 @@ describe('MasterManifestGenerator spec', function() {
             warn : sinon.stub(),
             error: sinon.stub(),
             fatal: sinon.stub()
-        }
+        };
 
         var mocks = {
             './NetworkClientFactory' : networkClientFactoryMock
