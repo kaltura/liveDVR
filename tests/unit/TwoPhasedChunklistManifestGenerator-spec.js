@@ -115,8 +115,7 @@ describe('Two phased chunklist manifest generator spec', function() {
         var newItems = createArrayOfPlaylistItems("new");
         var previousItems = createArrayOfPlaylistItems("previous");
         var downloadedItemsList = _.first(previousItems, previousItems.length-1);
-
-        //var downloadedFilesGetterStub = sinon.stub().returns(['unrelatedFile1', 'unrelatedFile2'].concat(downloadedItemsNames));
+        
         var downloadedFilesResult = {'unrelatedFile1' : true, 'unrelatedFile2' : true};
         _.each(downloadedItemsList, function(i){
             downloadedFilesResult[i.get('uri')] = true;
