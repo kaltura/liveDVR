@@ -29,7 +29,8 @@ describe('Two phased chunklist manifest generator spec', function() {
         intermediateChunklistManifestGenerator = {
             init : sinon.stub().returns(Q()),
             update : function(items) {
-                return Q(this.getCurrentManifest().items.PlaylistItem.concat(items));
+                intermediateManifest.items.PlaylistItem = intermediateManifest.items.PlaylistItem.concat(items);
+                return Q({removedChunks : []});
             },
             getCurrentManifest : sinon.stub().returns(intermediateManifest)
         };
@@ -39,7 +40,8 @@ describe('Two phased chunklist manifest generator spec', function() {
         externallyVisibleManifestGenerator = {
             init : sinon.stub().returns(Q()),
             update : function(items) {
-                return Q(this.getCurrentManifest().items.PlaylistItem.concat(items));
+                externalManifest.items.PlaylistItem = externalManifest.items.PlaylistItem.concat(items);
+                return Q({removedChunks : []});
             },
             getCurrentManifest : sinon.stub().returns(externalManifest)
         };
@@ -55,7 +57,8 @@ describe('Two phased chunklist manifest generator spec', function() {
                 return logger;
             },
             './PtsAlligner' : sinon.stub().returns({
-                process : sinon.stub().returns(Q())
+                process : sinon.stub().returns(Q()),
+                initialize : sinon.stub().returns(Q())
             })
         };
 
@@ -112,11 +115,14 @@ describe('Two phased chunklist manifest generator spec', function() {
         var newItems = createArrayOfPlaylistItems("new");
         var previousItems = createArrayOfPlaylistItems("previous");
         var downloadedItemsList = _.first(previousItems, previousItems.length-1);
-        var downloadedItemsNames = _.map(downloadedItemsList,function(item){
-            return item.get('uri');
-        });
 
-        var downloadedFilesGetterStub = sinon.stub().returns(['unrelatedFile1', 'unrelatedFile2'].concat(downloadedItemsNames));
+        //var downloadedFilesGetterStub = sinon.stub().returns(['unrelatedFile1', 'unrelatedFile2'].concat(downloadedItemsNames));
+        var downloadedFilesResult = {'unrelatedFile1' : true, 'unrelatedFile2' : true};
+        _.each(downloadedItemsList, function(i){
+            downloadedFilesResult[i.get('uri')] = true;
+        });
+        var downloadedFilesGetterStub = sinon.stub().returns(downloadedFilesResult);
+
         var manifestGenerator = createTwoPhasedChunklistManifestGenerator(null, downloadedFilesGetterStub);
 
         intermediateManifest.items.PlaylistItem = previousItems;
@@ -124,9 +130,8 @@ describe('Two phased chunklist manifest generator spec', function() {
         //var externalManifestLengthBeforeUpdate = externallyVisibleManifestGenerator.getCurrentManifest().PlaylistItem.length;
         manifestGenerator.init().then(function(){
             return manifestGenerator.update(newItems);
-        })
-            .then(function(){
-                expect(intermediateChunklistManifestGenerator.update.getCall(0).args[0]).to.eql(newItems);
+        }).then(function(){
+            expect(intermediateChunklistManifestGenerator.update.getCall(0).args[0]).to.eql(newItems);
             expect(externallyVisibleManifestGenerator.update.getCall(0).args[0]).to.eql(downloadedItemsList);
             done();
         }).catch(function(err){

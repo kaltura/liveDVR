@@ -12,7 +12,7 @@
   "liveMaxChunkCount" : 15,
   "sessionDuration" : 180000,
   "flavorDownloaderTeardownInterval" : 15000,
-  "logLevel" : "debug",
+  "logLevel" : "DEBUG",
   "logToConsole" : true,
   "logFileName" : "/var/log/liveDVR/kDvrWorker.log",
   "mediaServer" : {
@@ -22,7 +22,7 @@
   "webServerParams" : {
     "applicationName" : "kLive",
     "port" : 8080,
-    "logLevel" : "debug",
+    "logLevel" : "DEBUG",
     "logFileName" : "/var/log/liveDVR/kDvrWebServer.log",
     "logToConsole" : true
   },

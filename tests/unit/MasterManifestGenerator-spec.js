@@ -38,8 +38,17 @@ describe('MasterManifestGenerator spec', function() {
         var customizeMocksFunction = function(m){
             mocks = m;
         };
+
+        var logger = {
+            trace : sinon.stub(),
+            debug : sinon.stub(),
+            info: sinon.stub(),
+            warn : sinon.stub(),
+            error: sinon.stub(),
+            fatal: sinon.stub()
+        };
         var customizeCtorParamsFunction = function(){
-            return ['12345', 'localhost', null, 'test', 'http://basePath'];
+            return ['12345', 'localhost', null, 'test', logger];
         };
         var masterManifestCreator = createMasterManifestGenerator(customizeMocksFunction, customizeCtorParamsFunction);
 
@@ -110,22 +119,24 @@ describe('MasterManifestGenerator spec', function() {
             }
         };
 
-        var loggerMock = sinon.stub().returns({
+        var loggerMock = {
+            trace : sinon.stub(),
+            debug : sinon.stub(),
             info: sinon.stub(),
+            warn : sinon.stub(),
             error: sinon.stub(),
-            debug: sinon.stub()
-        });
+            fatal: sinon.stub()
+        }
 
         var mocks = {
-            './NetworkClientFactory' : networkClientFactoryMock,
-            './logger/logger' : loggerMock
+            './NetworkClientFactory' : networkClientFactoryMock
         };
 
         if (customizeMocks) {
             customizeMocks(mocks);
         }
 
-        ctorParams = ['12345', 'localhost', 1935, 'test', '/basePath'];
+        ctorParams = ['12345', 'localhost', 1935, 'test', loggerMock];
 
         if (customizeCtorParams){
             ctorParams = customizeCtorParams();

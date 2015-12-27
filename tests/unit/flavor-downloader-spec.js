@@ -69,10 +69,12 @@ describe('flavor-downloader tests', function() {
         mockObjects['./promise-m3u8'] = generatePromiseM3u8Mock(path.join(__dirname, '/../resources/flavor-downloader-data/simpleManifest.m3u8'));
         mockObjects['glob'] = sinon.stub().callsArgWith(1, null, []);
         mockObjects['./logger/logger'] = sinon.stub().returns({
+            trace : sinon.stub(),
+            debug: sinon.stub(),
             info: sinon.stub(),
-            error: sinon.stub(),
             warn: sinon.stub(),
-            debug: sinon.stub()
+            error: sinon.stub(),
+            fatal : sinon.stub()
         });
 
         if (updateMocks) {

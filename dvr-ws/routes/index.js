@@ -29,7 +29,7 @@ router.get(/\/smil\:([^\\/]+?)\.smil\/playlist\.m3u8(?:\/(?=$))?$/i, function(re
             })
         }
         else {
-            var masterManifestCreator = MasterManifestCreator(entryId, config.get("mediaServer").hostname, config.get("mediaServer").port, config.get('mediaServer').applicationName);
+            var masterManifestCreator = MasterManifestCreator(entryId, config.get("mediaServer").hostname, config.get("mediaServer").port, config.get('mediaServer').applicationName, logger);
             var manifestContent;
             //get master manifest
             masterManifestCreator.getManifest(fullUrl, tag).then(

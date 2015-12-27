@@ -12,7 +12,7 @@ var m3u8Parser = require('../../lib/promise-m3u8');
 var chai = require('chai');
 var expect = chai.expect;
 
-describe('M3U8 Generator tests', function() {
+describe('Chunklist manifest generator tests', function() {
 
     function createManifestGenerator(customizeMocks, dvrWindowSize, maxChunkCount) {
         var expectedManifest = fs.readFileSync(__dirname + '/../resources/simpleManifest.m3u8', 'utf8');
@@ -27,9 +27,12 @@ describe('M3U8 Generator tests', function() {
         };
 
         var loggerMock = {
+            trace : sinon.stub(),
+            debug: sinon.stub(),
             info: sinon.stub(),
+            warn : sinon.stub(),
             error: sinon.stub(),
-            debug: sinon.stub()
+            fatal : sinon.stub()
         };
 
         var mocks = {
