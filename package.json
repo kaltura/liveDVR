@@ -33,7 +33,6 @@
     "touch": "1.0.0",
     "underscore": "1.8.3",
     "log4js" : "0.6.29",
-    "moment-timezone" : "0.4.1",
     "v8-profiler" : "5.5.0"
   }
 }
