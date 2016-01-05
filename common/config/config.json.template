@@ -36,5 +36,7 @@
     "timeInterval" : 900000,
     "windowSize" : 3,
     "enabled" : false
-  }
+  },
+  "ffProbePath" : "C:\\ffmpeg\\bin\\ffprobe.exe",
+  "ffmpegPath" : "C:\\ffmpeg\\bin\\ffmpeg.exe"
 }
