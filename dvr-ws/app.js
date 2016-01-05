@@ -5,7 +5,6 @@ var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
 var config = require('../common/Configuration');
 var logger = require('./logger/logger');
-
 var routes = require('./routes/index');
 
 var app = express();
@@ -27,12 +26,19 @@ app.use(function(req, res, next){
 // express-winston logger makes sense BEFORE the router.
 app.use(expresslogger.consoleLogger);
 
+app.use(function(req, res, next) {
+
+  if (req.url.indexOf('.m3u8') > -1)
+  {
+    res.setHeader('Cache-Control', 'public, max-age=5');
+  }
+  next();
+});
 
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/' + config.get('webServerParams:applicationName'),express.static(config.get('rootFolderPath')));
-
-
 app.use('/', routes);
+
 
 app.use(expresslogger.errorLogger);
 
