@@ -23,7 +23,8 @@ describe('Entry downloader spec', function() {
 
         flavorDownloaderMock = {
             stop : sinon.stub().returns(Q.resolve()),
-            start : sinon.stub().returns(Q.resolve())
+            start : sinon.stub().returns(Q.resolve()),
+            on : sinon.stub()
         };
         var flavorDownloaderCtorMock = sinon.stub().returns(flavorDownloaderMock);
 
