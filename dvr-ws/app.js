@@ -6,8 +6,17 @@ var bodyParser = require('body-parser');
 var config = require('../common/Configuration');
 var logger = require('./logger/logger');
 var routes = require('./routes/index');
+var accesslog = require('apache-like-accesslog');
+
 
 var app = express();
+
+accesslog.configure({
+  format: 'EXTENDED',
+  directory: path.dirname(config.get('webServerParams:logFileName')),
+  filename: 'access.log'});
+
+app.use(accesslog.logger);
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -22,6 +31,8 @@ app.use(function(req, res, next){
   logger.info(JSON.stringify(req.url));
   next();
 })
+
+
 
 // express-winston logger makes sense BEFORE the router.
 app.use(expresslogger.consoleLogger);
