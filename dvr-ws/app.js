@@ -12,7 +12,7 @@ var accesslog = require('apache-like-accesslog');
 var app = express();
 
 accesslog.configure({
-  format: 'CLF',
+  format: 'EXTENDED',
   directory: path.dirname(config.get('webServerParams:logFileName')),
   filename: 'access.log'});
 
