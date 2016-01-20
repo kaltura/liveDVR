@@ -8,8 +8,8 @@ var logger = require('./logger/logger');
 var routes = require('./routes/index');
 var accesslog = require('apache-like-accesslog');
 
-
 var app = express();
+app.set('env', 'production');
 
 accesslog.configure({
   format: 'EXTENDED',
@@ -43,6 +43,11 @@ app.use(function(req, res, next) {
   {
     res.setHeader('Cache-Control', 'public, max-age=5');
   }
+  else if (req.url.indexOf('.ts') > -1)
+  {
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+  }
+
   next();
 });
 
