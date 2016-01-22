@@ -38,5 +38,6 @@
     "enabled" : false
   },
   "ffprobePath" : "C:\\ffmpeg\\bin\\ffprobe.exe",
-  "ffmpegPath" : "C:\\ffmpeg\\bin\\ffmpeg.exe"
+  "ffmpegPath" : "C:\\ffmpeg\\bin\\ffmpeg.exe",
+  "nginxEntryInputCreationInterval" : 5000
 }
