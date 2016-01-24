@@ -42,10 +42,12 @@ app.use(function(req, res, next) {
   if (req.url.indexOf('.m3u8') > -1)
   {
     res.setHeader('Cache-Control', 'public, max-age=5');
+    res.setHeader('Content-Type', 'application/vnd.apple.mpegURL');
   }
   else if (req.url.indexOf('.ts') > -1)
   {
     res.setHeader('Cache-Control', 'public, max-age=86400');
+    res.setHeader('Content-Type', 'video/MP2T');
   }
 
   next();
