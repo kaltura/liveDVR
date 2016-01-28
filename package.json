@@ -33,6 +33,7 @@
     "touch": "1.0.0",
     "underscore": "1.8.3",
     "log4js" : "0.6.29",
-    "v8-profiler" : "5.5.0"
+    "v8-profiler" : "5.5.0",
+    "usage" : "0.7.1"
   }
 }
