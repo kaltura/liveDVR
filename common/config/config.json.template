@@ -36,5 +36,11 @@
     "timeInterval" : 900000,
     "windowSize" : 3,
     "enabled" : false
+  },
+  "highCpuHandlingParams" : {
+    "highCpuThreshold" : 90,
+    "allowedConsecutiveHighCpuUsageSamples" : 5,
+    "cpuSamplingInterval" : 1000,
+    "enabled" : true
   }
 }
