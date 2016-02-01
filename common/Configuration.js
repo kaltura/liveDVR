@@ -29,16 +29,18 @@ module.exports = (function(){
         for (var p in configPropertiesObj) {
             if (configPropertiesObj.hasOwnProperty(p)) {
                 if (configPropertiesObj[p] instanceof Object) {
+                    if (!configOutputObj[p]) {
+                        configOutputObj[p] = {};
+                    }
                     assignValues(configPropertiesObj[p], configOutputObj[p]);
-                }
-                else {
+                } else {
                     configOutputObj[p] = configPropertiesObj[p];
                 }
             }
         }
     }
 
-    fs.writeFileSync(path.join(__dirname, './config/config.json'), JSON.stringify(configObj, null, 2));
+    //fs.writeFileSync(path.join(__dirname, './config/config.json'), JSON.stringify(configObj, null, 2));
 
     var nconf = require('nconf');
 
@@ -49,7 +51,8 @@ module.exports = (function(){
     //
     nconf.argv()
         .env()
-        .file({ file: path.join(__dirname, './config/config.json') });
+       // .file({ file: path.join(__dirname, './config/config.json') });
+        .defaults(configObj);
 
     return nconf;
 })();
