@@ -7,6 +7,7 @@ var config = require('../common/Configuration');
 var logger = require('./logger/logger');
 var routes = require('./routes/index');
 var accesslog = require('apache-like-accesslog');
+var compression = require('compression');
 
 var app = express();
 app.set('env', 'production');
@@ -23,6 +24,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
 //app.use(logger('dev'));
+app.use(compression());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -32,12 +34,15 @@ app.use(function(req, res, next){
   next();
 })
 
-
+app.disable('x-powered-by');
 
 // express-winston logger makes sense BEFORE the router.
 app.use(expresslogger.consoleLogger);
 
 app.use(function(req, res, next) {
+
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
 
   if (req.url.indexOf('.m3u8') > -1)
   {
