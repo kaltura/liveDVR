@@ -18,17 +18,17 @@ module.exports = {
         return entryId;
     },
 
-    getFlavorFullPath: function (entryId, bitrate) {
+    getFlavorFullPath: function (entryId, flavorRecognizer) {
         var config = require('./Configuration');
-        return path.join(config.get('rootFolderPath'), entryId, bitrate.toString());
+        return path.join(config.get('rootFolderPath'), entryId, flavorRecognizer.toString());
     },
 
-    getFlavorRelativePath: function (entryId, bitrate) {
-        return path.join(entryId, bitrate.toString());
+    getFlavorRelativePath: function (entryId, flavorRecognizer) {
+        return path.join(entryId, flavorRecognizer.toString());
     },
 
     getManifestName: function () {
-        return 'manifest.m3u8';
+        return 'chunklist.m3u8';
     },
 
     getMasterManifestName: function () {

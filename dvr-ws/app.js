@@ -54,8 +54,7 @@ app.use(function(req, res, next) {
 });
 
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/' + config.get('webServerParams:applicationName'),express.static(config.get('rootFolderPath')));
-app.use('/', routes);
+app.use('/' + config.get('webServerParams:applicationName'), routes);
 
 
 app.use(expresslogger.errorLogger);
