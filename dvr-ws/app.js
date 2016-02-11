@@ -23,8 +23,18 @@ app.use(accesslog.logger);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'jade');
 
+
+function shouldCompress(req, res) {
+  if (req.url.indexOf('.m3u8') > -1 ) {
+
+    return true;
+  }
+  // fallback to standard filter function
+  return compression.filter(req, res)
+}
+
 //app.use(logger('dev'));
-app.use(compression());
+app.use(compression({filter: shouldCompress}));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
