@@ -38,7 +38,15 @@ start() {
       -l $LOGFILE \
       --minUptime $MIN_UPTIME \
       --spinSleepTime $SPIN_SLEEP_TIME \
-	start $APPLICATION_PATH &
+	start $APPLICATION_PATH prefix:0&
+    echo "Starting $NAME"
+    forever \
+      --pidFile $PIDFILE \
+      -a \
+      -l $LOGFILE \
+      --minUptime $MIN_UPTIME \
+      --spinSleepTime $SPIN_SLEEP_TIME \
+        start $APPLICATION_PATH prefix:1&
     RETVAL=$?
 }
 
