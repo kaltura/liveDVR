@@ -8,7 +8,7 @@
   "pollingInterval" : 2000,
   "backendPollingInterval" : 3000,
   "dvrTimeWindow" : 7200,
-  "dvrTimeWindowThreshold":900,
+  "dvrTimeWindowThreshold":900,     //Minimum DVR window
   "dvrMaxChunkCount" : 1000,
   "liveMaxChunkCount" : 15,
   "sessionDuration" : 180000,
