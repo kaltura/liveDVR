@@ -12,7 +12,7 @@ router.get(/\/smil\:([^\\/]*)_all\.smil\/([^\?]*)/i, function(req, res) {
     var fileName = req.params[1];
 
     var disk = path.join(persistenceFormat.getEntryFullPath(entryId),fileName);
-    res.sendfile(disk);
+    res.sendFile(disk);
 
 });
 
