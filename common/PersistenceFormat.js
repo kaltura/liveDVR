@@ -2,6 +2,7 @@
  * Created by elad.benedict on 8/23/2015.
  */
 
+var config = require('./Configuration');
 var path = require('path');
 var qio = require('q-io/fs');
 var _ = require('underscore');
@@ -10,7 +11,6 @@ var Q = require('q');
 module.exports = {
 
     getEntryFullPath: function (entryId) {
-        var config = require('./Configuration');
         return path.join(config.get('rootFolderPath'), entryId);
     },
 
@@ -18,17 +18,16 @@ module.exports = {
         return entryId;
     },
 
-    getFlavorFullPath: function (entryId, bitrate) {
-        var config = require('./Configuration');
-        return path.join(config.get('rootFolderPath'), entryId, bitrate.toString());
+    getFlavorFullPath: function (entryId, flavorName) {
+        return path.join(config.get('rootFolderPath'), entryId, flavorName.toString());
     },
 
-    getFlavorRelativePath: function (entryId, bitrate) {
-        return path.join(entryId, bitrate.toString());
+    getFlavorRelativePath: function (entryId, flavorName) {
+        return path.join(entryId, flavorName.toString());
     },
 
     getManifestName: function () {
-        return 'manifest.m3u8';
+        return 'chunklist.m3u8';
     },
 
     getMasterManifestName: function () {

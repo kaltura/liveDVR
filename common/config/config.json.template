@@ -2,6 +2,7 @@
   "mockNetwork" : false,
   "mockBackend" : false,
   "readMockBackendResponseFromFile" : false,
+  "flavorBasedUrls": true,
   "rootFolderPath" : "/dvrContentRootPath",
   "oldContentFolderPath" : "/dvrOldContentRootPath",
   "requestTimeout" : 10000,
