@@ -28,7 +28,7 @@ var logger = function (file, level, logToConsole) {
             "type": "console",
             "layout": {
                 "type": "pattern",
-                "pattern": "%m"
+                pattern: "%d{ABSOLUTE} %[%-5p%] %c %m"
             },
             "category": "newHLS"
         });
