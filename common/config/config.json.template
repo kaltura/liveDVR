@@ -2,6 +2,7 @@
   "mockNetwork" : false,
   "mockBackend" : false,
   "readMockBackendResponseFromFile" : false,
+  "universalTsTimestamp" : true,
   "rootFolderPath" : "/dvrContentRootPath",
   "oldContentFolderPath" : "/dvrOldContentRootPath",
   "requestTimeout" : 20000,
