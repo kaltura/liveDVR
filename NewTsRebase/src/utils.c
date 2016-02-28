@@ -146,16 +146,3 @@ char * match_regex (const char *regex_key , const char * to_match)
     return NULL;
 }
 
-
-void free_list_ID3_struct(ID3v2_struct* head){
-    ID3v2_struct* tmp;
-    
-    while (head != NULL)
-    {
-        tmp = head;
-        head = head->next;
-        free(tmp->objectType);
-        free(tmp);
-    }
-
-}
