@@ -5,8 +5,6 @@
   "universalTsTimestamp" : true,
   "rootFolderPath" : "/dvrContentRootPath",
   "oldContentFolderPath" : "/dvrOldContentRootPath",
-  "rootFolderPath" : "/Users/ronyadgar/Downloads/DVR",
-  "oldContentFolderPath" : "/Users/ronyadgar/Documents/tmp",
   "requestTimeout" : 10000,
   "pollingInterval" : 2000,
   "backendPollingInterval" : 3000,
