@@ -5,6 +5,7 @@
 #include "mpegTsStructs.h"
 #include "common.h"
 #include "types.h"
+#include <stdio.h>
 
 // typedefs
 //typedef void (*packetizer_callback_t)(void* context, const byte_t* packet, size_t size, int64_t pts,ID3v2_struct** ID3v2_struct_list_p);

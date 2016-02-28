@@ -16,6 +16,7 @@ typedef struct
 	uint64_t total_frame_durations;
 	uint64_t total_frame_count;
 	int64_t correction;
+    int64_t suggested_correction;
 } ts_rebase_context_t;
 
 // functions
