@@ -4,7 +4,7 @@
   "readMockBackendResponseFromFile" : false,
   "rootFolderPath" : "/dvrContentRootPath",
   "oldContentFolderPath" : "/dvrOldContentRootPath",
-  "requestTimeout" : 10000,
+  "requestTimeout" : 20000,
   "pollingInterval" : 2000,
   "backendPollingInterval" : 3000,
   "defaultDvrWindow" : 7200,
@@ -14,8 +14,14 @@
   "sessionDuration" : 180000,
   "flavorDownloaderTeardownInterval" : 15000,
   "logLevel" : "DEBUG",
-  "logToConsole" : true,
+  "logToConsole" : false,
   "logFileName" : "/var/log/liveDVR/kDvrWorker.log",
+  "simulateStreams": {
+      "enable":false,
+      "count": 100,
+      "maxChunkCount": 5,
+      "wowzaUrl": "http://127.0.0.1:1935/live/_definst_/1_abc123_1/playlist.m3u8"
+  },
   "mediaServer" : {
     "hostname" : "@HOSTNAME@",
     "applicationName" : "kLive"
