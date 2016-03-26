@@ -6,12 +6,15 @@
   "oldContentFolderPath" : "/dvrOldContentRootPath",
   "requestTimeout" : 20000,
   "pollingInterval" : 2000,
-  "backendPollingInterval" : 3000,
+  "backendPollingInterval" : 5000,
+  "wowzaPollingInterval" : 5000,
   "defaultDvrWindow" : 7200,
   "minimalDvrWindow":900,
   "dvrMaxChunkCount" : 1000,
   "liveMaxChunkCount" : 15,
+  "minChunksForPlayback" : 3,
   "sessionDuration" : 180000,
+  "apiUpdateInterval" : 60000,
   "flavorDownloaderTeardownInterval" : 15000,
   "logLevel" : "DEBUG",
   "logToConsole" : false,
@@ -25,6 +28,9 @@
   "mediaServer" : {
     "hostname" : "@HOSTNAME@",
     "applicationName" : "kLive"
+    "port" : 80,
+    "user" : "",
+    "password" : ""
   },
   "webServerParams" : {
     "applicationName" : "kLive",
