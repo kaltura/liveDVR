@@ -16,6 +16,7 @@
   "sessionDuration" : 180000,
   "apiUpdateInterval" : 60000,
   "flavorDownloaderTeardownInterval" : 15000,
+  "playlistUpdateInterval" : 300000,
   "logLevel" : "DEBUG",
   "logToConsole" : false,
   "logFileName" : "/var/log/liveDVR/kDvrWorker.log",
