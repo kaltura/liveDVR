@@ -33,7 +33,8 @@ char* itob(int integer)
     
     // We need to reverse the bytes because Intel uses little endian.
     char* aux = (char*) &integer;
-    for(int i = size - 1; i >= 0; i--)
+	int i;
+    for(i = size - 1; i >= 0; i--)
     {
         result[size - 1 - i] = aux[i];
     }

@@ -27,7 +27,8 @@ ParseID3Tag(void* context, const byte_t* buf, size_t size, int64_t pts, ID3v2_st
     ID3v2_tag* tag= load_tag_with_buffer((char *)buf,(int)size);
     if (tag!=NULL)
     {
-        for (ID3v2_frame_list* frame=tag->frames->start;frame!=NULL;frame=frame->next){
+		ID3v2_frame_list* frame;
+		for (frame = tag->frames->start; frame != NULL; frame = frame->next){
             ID3v2_frame* frameObj=frame->frame;
             ID3v2_struct* ID3v2_struct_t=parse_json(frameObj->data);
             if (ID3v2_struct_t!=NULL){
