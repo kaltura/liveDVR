@@ -16,8 +16,8 @@ typedef struct
 	uint64_t total_frame_durations;
 	uint64_t total_frame_count;
 	int64_t correction;
-    int64_t suggested_correction;
-	int64_t first_frame_dts;
+    int64_t id3_pts_diff;
+	int64_t original_first_frame_dts;
 } ts_rebase_context_t;
 
 // functions

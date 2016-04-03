@@ -17,7 +17,7 @@ ID3v2_struct* parse_json(char * json){
     }
     ID3v2_struct_t->objectType=match_regex(regex_objectType, find_text);
     char *UnixTimeStamp_string=match_regex(regex_timestamp, find_text);
-	if (ID3v2_struct_t->objectType == NULL || *UnixTimeStamp_string == NULL){
+	if (ID3v2_struct_t->objectType == NULL || UnixTimeStamp_string == NULL){
 		return NULL;
 	}
    ID3v2_struct_t->UnixTimeStamp = (long)strtold(UnixTimeStamp_string, NULL);

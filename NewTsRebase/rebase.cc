@@ -13,8 +13,8 @@
 #define CONTEXT_CORRECTION				"correction"
 #define CONTEXT_TOTAL_FRAME_DURATIONS	"totalFrameDurations"
 #define CONTEXT_TOTAL_FRAME_COUNT		"totalFrameCount"
-#define CONTEXT_SUGGESTED_CORRECTION "suggested_correction"
-#define CONTEXT_FIRST_FRAME_DTS "first_frame_dts"
+#define CONTEXT_SUGGESTED_CORRECTION "id3_pts_diff"
+#define CONTEXT_FIRST_FRAME_DTS "original_first_frame_dts"
 #define TIMESTAMP_MASK (0x1ffffffff)	// 33 bits
 #define REBASE_THRESHOLD_DEFAULT (22500)		// 1/4 sec
 
@@ -66,12 +66,16 @@ void parsing_ID3_tag(const byte_t* buffer_data, size_t buffer_size, ts_rebase_co
                     &stream_walker_state,
                     &ID3v2_struct_list);
     stream_walker_free(&stream_walker_state);
-    
-    context->suggested_correction=get_suggested_correction(ID3v2_struct_list);
-	if (((context->correction - context->suggested_correction) & TIMESTAMP_MASK) > threshold &&
-		((context->suggested_correction - context->correction) & TIMESTAMP_MASK) > threshold)
+
+
+    context->id3_pts_diff=get_suggested_correction(ID3v2_struct_list);
+    if ( 0!=context->id3_pts_diff )
     {
-        context->correction = context->suggested_correction;
+        if (((context->correction -  context->id3_pts_diff) & TIMESTAMP_MASK) > threshold &&
+            ((context->id3_pts_diff - context->correction) & TIMESTAMP_MASK) > threshold)
+        {
+            context->correction =  context->id3_pts_diff;
+        }
     }
     free_list_ID3_struct(ID3v2_struct_list);
     
@@ -121,7 +125,7 @@ NAN_METHOD(RebaseTs)
     context.total_frame_count = curValue->IsNumber() ? curValue->IntegerValue() : 0;
     
     curValue = inputContext->Get(NanNew<String>(CONTEXT_SUGGESTED_CORRECTION));
-    context.suggested_correction = curValue->IsNumber() ? curValue->IntegerValue() : 0;
+    context.id3_pts_diff = curValue->IsNumber() ? curValue->IntegerValue() : 0;
 
     int rebase_threshold = (args.Length() == 4)  ? args[3]->NumberValue() : REBASE_THRESHOLD_DEFAULT;
     if (args[2]->ToBoolean()->BooleanValue())
@@ -131,7 +135,7 @@ NAN_METHOD(RebaseTs)
         context.expected_dts=NO_TIMESTAMP;
         
 		parsing_ID3_tag(buffer_data, buffer_size, &context, rebase_threshold);
-        inputContext->Set(NanNew<String>(CONTEXT_SUGGESTED_CORRECTION),     NanNew<Number>(context.suggested_correction));
+        inputContext->Set(NanNew<String>(CONTEXT_SUGGESTED_CORRECTION),     NanNew<Number>(context.id3_pts_diff));
         
     }
 
@@ -151,7 +155,7 @@ NAN_METHOD(RebaseTs)
     inputContext->Set(NanNew<String>(CONTEXT_CORRECTION),            NanNew<Number>(context.correction));
     inputContext->Set(NanNew<String>(CONTEXT_TOTAL_FRAME_DURATIONS), NanNew<Number>(context.total_frame_durations));
     inputContext->Set(NanNew<String>(CONTEXT_TOTAL_FRAME_COUNT),     NanNew<Number>(context.total_frame_count));
-	inputContext->Set(NanNew<String>(CONTEXT_FIRST_FRAME_DTS), NanNew<Number>(context.first_frame_dts));
+	inputContext->Set(NanNew<String>(CONTEXT_FIRST_FRAME_DTS), NanNew<Number>(context.original_first_frame_dts));
     
     Local<Value> result = NanNew<Number>(duration);
     
