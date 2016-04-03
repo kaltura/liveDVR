@@ -2,8 +2,8 @@
   "mockNetwork" : false,
   "mockBackend" : false,
   "readMockBackendResponseFromFile" : false,
-  "rootFolderPath" : "/dvrContentRootPath",
-  "oldContentFolderPath" : "/dvrOldContentRootPath",
+  "rootFolderPath" : "~/dvr/dvrContentRootPath",
+  "oldContentFolderPath" : "~/dvr/dvrOldContentRootPath",
   "requestTimeout" : 20000,
   "pollingInterval" : 2000,
   "backendPollingInterval" : 5000,
@@ -17,8 +17,8 @@
   "apiUpdateInterval" : 60000,
   "flavorDownloaderTeardownInterval" : 15000,
   "logLevel" : "DEBUG",
-  "logToConsole" : false,
-  "logFileName" : "/var/log/liveDVR/kDvrWorker.log",
+  "logToConsole" : true,
+  "logFileName" : "~/dvr/kDvrWorker.log",
   "simulateStreams": {
       "enable":false,
       "count": 100,
@@ -27,8 +27,8 @@
   },
   "mediaServer" : {
     "hostname" : "@HOSTNAME@",
-    "applicationName" : "kLive"
-    "port" : 80,
+    "applicationName" : "kLive",
+    "port" : 1935,
     "user" : "",
     "password" : ""
   },
@@ -36,7 +36,7 @@
     "applicationName" : "kLive",
     "port" : 8080,
     "logLevel" : "DEBUG",
-    "logFileName" : "/var/log/liveDVR/kDvrWebServer.log",
+    "logFileName" : "~/dvr/kDvrWebServer.log",
     "logToConsole" : true
   },
   "backendClient" : {
