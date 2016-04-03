@@ -5,13 +5,16 @@
 var path = require('path');
 var fs = require('fs');
 var _ = require('underscore')
+var hostname = require('./utils/hostname');
 
 module.exports = (function(){
 
-    var machineName = require('./utils/hostname');
+    var machineName = hostname.getLocalMachineFullHostname();
 
     var configTemplateContent = fs.readFileSync(path.join(__dirname, './config/config.json.template'), 'utf8');
     var updatedConfigContent = configTemplateContent.replace('@HOSTNAME@', machineName);
+    updatedConfigContent= updatedConfigContent.replace(/~/g,hostname.homedir());
+
     var configObj = JSON.parse(updatedConfigContent);
 
     var mappingFilePath = path.join(__dirname, 'config', 'configMapping.json');
