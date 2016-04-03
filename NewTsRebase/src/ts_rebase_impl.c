@@ -234,6 +234,7 @@ ts_rebase_impl(
 		&frame_count,
 		&first_frame_dts,
 		&last_frame_dts);
+	context->first_frame_dts = first_frame_dts;
 	if (frame_count == 0)
 	{
 		return;

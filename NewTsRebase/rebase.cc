@@ -14,8 +14,9 @@
 #define CONTEXT_TOTAL_FRAME_DURATIONS	"totalFrameDurations"
 #define CONTEXT_TOTAL_FRAME_COUNT		"totalFrameCount"
 #define CONTEXT_SUGGESTED_CORRECTION "suggested_correction"
+#define CONTEXT_FIRST_FRAME_DTS "first_frame_dts"
 #define TIMESTAMP_MASK (0x1ffffffff)	// 33 bits
-#define REBASE_THRESHOLD (22500)		// 1/4 sec
+#define REBASE_THRESHOLD_DEFAULT (22500)		// 1/4 sec
 
 using namespace v8;
 using namespace node;
@@ -33,33 +34,24 @@ void free_list_ID3_struct(ID3v2_struct* head){
     
 }
 
-static const char kaltura_object_type[] = "KalturaSyncTimecode";
-
+static const char KALTURA_SYNC_TIMECODE[] = "KalturaSyncTimecode";
+static const char KALTURA_SYNC_POINT[] = "KalturaSyncPoint";
 uint64_t get_suggested_correction(ID3v2_struct* obj)
 {
-    uint64_t suggested_correction;
-    if (obj==NULL)
-    {
-        return 0    ;
-    }
-    while (1){
-        suggested_correction=90*obj->UnixTimeStamp-obj->PTS;
-        if  (!strcmp(obj->objectType,kaltura_object_type)){   //TODO: change to constant
-            suggested_correction=90*obj->UnixTimeStamp-obj->PTS; //normalize it such the units is second*90,000
-            if (*obj->objectType=='\0'){
-                puts("ERROR object type is null");
-            }
-            return suggested_correction;
-        }
-        obj=obj->next;
-        if (obj == NULL)
-            break;
-    }
-    return suggested_correction;
-    
+	uint64_t suggested_correction=0;
+	while (obj != NULL) {
+		if (!strcmp(obj->objectType, KALTURA_SYNC_TIMECODE) || !strcmp(obj->objectType, KALTURA_SYNC_POINT)){
+			suggested_correction = 90 * obj->UnixTimeStamp - obj->PTS; //normalize it such the units is second*90,000
+			if (!strcmp(obj->objectType, KALTURA_SYNC_TIMECODE)){	// if object type is KalturaSyncTimecode return its value
+				return suggested_correction;
+			}
+		}
+		obj = obj->next;
+	}
+	return suggested_correction;
 }
 
-void parsing_ID3_tag(const byte_t* buffer_data, size_t buffer_size, ts_rebase_context_t* context)
+void parsing_ID3_tag(const byte_t* buffer_data, size_t buffer_size, ts_rebase_context_t* context, int threshold)
 {
     stream_walker_state_t stream_walker_state;
     ID3v2_struct* ID3v2_struct_list=NULL;
@@ -76,8 +68,8 @@ void parsing_ID3_tag(const byte_t* buffer_data, size_t buffer_size, ts_rebase_co
     stream_walker_free(&stream_walker_state);
     
     context->suggested_correction=get_suggested_correction(ID3v2_struct_list);
-    if (((context->correction - context->suggested_correction) & TIMESTAMP_MASK) > REBASE_THRESHOLD &&
-        ((context->suggested_correction - context->correction) & TIMESTAMP_MASK) > REBASE_THRESHOLD)
+	if (((context->correction - context->suggested_correction) & TIMESTAMP_MASK) > threshold &&
+		((context->suggested_correction - context->correction) & TIMESTAMP_MASK) > threshold)
     {
         context->correction = context->suggested_correction;
     }
@@ -110,6 +102,7 @@ NAN_METHOD(RebaseTs)
        return NanThrowTypeError("Argument 3 must be a buffer");
     }
     
+
     // parse the context
     ts_rebase_context_t context;
     Local<Value> curValue;
@@ -129,18 +122,20 @@ NAN_METHOD(RebaseTs)
     
     curValue = inputContext->Get(NanNew<String>(CONTEXT_SUGGESTED_CORRECTION));
     context.suggested_correction = curValue->IsNumber() ? curValue->IntegerValue() : 0;
-    
+
+    int rebase_threshold = (args.Length() == 4)  ? args[3]->NumberValue() : REBASE_THRESHOLD_DEFAULT;
     if (args[2]->ToBoolean()->BooleanValue())
     {
         const byte_t* buffer_data=(const byte_t*)Buffer::Data(args[1]->ToObject());
         size_t buffer_size=Buffer::Length(args[1]->ToObject());
         context.expected_dts=NO_TIMESTAMP;
         
-        parsing_ID3_tag(buffer_data, buffer_size, &context);
+		parsing_ID3_tag(buffer_data, buffer_size, &context, rebase_threshold);
         inputContext->Set(NanNew<String>(CONTEXT_SUGGESTED_CORRECTION),     NanNew<Number>(context.suggested_correction));
         
     }
 
+	
     
     // perform the rebase
     uint64_t duration;
@@ -156,6 +151,7 @@ NAN_METHOD(RebaseTs)
     inputContext->Set(NanNew<String>(CONTEXT_CORRECTION),            NanNew<Number>(context.correction));
     inputContext->Set(NanNew<String>(CONTEXT_TOTAL_FRAME_DURATIONS), NanNew<Number>(context.total_frame_durations));
     inputContext->Set(NanNew<String>(CONTEXT_TOTAL_FRAME_COUNT),     NanNew<Number>(context.total_frame_count));
+	inputContext->Set(NanNew<String>(CONTEXT_FIRST_FRAME_DTS), NanNew<Number>(context.first_frame_dts));
     
     Local<Value> result = NanNew<Number>(duration);
     
