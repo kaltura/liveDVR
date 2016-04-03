@@ -17,9 +17,15 @@ ID3v2_struct* parse_json(char * json){
     }
     ID3v2_struct_t->objectType=match_regex(regex_objectType, find_text);
     char *UnixTimeStamp_string=match_regex(regex_timestamp, find_text);
-   ID3v2_struct_t->UnixTimeStamp = (long)strtold(UnixTimeStamp_string,NULL);
-    free(UnixTimeStamp_string);
-    return ID3v2_struct_t;
+	if (ID3v2_struct_t->objectType == NULL || *UnixTimeStamp_string == NULL){
+		return NULL;
+	}
+   ID3v2_struct_t->UnixTimeStamp = (long)strtold(UnixTimeStamp_string, NULL);
+   free(UnixTimeStamp_string);
+   if (ID3v2_struct_t->UnixTimeStamp == 0){
+	   return NULL;
+   }
+   return ID3v2_struct_t;
 }
 static void
 ParseID3Tag(void* context, const byte_t* buf, size_t size, int64_t pts, ID3v2_struct** ID3v2_struct_list_p)
