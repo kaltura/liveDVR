@@ -6,10 +6,12 @@ var config = require('../Configuration');
 var path = require('path');
 var mkdirp = require('mkdirp');
 var util = require('util');
+var hostname = require('../utils/hostname');
 
 var logger = function (file, level, logToConsole) {
 
     var logFullPath = path.resolve(file);
+    logFullPath= logFullPath.replace(/~/g,hostname.homedir());
     mkdirp.sync(path.dirname(logFullPath));
 
     var log4js = require( "log4js" );
@@ -28,7 +30,7 @@ var logger = function (file, level, logToConsole) {
             "type": "console",
             "layout": {
                 "type": "pattern",
-                "pattern": "%m"
+                pattern: "%d{ABSOLUTE} %[%-5p%] %c %m"
             },
             "category": "newHLS"
         });
@@ -54,12 +56,7 @@ var logger = function (file, level, logToConsole) {
     return res;
 };
 
-var messageDecoration = function(msg) {
-    return "[PID="+process.pid+"] "+ msg;
-};
-
-var loggerDecorator = require('../../lib/utils/log-decorator');
 
 module.exports = function(file, level, logToConsole){
-    return loggerDecorator(logger(file, level, logToConsole), messageDecoration);
+    return logger(file, level, logToConsole);
 };

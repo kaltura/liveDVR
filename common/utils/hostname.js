@@ -5,7 +5,28 @@
 var os = require('os');
 var shell = require('shelljs');
 
-module.exports = (function getLocalMachineFullHostname() {
+
+function homedir() {
+    var env = process.env;
+    var home = env.HOME;
+    var user = env.LOGNAME || env.USER || env.LNAME || env.USERNAME;
+
+    if (process.platform === 'win32') {
+        return env.USERPROFILE || env.HOMEDRIVE + env.HOMEPATH || home || null;
+    }
+
+    if (process.platform === 'darwin') {
+        return home || (user ? '/Users/' + user : null);
+    }
+
+    if (process.platform === 'linux') {
+        return home || (process.getuid() === 0 ? '/root' : (user ? '/home/' + user : null));
+    }
+
+    return home || null;
+}
+
+function getLocalMachineFullHostname() {
     var res = "HOSTNAME_PLACEHOLDER";
     if (os.platform() == 'win32' || os.platform() == 'win64')
     {
@@ -27,4 +48,9 @@ module.exports = (function getLocalMachineFullHostname() {
         res = hostnameCmd.output.replace(/\n$/, ''); // Remove line ending at the end
     }
     return res;
-})();
+}
+
+module.exports = {
+    homedir: homedir,
+    getLocalMachineFullHostname: getLocalMachineFullHostname
+};
