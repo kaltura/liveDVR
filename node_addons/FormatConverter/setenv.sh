@@ -19,7 +19,7 @@ function makeFFmpeg()
     cd $ffmpegDir
 
     debug_specifics=""
-    [ "$Release" == "" ] &&  debug_specifics='---enable-debug --disable-optimizations'
+    [ "$Release" == "" ] &&  debug_specifics='--enable-debug --disable-optimizations'
 
     configFileName=$ffmpegDir/lastConfigure
 
@@ -27,8 +27,7 @@ function makeFFmpeg()
 
     confCmd="./configure --disable-everything --disable-doc --enable-protocol=file --enable-demuxer=mpegts --enable-muxer=rtp_mpegts --enable-parser=h264 --enable-parser=aac --enable-muxer=mp4   --enable-zlib --enable-bsf=aac_adtstoasc $debug_specifics --enable-decoder=aac"
 
-    # TODO: code slow down! consider --cc="gcc -fvisibility=protected" instead!
-    [ "$os_name" == "Linux" ] && confCmd="$confCmd --enable-pic --enable-shared --extra-ldlibflags="-Wl,-rpath '-Wl,$$ORIGIN'""
+    [ "$os_name" == "Linux" ] && confCmd="$confCmd --enable-pic"
 
     actualCmd=""
 
