@@ -17,7 +17,7 @@
   "apiUpdateInterval" : 60000,
   "flavorDownloaderTeardownInterval" : 15000,
   "playlistUpdateInterval" : 300000,
-  "logLevel" : "DEBUG",
+  "logLevel" : "INFO",
   "logToConsole" : true,
   "logFileName" : "~/dvr/kDvrWorker.log",
   "simulateStreams": {
