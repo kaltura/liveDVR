@@ -1,7 +1,7 @@
 /**
  * Created by igors on 3/26/16.
  */
-var MP4Writer = require('../../../lib/MP4Writer');
+var MP4WriteStream = require('../../../lib/MP4WriteStream');
 var fs = require('fs');
 var util = require('util');
 

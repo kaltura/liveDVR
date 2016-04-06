@@ -1,4 +1,4 @@
-var MP4Writer = require('../../../lib/MP4Writer');
+var MP4WriteStream = require('../../../lib/MP4WriteStream');
 var fs = require('fs');
 var http = require('http');
 var Url = require('url');
@@ -6,7 +6,7 @@ var Url = require('url');
 var tsFilePath = "/Users/igors/Documents/media-u3hnkeqbd_w624400711_8026.ts_saved.ts";//__dirname+'/../resources/media-uixh2a1qh_w1892051821_472.ts';
 var httpPath = 'http://localhost/wn/media-uhe4wm3o6_b475136_144354218.ts';
 
-var ts2mp4 = new MP4Writer(tsFilePath, {
+var ts2mp4 = new MP4WriteStream(tsFilePath, {
         debug: console.log,
         info: console.log,
         warn: console.log,
