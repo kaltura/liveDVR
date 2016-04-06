@@ -48,7 +48,7 @@
         "xcode_settings": {
             "GCC_ENABLE_CPP_EXCEPTIONS": "YES",
             "OTHER_CPLUSPLUSFLAGS" : ["-std=c++11","-stdlib=libc++", "-v", "-D__STDC_CONSTANT_MACROS"],
-            "OTHER_LDFLAGS": ["-stdlib=libc++","-o FormatConverter.node","-undefined dynamic_lookup"],
+            "OTHER_LDFLAGS": ["-stdlib=libc++","-undefined dynamic_lookup"],
             "MACOSX_DEPLOYMENT_TARGET": "10.7",
             "GCC_ENABLE_CPP_EXCEPTIONS": "YES"
             
