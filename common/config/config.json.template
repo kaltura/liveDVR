@@ -1,6 +1,6 @@
 {
   "mockNetwork" : false,
-  "mockBackend" : false,
+  "mockBackend" : true,
   "readMockBackendResponseFromFile" : false,
   "rootFolderPath" : "~/dvr/dvrContentRootPath",
   "oldContentFolderPath" : "~/dvr/dvrOldContentRootPath",
@@ -22,13 +22,13 @@
   "logFileName" : "~/dvr/kDvrWorker.log",
   "simulateStreams": {
       "enable":false,
-      "count": 100,
+      "count": 1,
       "maxChunkCount": 5,
       "wowzaUrl": "http://127.0.0.1:1935/live/_definst_/1_abc123_1/playlist.m3u8"
   },
   "mediaServer" : {
-    "hostname" : "@HOSTNAME@",
-    "applicationName" : "kLive",
+    "hostname" : "127.0.0.1",
+    "applicationName" : "live",
     "port" : 1935,
     "user" : "",
     "password" : ""

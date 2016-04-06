@@ -31,6 +31,6 @@ module.exports = {
     },
 
     getMasterManifestName: function () {
-        return 'playlist.m3u8';
+        return 'playlist.json';
     }
 };
