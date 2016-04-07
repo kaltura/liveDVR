@@ -3,10 +3,10 @@ var fs = require('fs');
 var http = require('http');
 var Url = require('url');
 
-var tsFilePath = "/Users/igors/Documents/media-u3hnkeqbd_w624400711_8026.ts_saved.ts";//__dirname+'/../resources/media-uixh2a1qh_w1892051821_472.ts';
+var tsFilePath = "/Users/igors/dvr/dvrContentRootPath/1_abc123/1/media-ub430pe9s_w1090369887_2318.ts_saved.ts";//__dirname+'/../resources/media-uixh2a1qh_w1892051821_472.ts';
 var httpPath = 'http://localhost/wn/media-uhe4wm3o6_b475136_144354218.ts';
 
-var ts2mp4 = new MP4WriteStream(tsFilePath, {
+var ts2mp4 = new MP4WriteStream(tsFilePath + '.mp4', {
         debug: console.log,
         info: console.log,
         warn: console.log,
