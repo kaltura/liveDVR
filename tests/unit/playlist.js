@@ -1,7 +1,7 @@
 /**
  * Created by igors on 3/30/16.
  */
-var PlaylistUtils = require('./../../lib/utils/playlist-utils');
+var PlaylistUtils = require('./../../lib/PlaylistGenerator/playlistGenrator-utils');
 var config = require('./../../common/Configuration');
 var MP4WriteStream=require('./../../lib/MP4WriteStream');
 var logger = require('./../../lib/logger/logger')(module);
@@ -9,7 +9,6 @@ var path = require('path');
 var Q = require('q');
 var fs = require('fs');
 var util = require('util');
-var PackagerPlayList = require('./../../lib/manifest/PlaylistGenerator');
 
 config.set('preserveOriginalChunk',false);
 

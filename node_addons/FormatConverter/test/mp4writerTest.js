@@ -3,9 +3,9 @@ var fs = require('fs');
 var http = require('http');
 var Url = require('url');
 
-var tsFilePath = "/Users/igors/dvr/dvrContentRootPath/1_abc123/1/media-ub430pe9s_w1090369887_2318.ts_saved.ts";//__dirname+'/../resources/media-uixh2a1qh_w1892051821_472.ts';
+var tsFilePath = "/Users/igors/dvr/dvrContentRootPath/1_abc123/1/media-ul0o1lom6_w1600782441_670.ts.mp4_saved.ts";//__dirname+'/../resources/media-uixh2a1qh_w1892051821_472.ts';
 var httpPath = 'http://localhost/wn/media-uhe4wm3o6_b475136_144354218.ts';
-
+console.log("tsFilePath=",tsFilePath);
 var ts2mp4 = new MP4WriteStream(tsFilePath + '.mp4', {
         debug: console.log,
         info: console.log,
