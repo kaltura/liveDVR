@@ -14,6 +14,7 @@
 #include "AVFormat.h"
 #include "Converter.h"
 #include <unordered_map>
+#include <sstream>
 
 using namespace v8;
 using namespace node;
@@ -26,13 +27,13 @@ return Nan::ThrowTypeError("error ");\
 }\
 }
 
+
 namespace converter {
     
        
     class TS2MP4Convertor : public node::ObjectWrap,
     public Converter
     {
-        
         class AsyncProgressConverter : public Nan::AsyncProgressWorker {
             //AsyncProgressWorker
           
@@ -50,7 +51,11 @@ namespace converter {
         private:
             // called by libuv worker in separate thread
             virtual void Execute (const ExecutionProgress& progress){
-                m_handler.Execute(progress);
+                try {
+                    m_handler.Execute(progress);
+                } catch(std::exception &e) {
+                    this->SetErrorMessage(e.what());
+                }
             }
             
             virtual void HandleProgressCallback(const char *data, size_t size){

@@ -12,6 +12,7 @@
 #include "NodeStream.h"
 #include <unordered_map>
 
+
 namespace converter {
     
     
@@ -181,10 +182,16 @@ namespace converter {
         info.GetReturnValue().Set(info.This());
     }
     
+    
     // called by libuv worker in separate thread
     void TS2MP4Convertor::Execute (const TS2MP4Convertor::AsyncProgressConverter::ExecutionProgress& progress) {
         
-        _N(onData());
+        int result = onData();
+        if( result < 0){
+            std::ostringstream error;
+            error << " TS2MP4Convertor::Execute failed with error " << result;
+            throw std::runtime_error(error.str());
+        }
     }
     
     void TS2MP4Convertor::HandleProgressCallback(const char *data, size_t size) {
