@@ -111,7 +111,7 @@ namespace converter{
     
     Converter::Converter()
     :m_creationTime(0),
-     m_hash(nullptr),
+    m_hash(nullptr),
     m_minStartDTSMsec(0),
     state(CLOSED)
     {}
@@ -238,13 +238,15 @@ namespace converter{
             if(in_stream->codec->codec_id == AV_CODEC_ID_TIMED_ID3){
                 if( m_creationTime ==0 ){
                     m_creationTime = extractUnixTimeMsecFromId3Tag(pkt.data,pkt.size);
-                    av_log(*input,AV_LOG_TRACE,"Converter::pushData. parsed id3 time %lld stream start time %lld pts %lld",
-                           m_creationTime, in_stream->start_time,pkt.pts);
-                    m_creationTime -= av_rescale(pkt.pts,TIMESTAMP_RESOLUTION * in_stream->time_base.num,
-                                                 in_stream->time_base.den);
-                    // hack for mp4
-                    MOVMuxContext *mov = reinterpret_cast<MOVMuxContext*>(output->priv_data);
-                    mov->time = m_creationTime / 1000 + 0x7C25B080; // 1970 based -> 1904 based
+                    if(m_creationTime > 0){
+                        av_log(*input,AV_LOG_TRACE,"Converter::pushData. parsed id3 time %lld stream start time %lld pts %lld",
+                               m_creationTime, in_stream->start_time,pkt.pts);
+                        m_creationTime -= av_rescale(pkt.pts,TIMESTAMP_RESOLUTION * in_stream->time_base.num,
+                                                     in_stream->time_base.den);
+                        // hack for mp4
+                        MOVMuxContext *mov = reinterpret_cast<MOVMuxContext*>(output->priv_data);
+                        mov->time = m_creationTime / 1000 + 0x7C25B080; // 1970 based -> 1904 based
+                    }
                 }
             } else {
                 
@@ -254,25 +256,25 @@ namespace converter{
                 
                 /* copy packet */
                 
-            //    log_packet(*input, &pkt, "in",AV_LOG_FATAL);
+                //    log_packet(*input, &pkt, "in",AV_LOG_FATAL);
                 
                 if(AV_NOPTS_VALUE != pkt.pts){
                     pkt.pts = av_rescale_q_rnd(pkt.pts, in_stream->time_base, out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
                 }
-                    if(pts.size() > 0 && pkt.pts <= pts[pkt.stream_index]){
-                        pkt.pts = pts[pkt.stream_index]+1;
-                    }
-                    
-                    pts[pkt.stream_index] = pkt.pts;
-                    
-                 if(AV_NOPTS_VALUE != pkt.dts){
-                     pkt.dts = av_rescale_q_rnd(pkt.dts, in_stream->time_base, out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-                 }
-                     if(dts.size() > 0 && pkt.dts <= dts[pkt.stream_index]){
-                         pkt.dts = dts[pkt.stream_index]+1;
-                     }
-                     
-                     dts[pkt.stream_index] = pkt.dts;
+                if(pts.size() > 0 && pkt.pts <= pts[pkt.stream_index]){
+                    pkt.pts = pts[pkt.stream_index]+1;
+                }
+                
+                pts[pkt.stream_index] = pkt.pts;
+                
+                if(AV_NOPTS_VALUE != pkt.dts){
+                    pkt.dts = av_rescale_q_rnd(pkt.dts, in_stream->time_base, out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+                }
+                if(dts.size() > 0 && pkt.dts <= dts[pkt.stream_index]){
+                    pkt.dts = dts[pkt.stream_index]+1;
+                }
+                
+                dts[pkt.stream_index] = pkt.dts;
                 
                 
                 pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
