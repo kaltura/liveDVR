@@ -54,12 +54,12 @@ extern "C"{
         return buf;
     }
     
-    inline void log_packet(const AVFormatContext *fmt_ctx, const AVPacket *pkt, const char *tag)
+    inline void log_packet(const AVFormatContext *fmt_ctx, const AVPacket *pkt, const char *tag,int avlog_level = AV_LOG_TRACE)
     {
         AVRational *time_base = &fmt_ctx->streams[pkt->stream_index]->time_base;
         ts_buf a,b,c,d,e,f;
         
-        av_log(nullptr,AV_LOG_TRACE,"stm:%d sz:%d pts:%s pts_time:%s dts:%s dts_time:%s duration:%s duration_time:%s stream_index:%d\n",
+        av_log(nullptr,avlog_level,"stm:%d sz:%d pts:%s pts_time:%s dts:%s dts_time:%s duration:%s duration_time:%s stream_index:%d\n",
                pkt->stream_index,
                pkt->size,
                av_ts_make_string(a,pkt->pts), av_ts_make_time_string(b,pkt->pts, time_base),
@@ -191,21 +191,6 @@ namespace converter{
             }
         }
         
-        // minStartTime &= ~1000;
-        /*
-        for( size_t i = 0 ; i < input->nb_streams; i++){
-            AVStream *in_stream =input->streams[i];
-            //HACK: ID3 parser does not produce pts'es bound to in_stream->start_time
-            if( in_stream->codec->codec_id == AV_CODEC_ID_TIMED_ID3 ){
-                in_stream->start_time = av_rescale(minStartTime,in_stream->time_base.den,1000 * in_stream->time_base.num);
-                continue;
-            }
-            int64_t stream_offset = av_rescale(minStartTime,in_stream->time_base.den,1000 * in_stream->time_base.num);
-            av_log(*input,AV_LOG_TRACE,"Converter::checkForStreams. stream %ld start time %lld normalized by %lld => %lld",
-                   i,in_stream->start_time,stream_offset,in_stream->start_time - stream_offset);
-            in_stream->start_time -= stream_offset;
-        }*/
-        
         AVDictionary *opts = nullptr;
         av_dict_set(&opts, "use_editlist", "0", 0);
         int success = avformat_write_header(*output, &opts);
@@ -235,11 +220,19 @@ namespace converter{
             
             AVStream *in_stream  = input->streams[pkt.stream_index];
             
+            //pkt.pts = pkt.dts;
+            
             if(AV_NOPTS_VALUE != pkt.pts){
+                m_minStartDTSMsec = std::min(m_minStartDTSMsec, pkt.pts);
                 pkt.pts -= av_rescale(m_minStartDTSMsec,in_stream->time_base.den,TIMESTAMP_RESOLUTION * in_stream->time_base.num);
+            } else {
+                av_log(*input,AV_LOG_INFO,"Converter::pushData. stream %d. pkt with pts=AV_NOPTS_VALUE",m_streamMapper[pkt.stream_index]);
             }
             if(AV_NOPTS_VALUE != pkt.dts){
+                m_minStartDTSMsec = std::min(m_minStartDTSMsec, pkt.dts);
                 pkt.dts -= av_rescale(m_minStartDTSMsec,in_stream->time_base.den,TIMESTAMP_RESOLUTION * in_stream->time_base.num);
+            } else {
+                av_log(*input,AV_LOG_INFO,"Converter::pushData. stream %d. pkt with dts=AV_NOPTS_VALUE",m_streamMapper[pkt.stream_index]);
             }
             
             if(in_stream->codec->codec_id == AV_CODEC_ID_TIMED_ID3){
@@ -260,19 +253,27 @@ namespace converter{
                 AVStream *out_stream = output->streams[pkt.stream_index];
                 
                 /* copy packet */
-                pkt.pts = av_rescale_q_rnd(pkt.pts, in_stream->time_base, out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
                 
-                if(pkt.pts <= pts[pkt.stream_index])
-                    pkt.pts = pts[pkt.stream_index]+1;
+            //    log_packet(*input, &pkt, "in",AV_LOG_FATAL);
                 
-                pts[pkt.stream_index] = pkt.pts;
+                if(AV_NOPTS_VALUE != pkt.pts){
+                    pkt.pts = av_rescale_q_rnd(pkt.pts, in_stream->time_base, out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+                }
+                    if(pts.size() > 0 && pkt.pts <= pts[pkt.stream_index]){
+                        pkt.pts = pts[pkt.stream_index]+1;
+                    }
+                    
+                    pts[pkt.stream_index] = pkt.pts;
+                    
+                 if(AV_NOPTS_VALUE != pkt.dts){
+                     pkt.dts = av_rescale_q_rnd(pkt.dts, in_stream->time_base, out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+                 }
+                     if(dts.size() > 0 && pkt.dts <= dts[pkt.stream_index]){
+                         pkt.dts = dts[pkt.stream_index]+1;
+                     }
+                     
+                     dts[pkt.stream_index] = pkt.dts;
                 
-                pkt.dts = av_rescale_q_rnd(pkt.dts, in_stream->time_base, out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-                
-                if(pkt.dts <= dts[pkt.stream_index])
-                    pkt.dts = dts[pkt.stream_index]+1;
-                
-                dts[pkt.stream_index] = pkt.dts;
                 
                 pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
                 pkt.pos = -1;
