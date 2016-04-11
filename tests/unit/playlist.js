@@ -1,6 +1,7 @@
 /**
  * Created by igors on 3/30/16.
  */
+var PlaylistGenerator = require('./../../lib/PlaylistGenerator/PlaylistGenerator');
 var PlaylistUtils = require('./../../lib/PlaylistGenerator/playlistGenrator-utils');
 var config = require('./../../common/Configuration');
 var MP4WriteStream=require('./../../lib/MP4WriteStream');
@@ -9,8 +10,20 @@ var path = require('path');
 var Q = require('q');
 var fs = require('fs');
 var util = require('util');
+var _ = require('underscore');
+
+
+PlaylistUtils.playlistConfig.skipPathCheck = true;
 
 config.set('preserveOriginalChunk',false);
+config.set('rootFolderPath','/var/tmp');
+
+logger = {
+    debug:console.log,
+    info:console.log,
+    warn:console.log,
+    error:console.log
+};
 
 var stdDevTest = function() {
     var stats = new PlaylistUtils.Stats(1000);
@@ -1057,6 +1070,7 @@ FlavorWorker.prototype.completeIteration = function(self){
             console.log(that.testName + " - " + that.flavorId + " " + err);
         })
         .finally(function(){
+            console.log(that.testName + " - " + that.flavorId + " finally" );
             that.updatePromise = null;
         });
 
@@ -1076,9 +1090,9 @@ FlavorWorker.prototype.start = function() {
     var that = this;
 
     that.sesionStartTimeDiff = Date.now() - that.chunkList[0].video.firstDTS
-            - that.chunkList.slice(0,bootstrapFileCount).reduce(function(val,item){
-                return item.video.duration + val;
-       },0);
+        - that.chunkList.slice(0,bootstrapFileCount).reduce(function(val,item){
+            return item.video.duration + val;
+        },0);
 
     that.beginIteration();
 
@@ -1086,13 +1100,23 @@ FlavorWorker.prototype.start = function() {
 };
 
 FlavorWorker.prototype.stop = function () {
+
     var that = this;
+
+    console.log("FlavorWorker.stop flavor", that.flavorId);
 
     if(that.tm ) {
         clearTimeout(that.tm);
         that.tm = null;
     }
-    return that.updatePromise || Q.resolve();
+
+
+    var promise = that.updatePromise || Q.resolve();
+
+    return promise.then(function(){
+        console.log("FlavorWorker.stop removing flavor %s from playlist",that.flavorId);
+        return that.playlist.remove(that.flavorId);
+    });
 };
 
 var available_tests = [
@@ -1102,7 +1126,7 @@ var available_tests = [
 ];
 
 var enabled_tests = [
-   // 'test stream with encoder timestamp wrap'
+    // 'test stream with encoder timestamp wrap'
     'test continuous stream'
 //    'test stream with discontinuities single flavor'
 ]
@@ -1118,10 +1142,17 @@ var runSession = function(testName,flavors,iterations) {
 
     var playlistPath = path.join(mp4FilesPath,'playlist.json');
 
+    var entryId = 'abc123',
+        playlistDir = path.join(config.get('rootFolderPath'),entryId);
+
+    if(!fs.existsSync(playlistDir)) {
+        fs.mkdirSync(playlistDir);
+    }
+
     var playlist = new PlaylistGenerator({
-            entryId:'abc123',
-           dvrWindow:7200
-        } ,logger);
+        entryId:entryId,
+        dvrWindow:7200
+    } ,true,logger);
 
     var def = Q.defer();
     playlist.start().then( function() {
@@ -1131,27 +1162,35 @@ var runSession = function(testName,flavors,iterations) {
         },10000);
 
         var flavorWorkers =  flavors.map(function(f){
-            return new FlavorWorker(testName,playlist, f.list, f.flavor,iterations).start();
+            return new FlavorWorker(testName,playlist, f.list, f.flavor,iterations);
         });
 
         var done = function(){
 
+            console.log("done called. stopping all workers");
+
             clearInterval(diagTimer);
 
-            Q.AllSettled(flavorWorkers.map(function(worker){
-                worker.stop();
+            playlist.stop();
+            Q.allSettled(flavorWorkers.map(function(worker){
+                console.log("stopping worker "+worker.flavorId);
+                return worker.stop();
             }))
-                .then( function() {
-                    playlist.stop();
-                })
-                .then( function() {
+                .finally( function() {
                     def.resolve(testName);
                 });
         };
 
         process.on('SIGINT',done);
 
-    }).catch(function(err){
+        process.on('SIGTERM',done);
+
+        return flavorWorkers.map(function(worker){
+            return worker.start();
+        });
+
+    })
+      .catch(function(err){
         def.reject(testName + " -" + err);
     });
 
