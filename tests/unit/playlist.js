@@ -1127,8 +1127,8 @@ var available_tests = [
 
 var enabled_tests = [
     // 'test stream with encoder timestamp wrap'
-    'test continuous stream'
-//    'test stream with discontinuities single flavor'
+    //'test continuous stream'
+    'test stream with discontinuities single flavor'
 ]
 
 var runSession = function(testName,flavors,iterations) {
@@ -1158,6 +1158,7 @@ var runSession = function(testName,flavors,iterations) {
     playlist.start().then( function() {
 
         var diagTimer = setInterval(function(){
+            playlist.validate();
             console.log(util.inspect(playlist.getDiagnostics()));
         },10000);
 
