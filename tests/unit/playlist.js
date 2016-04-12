@@ -1033,6 +1033,8 @@ WorkerItem.prototype.clone = function(from,timeBias,uniqueSig) {
     return this;
 };
 
+var timescale = 1;
+
 function FlavorWorker(testName,playlist,chunkList,flavorId,iterations){
     this.playlist = playlist;
     this.chunkList = new Array(chunkList)[0];
@@ -1056,7 +1058,7 @@ FlavorWorker.prototype.beginIteration = function() {
 
     var waitTime = Math.max(0,that.workerItem.video.firstDTS - Date.now());
 
-    that.tm = setTimeout(that.completeIteration, waitTime,that);
+    that.tm = setTimeout(that.completeIteration, waitTime / timescale,that);
 };
 
 FlavorWorker.prototype.completeIteration = function(self){
@@ -1140,13 +1142,17 @@ var runSession = function(testName,flavors,iterations) {
 
     console.log(testName);
 
-    var playlistPath = path.join(mp4FilesPath,'playlist.json');
 
     var entryId = 'abc123',
-        playlistDir = path.join(config.get('rootFolderPath'),entryId);
+        playlistDir = path.join(config.get('rootFolderPath'),entryId),
+        playlistPath = path.join(playlistDir,'playlist.json');
 
     if(!fs.existsSync(playlistDir)) {
         fs.mkdirSync(playlistDir);
+    } else {
+        if(fs.existsSync(playlistPath)){
+            fs.unlinkSync(playlistPath);
+        }
     }
 
     var playlist = new PlaylistGenerator({
@@ -1160,7 +1166,7 @@ var runSession = function(testName,flavors,iterations) {
         var diagTimer = setInterval(function(){
             playlist.validate();
             console.log(util.inspect(playlist.getDiagnostics()));
-        },10000);
+        },10000 / timescale);
 
         var flavorWorkers =  flavors.map(function(f){
             return new FlavorWorker(testName,playlist, f.list, f.flavor,iterations);
