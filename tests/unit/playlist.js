@@ -1035,7 +1035,7 @@ WorkerItem.prototype.clone = function(from,timeBias,uniqueSig) {
 
 var timescale = 1;
 
-function FlavorWorker(testName,playlist,chunkList,flavorId,iterations){
+function FlavorWorker(testName,playlist,chunkList,flavorId,iterations,dontWait){
     this.playlist = playlist;
     this.chunkList = new Array(chunkList)[0];
     this.flavorId = flavorId;
@@ -1045,6 +1045,7 @@ function FlavorWorker(testName,playlist,chunkList,flavorId,iterations){
     this.workerItem = new WorkerItem(flavorId);
     this.listDuration = this.chunkList[this.chunkList.length-1].video.firstDTS
         + this.chunkList[this.chunkList.length-1].video.duration - this.chunkList[0].video.firstDTS;
+    this.dontWait = dontWait;
 }
 
 var bootstrapFileCount = 0;
@@ -1058,7 +1059,7 @@ FlavorWorker.prototype.beginIteration = function() {
 
     var waitTime = Math.max(0,that.workerItem.video.firstDTS - Date.now());
 
-    that.tm = setTimeout(that.completeIteration, waitTime / timescale,that);
+    that.tm = setTimeout(that.completeIteration, that.dontWait ? 0 : waitTime / timescale,that);
 };
 
 FlavorWorker.prototype.completeIteration = function(self){
@@ -1124,16 +1125,20 @@ FlavorWorker.prototype.stop = function () {
 var available_tests = [
     'test continuous stream',
     'test stream with discontinuities single flavor',
-    'test stream with encoder timestamp wrap'
+    'test stream with encoder timestamp wrap',
+    'test stream with shuffled single flavor'
 ];
 
 var enabled_tests = [
     // 'test stream with encoder timestamp wrap'
     //'test continuous stream'
-    'test stream with discontinuities single flavor'
+   // 'test stream with discontinuities single flavor',
+    'test stream with shuffled single flavor'
 ]
 
-var runSession = function(testName,flavors,iterations) {
+var runSession = function(testName,flavors,iterations,dontWait) {
+
+    dontWait = dontWait || false;
 
     if(enabled_tests.indexOf(testName) < 0){
         console.log("test \"%s\" is disabled, skipping",testName);
@@ -1169,7 +1174,7 @@ var runSession = function(testName,flavors,iterations) {
         },10000 / timescale);
 
         var flavorWorkers =  flavors.map(function(f){
-            return new FlavorWorker(testName,playlist, f.list, f.flavor,iterations);
+            return new FlavorWorker(testName,playlist, f.list, f.flavor,iterations,dontWait);
         });
 
         var done = function(){
@@ -1257,28 +1262,35 @@ var createEncoderWrap = function(list){
 var numOfFiles = 5;
 
 
+
 // test # 1 test run of files
 //config.set('dontInitializePlaylist',true);
 
 runSession('test continuous stream',[{list:fileInfos.slice(0,numOfFiles),flavor:1},{list:fileInfos.slice(0,numOfFiles),flavor:2}])
     .then( function() {
-        return runSession('test stream with discontinuities single flavor',
+        return runSession('test stream with shuffled single flavor',
             [{
-                list: createDiscontinuities(fileInfos.slice(0,32), 60000),
+                list: createDiscontinuities(_.shuffle(fileInfos.slice(0, 32)), 60000),
                 flavor: 1
-            }])
-            .then(function (msg) {
-                console.log(msg);
-            })
-            .catch(function (err) {
-                console.log(err);
-            })
-            .finally(function () {
-                return runSession('test stream with encoder timestamp wrap',
+            }],30,true).then(function () {
+                return runSession('test stream with discontinuities single flavor',
                     [{
-                        list: createEncoderWrap(fileInfos.slice(0,5)),
+                        list: createDiscontinuities(fileInfos.slice(0, 32), 60000),
                         flavor: 1
                     }])
+                    .then(function (msg) {
+                        console.log(msg);
+                    })
+                    .catch(function (err) {
+                        console.log(err);
+                    })
+                    .finally(function () {
+                        return runSession('test stream with encoder timestamp wrap',
+                            [{
+                                list: createEncoderWrap(fileInfos.slice(0, 5)),
+                                flavor: 1
+                            }])
+                    });
             });
     });
 
