@@ -1,37 +1,46 @@
 {
   "mockNetwork" : false,
-  "mockBackend" : false,
+  "mockBackend" : true,
   "readMockBackendResponseFromFile" : false,
-  "rootFolderPath" : "/dvrContentRootPath",
-  "oldContentFolderPath" : "/dvrOldContentRootPath",
+  "rootFolderPath" : "~/dvr/dvrContentRootPath",
+  "oldContentFolderPath" : "~/dvr/dvrOldContentRootPath",
   "requestTimeout" : 20000,
-  "pollingInterval" : 2000,
-  "backendPollingInterval" : 3000,
+  "flavorSuccessPollingInterval" : 2000,
+  "flavorFailPollingInterval" : 10000,
+  "backendPollingInterval" : 5000,
+  "wowzaPollingInterval" : 5000,
   "defaultDvrWindow" : 7200,
-  "minimalDvrWindow":900,
+  "minimalDvrWindow" : 900,
   "dvrMaxChunkCount" : 1000,
   "liveMaxChunkCount" : 15,
+  "minChunksForPlayback" : 3,
   "sessionDuration" : 180000,
+  "apiUpdateInterval" : 60000,
   "flavorDownloaderTeardownInterval" : 15000,
   "playlistUpdateInterval" : 300000,
-  "logLevel" : "DEBUG",
-  "logToConsole" : false,
-  "logFileName" : "/var/log/liveDVR/kDvrWorker.log",
+  "preserveOriginalChunk":true,
+  "logLevel" : "INFO",
+  "logToConsole" : true,
+  "logFileName" : "~/dvr/kDvrWorker.log",
   "simulateStreams": {
-      "enable":false,
-      "count": 100,
+      "enable":true,
+      "count": 1,
+      "dvrWindow": 7200,
       "maxChunkCount": 5,
-      "wowzaUrl": "http://127.0.0.1:1935/live/_definst_/1_abc123_1/playlist.m3u8"
+      "wowzaUrl": "http://cdn-lt-live.tvmidtvest.dk/dc-1/m/ny-live-publish5/kLive/smil:0_ppxiw1pv_all.smil/playlist.m3u8"
   },
   "mediaServer" : {
-    "hostname" : "@HOSTNAME@",
-    "applicationName" : "kLive"
+    "hostname" : "127.0.0.1",
+    "applicationName" : "live",
+    "port" : 1935,
+    "user" : "",
+    "password" : ""
   },
   "webServerParams" : {
     "applicationName" : "kLive",
     "port" : 8080,
     "logLevel" : "DEBUG",
-    "logFileName" : "/var/log/liveDVR/kDvrWebServer.log",
+    "logFileName" : "~/dvr/kDvrWebServer.log",
     "logToConsole" : true
   },
   "backendClient" : {
@@ -45,11 +54,11 @@
     "windowSize" : 3,
     "enabled" : false
   },
-   "playlistConfig" : {
-       "debug" : false,
-       "waitTimeBeforeRemoval" : 100000,
-       "maxChunkGapSize" : 10000,
-       "maxAllowedPTSDrift": 1000,
-       "timestampToleranceMs": 2
-   }
+  "playlistConfig" : {
+      "debug" : true,
+      "waitTimeBeforeRemoval" : 100000,
+      "maxChunkGapSize" : 10000,
+      "maxAllowedPTSDrift": 1000,
+      "timestampToleranceMs": 2
+  }
 }
