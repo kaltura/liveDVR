@@ -43,6 +43,7 @@ namespace converter{
         int64_t          m_creationTime;
         AVMD5            *m_hash;
         int64_t          m_minStartDTSMsec;
+        bool             m_bDataPending;
         
         std::vector<int> m_streamMapper;
         
@@ -59,7 +60,7 @@ namespace converter{
         
         int init(std::shared_ptr<StreamBase> inputStream, std::shared_ptr<StreamBase> outputStream);
         
-        int onData();
+        int onData(bool bEOS);
         
         void close();
         

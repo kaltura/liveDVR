@@ -56,7 +56,8 @@ namespace converter {
     }
     
     TS2MP4Convertor::TS2MP4Convertor()
-    :m_pAsyncConverter(nullptr)
+    :m_pAsyncConverter(nullptr),
+    m_bEOS(false)
     {
         av_log(nullptr,AV_LOG_TRACE,"TS2MP4Convertor::TS2MP4Convertor");
         // supported event types
@@ -167,6 +168,8 @@ namespace converter {
         if( input.GetStream() == NULL){
             Nan::ThrowError("internalPush. null buffer");
         }
+     
+        m_bEOS = true;
         
         if(m_pAsyncConverter != NULL){
             av_log(*input,AV_LOG_TRACE,"internalPush. task already scheduled. skipping");
@@ -186,7 +189,7 @@ namespace converter {
     // called by libuv worker in separate thread
     void TS2MP4Convertor::Execute (const TS2MP4Convertor::AsyncProgressConverter::ExecutionProgress& progress) {
         
-        int result = onData();
+        int result = onData(m_bEOS);
         if( result < 0){
             std::ostringstream error;
             error << " TS2MP4Convertor::Execute failed with error " << result;

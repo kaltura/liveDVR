@@ -113,7 +113,8 @@ namespace converter{
     :m_creationTime(0),
     m_hash(nullptr),
     m_minStartDTSMsec(0),
-    state(CLOSED)
+    state(CLOSED),
+    m_bDataPending(true)
     {}
     
     Converter::~Converter(){
@@ -128,7 +129,7 @@ namespace converter{
         if(!input->nb_streams){
             _S(input.checkStreams());
             if(!input->nb_streams){
-                return 0;
+                return m_bDataPending ? 0 : -1;
             }
         }
         
@@ -139,11 +140,11 @@ namespace converter{
             switch(in_stream->codec->codec_type){
                 case AVMEDIA_TYPE_VIDEO:
                     if(in_stream->codec->width == 0 )
-                        return 0;
+                        return m_bDataPending ? 0 : -1;
                     break;
                 case AVMEDIA_TYPE_AUDIO:
                     if(in_stream->codec->channels == 0 )
-                        return 0;
+                        return m_bDataPending ? 0 : -1;
                     break;
                 default:
                     break;
@@ -305,8 +306,8 @@ namespace converter{
         return 0;
     }
     
-    int Converter::onData(){
-        
+    int Converter::onData(bool bEOS){
+        m_bDataPending = bEOS == false;
         switch(state){
             case CREATING:
                 if(checkForStreams()){

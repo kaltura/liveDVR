@@ -129,6 +129,8 @@ namespace converter {
             unsigned char   m_flags;
         };
         
+        bool m_bEOS;
+        
         typedef std::unordered_map< std::string, CallbackInfo > CALLBACK_SUBS;
         typedef CALLBACK_SUBS::iterator SUBS_iter;
         CALLBACK_SUBS m_callSubscriptions;
