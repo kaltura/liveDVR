@@ -113,8 +113,8 @@ namespace converter{
     :m_creationTime(0),
     m_hash(nullptr),
     m_minStartDTSMsec(0),
-    state(CLOSED),
-    m_bDataPending(true)
+    m_bDataPending(true),
+    state(CLOSED)
     {}
     
     Converter::~Converter(){
@@ -163,8 +163,7 @@ namespace converter{
             
             AVStream *in_stream =input->streams[i];
             
-            int64_t start_time = in_stream->first_dts != AV_NOPTS_VALUE ? in_stream->first_dts : in_stream->start_time;
-            m_minStartDTSMsec = std::min(m_minStartDTSMsec,av_rescale(start_time,1000 * in_stream->time_base.num,in_stream->time_base.den));
+            m_minStartDTSMsec = std::min(m_minStartDTSMsec,av_rescale(in_stream->start_time,1000 * in_stream->time_base.num,in_stream->time_base.den));
             
             if(in_stream->codec->codec_id == AV_CODEC_ID_TIMED_ID3)
                 continue;
@@ -228,6 +227,9 @@ namespace converter{
                 av_log(*input,AV_LOG_WARNING,"Converter::pushData. stream %d. pkt with pts=AV_NOPTS_VALUE\n",m_streamMapper[pkt.stream_index]);
             }
             if(AV_NOPTS_VALUE != pkt.dts){
+                if(AV_NOPTS_VALUE != in_stream->first_dts){
+                    pkt.dts += in_stream->start_time - in_stream->first_dts;
+                }
                 pkt.dts -= av_rescale(m_minStartDTSMsec,in_stream->time_base.den,TIMESTAMP_RESOLUTION * in_stream->time_base.num);
             } else {
                 av_log(*input,AV_LOG_WARNING,"Converter::pushData. stream %d. pkt with dts=AV_NOPTS_VALUE\n",m_streamMapper[pkt.stream_index]);
