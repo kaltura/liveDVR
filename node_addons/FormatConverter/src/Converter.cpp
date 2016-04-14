@@ -59,13 +59,14 @@ extern "C"{
         AVRational *time_base = &fmt_ctx->streams[pkt->stream_index]->time_base;
         ts_buf a,b,c,d,e,f;
         
-        av_log(nullptr,avlog_level,"stm:%d sz:%d pts:%s pts_time:%s dts:%s dts_time:%s duration:%s duration_time:%s stream_index:%d\n",
+        av_log(nullptr,avlog_level,"stm:%d sz:%d (pts-dts)={%s,%s} (pts_time:%s dts_time:%s) duration:%s duration_time:%s stream_index:%d pkt_flags:%x\n",
                pkt->stream_index,
                pkt->size,
-               av_ts_make_string(a,pkt->pts), av_ts_make_time_string(b,pkt->pts, time_base),
-               av_ts_make_string(c,pkt->dts), av_ts_make_time_string(d,pkt->dts, time_base),
+               av_ts_make_string(a,pkt->pts), av_ts_make_string(c,pkt->dts),av_ts_make_time_string(b,pkt->pts, time_base),
+                av_ts_make_time_string(d,pkt->dts, time_base),
                av_ts_make_string(e,pkt->duration), av_ts_make_time_string(f,pkt->duration, time_base),
-               pkt->stream_index);
+               pkt->stream_index,
+               pkt->flags);
         
     }
 }
@@ -227,9 +228,6 @@ namespace converter{
                 av_log(*input,AV_LOG_WARNING,"Converter::pushData. stream %d. pkt with pts=AV_NOPTS_VALUE\n",m_streamMapper[pkt.stream_index]);
             }
             if(AV_NOPTS_VALUE != pkt.dts){
-                if(AV_NOPTS_VALUE != in_stream->first_dts){
-                    pkt.dts += in_stream->start_time - in_stream->first_dts;
-                }
                 pkt.dts -= av_rescale(m_minStartDTSMsec,in_stream->time_base.den,TIMESTAMP_RESOLUTION * in_stream->time_base.num);
             } else {
                 av_log(*input,AV_LOG_WARNING,"Converter::pushData. stream %d. pkt with dts=AV_NOPTS_VALUE\n",m_streamMapper[pkt.stream_index]);
@@ -279,7 +277,7 @@ namespace converter{
                 
                 pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
                 pkt.pos = -1;
-                
+
                 log_packet(*input, &pkt, "in");
                 
                 _S(av_interleaved_write_frame(*output, &pkt));
