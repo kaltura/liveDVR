@@ -59,6 +59,7 @@
       "waitTimeBeforeRemoval" : 100000,
       "maxChunkGapSize" : 10000,
       "maxAllowedPTSDrift": 1000,
-      "timestampToleranceMs": 2
+      "timestampToleranceMs": 2,
+       "minRefreshPlaylistInterval" : 20000
   }
 }
