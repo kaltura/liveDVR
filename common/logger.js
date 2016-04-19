@@ -3,11 +3,11 @@
  */
 
 
-var config = require('../Configuration');
+var config = require('./Configuration');
 var path = require('path');
 var mkdirp = require('mkdirp');
 var util = require('util');
-var hostname = require('../utils/hostname');
+var hostname = require('./utils/hostname');
 var log4js = require( "log4js" );
 
 
