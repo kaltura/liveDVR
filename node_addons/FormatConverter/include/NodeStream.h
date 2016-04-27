@@ -11,6 +11,7 @@
 
 #include <nan.h>
 #include <MemoryStream.h>
+#include <fstream>
 
 using namespace v8;
 using namespace node;
@@ -38,6 +39,7 @@ namespace converter {
         std::vector<uint8_t> m_output;
         std::vector<uint8_t>::iterator m_pos;
         size_t m_written;
+        std::ofstream m_ofs;
         
         NodeOutputStream();
         

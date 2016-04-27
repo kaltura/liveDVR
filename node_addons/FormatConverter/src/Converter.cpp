@@ -8,6 +8,13 @@
 
 #include "Converter.h"
 
+template<>
+void std::default_delete<AVDictionary>::operator() (AVDictionary* p) const _NOEXCEPT
+{
+    av_dict_free(&p);
+}
+
+
 extern "C"{
 #include <libavformat/movenc.h>
     
@@ -154,8 +161,8 @@ namespace converter{
         
         output->max_interleave_delta = 100;
         
-        dts.resize(input->nb_streams);
-        pts.resize(input->nb_streams);
+        dts.resize(input->nb_streams,AV_NOPTS_VALUE);
+        pts.resize(input->nb_streams,AV_NOPTS_VALUE);
         m_streamMapper.resize(input->nb_streams);
         
         m_minStartDTSMsec = std::numeric_limits<int64_t>::max();
@@ -194,11 +201,11 @@ namespace converter{
         }
         
         AVDictionary *opts = nullptr;
-        av_dict_set(&opts, "use_editlist", "0", 0);
-        int success = avformat_write_header(*output, &opts);
-        av_dict_free(&opts);
-        
-        _S(success);
+
+        _S(av_dict_set(&opts, "use_editlist", "0", 0));
+        std::unique_ptr<AVDictionary> optsptr(opts);
+        _S(avformat_write_header(*output, &opts));
+        optsptr.release();
         
         state = PUSHING;
         
@@ -207,6 +214,18 @@ namespace converter{
         return 0;
     }
     
+    inline void updateLastTimestamp(int64_t &lastValue,int64_t &timestamp,AVRational &tbIn,AVRational &tbOut){
+        
+        if(AV_NOPTS_VALUE == timestamp && AV_NOPTS_VALUE != lastValue){
+            timestamp = lastValue+1;
+        } else {
+            timestamp = av_rescale_q_rnd(timestamp, tbIn, tbOut, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+        }
+        if(AV_NOPTS_VALUE != lastValue && lastValue == timestamp){
+            timestamp++;
+        }
+        lastValue = timestamp;
+    }
     
     int Converter::pushData(){
         
@@ -259,21 +278,9 @@ namespace converter{
                 
                 //log_packet(*input, &pkt, "in",AV_LOG_FATAL);
                 
-                if(AV_NOPTS_VALUE != pkt.pts){
-                    pkt.pts = av_rescale_q_rnd(pkt.pts, in_stream->time_base, out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-                } else {
-                    pkt.pts = pts[pkt.stream_index]+1;
-                }
+                updateLastTimestamp(pts[pkt.stream_index], pkt.pts,in_stream->time_base,out_stream->time_base);
                 
-                pts[pkt.stream_index] = pkt.pts;
-                
-                if(AV_NOPTS_VALUE != pkt.dts){
-                    pkt.dts = av_rescale_q_rnd(pkt.dts, in_stream->time_base, out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-                } else  {
-                    pkt.dts = dts[pkt.stream_index]+1;
-                }
-                
-                dts[pkt.stream_index] = pkt.dts;
+                updateLastTimestamp(dts[pkt.stream_index], pkt.dts,in_stream->time_base,out_stream->time_base);
                 
                 pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
                 pkt.pos = -1;

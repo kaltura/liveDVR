@@ -13,18 +13,26 @@
 
 namespace converter {
     
+   
     //NodeOutputStream
     NodeOutputStream::NodeOutputStream()
     :m_written(0)
     {
         m_pos =m_output.begin();
+        //m_ofs.open("/Users/igors/Documents/out.ts");
     }
     
     NodeOutputStream::~NodeOutputStream()
     {
+        if(m_ofs.is_open()){
+            m_ofs.close();
+        }
     }
     
     int NodeOutputStream::Write(uint8_t *buf, int size) {
+        if(m_ofs.is_open()){
+            m_ofs.write((const char*)buf,size);
+        }
         if(m_pos == m_output.end()){
             //m_output.reserve(NextPow2::next(m_output.size()));
             m_output.insert(m_pos, buf, buf + size);
@@ -41,6 +49,23 @@ namespace converter {
     }
     
     int64_t NodeOutputStream::Seek(int64_t offset, int whence) {
+        if(m_ofs.is_open()){
+            std::ios_base::seek_dir dir;
+            switch(whence)
+            {
+                case SEEK_SET:
+                    dir = std::ios_base::beg;
+                    break;
+                case SEEK_END:
+                    dir = std::ios_base::end;
+                    break;
+                case SEEK_CUR:
+                   dir = std::ios_base::cur;
+                    break;
+                    
+            };
+            m_ofs.seekp(offset,dir);
+        }
         switch(whence)
         {
             case SEEK_SET:
