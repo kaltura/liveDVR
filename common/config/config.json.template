@@ -19,7 +19,7 @@
   "flavorDownloaderTeardownInterval" : 15000,
   "playlistUpdateInterval" : 300000,
   "preserveOriginalChunk":true,
-  "logLevel" : "INFO",
+  "logLevel" : "WARN",
   "logToConsole" : true,
   "logFileName" : "~/dvr/kDvrWorker.log",
   "simulateStreams": {
@@ -27,7 +27,8 @@
       "count": 1,
       "dvrWindow": 7200,
       "maxChunkCount": 5,
-      "wowzaUrl": "http://cdn-lt-live.tvmidtvest.dk/dc-1/m/ny-live-publish5/kLive/smil:0_ppxiw1pv_all.smil/playlist.m3u8"
+      "wowzaUrl": "http://kalsegsec-a.akamaihd.net/dc-1/m/ny-live-publish101/kLive/smil:1_ceut3fcf_all.smil/playlist.m3u8",
+      "entryId" : "1_ceut3fcf"
   },
   "mediaServer" : {
     "hostname" : "127.0.0.1",
@@ -60,6 +61,7 @@
       "maxChunkGapSize" : 10000,
       "maxAllowedPTSDrift": 1000,
       "timestampToleranceMs": 2,
-       "minRefreshPlaylistInterval" : 20000
+       "minRefreshPlaylistInterval" : 20000,
+       "humanReadable" : true
   }
 }
