@@ -20,6 +20,7 @@ namespace converter{
         double firstEncoderDtsMsec;
         double wrapEncoderDtsMsec;
         double durationMsec;
+        std::vector<double> vectKeyFrameDtsMsec;
         AVMediaType  mtype;
     };
     

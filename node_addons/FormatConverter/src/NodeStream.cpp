@@ -161,12 +161,19 @@ namespace converter {
                 case AVMEDIA_TYPE_VIDEO:
                 case AVMEDIA_TYPE_AUDIO:
                 {
+                    Local<Array> vectKeyFrameDtsMsec = Array::New(iter->vectKeyFrameDtsMsec.size());
+                  
+                    for(uint32_t i = 0; i < vectKeyFrameDtsMsec->Length();i++){
+                        vectKeyFrameDtsMsec->Set(i, Number::New(iter->vectKeyFrameDtsMsec[i]));
+                    }
+                    
                     Local<Object> trackInfo = Nan::New<Object>();
                     fileInfo->Set(String::New(iter->mtype == AVMEDIA_TYPE_VIDEO ? "video" : "audio"),trackInfo);
                     trackInfo->Set(String::New("duration"),Number::New(iter->durationMsec));
                     trackInfo->Set(String::New("firstDTS"),Number::New(iter->firstDtsMsec));
                     trackInfo->Set(String::New("firstEncoderDTS"),Number::New(iter->firstEncoderDtsMsec));
                     trackInfo->Set(String::New("wrapEncoderDTS"),Number::New(iter->wrapEncoderDtsMsec));
+                    trackInfo->Set(String::New("keyFrameDTS"),vectKeyFrameDtsMsec);
                 }
                     break;
                 default:

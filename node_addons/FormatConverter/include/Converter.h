@@ -37,9 +37,34 @@ namespace converter{
         Converter(const Converter&);
         void operator=(Converter&);
     protected:
+        
+        static double dts2msec(const int64_t&val,const AVRational &timebase);
+        
+        friend struct ExtraTrackInfo;
+        
         CInputCtx   input;
         COutputCtx  output;
-        std::vector<int64_t> pts, dts;
+        
+        struct ExtraTrackInfo{
+            ExtraTrackInfo(const double &dts)
+            :lastDTS(AV_NOPTS_VALUE),
+            lastPTS(AV_NOPTS_VALUE),
+            maxDTS(0),
+            startDTS(dts)
+            {}
+            
+            void addKeyFrame(const double &kt){
+                vecKeyFrameDTS.push_back( kt - startDTS);
+            }
+            
+            int64_t lastDTS,
+                    lastPTS,
+                    maxDTS;
+            double startDTS;
+            std::vector<double> vecKeyFrameDTS;
+        };
+        
+        std::vector<ExtraTrackInfo> m_extraTrackInfo;
         int64_t          m_creationTime;
         AVMD5            *m_hash;
         int64_t          m_minStartDTSMsec;
