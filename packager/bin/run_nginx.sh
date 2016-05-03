@@ -39,11 +39,11 @@ done
 
 echo "running $nginxPath -c /var/tmp/nginx.conf"
 
-nginxDir=/usr/local/nginx/
+nginxDir="/usr/local/nginx"
 
-[ -d "$nginxDir" ] && mkdir -p $nginxDir
+[ -d "$nginxDir" ] || mkdir -p $nginxDir
 
-[ -d "$nginxDir/logs" ] && mkdir -p "$nginxDir/logs"
+[ -d "$nginxDir/logs" ] || mkdir -p "$nginxDir/logs"
 
 $nginxPath -c /var/tmp/nginx.conf &> /dev/null &
 
