@@ -50,7 +50,7 @@ namespace converter {
     
     int64_t NodeOutputStream::Seek(int64_t offset, int whence) {
         if(m_ofs.is_open()){
-            std::ios_base::seek_dir dir;
+            std::ios_base::seekdir dir;
             switch(whence)
             {
                 case SEEK_SET:
