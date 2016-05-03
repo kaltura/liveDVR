@@ -39,7 +39,15 @@ done
 
 echo "running $nginxPath -c /var/tmp/nginx.conf"
 
+nginxDir=/usr/local/nginx/
+
+[ -d "$nginxDir" ] && mkdir -p $nginxDir
+
+[ -d "$nginxDir/logs" ] && mkdir -p "$nginxDir/logs"
+
 $nginxPath -c /var/tmp/nginx.conf &> /dev/null &
+
+echo "nginx log dir is: $nginxDir/logs"
 
 echo "nginx pid(s) is:"
 getNginxPids
