@@ -15,7 +15,7 @@ case  $os_name in
     binDir=darwin
     ;;
 "Linux")
-    binDir=linux/
+    binDir=linux
     ;;
 esac
 
