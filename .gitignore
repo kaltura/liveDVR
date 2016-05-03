@@ -29,3 +29,5 @@ node_modules
 
 NewTsRebase/build/**
 endListPending.json
+common/config/config.json
+common/config/configMapping.json
