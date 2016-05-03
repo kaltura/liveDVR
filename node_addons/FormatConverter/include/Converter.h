@@ -56,7 +56,6 @@ namespace converter{
             void addKeyFrame(const double &kt){
                 vecKeyFrameDTS.push_back( kt - startDTS);
             }
-            
             int64_t lastDTS,
                     lastPTS,
                     maxDTS;

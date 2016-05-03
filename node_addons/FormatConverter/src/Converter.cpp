@@ -359,6 +359,7 @@ namespace converter{
                         double wrapDTS = ::ceil(dts2msec(1ULL << stream->pts_wrap_bits,stream->time_base));
                         ExtraTrackInfo &extraInfo = this->m_extraTrackInfo[this->m_streamMapper[i]];
                         double duration = dts2msec(extraInfo.maxDTS - stream->start_time,stream->time_base);
+
                         mfi.tracks.push_back({ this->m_creationTime + extraInfo.startDTS - m_minStartDTSMsec,
                             extraInfo.startDTS,
                             wrapDTS,

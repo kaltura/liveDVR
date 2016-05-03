@@ -161,10 +161,10 @@ namespace converter {
                 case AVMEDIA_TYPE_VIDEO:
                 case AVMEDIA_TYPE_AUDIO:
                 {
-                    Local<Array> vectKeyFrameDtsMsec = Array::New(iter->vectKeyFrameDtsMsec.size());
+                    Local<Array> vecKeyFrameDtsMsec = Array::New(iter->vecKeyFrameDtsMsec.size());
                   
-                    for(uint32_t i = 0; i < vectKeyFrameDtsMsec->Length();i++){
-                        vectKeyFrameDtsMsec->Set(i, Number::New(iter->vectKeyFrameDtsMsec[i]));
+                    for(uint32_t i = 0; i < vecKeyFrameDtsMsec->Length();i++){
+                        vecKeyFrameDtsMsec->Set(i, Number::New(iter->vecKeyFrameDtsMsec[i]));
                     }
                     
                     Local<Object> trackInfo = Nan::New<Object>();
@@ -173,7 +173,7 @@ namespace converter {
                     trackInfo->Set(String::New("firstDTS"),Number::New(iter->firstDtsMsec));
                     trackInfo->Set(String::New("firstEncoderDTS"),Number::New(iter->firstEncoderDtsMsec));
                     trackInfo->Set(String::New("wrapEncoderDTS"),Number::New(iter->wrapEncoderDtsMsec));
-                    trackInfo->Set(String::New("keyFrameDTS"),vectKeyFrameDtsMsec);
+                    trackInfo->Set(String::New("keyFrameDTS"),vecKeyFrameDtsMsec);
                 }
                     break;
                 default:
