@@ -27,8 +27,6 @@ function getNginxPids(){
     ps -fA | grep nginx | grep -vE "grep|$scriptName" | awk '{print $2}'
 }
 
-getNginxPids
-
 processes=(`getNginxPids`)
 
 echo "processes=$processes"
