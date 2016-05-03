@@ -35,9 +35,19 @@ return -1;\
 } \
 }
 
-template<>
-void std::default_delete<AVDictionary>::operator() (AVDictionary* p) const _NOEXCEPT;
+namespace std {
+#ifndef _NOEXCEPT
+#define _NOEXCEPT noexcept
+#endif
+    
+    template<>
+    inline
+    void default_delete<AVDictionary>::operator() (AVDictionary* p) const _NOEXCEPT
+    {
+    av_dict_free(&p);
+}
 
+};
 
 namespace converter{
     
@@ -118,7 +128,7 @@ return "";\
         size_t indexStart = walkerIndex, lastIndex = walkerIndex;
         for (; lastIndex < len; lastIndex++)
         {
-         //   ensure_len(lastIndex+1)
+            //   ensure_len(lastIndex+1)
             if (0 == buf[lastIndex])
             {
                 break;
@@ -235,8 +245,8 @@ return "";\
     
     const double TIMESTAMP_RESOLUTION = 1000.0;
     
-   
-
+    
+    
 };
 
 #endif

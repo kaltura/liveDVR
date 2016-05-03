@@ -8,13 +8,6 @@
 
 #include "Converter.h"
 
-template<>
-void std::default_delete<AVDictionary>::operator() (AVDictionary* p) const _NOEXCEPT
-{
-    av_dict_free(&p);
-}
-
-
 extern "C"{
 #include <libavformat/movenc.h>
     
