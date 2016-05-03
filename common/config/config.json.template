@@ -52,5 +52,6 @@
     "timeInterval" : 900000,
     "windowSize" : 3,
     "enabled" : false
-  }
+  },
+  "universalTimestampPartnersList" : []
 }
