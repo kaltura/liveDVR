@@ -202,56 +202,32 @@ ts_rebase_shift_timestamps(
 	}
 }
 
-void 
-ts_rebase_impl(
-	ts_rebase_context_t* context,
-	u_char* buffer, 
-	size_t size, 
-	uint64_t* duration,
-    bool universal_timestamp)
+void ts_rebase_impl(
+                    ts_rebase_context_t* context,
+                    uint64_t* duration,
+                    u_char* buffer,
+                    size_t size,
+                    int main_pid,
+                    uint32_t frame_count,
+                    int64_t first_frame_dts,
+                    int64_t last_frame_dts
+)
 {
-	uint32_t frame_count;
-    int64_t corrected_dts;
-	int64_t first_frame_dts = 0;
-	int64_t last_frame_dts = 0;
-	int main_pid;
-	
-	*duration = 0;
-
-	if (size < TS_PACKET_LENGTH)
-	{
-		return;
-	}
-	
-	main_pid = ts_rebase_find_main_pid(buffer, size);
-	if (main_pid == 0)
-	{
-		return;
-	}
-
-	ts_rebase_get_stream_frames_info(
-		buffer,
-		size,
-		main_pid,
-		&frame_count,
-		&first_frame_dts,
-		&last_frame_dts);
-	context->original_first_frame_dts = first_frame_dts;
+    
+    if (size < TS_PACKET_LENGTH)
+    {
+        return;
+    }
+    
+    if (main_pid == 0)
+    {
+        return;
+    }
+    
 	if (frame_count == 0)
 	{
 		return;
 	}
-    
-    if (!universal_timestamp  && context->expected_dts != NO_TIMESTAMP)
-    {
-        corrected_dts = first_frame_dts + context->correction;
-        
-        if (((context->expected_dts - corrected_dts) & TIMESTAMP_MASK) > REBASE_THRESHOLD &&
-            ((corrected_dts - context->expected_dts) & TIMESTAMP_MASK) > REBASE_THRESHOLD)
-        {
-            context->correction = context->expected_dts - first_frame_dts;
-        }
-    }
     
 	if (context->correction != 0)
 	{
@@ -269,7 +245,7 @@ ts_rebase_impl(
 	context->expected_dts = last_frame_dts;
 	if (context->total_frame_count > 0)
 	{
-		context->expected_dts += context->total_frame_durations / context->total_frame_count;
+		context->expected_dts += context->total_frame_durations / context->total_frame_count; //Adding the average time of a frame
 	}
 
 	*duration = (context->expected_dts - first_frame_dts) & TIMESTAMP_MASK;
