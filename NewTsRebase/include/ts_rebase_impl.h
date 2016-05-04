@@ -19,6 +19,7 @@ typedef struct
 	int64_t correction;
     int64_t id3_pts_diff;
 	int64_t original_first_frame_dts;
+    int64_t last_frame_dts;
 } ts_rebase_context_t;
 
 // functions
@@ -33,6 +34,16 @@ void ts_rebase_impl(
 	uint64_t* duration,
     bool universal_timestamp);
 
+ void ts_rebase_get_stream_frames_info(
+                                     const u_char* buffer,
+                                     size_t size,
+                                     int pid,
+                                     uint32_t* frame_count,
+                                     int64_t* first_frame_dts,
+                                     int64_t* last_frame_dts);
+    
+
+int ts_rebase_find_main_pid(const u_char* buffer, size_t size);
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */

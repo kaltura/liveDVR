@@ -2,7 +2,6 @@
 #include "constants.h"
 #include <stdbool.h>
 
-
 static int
 ts_rebase_get_main_pid_from_pmt(
 	const u_char* packet_offset,
@@ -59,7 +58,7 @@ ts_rebase_get_main_pid_from_pmt(
 	return result;
 }
 
-static int
+ int
 ts_rebase_find_main_pid(const u_char* buffer, size_t size)
 {
 	const mpeg_ts_header_t* ts_header;
@@ -102,7 +101,7 @@ ts_rebase_find_main_pid(const u_char* buffer, size_t size)
 	return 0;
 }
 
-static void
+ void
 ts_rebase_get_stream_frames_info(
 	const u_char* buffer,
 	size_t size,
