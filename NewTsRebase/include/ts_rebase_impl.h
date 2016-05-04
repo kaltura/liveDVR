@@ -4,6 +4,7 @@
 // includes
 #include <sys/types.h>
 #include "mpegTs.h"
+#include <stdbool.h>
 
 // typedefs
 #ifdef WIN32
@@ -29,7 +30,8 @@ void ts_rebase_impl(
 	ts_rebase_context_t* context,
 	u_char* buffer,
 	size_t size,
-	uint64_t* duration);
+	uint64_t* duration,
+    bool universal_timestamp);
 
 #ifdef __cplusplus
 }

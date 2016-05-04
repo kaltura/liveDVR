@@ -128,7 +128,8 @@ NAN_METHOD(RebaseTs)
     context.id3_pts_diff = curValue->IsNumber() ? curValue->IntegerValue() : 0;
 
     int rebase_threshold = (args.Length() == 4)  ? args[3]->NumberValue() : REBASE_THRESHOLD_DEFAULT;
-    if (args[2]->ToBoolean()->BooleanValue())
+    bool universal_timestamp = args[2]->ToBoolean()->BooleanValue();
+    if (universal_timestamp)
     {
         const byte_t* buffer_data=(const byte_t*)Buffer::Data(args[1]->ToObject());
         size_t buffer_size=Buffer::Length(args[1]->ToObject());
@@ -148,7 +149,8 @@ NAN_METHOD(RebaseTs)
                    &context,
                    (u_char*)Buffer::Data(args[1]->ToObject()),
                    Buffer::Length(args[1]->ToObject()),
-                   &duration);
+                   &duration,
+                   universal_timestamp);
     
     // update the context object
     inputContext->Set(NanNew<String>(CONTEXT_EXPECTED_DTS), 		 NanNew<Number>(context.expected_dts));
