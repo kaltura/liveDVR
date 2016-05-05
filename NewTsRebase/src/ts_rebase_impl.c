@@ -1,6 +1,6 @@
 #include "ts_rebase_impl.h"
 #include "constants.h"
-
+#include <stdbool.h>
 
 static int
 ts_rebase_get_main_pid_from_pmt(
@@ -58,7 +58,7 @@ ts_rebase_get_main_pid_from_pmt(
 	return result;
 }
 
-static int
+ int
 ts_rebase_find_main_pid(const u_char* buffer, size_t size)
 {
 	const mpeg_ts_header_t* ts_header;
@@ -101,7 +101,7 @@ ts_rebase_find_main_pid(const u_char* buffer, size_t size)
 	return 0;
 }
 
-static void
+ void
 ts_rebase_get_stream_frames_info(
 	const u_char* buffer,
 	size_t size,
@@ -202,44 +202,33 @@ ts_rebase_shift_timestamps(
 	}
 }
 
-void 
-ts_rebase_impl(
-	ts_rebase_context_t* context,
-	u_char* buffer, 
-	size_t size, 
-	uint64_t* duration)
+void ts_rebase_impl(
+                    ts_rebase_context_t* context,
+                    uint64_t* duration,
+                    u_char* buffer,
+                    size_t size,
+                    int main_pid,
+                    uint32_t frame_count,
+                    int64_t first_frame_dts,
+                    int64_t last_frame_dts
+)
 {
-	uint32_t frame_count;
-	int64_t first_frame_dts = 0;
-	int64_t last_frame_dts = 0;
-	int main_pid;
-	
-	*duration = 0;
-
-	if (size < TS_PACKET_LENGTH)
-	{
-		return;
-	}
-	
-	main_pid = ts_rebase_find_main_pid(buffer, size);
-	if (main_pid == 0)
-	{
-		return;
-	}
-
-	ts_rebase_get_stream_frames_info(
-		buffer,
-		size,
-		main_pid,
-		&frame_count,
-		&first_frame_dts,
-		&last_frame_dts);
-	context->original_first_frame_dts = first_frame_dts;
+    
+    if (size < TS_PACKET_LENGTH)
+    {
+        return;
+    }
+    
+    if (main_pid == 0)
+    {
+        return;
+    }
+    
 	if (frame_count == 0)
 	{
 		return;
 	}
-
+    
 	if (context->correction != 0)
 	{
 		ts_rebase_shift_timestamps(
@@ -256,7 +245,7 @@ ts_rebase_impl(
 	context->expected_dts = last_frame_dts;
 	if (context->total_frame_count > 0)
 	{
-		context->expected_dts += context->total_frame_durations / context->total_frame_count;
+		context->expected_dts += context->total_frame_durations / context->total_frame_count; //Adding the average time of a frame
 	}
 
 	*duration = (context->expected_dts - first_frame_dts) & TIMESTAMP_MASK;
