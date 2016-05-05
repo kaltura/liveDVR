@@ -104,7 +104,7 @@ namespace converter {
     
     NAN_METHOD (TS2MP4Convertor::internalOn)
     {
-        if(info.Length() != 2){
+        if(info.Length() < 2){
             Nan::ThrowError("TS2MP4Convertor::on. expected 2 args");
         }
         
@@ -116,6 +116,12 @@ namespace converter {
             Nan::ThrowError("TS2MP4Convertor::on. expected callback");
         }
         
+        if(info.Length() > 2){
+            if(!info[2]->IsObject()){
+                Nan::ThrowError("TS2MP4Convertor::on. expected object for \"this\"");
+            }
+        }
+        
         String::AsciiValue eventName (info[0]);
         std::string strEvent(*eventName);
         SUBS_iter found = m_callSubscriptions.find(strEvent);
@@ -124,6 +130,9 @@ namespace converter {
         }
         if( found->second.m_flags & ~DELIVERED ){
             found->second.m_cb.reset(new Nan::Callback(info[1].As<Function>()));
+            if(info.Length() > 2){
+                found->second.m_pThis.Reset(info[2].As<Object>());
+            }
         }
         else if( found->second.m_flags & READY ){
             this->runCompleteCallback(found);
@@ -240,17 +249,14 @@ namespace converter {
             }
             
             if(!result.IsEmpty()) {
-                Local<Value> argv[] = { result };
-                iter->second.m_cb->Call(1, argv);
+                iter->second.Call(result);
             } else {
                 av_log(nullptr,AV_LOG_TRACE,"runCompleteCallback. empty result, probably a bug or error.");
                 deliverError(std::string("empty args, probably a bug or error. ") + iter->first);
             }
             
-            iter->second.m_flags |= DELIVERED;
-            iter->second.m_cb.reset();
+            iter->second.Done();
         }
-        
     }
     
     void TS2MP4Convertor::deliverError(const std::string &message){
@@ -258,10 +264,7 @@ namespace converter {
         SUBS_iter iter = m_callSubscriptions.find("error");
       
         if(iter != m_callSubscriptions.end() && iter->second.m_cb){
-            v8::Local<v8::Value> argv[] = {
-                v8::Exception::Error(Nan::New<String>(message.c_str()).ToLocalChecked())
-            };
-            iter->second.m_cb->Call(1, argv);
+            iter->second.Call( v8::Exception::Error(Nan::New<String>(message.c_str()).ToLocalChecked()) );
         } else {
             av_log(nullptr,AV_LOG_TRACE,"deliverError. no subscription for error event");
         }

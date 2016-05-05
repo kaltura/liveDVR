@@ -114,19 +114,50 @@ namespace converter {
         // managing event subscriptions
         
         
-        typedef std::unique_ptr<Nan::Callback> CALLBACK_PTR;
+        typedef std::shared_ptr<Nan::Callback> CALLBACK_PTR;
         // callback state
         enum CALLBACK_STATE{ INIT = 1, READY = 2, DELIVERED = 4};
         
         struct CallbackInfo {
             
-            CallbackInfo(Nan::Callback *cb = nullptr)
+            CallbackInfo(Nan::Callback *cb = nullptr,Handle<Object> obj = Handle<Object>())
             :m_cb(cb),
-            m_flags(INIT)
+            m_flags(INIT),
+            m_pThis(obj)
             {}
-           
+            
+            CallbackInfo(const CallbackInfo &o)
+            {
+                m_flags = o.m_flags;
+                m_cb = o.m_cb;
+                m_pThis.Reset(o.m_pThis);
+            }
+            
+            ~CallbackInfo()
+            {
+                m_pThis.Reset();
+            }
+            
+            void Call(const Local<Value> &result) {
+                Local<Value> argv[] = {result};
+                if(!m_pThis.IsEmpty()){
+                    Local<Object> target = Nan::New<Object>(m_pThis);
+                    m_cb->Call(target,1, argv);
+                } else {
+                    m_cb->Call(1, argv);
+                }
+            }
+            
+            void Done()
+            {
+                m_flags |= DELIVERED;
+                m_cb.reset();
+                m_pThis.Reset();
+            }
+            
             CALLBACK_PTR     m_cb;
             unsigned char   m_flags;
+            Nan::Persistent<Object> m_pThis;
         };
         
         bool m_bEOS;
