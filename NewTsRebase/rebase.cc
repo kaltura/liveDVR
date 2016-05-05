@@ -153,7 +153,7 @@ NAN_METHOD(RebaseTs)
         
 		parsing_ID3_tag(buffer_data, buffer_size, &context, rebase_threshold, last_frame_dts_old);  //parse the ID3 tag and check if correction is needed
         
-        inputContext->Set(NanNew<String>(CONTEXT_SUGGESTED_CORRECTION),     NanNew<Number>(context.id3_pts_diff & TIMESTAMP_MASK));
+        inputContext->Set(NanNew<String>(CONTEXT_SUGGESTED_CORRECTION),     NanNew<Number>(context.id3_pts_diff));
         
     }
     else
