@@ -151,14 +151,9 @@ NAN_METHOD(RebaseTs)
         curValue = inputContext->Get(NanNew<String>(CONTEXT_LAST_FRAME_DTS));
         int64_t last_frame_dts_old  = curValue->IsNumber() ? curValue->IntegerValue() : 0;
         
-
-        context.expected_dts=NO_TIMESTAMP;  //why?
-
-
+		parsing_ID3_tag(buffer_data, buffer_size, &context, rebase_threshold, last_frame_dts_old);  //parse the ID3 tag and check if correction is needed
         
-		parsing_ID3_tag(buffer_data, buffer_size, &context, rebase_threshold, last_frame_dts_old);
         inputContext->Set(NanNew<String>(CONTEXT_SUGGESTED_CORRECTION),     NanNew<Number>(context.id3_pts_diff & TIMESTAMP_MASK));
-        
         
     }
     else
@@ -189,8 +184,8 @@ NAN_METHOD(RebaseTs)
                    );
     
     // update the context object
-    inputContext->Set(NanNew<String>(CONTEXT_EXPECTED_DTS), 		 NanNew<Number>(context.expected_dts & TIMESTAMP_MASK ));
-    inputContext->Set(NanNew<String>(CONTEXT_CORRECTION),            NanNew<Number>(context.correction & TIMESTAMP_MASK));
+    inputContext->Set(NanNew<String>(CONTEXT_EXPECTED_DTS), 		 NanNew<Number>(context.expected_dts));
+    inputContext->Set(NanNew<String>(CONTEXT_CORRECTION),            NanNew<Number>(context.correction));
     inputContext->Set(NanNew<String>(CONTEXT_TOTAL_FRAME_DURATIONS), NanNew<Number>(context.total_frame_durations));
     inputContext->Set(NanNew<String>(CONTEXT_TOTAL_FRAME_COUNT),     NanNew<Number>(context.total_frame_count));
 	inputContext->Set(NanNew<String>(CONTEXT_FIRST_FRAME_DTS), NanNew<Number>(context.original_first_frame_dts));
