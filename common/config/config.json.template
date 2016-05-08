@@ -21,7 +21,7 @@
   "logToConsole" : true,
   "logFileName" : "/dvr/kDvrWorker.log",
   "simulateStreams": {
-      "enable":true,
+      "enable":false,
       "count": 1,
       "dvrWindow": 7200,
       "maxChunkCount": 5,
