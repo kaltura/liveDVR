@@ -21,7 +21,9 @@ esac
 
 nginxPath=$dirname/$binDir/nginx
 
-sed "s#@CONTENT_DIR@#~/dvr/dvrContentRootPath/#" $confDir/nginx.conf.template > /var/tmp/nginx.conf
+contentDir=${1:-$HOME/dvr/dvrContentRootPath}
+
+sed "s#@CONTENT_DIR@#$contentDir/#" $confDir/nginx.conf.template > /var/tmp/nginx.conf
 
 function getNginxPids(){
     ps -fA | grep nginx | grep -vE "grep|$scriptName" | awk '{print $2}'
