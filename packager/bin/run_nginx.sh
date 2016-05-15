@@ -8,6 +8,8 @@ os_name=`uname`
 
 confDir=$dirname/../config/
 
+
+
 echo "confDir=$confDir"
 
 case  $os_name in
@@ -21,9 +23,40 @@ esac
 
 nginxPath=$dirname/$binDir/nginx
 
+declare a dylibFiles
+
+for dylibFile in `ls $dirname/$binDir/*.dylib`
+do
+    targetFile=/usr/local/lib/`basename $dylibFile`
+    echo "$targetFile"
+    if [ ! -f "$targetFile" ]
+    then
+        echo "not found!"
+        dylibFiles+=("$targetFile")
+        ln -sf $dylibFile /usr/local/lib/
+    fi
+done
+
+function cleanup()
+{
+    echo "cleanup... ";
+    for file in ${dylibFiles[@]} ;
+    do
+        rm -f $file
+    done
+    echo "done!"
+}
+
+if [ "${#dylibFiles[@]}" -ne "0" ]
+then
+    trap cleanup SIGINT SIGTERM SIGSTOP 0
+fi
+
 contentDir=${1:-$HOME/dvr/dvrContentRootPath}
 
-sed "s#@CONTENT_DIR@#$contentDir/#" $confDir/nginx.conf.template > /var/tmp/nginx.conf
+port=${2:-8080}
+
+sed  -e "s#@CONTENT_DIR@#$contentDir/#" -e "s#@PORT@#$port#" $confDir/nginx.conf.template > /var/tmp/nginx.conf
 
 function getNginxPids(){
     ps -fA | grep nginx | grep -vE "grep|$scriptName" | awk '{print $2}'
