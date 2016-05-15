@@ -2,7 +2,7 @@
  * Created by igors on 3/30/16.
  */
 var PlaylistGenerator = require('./../../lib/PlaylistGenerator/PlaylistGenerator');
-var PlaylistUtils = require('./../../lib/PlaylistGenerator/playlistGenrator-utils');
+var PlaylistUtils = require('./../../lib/PlaylistGenerator/playlistGen-utils');
 var config = require('./../../common/Configuration');
 var MP4WriteStream=require('./../../lib/MP4WriteStream');
 var logger = require('./../../lib/logger/logger')(module);
