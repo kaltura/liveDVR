@@ -25,15 +25,17 @@ nginxPath=$dirname/$binDir/nginx
 
 declare a dylibFiles
 
-for dylibFile in `ls $dirname/$binDir/*.dylib`
+baseDir="$dirname/$binDir/"
+
+for dylibFile in `find $baseDir -type f -name "*.dylib"`
 do
-    targetFile=/usr/local/lib/`basename $dylibFile`
+    targetFile=${dylibFile/$baseDir/}
     echo "$targetFile"
     if [ ! -f "$targetFile" ]
     then
         echo "not found!"
         dylibFiles+=("$targetFile")
-        ln -sf $dylibFile /usr/local/lib/
+        ln -sf $dylibFile $targetFile
     fi
 done
 
