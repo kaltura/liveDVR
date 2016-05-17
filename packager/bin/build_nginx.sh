@@ -4,16 +4,17 @@ ffmpegLibsDir=${ffmpegLibsDir:-/root/liveDVR/node_addons/FormatConverter/build/F
 
 os_name=`uname`
 
+#export LIB_AV_CODEC=$ffmpegLibsDir/libavcodec/libavcodec.a
+export LIB_AV_FILTER="$ffmpegLibsDir/libavfilter/libavfilter.a"
+export LIB_AV_UTIL=$ffmpegLibsDir/libavutil/libavutil.a
+
 case  $os_name in
 "Darwin")
     ;;
 "Linux")
+    LIB_AV_FILTER="$LIB_AV_FILTER  -lpthread -lm -lrt"
    ;;
 esac
-
-#export LIB_AV_CODEC=$ffmpegLibsDir/libavcodec/libavcodec.a
-export LIB_AV_FILTER="$ffmpegLibsDir/libavfilter/libavfilter.a -lpthread -lm -lrt"
-export LIB_AV_UTIL=$ffmpegLibsDir/libavutil/libavutil.a
 
 cd ~/
 
