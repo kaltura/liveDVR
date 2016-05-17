@@ -2,8 +2,8 @@
   "mockNetwork" : false,
   "mockBackend" : false,
   "readMockBackendResponseFromFile" : false,
-  "rootFolderPath" : "/dvr/dvrContentRootPath",
-  "oldContentFolderPath" : "/dvr/dvrOldContentRootPath",
+  "rootFolderPath" : "~/dvr/dvrContentRootPath",
+  "oldContentFolderPath" : "~/dvr/dvrOldContentRootPath",
   "requestTimeout" : 20000,
   "flavorSuccessPollingInterval" : 2000,
   "flavorFailPollingInterval" : 10000,
@@ -19,15 +19,14 @@
   "flavorDownloaderTeardownInterval" : 15000,
   "logLevel" : "DEBUG",
   "logToConsole" : true,
-  "logFileName" : "/dvr/kDvrWorker.log",
+  "logFileName" : "~/dvr/kDvrWorker.log",
   "simulateStreams": {
       "enable":false,
       "count": 1,
       "dvrWindow": 7200,
       "maxChunkCount": 5,
       "useNginx":false,
-      "entryId": "1_abc123",
-      "wowzaUrl": "http://127.0.0.1:1935/live/_definst_/1_abc123_1/playlist.m3u8"
+      "wowzaUrl": "http://kalsegsec-a.akamaihd.net/dc-0/m/pa-live-publish2/kLive/smil:1_oorxcge2_all.smil/playlist.m3u8"
   },
   "mediaServer" : {
     "hostname" : "@HOSTNAME@",
@@ -47,7 +46,8 @@
     "windowSize" : 3,
     "enabled" : false
   },
-   "playlistConfig" : {
+
+    "playlistConfig" : {
         "debug" : false,
         "waitTimeBeforeRemoval" : 100000,
         "maxChunkGapSize" : 10000,
@@ -56,4 +56,6 @@
          "minRefreshPlaylistInterval" : 20000,
          "humanReadable" : false
     }
+
+
 }
