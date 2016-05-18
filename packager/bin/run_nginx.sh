@@ -21,7 +21,7 @@ case  $os_name in
     ;;
 esac
 
-nginxPath=$dirname/$binDir/nginx
+nginxPath="$dirname/../../bin/$binDir/nginx"
 
 declare a dylibFiles
 
