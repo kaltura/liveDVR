@@ -20,6 +20,9 @@ events {
 http {
     #include       mime.types;
     default_type  application/octet-stream;
+    types {
+        text/xml                              xml;
+    }
 
     #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
     #                  '$status $body_bytes_sent "$http_referer" '
@@ -46,6 +49,13 @@ http {
         rewrite  /kLive\/smil:(.*)_all.smil\/playlist.m3u8  /hls/$1/playlist.json/master.m3u8 last;
         rewrite  /kLive\/smil:(.*)_all.smil\/(.*)  /hls/$1/playlist.json/$2 last;
 
+        location = /serverip {
+
+            expires 1d;
+            return 200 "Kaltura";
+        }
+
+
 
        location /hls/ {
             vod hls;
@@ -69,6 +79,11 @@ http {
             add_header 'Access-Control-Allow-Origin' '*';
        }
 
+
+        location / {
+            expires 1d;
+            root   @WWW_DIR@;
+        }
 
     }
 }
