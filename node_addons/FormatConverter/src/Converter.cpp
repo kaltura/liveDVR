@@ -199,12 +199,10 @@ namespace converter{
         return 0;
     }
     
-    inline void updateLastTimestamp(int64_t &lastValue,int64_t &timestamp,AVRational &tbIn,AVRational &tbOut){
+    inline void updateLastTimestamp(int64_t &lastValue,int64_t &timestamp){
         
         if(AV_NOPTS_VALUE == timestamp && AV_NOPTS_VALUE != lastValue){
             timestamp = lastValue+1;
-        } else {
-            timestamp = av_rescale_q_rnd(timestamp, tbIn, tbOut, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
         }
         if(AV_NOPTS_VALUE != lastValue && lastValue == timestamp){
             timestamp++;
@@ -249,19 +247,25 @@ namespace converter{
                 
                 ExtraTrackInfo &xtra = m_extraTrackInfo[pkt.stream_index];
                 
-                if(AVMEDIA_TYPE_VIDEO == out_stream->codec->codec_type && (pkt.flags & AV_PKT_FLAG_KEY)){
-                    xtra.addKeyFrame(dts2msec(pkt.pts,in_stream->time_base));
-                }
+              
                 
                 /* copy packet */
                 
                 //log_packet(*input, &pkt, "in",AV_LOG_FATAL);
-          
+                
+                updateLastTimestamp(xtra.lastPTS, pkt.pts);
+                
                 xtra.maxDTS = pkt.pts + pkt.duration;
                 
-                updateLastTimestamp(xtra.lastPTS, pkt.pts,in_stream->time_base,out_stream->time_base);
+                if(AVMEDIA_TYPE_VIDEO == out_stream->codec->codec_type && (pkt.flags & AV_PKT_FLAG_KEY)){
+                    xtra.addKeyFrame(dts2msec(pkt.pts,in_stream->time_base));
+                }
                 
-                updateLastTimestamp(xtra.lastDTS, pkt.dts,in_stream->time_base,out_stream->time_base);
+                pkt.pts = av_rescale_q_rnd(pkt.pts, in_stream->time_base,out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+                
+                updateLastTimestamp(xtra.lastDTS, pkt.dts);
+                
+                pkt.dts = av_rescale_q_rnd(pkt.dts, in_stream->time_base,out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
                 
                 pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
                 pkt.pos = -1;
