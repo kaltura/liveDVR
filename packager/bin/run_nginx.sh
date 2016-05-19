@@ -1,6 +1,7 @@
 #! /bin/bash
 
 dirname=`dirname $0`
+cd $dirname
 
 scriptName=`basename $0`
 
@@ -8,7 +9,7 @@ os_name=`uname`
 
 confDir=$dirname/../config/
 
-
+echo "dirname=$dirname"
 
 echo "confDir=$confDir"
 
@@ -22,7 +23,6 @@ case  $os_name in
 esac
 
 nginxPath="$dirname/../../bin/$binDir/nginx"
-
 declare a dylibFiles
 
 baseDir="$dirname/$binDir/"
@@ -55,10 +55,11 @@ then
 fi
 
 contentDir=${1:-$HOME/dvr/dvrContentRootPath}
-
+wwwDir="`pwd`/../www"
+echo wwwDir = $wwwDir
 port=${2:-8080}
 
-sed  -e "s#@CONTENT_DIR@#$contentDir/#" -e "s#@PORT@#$port#" $confDir/nginx.conf.template > /var/tmp/nginx.conf
+sed  -e "s#@CONTENT_DIR@#$contentDir/#" -e "s#@PORT@#$port#" -e "s#@WWW_DIR@#$wwwDir#"  $confDir/nginx.conf.template > /var/tmp/nginx.conf
 
 function getNginxPids(){
     ps -fA | grep nginx | grep -vE "grep|$scriptName" | awk '{print $2}'
