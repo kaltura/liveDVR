@@ -9,11 +9,11 @@
   "flavorFailPollingInterval" : 10000,
   "backendPollingInterval" : 5000,
   "wowzaPollingInterval" : 5000,
-  "defaultDvrWindow" : 7200,
-  "minimalDvrWindow" : 900,
+  "defaultDvrWindowInSec" : 7200,
+  "minimalDvrWindowInSec" : 900,
   "dvrMaxChunkCount" : 1000,
-  "liveMaxChunkCount" : 15,
-  "minChunksForPlayback" : 3,
+  "defaultPlayWindowInSec" : 150,
+  "minDurationForPlaybackInSec" : 30,
   "sessionDuration" : 180000,
   "apiUpdateInterval" : 60000,
   "flavorDownloaderTeardownInterval" : 15000,
@@ -35,6 +35,13 @@
     "user" : "",
     "password" : ""
   },
+  "webServerParams" : {
+      "applicationName" : "kLive",
+      "port" : 8080,
+      "logLevel" : "DEBUG",
+      "logFileName" : "/var/log/liveDVR/kDvrWebServer.log",
+      "logToConsole" : true
+    },
   "backendClient" : {
     "adminSecret" :"admin secret",
     "partnerId" : 12345,
@@ -46,16 +53,14 @@
     "windowSize" : 3,
     "enabled" : false
   },
-
-    "playlistConfig" : {
-        "debug" : false,
-        "waitTimeBeforeRemoval" : 100000,
-        "maxChunkGapSize" : 10000,
-        "maxAllowedPTSDrift": 1000,
-        "timestampToleranceMs": 2,
-         "minRefreshPlaylistInterval" : 20000,
-         "humanReadable" : false
-    }
-
-
+  "playlistConfig" : {
+    "debug" : false,
+    "waitTimeBeforeRemoval" : 100000,
+    "maxChunkGapSize" : 10000,
+    "maxAllowedPTSDrift": 1000,
+    "timestampToleranceMs": 2,
+    "minRefreshPlaylistInterval" : 20000,
+    "humanReadable" : false
+  },
+    "universalTimestampPartnersList" : []
 }
