@@ -70,7 +70,7 @@ var tl = new Tester(logger,TimestampList.prototype.editPolicy.cutaway),
     d1 = new Tester(logger,TimestampList.prototype.editPolicy.update);
 
 try {
-    var timestamp = 0, step = 1000,timestampRemove = 0, nInsert = 3, nRemove = 3, maxDuration = step * 20,
+    var startDTS = Math.ceil(1464196660972.311), timestamp = startDTS, step = 1000, nInsert = 3, rollingWindow = step * 20,
         nIterations = 1000;
 
     for(var j = 0;j < nIterations;j++) {
@@ -78,7 +78,11 @@ try {
 
         for(var i =0; i < nInsert;i++){
             insert.push(timestamp);
-            timestamp += step;
+            var variance = 0;
+            if(i === nInsert -1) {
+                variance = Math.ceil(Math.random() * 5);
+            }
+            timestamp += step + variance;
         }
         tl.insertRange(insert);
         tl.checkTL();
@@ -91,7 +95,7 @@ try {
         d1.append(insert[0],duration);
         d1.checkTL();
 
-        while(d1.itemCount > 0 && timestamp - d1.firstDTS[0] > maxDuration) {
+        while(d1.itemCount > 0 && timestamp - d1.firstDTS[0] > rollingWindow) {
             var from = d1.firstDTS[0];
             d1.remove(0);
             d1.checkTL();
@@ -104,8 +108,8 @@ try {
         }
 
         if(0 === j % 100 && j > 0){
-            var from = Math.random()* maxDuration / 2 + timestamp,
-                to = from + Math.random() * maxDuration / 4 + 100;
+            var from = Math.random()* rollingWindow / 2 + timestamp,
+                to = from + Math.random() * rollingWindow / 4 + 100;
             tl.removeRange(Math.ceil(from),Math.ceil(to));
             tl.checkTL();
             d1.removeRange(Math.ceil(from),Math.ceil(to));
