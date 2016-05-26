@@ -35,13 +35,6 @@
     "user" : "",
     "password" : ""
   },
-  "webServerParams" : {
-      "applicationName" : "kLive",
-      "port" : 8080,
-      "logLevel" : "DEBUG",
-      "logFileName" : "/var/log/liveDVR/kDvrWebServer.log",
-      "logToConsole" : true
-    },
   "backendClient" : {
     "adminSecret" :"admin secret",
     "partnerId" : 12345,
