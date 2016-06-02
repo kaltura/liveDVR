@@ -53,7 +53,10 @@
     "maxAllowedPTSDrift": 1000,
     "timestampToleranceMs": 2,
     "minRefreshPlaylistInterval" : 20000,
-    "humanReadable" : false
+    "humanReadable" : false,
+    "keyFrameSearchOffsetMs" : 1,
+    "discontinuityMode" : true,
+    "segmentDuration" : 10000
   },
     "universalTimestampPartnersList" : []
 }
