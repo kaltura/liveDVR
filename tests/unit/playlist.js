@@ -5,7 +5,6 @@ var PlaylistGenerator = require('./../../lib/PlaylistGenerator/PlaylistGenerator
 var PlaylistUtils = require('./../../lib/PlaylistGenerator/playlistGen-utils');
 var config = require('./../../common/Configuration');
 var MP4WriteStream=require('./../../lib/MP4WriteStream');
-var logger = require('./../../lib/logger/logger')(module);
 var path = require('path');
 var Q = require('q');
 var fs = require('fs');
@@ -1033,7 +1032,7 @@ WorkerItem.prototype.clone = function(from,timeBias,uniqueSig) {
     return this;
 };
 
-var timescale = 1;
+var timescale = 10000;
 
 function FlavorWorker(testName,playlist,chunkList,flavorId,iterations,dontWait){
     this.playlist = playlist;
@@ -1126,14 +1125,16 @@ var available_tests = [
     'test continuous stream',
     'test stream with discontinuities single flavor',
     'test stream with encoder timestamp wrap',
-    'test stream with shuffled single flavor'
+    'test stream with shuffled single flavor',
+    'test stream with discontinuities multi flavor'
 ];
 
 var enabled_tests = [
     // 'test stream with encoder timestamp wrap'
     //'test continuous stream'
-   // 'test stream with discontinuities single flavor',
-    'test stream with shuffled single flavor'
+    'test stream with discontinuities single flavor',
+    //'test stream with discontinuities multi flavor'
+   // 'test stream with shuffled single flavor'
 ]
 
 var runSession = function(testName,flavors,iterations,dontWait) {
@@ -1162,15 +1163,18 @@ var runSession = function(testName,flavors,iterations,dontWait) {
 
     var playlist = new PlaylistGenerator({
         entryId:entryId,
-        dvrWindow:7200
-    } ,true,logger);
+        playWindow:600
+    } ,true);
 
     var def = Q.defer();
     playlist.start().then( function() {
 
         var diagTimer = setInterval(function(){
-            playlist.validate();
             console.log(util.inspect(playlist.getDiagnostics()));
+
+            if(!playlist.validate()){
+                console.log("playlist validation failed");
+            }
         },10000 / timescale);
 
         var flavorWorkers =  flavors.map(function(f){
@@ -1277,6 +1281,30 @@ runSession('test continuous stream',[{list:fileInfos.slice(0,numOfFiles),flavor:
                     [{
                         list: createDiscontinuities(fileInfos.slice(0, 32), 60000),
                         flavor: 1
+                    }])
+                    .then(function (msg) {
+                        console.log(msg);
+                    })
+                    .catch(function (err) {
+                        console.log(err);
+                    })
+                    .finally(function () {
+                        return runSession('test stream with encoder timestamp wrap',
+                            [{
+                                list: createEncoderWrap(fileInfos.slice(0, 5)),
+                                flavor: 1
+                            }])
+                    });
+            }).then(function() {
+
+                return runSession('test stream with discontinuities multi flavor',
+                    [{
+                        list: createDiscontinuities(fileInfos.slice(0, 32), 60000),
+                        flavor: 1
+                    },
+                    {
+                        list: createDiscontinuities(fileInfos.slice(0, 32), 60000),
+                        flavor: 2
                     }])
                     .then(function (msg) {
                         console.log(msg);
