@@ -257,13 +257,15 @@ namespace converter{
                 
                 xtra.maxDTS = pkt.pts + pkt.duration;
                 
-                if(AVMEDIA_TYPE_VIDEO == out_stream->codec->codec_type && (pkt.flags & AV_PKT_FLAG_KEY)){
-                    xtra.addKeyFrame(dts2msec(pkt.pts,in_stream->time_base));
-                }
+             
                 
                 pkt.pts = av_rescale_q_rnd(pkt.pts, in_stream->time_base,out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
                 
                 updateLastTimestamp(xtra.lastDTS, pkt.dts);
+                
+                if(AVMEDIA_TYPE_VIDEO == out_stream->codec->codec_type && (pkt.flags & AV_PKT_FLAG_KEY)){
+                    xtra.addKeyFrame(dts2msec(pkt.dts,in_stream->time_base));
+                }
                 
                 pkt.dts = av_rescale_q_rnd(pkt.dts, in_stream->time_base,out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
                 
@@ -361,7 +363,7 @@ namespace converter{
                             extraInfo.startDTS,
                             wrapDTS,
                             duration,
-                            extraInfo.vecKeyFrameDTS,
+                            extraInfo.keyFrameDTSValues(),
                             stream->codec->codec_type
                         });
                     }

@@ -60,6 +60,20 @@ namespace converter{
                     lastPTS,
                     maxDTS;
             double startDTS;
+            
+            const std::vector<double> &keyFrameDTSValues() {
+                if(vecKeyFrameDTS.size()){
+                    double dVal = vecKeyFrameDTS[0];
+                    if(dVal < 0){
+                        for(std::vector<double>::iterator it = vecKeyFrameDTS.begin(); it !=vecKeyFrameDTS.end(); it++) {
+                            *it -= dVal;
+                        }
+                    }
+                }
+                return vecKeyFrameDTS;
+            }
+            
+        private:
             std::vector<double> vecKeyFrameDTS;
         };
         
