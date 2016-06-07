@@ -28,6 +28,13 @@ return e;\
 } \
 }
 
+#define _V(e)  { \
+int res = (e);\
+if(res < 0) { \
+av_log(nullptr,AV_LOG_WARNING,"%s (%d) error %d\n",__FILE__,__LINE__,res); \
+} \
+}
+
 #define _PTR(p)  { \
 if(!(p)) { \
 av_log(nullptr,AV_LOG_WARNING,"%s (%d) NULL pointer\n",__FILE__,__LINE__); \
