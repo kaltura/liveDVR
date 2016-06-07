@@ -61,7 +61,7 @@ http {
             vod hls;
             alias @CONTENT_DIR@;
             vod_max_mapping_response_size 1000K;
-            vod_align_segments_to_key_frames off;
+            vod_align_segments_to_key_frames on;
             vod_mode mapped;
             vod_hls_absolute_master_urls off;
             vod_hls_absolute_index_urls off;
