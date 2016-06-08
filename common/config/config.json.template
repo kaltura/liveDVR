@@ -33,7 +33,8 @@
     "applicationName" : "kLive",
     "port" : 1935,
     "user" : "",
-    "password" : ""
+    "password" : "",
+    "maxPlaylistFileAgeMillisec" : 300000
   },
   "webServerParams" : {
     "applicationName" : "kLive",
