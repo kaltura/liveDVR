@@ -39,11 +39,17 @@ $0 ~ /\[debug\]/ && $0 ~ /GET \/hls\/(.*)\/playlist.json\/seg/ {
     if(verbose){
         print $2 " "lastChunkPath;
     }
-    if(lastChunk && lastChunk+1 != b[2]){
-        print $2" "lastChunkPath" error: expected chunk "lastChunk+1" got: "b[2]
+
+    if(length(b) == 6){
+        lastChunkId = b[4]
+    } else {
+        lastChunkId =  b[2]
+    }
+    if(lastChunk && lastChunk+1 != lastChunkId){
+        print $2" "lastChunkPath" error: expected chunk "lastChunk+1" got: "lastChunkId
         delete __lastDTS[0]
     }
-    lastChunk=b[2];
+    lastChunk=lastChunkId;
     split($2,a,":");
     time=a[3]+a[2]*60+a[1]*3600;
     if(lastTime){
@@ -74,6 +80,29 @@ state == "checkDTS" && $0 ~ /first frame dts/ {
         }
     }
      __lastDTS[0] = $11
+}
+
+$0 ~ /media_set_parse_json: produced segment/ {
+    tmp1 = $9
+    tmp2=$11
+    tmp3=$13
+    if(segment_index){
+        if(segment_index == tmp1 - 1){
+            if(segment_start_time+segment_duration != tmp2){
+                printf (" chunk %d adjucent chunks  differ: diff: %d prev={ %d  %d}  cur={%d %d}",tmp1,
+                (tmp2-segment_start_time+segment_duration),
+                segment_start_time,
+                segment_duration,
+                tmp2,
+                tmp3)
+            }
+        } else {
+            print "segment discontinuity: cur: "tmp1" prev: "segment_index
+        }
+    }
+    segment_index = tmp1
+    segment_start_time=tmp2
+    segment_duration=tmp3
 }
 
 END {
