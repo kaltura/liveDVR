@@ -23,36 +23,6 @@ case  $os_name in
 esac
 
 nginxPath="$dirname/../../bin/$binDir/nginx"
-declare a dylibFiles
-
-baseDir="$dirname/$binDir/"
-
-for dylibFile in `find $baseDir -type f -name "*.dylib"`
-do
-    targetFile=${dylibFile/$baseDir/}
-    echo "$targetFile"
-    if [ ! -f "$targetFile" ]
-    then
-        echo "not found!"
-        dylibFiles+=("$targetFile")
-        ln -sf $dylibFile $targetFile
-    fi
-done
-
-function cleanup()
-{
-    echo "cleanup... ";
-    for file in ${dylibFiles[@]} ;
-    do
-        rm -f $file
-    done
-    echo "done!"
-}
-
-if [ "${#dylibFiles[@]}" -ne "0" ]
-then
-    trap cleanup SIGINT SIGTERM SIGSTOP 0
-fi
 
 contentDir=${1:-$HOME/dvr/dvrContentRootPath}
 wwwDir="`pwd`/../www"
