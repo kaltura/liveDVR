@@ -31,6 +31,9 @@ module.exports = {
     },
 
     getMasterManifestName: function () {
-        return 'playlist.m3u8';
+        return 'playlist.json';
+    },
+    getMP4FileNamefromInfo: function(fileInfo){
+        return fileInfo.sig + '.mp4';
     }
 };

@@ -9,24 +9,31 @@
   "flavorFailPollingInterval" : 10000,
   "backendPollingInterval" : 5000,
   "wowzaPollingInterval" : 5000,
-  "defaultDvrWindow" : 7200,
-  "minimalDvrWindow" : 900,
+  "defaultDvrWindowInSec" : 7200,
+  "minimalDvrWindowInSec" : 900,
   "dvrMaxChunkCount" : 1000,
-  "liveMaxChunkCount" : 15,
-  "minChunksForPlayback" : 3,
+  "defaultPlayWindowInSec" : 150,
+  "minDurationForPlaybackInSec" : 30,
   "sessionDuration" : 180000,
   "apiUpdateInterval" : 60000,
   "flavorDownloaderTeardownInterval" : 15000,
-  "numOfIterationsForPlaylistUpdate" : 5,
   "logLevel" : "DEBUG",
-  "logToConsole" : false,
+  "logToConsole" : true,
   "logFileName" : "~/dvr/kDvrWorker.log",
+  "preserveOriginalChunk" : true,
   "simulateStreams": {
-      "enable":false,
-      "count": 1,
-      "maxChunkCount": 5,
-      "useNginx":false,
-      "wowzaUrl": "http://127.0.0.1:1935/live/_definst_/1_abc123_1/playlist.m3u8"
+      "enable":true,
+         "count": 1,
+         "playWindow": 200,
+         "maxChunkCount": 5,
+         "useNginx":false,
+         "orig_wowzaUrl": "http://kalsegsec-a.akamaihd.net/dc-0/m/pa-live-publish2/kLive/smil:1_oorxcge2_all.smil/playlist.m3u8",
+         "orig_entryId": "1_oorxcge2",
+         "entryId": "1_ceut3fcf",
+         "tt_wowzaUrl": "http://127.0.0.1:1935/kLive/_definst_/1_ceut3fcf_1/playlist.m3u8",
+         "wowzaUrl": "http://kalsegsec-a.akamaihd.net/dc-1/m/ny-live-publish101/kLive/smil:1_ceut3fcf_all.smil/playlist.m3u8",
+         "abc_entryId": "1_abc123",
+         "abc_wowzaUrl": "http://127.0.0.1:1935/kLive/_definst_/1_abc123_1/playlist.m3u8"
   },
   "mediaServer" : {
     "hostname" : "@HOSTNAME@",
@@ -34,13 +41,6 @@
     "port" : 1935,
     "user" : "",
     "password" : ""
-  },
-  "webServerParams" : {
-    "applicationName" : "kLive",
-    "port" : 8080,
-    "logLevel" : "DEBUG",
-    "logFileName" : "~/dvr/kDvrWebServer.log",
-    "logToConsole" : true
   },
   "backendClient" : {
     "adminSecret" :"admin secret",
@@ -52,5 +52,18 @@
     "timeInterval" : 900000,
     "windowSize" : 3,
     "enabled" : false
-  }
+  },
+  "playlistConfig" : {
+    "debug" : false,
+    "waitTimeBeforeRemoval" : 100000,
+    "maxChunkGapSize" : 10000,
+    "maxAllowedPTSDrift": 1000,
+    "timestampToleranceMs": 2,
+    "minRefreshPlaylistInterval" : 20000,
+    "humanReadable" : false,
+    "keyFrameSearchOffsetMs" : 1,
+    "discontinuityMode" : true,
+     "segmentDuration" : 10000
+  },
+    "universalTimestampPartnersList" : []
 }

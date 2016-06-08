@@ -1,0 +1,89 @@
+
+#user  nobody;
+
+worker_processes  1;
+
+#uncomment for debugging
+#daemon off;
+
+#error_log  logs/error.log;
+#error_log  logs/error.log  notice;
+
+error_log  logs/error.log  debug;
+
+#pid        logs/nginx.pid;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    #include       mime.types;
+    default_type  application/octet-stream;
+    types {
+        text/xml                              xml;
+    }
+
+    #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+    #                  '$status $body_bytes_sent "$http_referer" '
+    #                  '"$http_user_agent" "$http_x_forwarded_for"';
+
+    #access_log  logs/access.log  main;
+
+    sendfile        on;
+    keepalive_timeout  65;
+
+    #gzip  on;
+
+    server {
+        listen       @PORT@;
+        server_name  localhost;
+
+        #web server access
+        #rewrite_log on;
+        #error_log    /usr/local/nginx/logs/example.com.error.log debug;
+
+        rewrite /kLive\/smil:(.*)_all.smil\/(.*)\/chunklist.m3u8  /hls/$1/playlist.json/index-f$2-v1-a1.m3u8 last;
+        rewrite /kLive\/smil:(.*)_all.smil\/(.*)\/(.*).ts  /hls/$1/playlist.json/$3.ts last;
+
+        rewrite  /kLive\/smil:(.*)_all.smil\/playlist.m3u8  /hls/$1/playlist.json/master.m3u8 last;
+        rewrite  /kLive\/smil:(.*)_all.smil\/(.*)  /hls/$1/playlist.json/$2 last;
+
+        location = /serverip {
+
+            expires 1d;
+            return 200 "Kaltura";
+        }
+
+
+
+       location /hls/ {
+            vod hls;
+            alias @CONTENT_DIR@;
+            vod_max_mapping_response_size 1000K;
+            vod_align_segments_to_key_frames on;
+            vod_mode mapped;
+            vod_hls_absolute_master_urls off;
+            vod_hls_absolute_index_urls off;
+            vod_live_segment_count -10;
+            gzip on;
+            gzip_types application/vnd.apple.mpegurl;
+            expires off;
+            vod_last_modified 'Sun, 19 Nov 2000 08:52:00 GMT';
+            vod_last_modified_types *;
+            vod_expires 100d;
+            vod_expires_live 3;
+            add_header 'Access-Control-Allow-Headers' 'Origin,Range';
+            add_header 'Access-Control-Expose-Headers' 'Server,Content-Length,Content-Range,Date';
+            add_header 'Access-Control-Allow-Methods' 'GET, HEAD, OPTIONS';
+            add_header 'Access-Control-Allow-Origin' '*';
+       }
+
+
+        location / {
+            expires 1d;
+            root   @WWW_DIR@;
+        }
+
+    }
+}
