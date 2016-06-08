@@ -20,13 +20,20 @@
   "logLevel" : "DEBUG",
   "logToConsole" : true,
   "logFileName" : "~/dvr/kDvrWorker.log",
+  "preserveOriginalChunk" : true,
   "simulateStreams": {
-      "enable":false,
-      "count": 1,
-      "dvrWindow": 7200,
-      "maxChunkCount": 5,
-      "useNginx":false,
-      "wowzaUrl": "http://kalsegsec-a.akamaihd.net/dc-0/m/pa-live-publish2/kLive/smil:1_oorxcge2_all.smil/playlist.m3u8"
+      "enable":true,
+         "count": 1,
+         "playWindow": 200,
+         "maxChunkCount": 5,
+         "useNginx":false,
+         "orig_wowzaUrl": "http://kalsegsec-a.akamaihd.net/dc-0/m/pa-live-publish2/kLive/smil:1_oorxcge2_all.smil/playlist.m3u8",
+         "orig_entryId": "1_oorxcge2",
+         "entryId": "1_ceut3fcf",
+         "tt_wowzaUrl": "http://127.0.0.1:1935/kLive/_definst_/1_ceut3fcf_1/playlist.m3u8",
+         "wowzaUrl": "http://kalsegsec-a.akamaihd.net/dc-1/m/ny-live-publish101/kLive/smil:1_ceut3fcf_all.smil/playlist.m3u8",
+         "abc_entryId": "1_abc123",
+         "abc_wowzaUrl": "http://127.0.0.1:1935/kLive/_definst_/1_abc123_1/playlist.m3u8"
   },
   "mediaServer" : {
     "hostname" : "@HOSTNAME@",
@@ -56,7 +63,7 @@
     "humanReadable" : false,
     "keyFrameSearchOffsetMs" : 1,
     "discontinuityMode" : true,
-    "segmentDuration" : 10000
+     "segmentDuration" : 10000
   },
     "universalTimestampPartnersList" : []
 }
