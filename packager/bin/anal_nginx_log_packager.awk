@@ -89,7 +89,7 @@ $0 ~ /media_set_parse_json: produced segment/ {
     if(segment_index){
         if(segment_index == tmp1 - 1){
             if(segment_start_time+segment_duration != tmp2){
-                printf (" chunk %d adjucent chunks  differ: diff: %d prev={ %d  %d}  cur={%d %d}",tmp1,
+                printf (" chunk %d adjucent chunks  differ: diff: %d prev={ %d  %d}  cur={%d %d}\n",tmp1,
                 (tmp2-segment_start_time+segment_duration),
                 segment_start_time,
                 segment_duration,
