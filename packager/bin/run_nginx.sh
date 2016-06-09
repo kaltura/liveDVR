@@ -21,10 +21,10 @@ case  $os_name in
 "Linux")
     binDir=linux
     case $release_name in
-    case "CentOS")
+    "CentOS")
       binDir="$binDir/centos"
       ;;
-    case "Ubuntu")
+    "Ubuntu")
        binDir="$binDir/ubuntu"
        apt-get install libpcre3 libpcre3-dev zlibc zlib1g zlib1g-dev libssl-dev git make
        wget http://launchpadlibrarian.net/130794928/libc6_2.17-0ubuntu4_amd64.deb
