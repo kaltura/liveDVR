@@ -4,23 +4,32 @@ var config = require('../../common/Configuration');
 var logger = require('../logger/logger');
 var path = require('path')
 var persistenceFormat = require('../../common/PersistenceFormat');
+var fsUtils = require('../../lib/utils/fs-utils');
 
-router.get(/\/smil\:([^\\/]*)_all\.smil\/([^\?]*)/i, function(req, res) {
-    var that = this;
+router.get(/\/smil:([^\\/]*)_all\.smil\/([^\?]*)/i, function(req, res) {
     var entryId = req.params[0];
     var fileName = req.params[1];
 
-    var fullpath = path.join(persistenceFormat.getEntryFullPath(entryId),fileName);
-    res.sendFile(fullpath);
-/*
-    checkFileModifiedTime(fullpath)
-        .then( function() {
-            res.sendFile(fullpath);
-        })
-        .catch( function() {
-            res.status(404).send('%s not found', that.filename);
-        });
-*/
+    var fullPath = path.join(persistenceFormat.getEntryFullPath(entryId),fileName);
+
+    if ( fileName.search('chunklist.m3u8') > -1 ) {
+
+        // Todo: take the configuration initialization outside
+        var chunklistExpireAge = config.get("webServerParams:chunklistExpireAge");
+
+        fsUtils.checkIsFileExpired(fullPath, chunklistExpireAge)
+            .then(function () {
+                res.sendFile(fullPath);
+            })
+            .catch(function () {
+                var message = fileName + '%s not found';
+                res.status(404).send(message);
+            });
+    }
+    else {
+        res.sendFile(fullPath);
+    }
+
 });
 
 
