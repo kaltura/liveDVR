@@ -21,6 +21,7 @@
   "logToConsole" : true,
   "logFileName" : "~/dvr/kDvrWorker.log",
   "preserveOriginalChunk" : true,
+
   "simulateStreams": {
       "enable":false,
       "count": 1,
