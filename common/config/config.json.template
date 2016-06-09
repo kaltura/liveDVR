@@ -20,7 +20,6 @@
   "logLevel" : "DEBUG",
   "logToConsole" : true,
   "logFileName" : "~/dvr/kDvrWorker.log",
-  "preserveOriginalChunk" : true,
   "simulateStreams": {
       "enable":false,
       "count": 1,
@@ -57,7 +56,7 @@
     "humanReadable" : false,
     "keyFrameSearchOffsetMs" : 1,
     "discontinuityMode" : true,
-     "segmentDuration" : 10000
+    "segmentDuration" : 10000
   },
     "universalTimestampPartnersList" : []
 }
