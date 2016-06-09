@@ -36,8 +36,17 @@ esac
 
 nginxPath="$dirname/../../bin/$binDir/nginx"
 
-contentDir=${1:-$HOME/dvr/dvrContentRootPath}
-wwwDir="`pwd`/../www"
+contentDir=`cat "$dirname/../../common/config/config.json" | awk '$0 ~ /rootFolderPath/ { printf substr($2,2,length($2)-3) }'`
+
+if [ -z "$contentDir" ]
+then
+    echo "could not infer contentDir!"
+    exit 1
+fi
+
+echo "contentDir = $contentDir"
+
+wwwDir="$dirname/../www"
 echo wwwDir = $wwwDir
 port=${2:-8080}
 
