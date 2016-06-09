@@ -53,15 +53,11 @@ namespace converter{
             startDTS(dts)
             {}
             
-            void addKeyFrame(const double &kt){
-                vecKeyFrameDTS.push_back( kt - startDTS);
-            }
             int64_t lastDTS,
                     lastPTS,
                     maxDTS;
             double startDTS;
-            std::vector<double> vecKeyFrameDTS;
-        };
+         };
         
         std::vector<ExtraTrackInfo> m_extraTrackInfo;
         int64_t          m_creationTime;

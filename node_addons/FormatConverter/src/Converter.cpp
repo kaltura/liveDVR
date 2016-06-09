@@ -257,10 +257,6 @@ namespace converter{
                 
                 xtra.maxDTS = pkt.pts + pkt.duration;
                 
-                if(AVMEDIA_TYPE_VIDEO == out_stream->codec->codec_type && (pkt.flags & AV_PKT_FLAG_KEY)){
-                    xtra.addKeyFrame(dts2msec(pkt.pts,in_stream->time_base));
-                }
-                
                 pkt.pts = av_rescale_q_rnd(pkt.pts, in_stream->time_base,out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
                 
                 updateLastTimestamp(xtra.lastDTS, pkt.dts);
@@ -321,6 +317,33 @@ namespace converter{
     }
     
     
+    int getKeyFrames(MOVMuxContext *mov,std::vector<double> &result){
+    
+        if(!mov){
+            return -1;
+        }
+        
+        result.resize(0);
+        
+        // code *stolen* from movenc.c
+        for(MOVTrack *track = mov->tracks; track < mov->tracks + mov->nb_streams ; track++){
+            if ((track->enc->codec_type == AVMEDIA_TYPE_VIDEO ||
+                 track->enc->codec_tag == MKTAG('r','t','p',' ')) &&
+                track->has_keyframes && track->has_keyframes < track->entry){
+                for (int i = 0; i < track->entry; i++) {
+                    if (track->cluster[i].flags & MOV_SYNC_SAMPLE) {
+                        uint64_t millis = av_rescale_rnd(track->cluster[i].dts,1000,
+                                                         track->timescale,AV_ROUND_ZERO);
+                        result.push_back(millis);
+                    }
+                }
+                break;
+            }
+        }
+        
+        return 0;
+    }
+    
     void Converter::close(){
         
         if(state == PUSHING){
@@ -347,8 +370,15 @@ namespace converter{
             {
                 AVStream *stream = this->input->streams[i];
                 
+                std::vector<double> keyFrames;
+                
                 switch(stream->codec->codec_type){
                     case AVMEDIA_TYPE_VIDEO:
+                    {
+                        MOVMuxContext *mov = reinterpret_cast<MOVMuxContext*>(output->priv_data);
+                        
+                        _V(getKeyFrames(mov,keyFrames));
+                    }
                     case AVMEDIA_TYPE_AUDIO:
                     {
                        
@@ -356,12 +386,12 @@ namespace converter{
                         double wrapDTS = ::ceil(dts2msec(1ULL << stream->pts_wrap_bits,stream->time_base));
                         ExtraTrackInfo &extraInfo = this->m_extraTrackInfo[this->m_streamMapper[i]];
                         double duration = dts2msec(extraInfo.maxDTS - stream->start_time,stream->time_base);
-
+                       
                         mfi.tracks.push_back({ this->m_creationTime + extraInfo.startDTS - m_minStartDTSMsec,
                             extraInfo.startDTS,
                             wrapDTS,
                             duration,
-                            extraInfo.vecKeyFrameDTS,
+                            keyFrames,
                             stream->codec->codec_type
                         });
                     }
