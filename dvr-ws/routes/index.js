@@ -6,6 +6,9 @@ var path = require('path')
 var persistenceFormat = require('../../common/PersistenceFormat');
 var fsUtils = require('../../lib/utils/fs-utils');
 
+// get chunklist expire age
+var chunklistExpireAge = config.get("webServerParams:chunklistExpireAge");
+
 router.get(/\/smil:([^\\/]*)_all\.smil\/([^\?]*)/i, function(req, res) {
     var entryId = req.params[0];
     var fileName = req.params[1];
@@ -14,16 +17,12 @@ router.get(/\/smil:([^\\/]*)_all\.smil\/([^\?]*)/i, function(req, res) {
 
     if ( fileName.search('chunklist.m3u8') > -1 ) {
 
-        // Todo: take the configuration initialization outside
-        var chunklistExpireAge = config.get("webServerParams:chunklistExpireAge");
-
-        fsUtils.checkIsFileExpired(fullPath, chunklistExpireAge)
+        fsUtils.checkIfFileExpired(fullPath, chunklistExpireAge)
             .then(function () {
                 res.sendFile(fullPath);
             })
             .catch(function () {
-                var message = fileName + '%s not found';
-                res.status(404).send(message);
+                res.status(404);
             });
     }
     else {
