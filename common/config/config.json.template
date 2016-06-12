@@ -40,7 +40,7 @@
     "applicationName" : "kLive",
     "port" : 8080,
     "logLevel" : "DEBUG",
-    "logFileName" : "/Users/lilach.maliniak/Documents/tmp/var/log/kDvrWebServer.log",
+    "logFileName" : "~/dvr/kDvrWebServer.log",
     "logToConsole" : false,
     "chunklistExpireAge" : 300000
   },
