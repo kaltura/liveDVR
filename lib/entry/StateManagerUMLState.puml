@@ -1,0 +1,20 @@
+@startuml
+scale 350 width
+
+[*] --> init
+init --> broadcasting : broadcast
+broadcasting --> playing : play
+playing --> playing: play
+suspending --> playing: play
+broadcasting --> broadcasting : update
+suspending --> broadcasting : update
+playing  --> playing : update
+broadcasting --> suspending : suspend
+playing --> suspending : suspend
+suspending --> suspending : suspend
+suspending --> stopped :  stop
+stopped --> [*]
+
+init: start state
+stopped: rename chunklist
+@enduml

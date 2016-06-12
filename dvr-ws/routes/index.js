@@ -22,7 +22,7 @@ router.get(/\/smil:([^\\/]*)_all\.smil\/([^\?]*)/i, function(req, res) {
                 res.sendFile(fullPath);
             })
             .catch(function () {
-                res.status(404);
+                res.status(404).send('File not found');
             });
     }
     else {
