@@ -20,7 +20,7 @@ router.get(/\/smil:([^\/]*)_pass.smil\/(.*)/i, function(req, res) {
 });
 
 
-router.get(/\/smil:([^\\/]*)_all\.smil\/([^\?]*)/i, function(req, res) {
+router.get(/\/smil:([^\\/]*)_(?:all|publish)\.smil\/([^\?]*)/i, function(req, res) {
 
     var entryId = req.params[0];
     var fileName = req.params[1];
