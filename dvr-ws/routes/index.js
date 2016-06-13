@@ -4,13 +4,27 @@ var config = require('../../common/Configuration');
 var logger = require('../logger/logger');
 var path = require('path')
 var persistenceFormat = require('../../common/PersistenceFormat');
+var request = require('request');
+var util = require('util');
 var fs = require('fs');
 var errorUtils = require('../../lib/utils/error-utils');
+
+
+var urlPattern='http://localhost/kLive/smil:%s_all.smil/%s';
+
+router.get(/\/smil:([^\/]*)_pass.smil\/(.*)/i, function(req, res) {
+
+    var entryId = req.params[0];
+    var path = req.params[1];
+
+    request(util.format(urlPattern,entryId,path)).pipe(res);
+});
+
 
 // get chunklist expire age
 var chunklistExpireAge = config.get("webServerParams:chunklistExpireAge");
 
-router.get(/\/smil:([^\\/]*)_all\.smil\/([^\?]*)/i, function(req, res) {
+router.get(/\/smil:([^\\/]*)_(?:all|publish)\.smil\/([^\?]*)/i, function(req, res) {
     var entryId = req.params[0];
     var fileName = req.params[1];
 
