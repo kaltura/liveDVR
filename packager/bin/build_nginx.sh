@@ -34,6 +34,8 @@ then
     tar -zxvf nginx-$nginxVersion.tar.gz
 fi
 
+echo "$devRootDir/nginx-$nginxVersion"
+
 cd $devRootDir/nginx-$nginxVersion
 
 ./configure --add-module=$devRootDir/nginx-vod-module --with-debug --with-cc-opt="-O0"
