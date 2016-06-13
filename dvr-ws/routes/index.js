@@ -17,13 +17,7 @@ router.get(/\/smil:([^\\/]*)_all\.smil\/([^\?]*)/i, function(req, res) {
     var fullPath = path.join(persistenceFormat.getEntryFullPath(entryId),fileName);
 
     if ( fileName.search('chunklist.m3u8') > -1 ) {
-
-        if (false === checkIfFileExpired(fullPath, chunklistExpireAge)) {
-                res.sendFile(fullPath);
-        }
-        else {
-                res.status(404).send('File expired');
-        }
+        checkExpriedAndSendFile(fullPath, res);
     }
     else {
         res.sendFile(fullPath);
@@ -31,21 +25,22 @@ router.get(/\/smil:([^\\/]*)_all\.smil\/([^\?]*)/i, function(req, res) {
 
 });
 
-function checkIfFileExpired(fullPath, fileExpireAge) {
+function checkExpriedAndSendFile(fullPath, res) {
 
-    var oldestValidAge = Date.now() - fileExpireAge;
+    var oldestValidAge = Date.now() - chunklistExpireAge;
 
     try {
-         var stats = fs.statSync(fullPath);
-        
-         if (stats.mtime.getTime() >= oldestValidAge) {
-            logger.debug('modified time of %s is %s. File is valid.', fullPath, stats.mtime.toDateString());
-            return false;
-        }
-        else {
-             logger.warn('modified time of %s is %s. File expired.', fullPath, stats.mtime.toDateString());
-             return true;
-        }
+         fs.stat(fullPath, function(err, stats) {
+
+             if (stats.mtime.getTime() >= oldestValidAge) {
+                 logger.debug('modified time of %s is %s. File is valid.', fullPath, stats.mtime.toDateString());
+                 res.sendFile(fullPath);
+             }
+             else {
+                 logger.warn('modified time of %s is %s. File expired.', fullPath, stats.mtime.toDateString());
+                 res.status(404).send('File expired');
+             }
+         });
     } catch (e) {
         logger.error('exception, failed to get modified time of %s. error: %s', fullPath, errorUtils.error2string(e));
     }
