@@ -27,22 +27,27 @@ router.get(/\/smil:([^\\/]*)_all\.smil\/([^\?]*)/i, function(req, res) {
 
 function checkExpriedAndSendFile(fullPath, res) {
 
-    var oldestValidAge = Date.now() - chunklistExpireAge;
-
     try {
          fs.stat(fullPath, function(err, stats) {
 
-             if (stats.mtime.getTime() >= oldestValidAge) {
-                 logger.debug('modified time of %s is %s. File is valid.', fullPath, stats.mtime.toDateString());
-                 res.sendFile(fullPath);
+             if (err) {
+                 logger.error('failed to get modified time of %s. error: %s', fullPath, errorUtils.error2string(e));
+                 return res.status(404).send('Error, cannot access file');
              }
              else {
-                 logger.warn('modified time of %s is %s. File expired.', fullPath, stats.mtime.toDateString());
-                 res.status(404).send('File expired');
+                 if (Date.now() - stats.mtime.getTime() <= chunklistExpireAge) {
+                     //logger.debug('modified time of %s is %s. File is valid.', fullPath, stats.mtime.toDateString());
+                     res.sendFile(fullPath);
+                 }
+                 else {
+                     logger.warn('modified time of %s is %s. File expired.', fullPath, stats.mtime.toDateString());
+                     res.status(404).send('File expired');
+                 }
              }
          });
     } catch (e) {
         logger.error('exception, failed to get modified time of %s. error: %s', fullPath, errorUtils.error2string(e));
+        res.status(404).send('File not found');
     }
 }
 
