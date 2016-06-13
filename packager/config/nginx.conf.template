@@ -65,7 +65,6 @@ http {
             vod_mode mapped;
             vod_hls_absolute_master_urls off;
             vod_hls_absolute_index_urls off;
-            vod_live_segment_count -10;
             gzip on;
             gzip_types application/vnd.apple.mpegurl;
             expires off;
