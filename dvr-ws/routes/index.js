@@ -43,9 +43,8 @@ function checkExpriedAndSendFile(fullPath, res) {
 
     try {
          fs.stat(fullPath, function(err, stats) {
-
              if (err) {
-                 logger.error('failed to get modified time of %s. error: %s', fullPath, errorUtils.error2string(e));
+                 logger.error('failed to get modified time of %s. error: %s', fullPath, errorUtils.error2string(err));
                  return res.status(404).send('Error, cannot access file');
              }
              else {
