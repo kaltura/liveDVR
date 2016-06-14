@@ -34,13 +34,15 @@
     "port" : 1935,
     "user" : "",
     "password" : ""
+
   },
   "webServerParams" : {
     "applicationName" : "kLive",
     "port" : 8080,
     "logLevel" : "DEBUG",
     "logFileName" : "~/dvr/kDvrWebServer.log",
-    "logToConsole" : true
+    "logToConsole" : false,
+    "chunklistExpireAge" : 300000
   },
   "backendClient" : {
     "adminSecret" :"admin secret",
