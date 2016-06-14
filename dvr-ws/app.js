@@ -68,6 +68,19 @@ app.use(function(req, res, next) {
   next();
 });
 
+
+app.get(/version/i, function(req, res) {
+  res.setHeader('Cache-Control', 'public, max-age=60');
+  res.set('Content-Type', 'text/plain');
+  var re=/\/v(.*)\/dvr-ws/.exec(__dirname);
+  if (re!=null && re.length===2) {
+    res.send(re[1]);
+  } else {
+    res.send(__dirname);
+  }
+});
+
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/' + config.get('webServerParams:applicationName'), routes);
 
@@ -105,5 +118,7 @@ app.use(function(err, req, res, next) {
     error: {}
   });
 });
+
+
 
 module.exports = app;
