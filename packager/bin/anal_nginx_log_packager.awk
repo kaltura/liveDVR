@@ -31,7 +31,25 @@ function printStats(caption){
     }
 }
 
+function parseChunkName(arr){
 
+   if(segId && (segId+1) == b[4] && (segTime + segDuration != b[2])){
+
+        printf ("[%d] segment discontinuity: %d new { %d %d } old: { %d %d }\n",
+         segId,b[2]-(segTime+segDuration),b[2],b[3],
+         segTime,segDuration)
+   }
+
+    segTime = b[2]
+    segDuration = b[3]
+    segId = b[4]
+
+    #printf("parseChunkName segTime=%d segDuration=%d segId=%d\n",
+    #    segTime,
+    #    segDuration,
+    #    segId)
+
+}
 
 $0 ~ /\[debug\]/ && $0 ~ /GET \/hls\/(.*)\/playlist.json\/seg/ {
     split($10,b,"-");
@@ -42,6 +60,7 @@ $0 ~ /\[debug\]/ && $0 ~ /GET \/hls\/(.*)\/playlist.json\/seg/ {
 
     if(length(b) == 6){
         lastChunkId = b[4]
+        parseChunkName(b)
     } else {
         lastChunkId =  b[2]
     }
@@ -90,7 +109,7 @@ $0 ~ /media_set_parse_json: produced segment/ {
         if(segment_index == tmp1 - 1){
             if(segment_start_time+segment_duration != tmp2){
                 printf (" chunk %d adjucent chunks  differ: diff: %d prev={ %d  %d}  cur={%d %d}\n",tmp1,
-                (tmp2-segment_start_time+segment_duration),
+                (tmp2-segment_start_time-segment_duration),
                 segment_start_time,
                 segment_duration,
                 tmp2,
@@ -103,6 +122,8 @@ $0 ~ /media_set_parse_json: produced segment/ {
     segment_index = tmp1
     segment_start_time=tmp2
     segment_duration=tmp3
+
+  # print " debug info:  "segment_index" "segment_start_time" "segment_duration
 }
 
 END {
