@@ -6,6 +6,7 @@ cd $dirname
 scriptName=`basename $0`
 
 os_name=`uname`
+release_name=`lsb_release -d | awk '{print $2}'`
 
 confDir=$dirname/../config/
 
@@ -19,43 +20,33 @@ case  $os_name in
     ;;
 "Linux")
     binDir=linux
+    case $release_name in
+    "CentOS")
+      binDir="$binDir/centos"
+      ;;
+    "Ubuntu")
+       binDir="$binDir/ubuntu"
+       apt-get install libpcre3 libpcre3-dev zlibc zlib1g zlib1g-dev libssl-dev git make
+       wget http://launchpadlibrarian.net/130794928/libc6_2.17-0ubuntu4_amd64.deb
+       dpkg -i libc6_2.17-0ubuntu4_amd64.deb
+       ;;
+    esac
     ;;
 esac
 
 nginxPath="$dirname/../../bin/$binDir/nginx"
-declare a dylibFiles
 
-baseDir="$dirname/$binDir/"
+contentDir=`cat "$dirname/../../common/config/config.json" | awk '$0 ~ /rootFolderPath/ { printf substr($2,2,length($2)-3) }'`
 
-for dylibFile in `find $baseDir -type f -name "*.dylib"`
-do
-    targetFile=${dylibFile/$baseDir/}
-    echo "$targetFile"
-    if [ ! -f "$targetFile" ]
-    then
-        echo "not found!"
-        dylibFiles+=("$targetFile")
-        ln -sf $dylibFile $targetFile
-    fi
-done
-
-function cleanup()
-{
-    echo "cleanup... ";
-    for file in ${dylibFiles[@]} ;
-    do
-        rm -f $file
-    done
-    echo "done!"
-}
-
-if [ "${#dylibFiles[@]}" -ne "0" ]
+if [ -z "$contentDir" ]
 then
-    trap cleanup SIGINT SIGTERM SIGSTOP 0
+    echo "could not infer contentDir!"
+    exit 1
 fi
 
-contentDir=${1:-$HOME/dvr/dvrContentRootPath}
-wwwDir="`pwd`/../www"
+echo "contentDir = $contentDir"
+
+wwwDir="$dirname/../www"
 echo wwwDir = $wwwDir
 port=${2:-8080}
 
