@@ -18,6 +18,7 @@
   "apiUpdateInterval" : 60000,
   "flavorDownloaderTeardownInterval" : 15000,
   "numOfIterationsForPlaylistUpdate" : 5,
+  "endlistAppenderTimeInMS" : 60000,
   "logLevel" : "DEBUG",
   "logToConsole" : false,
   "logFileName" : "~/dvr/kDvrWorker.log",
