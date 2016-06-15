@@ -1,8 +1,8 @@
 /**
  * Created by igors on 3/30/16.
  */
-var PlaylistGenerator = require('./../../lib/PlaylistGenerator/PlaylistGenerator');
 var PlaylistUtils = require('./../../lib/PlaylistGenerator/playlistGen-utils');
+var PlaylistGenerator = require('./../../lib/PlaylistGenerator/PlaylistGenerator');
 var config = require('./../../common/Configuration');
 var MP4WriteStream=require('./../../lib/MP4WriteStream');
 var path = require('path');
@@ -10,7 +10,7 @@ var Q = require('q');
 var fs = require('fs');
 var util = require('util');
 var _ = require('underscore');
-
+var PackagerSim = require('./../../lib/mocks/PackagerSimulator');
 
 PlaylistUtils.playlistConfig.skipPathCheck = true;
 
@@ -1133,11 +1133,11 @@ var available_tests = [
 
 var enabled_tests = [
     // 'test stream with encoder timestamp wrap'
-    //'test continuous stream'
-    'test stream with discontinuities single flavor',
-    //'test stream with discontinuities multi flavor'
-   // 'test stream with shuffled single flavor'
-]
+    //,'test continuous stream'
+    'test stream with discontinuities single flavor'
+    //,'test stream with discontinuities multi flavor'
+   // ,'test stream with shuffled single flavor'
+];
 
 var keyFrameIntervalMs = 3000;
 
@@ -1170,6 +1170,14 @@ var runSession = function(testName,flavors,iterations,dontWait) {
         playWindow:600
     } ,true);
 
+    var packagers = _.map(flavors,function(f){
+       return new PackagerSim(entryId + '[f-'+ f.flavor +']',
+           PlaylistUtils.playlistConfig,
+           playlist.playlistImp,
+           playlist,
+           f.flavor);
+    });
+
     var def = Q.defer();
     playlist.start().then( function() {
 
@@ -1186,7 +1194,6 @@ var runSession = function(testName,flavors,iterations,dontWait) {
                 var video = fi.video;
                 if( video && !_.isArray(video.keyFrameDTS)){
                     video.keyFrameDTS = [];
-                    var upper = video.duration;
                     for(var dts = 0; dts < video.duration; dts += keyFrameIntervalMs){
                         video.keyFrameDTS.push(dts);
                     }
