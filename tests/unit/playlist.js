@@ -1005,6 +1005,7 @@ WorkerItem.prototype.clone = function(from,timeBias,uniqueSig) {
         that.video.firstEncoderDTS = from.video.firstEncoderDTS;
         that.video.duration = from.video.duration;
         that.video.wrapEncoderDTS = from.video.wrapEncoderDTS;
+        that.video.keyFrameDTS = from.video.keyFrameDTS;
     } else {
         delete that.video;
     }
@@ -1028,6 +1029,7 @@ WorkerItem.prototype.clone = function(from,timeBias,uniqueSig) {
         that.sig = from.sig;
     }
     that.path = from.path;
+    that.startTime = from.startTime;
 
     return this;
 };
@@ -1137,6 +1139,8 @@ var enabled_tests = [
    // 'test stream with shuffled single flavor'
 ]
 
+var keyFrameIntervalMs = 3000;
+
 var runSession = function(testName,flavors,iterations,dontWait) {
 
     dontWait = dontWait || false;
@@ -1178,6 +1182,16 @@ var runSession = function(testName,flavors,iterations,dontWait) {
         },10000 / timescale);
 
         var flavorWorkers =  flavors.map(function(f){
+            _.each( f.list , function(fi){
+                var video = fi.video;
+                if( video && !_.isArray(video.keyFrameDTS)){
+                    video.keyFrameDTS = [];
+                    var upper = video.duration;
+                    for(var dts = 0; dts < video.duration; dts += keyFrameIntervalMs){
+                        video.keyFrameDTS.push(dts);
+                    }
+                }
+            });
             return new FlavorWorker(testName,playlist, f.list, f.flavor,iterations,dontWait);
         });
 

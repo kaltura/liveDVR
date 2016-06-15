@@ -52,7 +52,6 @@
     "maxChunkGapSize" : 10000,
     "maxAllowedPTSDrift": 1000,
     "timestampToleranceMs": 2,
-    "minRefreshPlaylistInterval" : 20000,
     "humanReadable" : false,
     "keyFrameSearchOffsetMs" : 1,
     "discontinuityMode" : true,
