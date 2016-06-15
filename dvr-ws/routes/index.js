@@ -47,12 +47,13 @@ function checkExpriedAndSendFile(fullPath, res) {
             return res.status(404).send('Error, cannot access file');
         }
         else {
-            if (Date.now() - stats.mtime.getTime() <= chunklistExpireAge) {
+            var now=new Date();
+            if (now - stats.mtime <= chunklistExpireAge) {
                 //logger.debug('modified time of %s is %s. File is valid.', fullPath, stats.mtime.toDateString());
                 res.sendFile(fullPath);
             }
             else {
-                logger.warn('modified time of %s is %s. File expired.', fullPath, stats.mtime.toDateString());
+                logger.warn('modified time of %s is %s which is smaller then now (%s) (threshold %s). File expired.', fullPath, stats.mtime,now,chunklistExpireAge);
                 res.status(404).send('File expired');
             }
         }
