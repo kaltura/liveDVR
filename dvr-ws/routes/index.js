@@ -10,14 +10,17 @@ var fs = require('fs');
 var errorUtils = require('../../lib/utils/error-utils');
 
 
-var urlPattern='http://localhost/kLive/smil:%s_all.smil/%s';
+var wsPort = config.get("mediaServer:port");
+var urlPattern='http://localhost:%s/kLive/smil:%s_all.smil/%s';
 
 router.get(/\/smil:([^\/]*)_pass.smil\/(.*)/i, function(req, res) {
 
     var entryId = req.params[0];
     var path = req.params[1];
 
-    request(util.format(urlPattern,entryId,path)).pipe(res);
+    var newUrl=util.format(urlPattern,wsPort,entryId,path);
+    //logger.error('_pass %s %s %s', entryId, path,newUrl);
+    request(newUrl).pipe(res);
 });
 
 
