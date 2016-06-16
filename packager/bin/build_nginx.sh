@@ -7,7 +7,6 @@ os_name=`uname`
 export LIB_AV_CODEC="$ffmpegLibsDir/libavcodec/libavcodec__.a"
 export LIB_AV_FILTER="$ffmpegLibsDir/libavfilter/libavfilter.a"
 export LIB_AV_UTIL=$ffmpegLibsDir/libavutil/libavutil.a
-export LIB_CRYPTO="undefined"
 
 case  $os_name in
 "Darwin")
