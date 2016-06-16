@@ -1,0 +1,32 @@
+# For upgrade just type ./upgradeLive <version>
+cd /opt/kaltura/
+echo updating liveDVR v.$1
+if [ ! -d "$1" ]; then
+    if [ ! -L "$LiveDVR" ]; then
+        echo Try to download  https://github.com/kaltura/liveDVR/archive/v$1.tar.gz
+        wget https://github.com/kaltura/liveDVR/archive/v$1.tar.gz
+    echo try to unzip v$1.tar.gz
+        tar -xvzf  v$1.tar.gz
+        mv liveDVR-$1 $1
+        #should check cp and git clone not throw error
+        cd $1
+        cp ../liveDVR/common/config/configMapping.json common/config/
+        npm install
+        cd dvr-ws
+        npm install
+        cd ../..
+        rm /opt/kaltura/liveDVR
+        ln -s /opt/kaltura/$1 /opt/kaltura/liveDVR
+        cp /opt/kaltura/liveDVR/serviceWrappers/linux/kDvrWorker /etc/init.d/
+        cp /opt/kaltura/liveDVR/serviceWrappers/linux/kDvrWebServer /etc/init.d/
+        /etc/init.d/kDvrWorker restart
+        /etc/init.d/kDvrWebServer restart
+        # also better to call dvr saas config
+        echo "Warning:  live-dvr-saas-config is not updated"
+        rm -rf /opt/kaltura/v$1.tar.gz
+    else
+        echo "No previous version found"
+    fi
+else
+    echo $1 is allready exsist
+fi
