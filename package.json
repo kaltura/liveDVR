@@ -21,7 +21,6 @@
   "dependencies": {
     "curry": "1.2.0",
     "forever": "0.15.1",
-    "fs-extra": "^0.30.0",
     "glob": "5.0.14",
     "heapdump": "^0.3.7",
     "log4js": "0.6.29",
