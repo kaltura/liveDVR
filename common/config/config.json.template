@@ -56,6 +56,5 @@
     "keyFrameSearchOffsetMs" : 1,
     "discontinuityMode" : true,
     "segmentDuration" : 10000
-  },
-    "universalTimestampPartnersList" : []
+  }
 }
