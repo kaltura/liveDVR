@@ -10,14 +10,17 @@ var fs = require('fs');
 var errorUtils = require('../../lib/utils/error-utils');
 
 
-var urlPattern='http://localhost/kLive/smil:%s_all.smil/%s';
+var wsPort = config.get("mediaServer:port");
+var urlPattern='http://localhost:%s/kLive/smil:%s_all.smil/%s';
 
 router.get(/\/smil:([^\/]*)_pass.smil\/(.*)/i, function(req, res) {
 
     var entryId = req.params[0];
     var path = req.params[1];
 
-    request(util.format(urlPattern,entryId,path)).pipe(res);
+    var newUrl=util.format(urlPattern,wsPort,entryId,path);
+    //logger.error('_pass %s %s %s', entryId, path,newUrl);
+    request(newUrl).pipe(res);
 });
 
 
@@ -47,12 +50,13 @@ function checkExpriedAndSendFile(fullPath, res) {
             return res.status(404).send('Error, cannot access file');
         }
         else {
-            if (Date.now() - stats.mtime.getTime() <= chunklistExpireAge) {
+            var now=new Date();
+            if (now - stats.mtime <= chunklistExpireAge) {
                 //logger.debug('modified time of %s is %s. File is valid.', fullPath, stats.mtime.toDateString());
                 res.sendFile(fullPath);
             }
             else {
-                logger.warn('modified time of %s is %s. File expired.', fullPath, stats.mtime.toDateString());
+                logger.warn('modified time of %s is %s which is smaller then now (%s) (threshold %s). File expired.', fullPath, stats.mtime,now,chunklistExpireAge);
                 res.status(404).send('File expired');
             }
         }
