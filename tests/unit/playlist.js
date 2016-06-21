@@ -1,8 +1,8 @@
 /**
  * Created by igors on 3/30/16.
  */
-var PlaylistGenerator = require('./../../lib/PlaylistGenerator/PlaylistGenerator');
 var PlaylistUtils = require('./../../lib/PlaylistGenerator/playlistGen-utils');
+var PlaylistGenerator = require('./../../lib/PlaylistGenerator/PlaylistGenerator');
 var config = require('./../../common/Configuration');
 var MP4WriteStream=require('./../../lib/MP4WriteStream');
 var path = require('path');
@@ -10,7 +10,7 @@ var Q = require('q');
 var fs = require('fs');
 var util = require('util');
 var _ = require('underscore');
-
+var PackagerSim = require('./../../lib/mocks/PackagerSimulator');
 
 PlaylistUtils.playlistConfig.skipPathCheck = true;
 
@@ -22,6 +22,15 @@ logger = {
     info:console.log,
     warn:console.log,
     error:console.log
+};
+
+var assertMonotonous = function(arr) {
+    _.reduce(arr, function (fiCheck, fi, index) {
+        if (fiCheck) {
+            PlaylistUtils.dbgAssert(Math.abs(fi.video.firstDTS - fiCheck.video.firstDTS - (fi.video.firstEncoderDTS - fiCheck.video.firstEncoderDTS)) < 1000);
+        }
+        return fi;
+    });
 };
 
 var stdDevTest = function() {
@@ -995,26 +1004,25 @@ WorkerItem.prototype.clone = function(from,timeBias,uniqueSig) {
         throw new Error('bad onput');
     }
 
-
-
     if (from.video) {
         if(!that.video) {
             that.video = {};
         }
         that.video.firstDTS = from.video.firstDTS + timeBias;
-        that.video.firstEncoderDTS = from.video.firstEncoderDTS;
+        that.video.firstEncoderDTS = (from.video.firstEncoderDTS + timeBias) % from.audio.wrapEncoderDTS;
         that.video.duration = from.video.duration;
         that.video.wrapEncoderDTS = from.video.wrapEncoderDTS;
+        that.video.keyFrameDTS = from.video.keyFrameDTS;
     } else {
         delete that.video;
     }
 
-    if(from.audio){
+    if(false && from.audio){
         if(!that.audio) {
             that.audio = {};
         }
         that.audio.firstDTS = from.audio.firstDTS + timeBias;
-        that.audio.firstEncoderDTS = from.audio.firstEncoderDTS;
+        that.audio.firstEncoderDTS = (from.audio.firstEncoderDTS + timeBias) % from.audio.wrapEncoderDTS;
         that.audio.duration = from.audio.duration;
         that.audio.wrapEncoderDTS = from.audio.wrapEncoderDTS;
     } else {
@@ -1028,22 +1036,35 @@ WorkerItem.prototype.clone = function(from,timeBias,uniqueSig) {
         that.sig = from.sig;
     }
     that.path = from.path;
+    if(uniqueSig){
+        that.path = from.path + '-' + that.sig ;
+    }
+    that.startTime = from.startTime;
+    that.chunkName = that.path.substr(Math.max(_.lastIndexOf(that.path,'/'),0));
 
     return this;
 };
 
 var timescale = 10000;
 
-function FlavorWorker(testName,playlist,chunkList,flavorId,iterations,dontWait){
+function FlavorWorker(testName,playlist,chunkList,flavorId,iterations,
+                      dontWait,batchSize){
+    batchSize = batchSize || 1;
     this.playlist = playlist;
     this.chunkList = new Array(chunkList)[0];
     this.flavorId = flavorId;
     this.counter = 0;
     this.iterations = iterations;
     this.testName = testName;
-    this.workerItem = new WorkerItem(flavorId);
-    this.listDuration = this.chunkList[this.chunkList.length-1].video.firstDTS
-        + this.chunkList[this.chunkList.length-1].video.duration - this.chunkList[0].video.firstDTS;
+    this.workerItems = _.map(new Array(batchSize),function(){
+        return new WorkerItem(flavorId);
+    });
+    var fiMax = _.max(this.chunkList,function(fi){
+        return fi.video.firstDTS;
+    });
+    this.listDuration = fiMax.video.firstDTS + fiMax.video.duration - _.min(this.chunkList,function(fi){
+            return fi.video.firstDTS;
+        }).video.firstDTS;
     this.dontWait = dontWait;
 }
 
@@ -1052,11 +1073,12 @@ var bootstrapFileCount = 0;
 FlavorWorker.prototype.beginIteration = function() {
     var that = this;
 
-    var nextItem = that.chunkList[that.counter % that.chunkList.length];
+    _.each(that.workerItems, function(wi,index) {
+        var nextItem = that.chunkList[(that.counter+index) % that.chunkList.length];
+        wi.clone(nextItem, that.sesionStartTimeDiff, true);
+    });
 
-    that.workerItem.clone(nextItem,that.sesionStartTimeDiff,true);
-
-    var waitTime = Math.max(0,that.workerItem.video.firstDTS - Date.now());
+    var waitTime = Math.max(0,that.workerItems[0].video.firstDTS - Date.now());
 
     that.tm = setTimeout(that.completeIteration, that.dontWait ? 0 : waitTime / timescale,that);
 };
@@ -1064,7 +1086,7 @@ FlavorWorker.prototype.beginIteration = function() {
 FlavorWorker.prototype.completeIteration = function(self){
     var that = self;
 
-    that.updatePromise = Q.all(that.playlist.update([that.workerItem]))
+    that.updatePromise = Q.all(that.playlist.update(that.workerItems))
         .then(function (chunksToRemove) {
             console.log(that.testName + " - " + that.flavorId + " " + util.inspect(chunksToRemove));
         })
@@ -1076,7 +1098,7 @@ FlavorWorker.prototype.completeIteration = function(self){
             that.updatePromise = null;
         });
 
-    that.counter++;
+    that.counter += that.workerItems.length;
     if (that.iterations && that.counter >= that.iterations) {
         return;
     }
@@ -1091,7 +1113,7 @@ FlavorWorker.prototype.completeIteration = function(self){
 FlavorWorker.prototype.start = function() {
     var that = this;
 
-    that.sesionStartTimeDiff = Date.now() - that.chunkList[0].video.firstDTS
+    that.sesionStartTimeDiff =  this.dontWait ? 0 : Date.now() - that.chunkList[0].video.firstDTS
         - that.chunkList.slice(0,bootstrapFileCount).reduce(function(val,item){
             return item.video.duration + val;
         },0);
@@ -1131,13 +1153,15 @@ var available_tests = [
 
 var enabled_tests = [
     // 'test stream with encoder timestamp wrap'
-    //'test continuous stream'
-    'test stream with discontinuities single flavor',
-    //'test stream with discontinuities multi flavor'
-   // 'test stream with shuffled single flavor'
-]
+    //,'test continuous stream'
+   // 'test stream with discontinuities single flavor'
+    //,'test stream with discontinuities multi flavor'
+    ,'test stream with shuffled single flavor'
+];
 
-var runSession = function(testName,flavors,iterations,dontWait) {
+var keyFrameIntervalMs = 3000;
+
+var runSession = function(testName,flavors,iterations,dontWait,batchSize) {
 
     dontWait = dontWait || false;
 
@@ -1166,6 +1190,14 @@ var runSession = function(testName,flavors,iterations,dontWait) {
         playWindow:600
     } ,true);
 
+    var packagers = _.map(flavors,function(f){
+       return new PackagerSim(entryId + '[f-'+ f.flavor +']',
+           PlaylistUtils.playlistConfig,
+           playlist.playlistImp,
+           playlist,
+           f.flavor);
+    });
+
     var def = Q.defer();
     playlist.start().then( function() {
 
@@ -1178,7 +1210,16 @@ var runSession = function(testName,flavors,iterations,dontWait) {
         },10000 / timescale);
 
         var flavorWorkers =  flavors.map(function(f){
-            return new FlavorWorker(testName,playlist, f.list, f.flavor,iterations,dontWait);
+            _.each( f.list , function(fi){
+                var video = fi.video;
+                if( video && !_.isArray(video.keyFrameDTS)){
+                    video.keyFrameDTS = [];
+                    for(var dts = 0; dts < video.duration; dts += keyFrameIntervalMs){
+                        video.keyFrameDTS.push(dts);
+                    }
+                }
+            });
+            return new FlavorWorker(testName,playlist, f.list, f.flavor,iterations,dontWait,batchSize);
         });
 
         var done = function(){
@@ -1270,13 +1311,44 @@ var numOfFiles = 5;
 // test # 1 test run of files
 //config.set('dontInitializePlaylist',true);
 
+var createShuffled = function (arr,batchSize){
+
+   assertMonotonous(arr);
+    //return [arr[2],arr[1],arr[3],arr[0],arr[4]];
+    var arr = arr.slice(0,batchSize);
+
+    //return arr.reverse();
+
+    var shuffledDTS = _.shuffle(_.map(arr,function(fi){
+        return fi.video.firstEncoderDTS;
+    }));
+    _.each(arr,function(fi,i){
+        fi.video.firstEncoderDTS = shuffledDTS[i];
+    });
+    return arr;
+
+    //return [arr[2],arr[1],arr[3],arr[0],arr[4]];
+    return _.shuffle(arr.slice(0,batchSize));
+
+    var nBatches = Math.floor(arr.length / batchSize);
+    arr.splice(nBatches*batchSize,arr.length-nBatches*batchSize);
+    while(nBatches-- > 0){
+        var at = nBatches * batchSize;
+        var sh = _.shuffle(arr.slice(at,at + batchSize));
+        sh.unshift(sh.length);
+        sh.unshift(at);
+        Array.prototype.splice.apply(arr,sh);
+    }
+    return arr;
+}
+
 runSession('test continuous stream',[{list:fileInfos.slice(0,numOfFiles),flavor:1},{list:fileInfos.slice(0,numOfFiles),flavor:2}])
     .then( function() {
         return runSession('test stream with shuffled single flavor',
             [{
-                list: createDiscontinuities(_.shuffle(fileInfos.slice(0, 32)), 60000),
+                list: createShuffled(fileInfos.slice(0, 32),5),
                 flavor: 1
-            }],30,true).then(function () {
+            }],30,true,5).then(function () {
                 return runSession('test stream with discontinuities single flavor',
                     [{
                         list: createDiscontinuities(fileInfos.slice(0, 32), 60000),

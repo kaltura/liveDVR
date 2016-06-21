@@ -21,11 +21,12 @@ module.exports = (function(){
     if (fs.existsSync(mappingFilePath))
     {
         var mappingContent = fs.readFileSync(mappingFilePath, 'utf8');
-        var mappingData = JSON.parse(mappingContent)[machineName];
-        if (mappingData)
-        {
-            assignValues(mappingData, configObj);
-        }
+        var mappingObj=JSON.parse(mappingContent);
+        _.each(mappingObj,function(value,key) {
+            if (machineName.match(key)) {
+                assignValues(value, configObj);
+            }
+        });
     }
 
     function assignValues(configPropertiesObj, configOutputObj) {
