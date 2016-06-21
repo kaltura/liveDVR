@@ -31,3 +31,9 @@ NewTsRebase/build/**
 endListPending.json
 common/config/config.json
 common/config/configMapping.json
+
+common/config/configMapping copy.json
+
+common/config/configMapping.json.backup
+
+lib/mocks/BackendClientMock copy.js

@@ -18,6 +18,7 @@
   "apiUpdateInterval" : 60000,
   "flavorDownloaderTeardownInterval" : 15000,
   "numOfIterationsForPlaylistUpdate" : 5,
+  "endlistAppenderTimeInMS" : 60000,
   "logLevel" : "DEBUG",
   "logToConsole" : false,
   "logFileName" : "~/dvr/kDvrWorker.log",
@@ -34,13 +35,15 @@
     "port" : 1935,
     "user" : "",
     "password" : ""
+
   },
   "webServerParams" : {
     "applicationName" : "kLive",
     "port" : 8080,
     "logLevel" : "DEBUG",
     "logFileName" : "~/dvr/kDvrWebServer.log",
-    "logToConsole" : true
+    "logToConsole" : false,
+    "chunklistExpireAge" : 300000
   },
   "backendClient" : {
     "adminSecret" :"admin secret",

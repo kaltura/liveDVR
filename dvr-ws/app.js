@@ -6,22 +6,16 @@ var bodyParser = require('body-parser');
 var config = require('../common/Configuration');
 var logger = require('./logger/logger');
 var routes = require('./routes/index');
-var accesslog = require('apache-like-accesslog');
+var morgan = require('morgan');
 var compression = require('compression');
+var fs=require('fs');
 
 var app = express();
 app.set('env', 'production');
 
-accesslog.configure({
-  format: 'EXTENDED',
-  directory: path.dirname(config.get('webServerParams:logFileName')),
-  filename: 'access.log'});
+var accessLogStream = fs.createWriteStream(path.dirname(config.get('webServerParams:logFileName'))+'/access.log', {flags: 'a'})
 
-app.use(accesslog.logger);
-
-// view engine setup
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'jade');
+app.use(morgan('combined', {stream: accessLogStream}));
 
 
 function shouldCompress(req, res) {
@@ -68,42 +62,25 @@ app.use(function(req, res, next) {
   next();
 });
 
+
+app.get(/version/i, function(req, res) {
+  res.setHeader('Cache-Control', 'public, max-age=60');
+  res.set('Content-Type', 'text/plain');
+  var re=/\/v(.*)\/dvr-ws/.exec(__dirname);
+  if (re!=null && re.length===2) {
+    res.send(re[1]);
+  } else {
+    res.send(__dirname);
+  }
+});
+
+
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/' + config.get('webServerParams:applicationName'), routes);
 
 
 app.use(expresslogger.errorLogger);
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
-});
 
-// error handlers
-
-// development error handler
-// will print stacktrace
-if (app.get('env') === 'development') {
-  console.log('DEBUG');
-  app.use(function(err, req, res, next) {
-    res.status(err.status || 500);
-    res.render('error', {
-      message: err.message,
-      error: err
-    });
-  });
-}
-
-// production error handler
-// no stacktraces leaked to user
-app.use(function(err, req, res, next) {
-  res.status(err.status || 500);
-  res.render('error', {
-    message: err.message,
-    error: {}
-  });
-});
 
 module.exports = app;
