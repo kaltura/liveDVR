@@ -52,13 +52,13 @@ function parseChunkName(arr){
 }
 
 $0 ~ /\[debug\]/ && $0 ~ /GET \/hls\/(.*)\/playlist.json\/seg/ {
-    split($10,b,"-");
+    n = split($10,b,"-");
     lastChunkPath=$10
     if(verbose){
         print $2 " "lastChunkPath;
     }
 
-    if(length(b) == 6){
+    if(n >= 6){
         lastChunkId = b[4]
         parseChunkName(b)
     } else {
