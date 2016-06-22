@@ -28,9 +28,9 @@ flavorCnt=0
         max[segIdx]=segTime
     }
     if(flavorCnt > 0 && callCnt == 10*flavorCnt ){
-        for(seg in max){
-           print "INFO: segIdx="seg" diff  "max[seg]-min[seg]
-        }
+       # for(seg in max){
+        #   print "INFO: segIdx="seg" diff  "max[seg]-min[seg]
+        #}
         delete max
         delete min
         callCnt = 0
