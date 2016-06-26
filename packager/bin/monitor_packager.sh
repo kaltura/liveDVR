@@ -119,12 +119,16 @@ function lookupTSFile {
     # result: seg-1466803160985-12000-146680317-f1-v1.ts -> seg 1466803160985 12000 146680317 f1 v1.ts
     # take 3 last tokens
     local n=${#items[@]}
+    [[ "$1" =~ "-a1" ]] &&  audio=1 || audio=0
+    [[ "$audio" -eq "1" ]] && pattern="(.*)-${items[$n-4]}-${items[$n-3]}-${items[$n-2]}-${items[$n-1]}" || pattern="(.*)-${items[$n-3]}-${items[$n-2]}-${items[$n-1]}"
+    found=`grep -iEo "$pattern" $outfile`
 
-    found=`grep -iEo "(.*)${items[$n-3]}-${items[$n-2]}-${items[$n-1]}" $outfile`
     # if debug info on chunk name is present then validate
     local retval=${#found}
-    if (( $retval > 0 && $n > 4 ))
+    [[ "$audio" -eq "1" ]] && fieldsCnt=5 || fieldsCnt=4
+    if (( $retval > 0 && $n > $fieldsCnt ))
     then
+        #echo "n=$n found=$found"
         dbgInfoCmp "$1" "$found"
     fi
     #echo "found=$found"
@@ -141,9 +145,12 @@ function analyzeChunk {
 
    #grep "$chunk" $outfile &> /dev/null && return
 
+lookupTSFile $chunk
    warning=`lookupTSFile $chunk`
 
    retval=$?
+
+   #echo "analyzeChunk chunk=$chunk retval=$retval"
 
    [ -n "$warning" ] && echo $warning >> $outfile
 
@@ -171,9 +178,7 @@ function analyzeChunk {
 
         [ "$media" = "v" ] &&  index=0 || index=1
 
-        #echo -e "\ncount:\tdts:\n$partitionLine" >> $outfile
-
-        line=`ffprobe "$urlPrefix/$chunk" -show_packets  -select_streams $media  | \
+        line=`ffprobe "$urlPrefix/$chunk"  -show_packets  -select_streams $media  | \
          awk 'BEGIN{ offset=length("dts_time=")+1; dur_offset=length("duration_time=")+1} \
             /duration_time=/ { duration_time=substr($0,dur_offset);} \
             /dts_time=/  { last=substr($0,offset); if(!first){first=last}} \
@@ -182,6 +187,7 @@ function analyzeChunk {
          #>> $outfile
        # echo -e "$endLine" >> $outfile
     done;
+
     if [ -n "${medias[0]}" ]
     then
          video=(${medias[0]})
@@ -204,8 +210,7 @@ function analyzeChunk {
             #there's no double processing in bash...
             [ `echo "$chunkStartEndTSDiff >= $threshold" | bc` = "1" ]  || [ `echo "$chunkStartEndTSDiff >= $threshold" | bc` = "1" ]  && warning="$warning bad alignment WARNING: $chunkStartEndTSDiff"
 
-
-            echo "$chunkStartDTSDiff $chunkStartEndTSDiff `echo "${video[3]} - ${audio[3]}" | bc` errors: $warning" >> $outfile;
+            echo "diffs: $chunkStartDTSDiff $chunkStartEndTSDiff `echo "${video[3]} - ${audio[3]}" | bc` errors: $warning" >> $outfile;
          else
            echo "${video[1]} ${video[2]} ${video[3]} errors: $warning" >> $outfile;
          fi
