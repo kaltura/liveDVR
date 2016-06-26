@@ -178,12 +178,17 @@ lookupTSFile $chunk
 
         [ "$media" = "v" ] &&  index=0 || index=1
 
+        dts_pat="dts=";   dts_duration_pat="duration_time="
+        #dts_pat="dts_time=";   dts_duration_pat="duration="
+        #NB: 9090 is packager initial offset for dts
         line=`ffprobe "$urlPrefix/$chunk"  -show_packets  -select_streams $media  | \
-         awk 'BEGIN{ offset=length("dts_time=")+1; dur_offset=length("duration_time=")+1} \
-            /duration_time=/ { duration_time=substr($0,dur_offset);} \
-            /dts_time=/  { last=substr($0,offset); if(!first){first=last}} \
-          END{ last+=duration_time; print first" "last" "(last-first)}'`
-        medias[index]="$media $line"
+         awk -v dtspat=$dts_pat -v dts_durationpat=$dts_duration_pat \
+           'BEGIN{ offset=length(dtspat)+1; dur_offset=length(dts_durationpat)+1} \
+            $0 ~ dts_durationpat { duration_time=substr($0,dur_offset);} \
+            $0 ~ dtspat  { last=substr($0,offset); if(!first){first=last} } \
+          END{ last=((last+8589934592)-9090)%8589934592; first=((first+8589934592)-9090)%8589934592; last+=duration_time; print first" "last" "(last-first)}'`
+
+         medias[index]="$media $line"
          #>> $outfile
        # echo -e "$endLine" >> $outfile
     done;
