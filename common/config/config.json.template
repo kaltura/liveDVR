@@ -55,6 +55,7 @@
     "humanReadable" : false,
     "keyFrameSearchOffsetMs" : 1,
     "discontinuityMode" : true,
-    "segmentDuration" : 10000
+    "segmentDuration" : 10000,
+    "enablePlaylistHistory": false
   }
 }
