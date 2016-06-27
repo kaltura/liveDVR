@@ -20,6 +20,9 @@
   "logLevel" : "DEBUG",
   "logToConsole" : true,
   "logFileName" : "~/dvr/kDvrWorker.log",
+  "regressionAdapter": {
+      "enable":false
+  },
   "simulateStreams": {
       "enable":false,
       "count": 1,
