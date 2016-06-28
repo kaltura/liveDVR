@@ -14,9 +14,27 @@ function makeFFmpeg()
 
     cd $1
 
-    [ -d "$ffmpegDir" ] || git clone https://github.com/FFmpeg/FFmpeg
+    if [ ! -d "$ffmpegDir" ]
+    then
+        wget https://github.com/FFmpeg/FFmpeg/releases/download/n3.0/ffmpeg-3.0.tar.gz -O  /var/tmp/ffmpeg-3.0.tar.gz
+        case $os_name in
+         'Linux')
+            devFFmpegDir=~/
+            ;;
+        'Darwin')
+            devFFmpegDir=~/Documents/
+            ;;
+        *) ;;
+        esac
+
+        tar -xzvf /var/tmp/ffmpeg-3.0.tar.gz -C $devFFmpegDir
+        ln -s $devFFmpegDir/ffmpeg-3.0 $ffmpegDir
+    fi
 
     cd $ffmpegDir
+
+    # checkout to specific revision
+    git checkout 'd693392886b8454c818e384c816b9ede53c570d8'
 
     debug_specifics=""
     [ "$Release" == "" ] &&  debug_specifics='--enable-debug --disable-optimizations'
@@ -25,7 +43,10 @@ function makeFFmpeg()
 
 
 
-    confCmd="./configure --disable-everything --disable-doc --enable-protocol=file --enable-demuxer=mpegts --enable-muxer=rtp_mpegts --enable-parser=h264 --enable-parser=aac --enable-muxer=mp4   --enable-zlib --enable-bsf=aac_adtstoasc $debug_specifics --enable-decoder=aac"
+    confCmd="./configure --disable-everything --disable-doc --enable-protocol=file \
+    --enable-demuxer=mpegts --enable-muxer=rtp_mpegts --enable-parser=h264 --enable-parser=aac \
+    --enable-muxer=mp4   --enable-zlib --enable-bsf=aac_adtstoasc --enable-decoder=aac --enable-decoder=h264 \
+    $debug_specifics"
 
     [ "$os_name" == "Linux" ] && confCmd="$confCmd --enable-pic"
 
