@@ -71,7 +71,17 @@ echo "entryId=$entryId server=$server playlistDirectory=$playlistDirectory serve
 #echo "${playlists[@]}"
 [ -f $outfile ] &&  >$outfile || touch $outfile;
 
-threshold="0.0005"
+use_dts_times=1
+if [[ "$use_dts_times" -eq "1" ]]
+then
+    threshold=$((1*90))
+    align_threshold=$((10*90))
+else
+    threshold="0.001"
+    align_threshold="0.01"
+fi
+
+echo "use_dts_times=$use_dts_times threshold=$threshold align_threshold=$align_threshold"
 
 function checkDiscontinuity {
 
@@ -82,7 +92,7 @@ function checkDiscontinuity {
      local trackStartDTS=$1
      local media=$3
      local diff=`echo "$trackStartDTS - $trackEndDTS" | bc`
-     if [ `echo "$diff < 0" | bc` = "1" ]
+     if [ `echo "$diff < -$threshold" | bc` = "1" ]
      then
          echo "($media) discontinuity: dts go back $diff"
      elif [ `echo "$diff > $threshold" | bc` = "1" ]
@@ -143,9 +153,6 @@ function analyzeChunk {
 
   #echo "analyzeChunk $chunk"
 
-   #grep "$chunk" $outfile &> /dev/null && return
-
-lookupTSFile $chunk
    warning=`lookupTSFile $chunk`
 
    retval=$?
@@ -178,15 +185,18 @@ lookupTSFile $chunk
 
         [ "$media" = "v" ] &&  index=0 || index=1
 
-        dts_pat="dts=";   dts_duration_pat="duration_time="
-        #dts_pat="dts_time=";   dts_duration_pat="duration="
+        if [[ "$use_dts_times" -eq "1" ]]
+        then
+            dts_pat="dts=";   initial_dts="9090"
+        else
+            dts_pat="dts_time=";   initial_dts="11"
+        fi
         #NB: 9090 is packager initial offset for dts
         line=`ffprobe "$urlPrefix/$chunk"  -show_packets  -select_streams $media  | \
-         awk -v dtspat=$dts_pat -v dts_durationpat=$dts_duration_pat \
-           'BEGIN{ offset=length(dtspat)+1; dur_offset=length(dts_durationpat)+1} \
-            $0 ~ dts_durationpat { duration_time=substr($0,dur_offset);} \
-            $0 ~ dtspat  { last=substr($0,offset); if(!first){first=last} } \
-          END{ last=((last+8589934592)-9090)%8589934592; first=((first+8589934592)-9090)%8589934592; last+=duration_time; print first" "last" "(last-first)}'`
+         awk -v dtspat=$dts_pat -v dts_initial_dts=$initial_dts\
+           'BEGIN{ offset=length(dtspat)+1; dur_offset=length(dts_durationpat)+1; durCnt = 0; durSum = 0 } \
+            $0 ~ dtspat  {  cur=substr($0,offset); if(last){ durCnt++;durSum += cur-last; } last = cur; if(!first){first=last} } \
+          END{ duration_time=int(durSum/durCnt);  last=((last+8589934592)-dts_initial_dts)%8589934592; first=((first+8589934592)-dts_initial_dts)%8589934592; last+=duration_time; print first" "last" "(last-first)}'`
 
          medias[index]="$media $line"
          #>> $outfile
@@ -213,11 +223,13 @@ lookupTSFile $chunk
             chunkStartDTSDiff=`echo "${video[1]} -${audio[1]}" | bc`
             chunkStartEndTSDiff=`echo "${video[2]} -${audio[2]}" | bc`
             #there's no double processing in bash...
-            [ `echo "$chunkStartEndTSDiff >= $threshold" | bc` = "1" ]  || [ `echo "$chunkStartEndTSDiff >= $threshold" | bc` = "1" ]  && warning="$warning bad alignment WARNING: $chunkStartEndTSDiff"
+            [[ `echo "$chunkStartEndTSDiff >= $align_threshold" | bc` = "1" ]]  || [[ `echo "$chunkStartEndTSDiff >= $align_threshold" | bc` = "1" ]]  && warning="$warning video/audio track alignment: $chunkStartEndTSDiff > $align_threshold"
 
-            echo "diffs: $chunkStartDTSDiff $chunkStartEndTSDiff `echo "${video[3]} - ${audio[3]}" | bc` errors: $warning" >> $outfile;
+            [[ "$warning" =~ [A-Za-z] ]] && warning="errors: $warning"
+            echo "diffs: $chunkStartDTSDiff $chunkStartEndTSDiff `echo "${video[3]} - ${audio[3]}" | bc` $warning" >> $outfile;
          else
-           echo "${video[1]} ${video[2]} ${video[3]} errors: $warning" >> $outfile;
+           [[ "$warning" =~ [A-Za-z] ]] && warning="errors: $warning"
+           echo "${video[1]} ${video[2]} ${video[3]} $warning" >> $outfile;
          fi
 
     fi
