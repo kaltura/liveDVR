@@ -57,6 +57,17 @@ http {
         rewrite  /kLive\/smil:(.*)_all.smil\/manifest.f4m            /hds/$1/playlist.json/manifest.f4m last;
         rewrite  /kLive\/smil:(.*)_all.smil\/(.*).abst               /hds/$1/playlist.json/$2.abst last;
 
+
+        add_header 'Access-Control-Allow-Headers' 'Origin,Range';
+        add_header 'Access-Control-Expose-Headers' 'Server,Content-Length,Content-Range,Date';
+        add_header 'Access-Control-Allow-Methods' 'GET, HEAD, OPTIONS';
+        add_header 'Access-Control-Allow-Origin' '*';
+
+        vod_last_modified 'Sun, 19 Nov 2000 08:52:00 GMT';
+        vod_last_modified_types *;
+        vod_expires 1d;
+        vod_expires_live 5;
+
         location = /serverip {
 
             expires 1d;
@@ -75,14 +86,7 @@ http {
              gzip_types application/vnd.apple.mpegurl;
              expires off;
              vod_live_window_duration 0;
-             vod_last_modified 'Sun, 19 Nov 2000 08:52:00 GMT';
-             vod_last_modified_types *;
-             vod_expires 100d;
-             vod_expires_live 3;
-             add_header 'Access-Control-Allow-Headers' 'Origin,Range';
-             add_header 'Access-Control-Expose-Headers' 'Server,Content-Length,Content-Range,Date';
-             add_header 'Access-Control-Allow-Methods' 'GET, HEAD, OPTIONS';
-             add_header 'Access-Control-Allow-Origin' '*';
+             vod_hls_output_id3_timestamps on;
         }
 
         location /hds/ {
@@ -96,14 +100,6 @@ http {
              expires off;
              vod_hds_manifest_file_name_prefix manifest;
              vod_hds_fragment_file_name_prefix frag;
-             vod_last_modified 'Sun, 19 Nov 2000 08:52:00 GMT';
-             vod_last_modified_types *;
-             vod_expires 100d;
-             vod_expires_live 3;
-             add_header 'Access-Control-Allow-Headers' 'Origin,Range';
-             add_header 'Access-Control-Expose-Headers' 'Server,Content-Length,Content-Range,Date';
-             add_header 'Access-Control-Allow-Methods' 'GET, HEAD, OPTIONS';
-             add_header 'Access-Control-Allow-Origin' '*';
         }
 
         location / {
