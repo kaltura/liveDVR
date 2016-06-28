@@ -33,9 +33,6 @@ function makeFFmpeg()
 
     cd $ffmpegDir
 
-    # checkout to specific revision
-    git checkout 'd693392886b8454c818e384c816b9ede53c570d8'
-
     debug_specifics=""
     [ "$Release" == "" ] &&  debug_specifics='--enable-debug --disable-optimizations'
 
