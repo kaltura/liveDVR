@@ -14,7 +14,7 @@ function makeFFmpeg()
 
     cd $1
 
-    [ -d "$ffmpegDir" ] || git clone https://github.com/FFmpeg/FFmpeg
+    [ -d "$ffmpegDir" ] || curl -o "https://github.com/FFmpeg/FFmpeg/releases/download/n3.0/ffmpeg-3.0.tar.gz" && tar -xvzf  ffmpeg-3.0.tar.gz
 
     cd $ffmpegDir
 
@@ -77,11 +77,11 @@ case $os_name in
 esac
 
 echo "$gyp_args"
-
+echo "Installing NAN"
 npm install nan
-
-node-gyp configure $gyp_args -v
+echo "Start node-gyp configure"
+node-gyp configure $gyp_args
 
 gyp_debug=${Release:---debug}
-
+echo "Start node-gyp build"
 node-gyp build $gyp_debug -v

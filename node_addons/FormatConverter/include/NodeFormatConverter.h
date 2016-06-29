@@ -40,8 +40,8 @@ namespace converter {
         public:
             AsyncProgressConverter(TS2MP4Convertor &obj)
             :Nan::AsyncProgressWorker(nullptr),
-            m_handler(obj)
-            ,m_lockObj(obj.handle_)
+            m_handler(obj),
+            m_lockObj(obj.handle())
             {
             }
             
@@ -82,12 +82,12 @@ namespace converter {
         
         static  v8::Persistent<v8::Function> constructor, bufferConstructor;
     private:
-        
+
         TS2MP4Convertor();
         
         ~TS2MP4Convertor();
         
-        static Handle<Value> New(const Arguments& args);
+        static void New(const v8::FunctionCallbackInfo<v8::Value>& info) ;
         
         static NAN_METHOD (on);
         

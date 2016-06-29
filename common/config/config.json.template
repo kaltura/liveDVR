@@ -41,11 +41,6 @@
     "serviceUrl" : "http://serviceURL",
     "ksSessionRefreshIntervalMinutes" : 720
   },
-  "heapDumpParams" : {
-    "timeInterval" : 900000,
-    "windowSize" : 3,
-    "enabled" : false
-  },
   "playlistConfig" : {
     "debug" : false,
     "waitTimeBeforeRemoval" : 100000,

@@ -1,4 +1,8 @@
 ## File Format Converter addon for node
+# prerequist
+on OSX  make sure you have yasm
+which yasm
+brew install yasm
 
 #Mac and linux:
 
