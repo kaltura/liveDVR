@@ -57,13 +57,16 @@ extern "C"{
     inline void log_packet(const AVFormatContext *fmt_ctx, const AVPacket *pkt, const char *tag,int avlog_level = AV_LOG_TRACE)
     {
         AVRational *time_base = &fmt_ctx->streams[pkt->stream_index]->time_base;
-        ts_buf a,b,c,d,e,f;
+        ts_buf a,b,c,d,e,f,h;
         
-        av_log(nullptr,avlog_level,"stm:%d sz:%d (pts-dts)={%s,%s} (pts_time:%s dts_time:%s) duration:%s duration_time:%s stream_index:%d pkt_flags:%x\n",
+        av_log(nullptr,avlog_level,"stm:%d sz:%d (pts-dts)={%s,%s,%s} (pts_time:%s dts_time:%s) duration:%s duration_time:%s stream_index:%d pkt_flags:%x\n",
                pkt->stream_index,
                pkt->size,
-               av_ts_make_string(a,pkt->pts), av_ts_make_string(c,pkt->dts),av_ts_make_time_string(b,pkt->pts, time_base),
-                av_ts_make_time_string(d,pkt->dts, time_base),
+               av_ts_make_string(a,pkt->pts),
+               av_ts_make_string(c,pkt->dts),
+                av_ts_make_string(h,pkt->pts-pkt->dts),
+               av_ts_make_time_string(b,pkt->pts, time_base),
+               av_ts_make_time_string(d,pkt->dts, time_base),
                av_ts_make_string(e,pkt->duration), av_ts_make_time_string(f,pkt->duration, time_base),
                pkt->stream_index,
                pkt->flags);
@@ -114,6 +117,10 @@ namespace converter{
         return val /(double)timebase.den * TIMESTAMP_RESOLUTION * timebase.num;
     }
     
+    int64_t getStreamStartTime(const AVStream *stream){
+        return stream->first_dts; //start_time
+    }
+    
     int Converter::checkForStreams(){
         
         if(!input->nb_streams){
@@ -125,13 +132,14 @@ namespace converter{
         
         _S(avformat_find_stream_info(*input,NULL));
         
-        
         for( size_t i = 0 ; i < input->nb_streams; i++){
             AVStream *in_stream =input->streams[i];
             switch(in_stream->codec->codec_type){
                 case AVMEDIA_TYPE_VIDEO:
                     if(in_stream->codec->width == 0 )
                         return m_bDataPending ? 0 : -1;
+    
+                   
                     break;
                 case AVMEDIA_TYPE_AUDIO:
                     if(in_stream->codec->channels == 0 )
@@ -148,22 +156,30 @@ namespace converter{
   
         m_minStartDTSMsec = std::numeric_limits<int64_t>::max();
         
+        //ffmpeg can shorten firt sample provided it's dts < pts
+        //it provides, however, means of overriding mechanism of mapping input dts on the output one.
+        output->output_ts_offset = std::numeric_limits<int64_t>::min();
+        output->avoid_negative_ts = 0;
+        
         for( size_t i = 0 , output_stream = 0; i < input->nb_streams; i++){
             
             AVStream *in_stream =input->streams[i];
             
-            int64_t stmStartTimeMs = av_rescale(in_stream->start_time,1000 * in_stream->time_base.num,in_stream->time_base.den);
+            int64_t stmStartTimeMs = av_rescale(getStreamStartTime(in_stream),1000 * in_stream->time_base.num,in_stream->time_base.den);
             
             m_minStartDTSMsec = std::min(m_minStartDTSMsec,stmStartTimeMs);
             
             if(in_stream->codec->codec_id == AV_CODEC_ID_TIMED_ID3)
                 continue;
             
+            // remember min dts offset. it will be subtracted by ffmpeg from dts/pts values before muxing
+            output->output_ts_offset = std::max(output->output_ts_offset,av_rescale_q(-in_stream->first_dts, in_stream->time_base,AV_TIME_BASE_Q));
+            
             AVStream *out_stream = avformat_new_stream(*output, in_stream->codec->codec);
             
             m_streamMapper[i] = output_stream++;
             
-            m_extraTrackInfo.push_back(ExtraTrackInfo(dts2msec(in_stream->start_time,in_stream->time_base)));
+            m_extraTrackInfo.push_back(ExtraTrackInfo(dts2msec(getStreamStartTime(in_stream),in_stream->time_base)));
             
             _S(avcodec_copy_context(out_stream->codec, in_stream->codec));
             
@@ -228,10 +244,10 @@ namespace converter{
                 if( m_creationTime ==0 ){
                     m_creationTime = extractUnixTimeMsecFromId3Tag(pkt.data,pkt.size);
                     if(m_creationTime > 0){
-                        av_log(*input,AV_LOG_TRACE,"Converter::pushData. parsed id3 time %lld stream start time %lld pts %lld",
-                               m_creationTime, in_stream->start_time,pkt.pts);
+                        av_log(*input,AV_LOG_TRACE,"Converter::pushData. parsed id3 time %lld stream first_dts %lld pts %lld",
+                               m_creationTime, in_stream->first_dts,pkt.pts);
 
-                        m_creationTime -= av_rescale(pkt.pts,TIMESTAMP_RESOLUTION * in_stream->time_base.num,
+                        m_creationTime -= av_rescale(pkt.dts,TIMESTAMP_RESOLUTION * in_stream->time_base.num,
                                                      in_stream->time_base.den) - m_minStartDTSMsec;
 
                         // hack for mp4
@@ -247,25 +263,22 @@ namespace converter{
                 
                 ExtraTrackInfo &xtra = m_extraTrackInfo[pkt.stream_index];
                 
-              
-                
                 /* copy packet */
                 
                 //log_packet(*input, &pkt, "in",AV_LOG_FATAL);
                 
                 updateLastTimestamp(xtra.lastPTS, pkt.pts);
                 
-                xtra.maxDTS = pkt.pts + pkt.duration;
-                
                 pkt.pts = av_rescale_q_rnd(pkt.pts, in_stream->time_base,out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
                 
                 updateLastTimestamp(xtra.lastDTS, pkt.dts);
+                
+                xtra.maxDTS = pkt.dts + pkt.duration;
                 
                 pkt.dts = av_rescale_q_rnd(pkt.dts, in_stream->time_base,out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
                 
                 pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
                 pkt.pos = -1;
-
        
                 log_packet(*input, &pkt, "in");
                 
@@ -327,8 +340,7 @@ namespace converter{
         
         // code *stolen* from movenc.c
         for(MOVTrack *track = mov->tracks; track < mov->tracks + mov->nb_streams ; track++){
-            if ((track->enc->codec_type == AVMEDIA_TYPE_VIDEO ||
-                 track->enc->codec_tag == MKTAG('r','t','p',' ')) &&
+            if (track->enc->codec_type == AVMEDIA_TYPE_VIDEO  &&
                 track->has_keyframes && track->has_keyframes < track->entry){
                 for (int i = 0; i < track->entry; i++) {
                     if (track->cluster[i].flags & MOV_SYNC_SAMPLE) {
@@ -340,6 +352,10 @@ namespace converter{
                 break;
             }
         }
+        
+        auto diff = result[0];
+        
+        std::transform(result.begin(),result.end(),result.begin(),[ diff ] (double val) -> double { return val - diff; });
         
         return 0;
     }
@@ -385,7 +401,7 @@ namespace converter{
                       
                         double wrapDTS = ::ceil(dts2msec(1ULL << stream->pts_wrap_bits,stream->time_base));
                         ExtraTrackInfo &extraInfo = this->m_extraTrackInfo[this->m_streamMapper[i]];
-                        double duration = dts2msec(extraInfo.maxDTS - stream->start_time,stream->time_base);
+                        double duration = dts2msec(extraInfo.maxDTS - stream->first_dts,stream->time_base);
                        
                         mfi.tracks.push_back({ this->m_creationTime + extraInfo.startDTS - m_minStartDTSMsec,
                             extraInfo.startDTS,

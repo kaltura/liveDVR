@@ -1,6 +1,12 @@
 # !/bin/bash
 
-ffmpegLibsDir=${ffmpegLibsDir:-/root/liveDVR/node_addons/FormatConverter/build/FFmpeg}
+
+cd ~/
+
+devRootDir=${devRootDir:-`pwd`}
+
+ffmpegLibsDir=${ffmpegLibsDir:-$devRootDir/liveDVR/node_addons/FormatConverter/build/FFmpeg}
+
 
 os_name=`uname`
 
@@ -16,9 +22,6 @@ case  $os_name in
    ;;
 esac
 
-cd ~/
-
-devRootDir=${devRootDir:-`pwd`}
 
 if [ ! -d "$devRootDir/nginx-vod-module" ]
 then
