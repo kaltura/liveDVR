@@ -3,35 +3,37 @@
 # the process monitor. For more configuration options associated with Forever,
 # see: https://github.com/nodejitsu/forever
 #
-# kDVR              This shell script takes care of starting and stopping the Kaltura kDVR Worker service
+# Live:              This shell script takes care of starting and stopping the Kaltura kLive Controller service
 #
 # chkconfig: 2345 13 87
-# description: Kaltura DVR Worker
+# description: Kaltura Live Controller
 
 ### BEGIN INIT INFO
-# Provides:          kDvrWorker
+# Provides:          kLiveController
 # Required-Start:    $local_fs $remote_fs $network
 # Required-Stop:     $local_fs $remote_fs $network
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # X-Interactive:     true
-# Short-Description: Start/stop Kaltura DVR Worker
-# Description:       Control the Kaltura DVR Worker service
+# Short-Description: Start/stop Kaltura Live Controller
 ### END INIT INFO
 
-NAME="kDVR Worker"
-KDVR_WORKER_PREFIX="/opt/kaltura/liveDVR"
-NODE_PATH="$KDVR_WORKER_PREFIX/node_modules"
-APPLICATION_PATH="$KDVR_WORKER_PREFIX/lib/Driver.js"
+NAME="kLive Controller"
+$KLIVE_CONTROLLER_PREFIX="/opt/kaltura/liveController"
+NODE_PATH="$KLIVE_CONTROLLER_PREFIX/node_modules"
+APPLICATION_PATH="$KLIVE_CONTROLLER_PREFIX/lib/App.js"
 LOG_DIR="/var/log"
-PIDFILE="$LOG_DIR/kDvrWorker.pid"
-LOGFILE="$LOG_DIR/kDvrWorker-forever.log"
+PIDFILE="$LOG_DIR/kLiveController.pid"
+LOGFILE="$LOG_DIR/kLiveController-forever.log"
 MIN_UPTIME="5000"
 SPIN_SLEEP_TIME="2000"
+NODE_VERSION="6.2.2"
 export PATH=$PATH:$NODE_PATH/forever/bin:/usr/local/bin
 
 start() {
     echo "Starting $NAME"
+    echo "Using Node version $NODE_VERSION"
+    nvm use $NODE_VERSION
     forever \
       --pidFile $PIDFILE \
       -a \

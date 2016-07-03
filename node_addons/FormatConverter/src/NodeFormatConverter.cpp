@@ -47,7 +47,6 @@ namespace converter {
     }
     
     NAN_METHOD(TS2MP4Convertor::NewInstance) {
-        
         const unsigned argc = 0;
         Local<Value> argv[argc] = {  };
         Local<Function> cons = Nan::New<Function>(constructor);

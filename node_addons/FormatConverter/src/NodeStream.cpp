@@ -130,11 +130,14 @@ namespace converter {
         //.v8::MaybeLocal<v8::Object> actualBuffer =  TS2MP4Convertor::bufferConstructor->NewInstance(3, constructorArgs);
         //Nan::CopyBuffer((char *)&m_output.at(0) + m_written, toWrite) ; */
         
-        if(slowBuffer.IsEmpty()){
+        
+        Local<Object> retval = slowBuffer.ToLocalChecked();
+        
+        if(retval->IsObject()){
             lock_shared_ptr();
         }
         
-        return slowBuffer.ToLocalChecked();
+        return retval;
     }
     
     Local<Value> NodeOutputStream::GetData(Isolate *isolate)
