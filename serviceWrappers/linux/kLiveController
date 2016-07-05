@@ -19,7 +19,7 @@
 ### END INIT INFO
 
 NAME="kLive Controller"
-$KLIVE_CONTROLLER_PREFIX="/opt/kaltura/liveController"
+KLIVE_CONTROLLER_PREFIX="/opt/kaltura/liveController"
 NODE_PATH="$KLIVE_CONTROLLER_PREFIX/node_modules"
 APPLICATION_PATH="$KLIVE_CONTROLLER_PREFIX/lib/App.js"
 LOG_DIR="/var/log"
@@ -27,13 +27,10 @@ PIDFILE="$LOG_DIR/kLiveController.pid"
 LOGFILE="$LOG_DIR/kLiveController-forever.log"
 MIN_UPTIME="5000"
 SPIN_SLEEP_TIME="2000"
-NODE_VERSION="6.2.2"
 export PATH=$PATH:$NODE_PATH/forever/bin:/usr/local/bin
 
 start() {
     echo "Starting $NAME"
-    echo "Using Node version $NODE_VERSION"
-    nvm use $NODE_VERSION
     forever \
       --pidFile $PIDFILE \
       -a \
