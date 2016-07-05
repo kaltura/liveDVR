@@ -20,6 +20,7 @@
   "logLevel" : "DEBUG",
   "logToConsole" : false,
   "logFileName" : "~/dvr/kDvrWorker.log",
+  "monitorPort": 4390,
   "regressionAdapter": {
       "enable":false
   },
