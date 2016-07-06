@@ -207,7 +207,7 @@ function analyzeChunk {
          awk -v dtspat=$dts_pat -v dts_initial_dts=$initial_dts\
            'BEGIN{ offset=length(dtspat)+1; dur_offset=length(dts_durationpat)+1; durCnt = 0; durSum = 0 } \
             $0 ~ dtspat  {  cur=substr($0,offset); if(last){ durCnt++;durSum += cur-last; } last = cur; if(!first){first=last} } \
-          END{ duration_time=int(durSum/durCnt);  last=((last+8589934592)-dts_initial_dts)%8589934592; first=((first+8589934592)-dts_initial_dts)%8589934592; last+=duration_time; print first" "last" "(last-first)}'`
+          END{ if(durCnt==0){durCnt=1} duration_time=int(durSum/durCnt);  last=((last+8589934592)-dts_initial_dts)%8589934592; first=((first+8589934592)-dts_initial_dts)%8589934592; last+=duration_time; print first" "last" "(last-first)}'`
 
          medias[index]="$media $line"
          #>> $outfile
