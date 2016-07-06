@@ -118,7 +118,13 @@ namespace converter{
     }
     
     int64_t getStreamStartTime(const AVStream *stream){
-        return stream->first_dts; //start_time
+        switch(stream->codec->codec_type){
+        case AVMEDIA_TYPE_VIDEO:
+        case AVMEDIA_TYPE_AUDIO:
+            return stream->first_dts;
+        default:
+            return stream->start_time;
+        };
     }
     
     int Converter::checkForStreams(){
