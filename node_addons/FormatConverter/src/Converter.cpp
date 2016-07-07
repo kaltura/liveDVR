@@ -10,7 +10,7 @@
 
 extern "C"{
 #include <libavformat/movenc.h>
-    
+#include <bitset>    
     
     //invalid suffix on literal C++11 requires...
     // thus, some code is replicated
@@ -136,6 +136,16 @@ namespace converter{
             }
         }
         
+        // surpress av warning on id3 tag stream: start time for stream %d is not set in estimate_timings_from_pts
+        std::bitset<32> markedStreamsSet;
+        for( size_t i = 0 ; i < input->nb_streams; i++){
+             AVStream *in_stream =input->streams[i];
+            if(in_stream->codec->codec_type == AVMEDIA_TYPE_DATA && in_stream->start_time == AV_NOPTS_VALUE){
+                in_stream->codec->codec_type = AVMEDIA_TYPE_UNKNOWN;
+                markedStreamsSet.set(i,true);
+            }
+        }
+        
         _S(avformat_find_stream_info(*input,NULL));
         
         for( size_t i = 0 ; i < input->nb_streams; i++){
@@ -144,12 +154,15 @@ namespace converter{
                 case AVMEDIA_TYPE_VIDEO:
                     if(in_stream->codec->width == 0 )
                         return m_bDataPending ? 0 : -1;
-    
-                   
                     break;
                 case AVMEDIA_TYPE_AUDIO:
                     if(in_stream->codec->channels == 0 )
                         return m_bDataPending ? 0 : -1;
+                    break;
+                case AVMEDIA_TYPE_UNKNOWN:
+                    if(markedStreamsSet[i]){
+                        in_stream->codec->codec_type = AVMEDIA_TYPE_DATA;
+                    }
                     break;
                 default:
                     break;
@@ -171,7 +184,7 @@ namespace converter{
             
             AVStream *in_stream =input->streams[i];
             
-            int64_t stmStartTimeMs = av_rescale(getStreamStartTime(in_stream),1000 * in_stream->time_base.num,in_stream->time_base.den);
+            int64_t stmStartTimeMs = av_rescale(in_stream->start_time,1000 * in_stream->time_base.num,in_stream->time_base.den);
             
             m_minStartDTSMsec = std::min(m_minStartDTSMsec,stmStartTimeMs);
             
@@ -207,12 +220,7 @@ namespace converter{
             }
         }
         
-        AVDictionary *opts = nullptr;
-
-        _S(av_dict_set(&opts, "use_editlist", "0", 0));
-        std::unique_ptr<AVDictionary> optsptr(opts);
-        _S(avformat_write_header(*output, &opts));
-        optsptr.release();
+        _S(avformat_write_header(*output, nullptr));
         
         state = PUSHING;
         
@@ -408,8 +416,7 @@ namespace converter{
                         double wrapDTS = ::ceil(dts2msec(1ULL << stream->pts_wrap_bits,stream->time_base));
                         ExtraTrackInfo &extraInfo = this->m_extraTrackInfo[this->m_streamMapper[i]];
                         double duration = dts2msec(extraInfo.maxDTS - stream->first_dts,stream->time_base);
-                       
-                        mfi.tracks.push_back({ this->m_creationTime + extraInfo.startDTS - m_minStartDTSMsec,
+                        mfi.tracks.push_back({ this->m_creationTime + dts2msec(stream->start_time,stream->time_base) - m_minStartDTSMsec,
                             extraInfo.startDTS,
                             wrapDTS,
                             duration,
