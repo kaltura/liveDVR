@@ -21,7 +21,14 @@
   "logToConsole" : true,
   "logFileName" : "~/dvr/kDvrWorker.log",
   "regressionAdapter": {
-      "enable":false
+      "enable": false,
+      "dataWarehouseRootFolderPath" : "~/dvr/tests",
+      "maxChunkCount": 10,
+      "entries" : [{
+            "entryId": "abc",
+            "flavorParamsIds": "32,33,34,35",
+            "serverType": 0
+        }]
   },
   "simulateStreams": {
       "enable":false,
