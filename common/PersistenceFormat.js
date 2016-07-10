@@ -33,7 +33,7 @@ module.exports = {
     getMasterManifestName: function () {
         return 'playlist.json';
     },
-    getMP4FileNamefromInfo: function(fileInfo){
-        return fileInfo.sig + '.mp4';
+    getMP4FileNamefromInfo: function(chunkPath){
+        return path.basename(chunkPath) + '.mp4';
     }
 };

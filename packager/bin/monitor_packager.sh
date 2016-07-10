@@ -76,9 +76,19 @@ if [[ "$use_dts_times" -eq "1" ]]
 then
     threshold=$((1*90))
     align_threshold=$((10*90))
+    dts_wrap=$((1<<33))
+    function dts_diff(){
+         local retval=$(( ($1 + $dts_wrap - $2) % $dts_wrap ))
+         #check for negative diff...
+         (( retval >= dts_wrap/2 )) && retval=$(($1-$2))
+         echo $retval
+    }
 else
     threshold="0.001"
     align_threshold="0.01"
+    function dts_diff(){
+         echo "$1 - $2" | bc
+    }
 fi
 
 echo "use_dts_times=$use_dts_times threshold=$threshold align_threshold=$align_threshold"
@@ -91,7 +101,8 @@ function checkDiscontinuity {
   then
      local trackStartDTS=$1
      local media=$3
-     local diff=`echo "$trackStartDTS - $trackEndDTS" | bc`
+     local diff=`dts_diff $trackStartDTS  $trackEndDTS`
+
      if [ `echo "$diff < -$threshold" | bc` = "1" ]
      then
          echo "($media) discontinuity: dts go back $diff"
@@ -196,7 +207,7 @@ function analyzeChunk {
          awk -v dtspat=$dts_pat -v dts_initial_dts=$initial_dts\
            'BEGIN{ offset=length(dtspat)+1; dur_offset=length(dts_durationpat)+1; durCnt = 0; durSum = 0 } \
             $0 ~ dtspat  {  cur=substr($0,offset); if(last){ durCnt++;durSum += cur-last; } last = cur; if(!first){first=last} } \
-          END{ duration_time=int(durSum/durCnt);  last=((last+8589934592)-dts_initial_dts)%8589934592; first=((first+8589934592)-dts_initial_dts)%8589934592; last+=duration_time; print first" "last" "(last-first)}'`
+          END{ if(durCnt==0){durCnt=1} duration_time=int(durSum/durCnt);  last=((last+8589934592)-dts_initial_dts)%8589934592; first=((first+8589934592)-dts_initial_dts)%8589934592; last+=duration_time; print first" "last" "(last-first)}'`
 
          medias[index]="$media $line"
          #>> $outfile
