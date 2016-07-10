@@ -1,6 +1,6 @@
 {
   "mockNetwork" : false,
-  "mockBackend" : false,
+  "mockBackend" : true,
   "readMockBackendResponseFromFile" : false,
   "rootFolderPath" : "~/dvr/dvrContentRootPath",
   "oldContentFolderPath" : "~/dvr/dvrOldContentRootPath",
@@ -21,12 +21,12 @@
   "logToConsole" : true,
   "logFileName" : "~/dvr/kDvrWorker.log",
   "regressionAdapter": {
-      "enable": false,
-      "dataWarehouseRootFolderPath" : "~/dvr/tests",
+      "enable":true,
+      "dataWarehouseRootFolderPath" : "/Users/lilach.maliniak/Desktop/dev/repositories/live-monitor/live-testing",
       "maxChunkCount": 10,
       "entries" : [{
             "entryId": "abc",
-            "flavorParamsIds": "32,33,34,35",
+            "flavorParamsIds": "32",
             "serverType": 0
         }]
   },
