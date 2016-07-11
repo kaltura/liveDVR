@@ -21,13 +21,15 @@
   "logToConsole" : true,
   "logFileName" : "~/dvr/kDvrWorker.log",
   "regressionAdapter": {
-      "enable":true,
+      "enable":false,
       "dataWarehouseRootFolderPath" : "/Users/lilach.maliniak/Desktop/dev/repositories/live-monitor/live-testing",
       "maxChunkCount": 10,
       "entries" : [{
             "entryId": "abc",
             "flavorParamsIds": "32",
-            "serverType": 0
+            "serverType": 0,
+            "firstChunklistIndex" : 0,
+            "playWindow": 150
         }]
   },
   "simulateStreams": {
