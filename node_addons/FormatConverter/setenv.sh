@@ -2,7 +2,6 @@
 
 [ "$1" = "DEBUG" ] && build_conf=Debug || build_conf=Release
 
-echo "build_conf = $build_conf"
 [ "$build_conf" != "Debug" ] && echo "target config: release" ||  echo "target config: debug"
 
 os_name=`uname`
@@ -39,7 +38,6 @@ function makeFFmpeg()
     [ "$Release" == "" ] &&  debug_specifics='--enable-debug --disable-optimizations'
 
     configFileName=$ffmpegDir/lastConfigure
-
 
 
     confCmd="./configure --disable-everything --disable-doc --enable-protocol=file --enable-demuxer=mpegts --enable-muxer=rtp_mpegts --enable-parser=h264 --enable-parser=aac --enable-muxer=mp4 --enable-zlib --enable-bsf=aac_adtstoasc --enable-decoder=aac --enable-decoder=h264"

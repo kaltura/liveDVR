@@ -18,51 +18,58 @@
 # Short-Description: Start/stop Kaltura Live Controller
 ### END INIT INFO
 
-NAME="kLive Controller"
-KLIVE_CONTROLLER_PREFIX="/opt/kaltura/liveController"
+NAME="kLiveController"
+KLIVE_CONTROLLER_PREFIX="/opt/kaltura/liveController/latest"
 NODE_PATH="$KLIVE_CONTROLLER_PREFIX/node_modules"
 FOREVER="$NODE_PATH/forever/bin/forever"
 APPLICATION_PATH="$KLIVE_CONTROLLER_PREFIX/lib/App.js"
 LOG_DIR="/var/log"
-PIDFILE="$LOG_DIR/kLiveController.pid"
-LOGFILE="$LOG_DIR/kLiveController-forever.log"
+PID_DIR="/var/run"
 MIN_UPTIME="5000"
 SPIN_SLEEP_TIME="2000"
 export PATH=$PATH:$NODE_PATH/forever/bin:/usr/local/bin
 
+# This loads nvm
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" || (echo "nvm not found in $NVM_DIR, this is a must, Exiting!" ; exit 1 )
+
+cd $KLIVE_CONTROLLER_PREFIX
+nvm use
+
 start() {
-    echo "Starting $NAME"
-    $FOREVER \
-      --pidFile $PIDFILE \
-      -a \
-      -l $LOGFILE \
-      --minUptime $MIN_UPTIME \
-      --spinSleepTime $SPIN_SLEEP_TIME \
-	  start $APPLICATION_PATH prefix:0&
-    echo "Starting $NAME"
-    $FOREVER \
-      --pidFile $PIDFILE \
-      -a \
-      -l $LOGFILE \
-      --minUptime $MIN_UPTIME \
-      --spinSleepTime $SPIN_SLEEP_TIME \
-      start $APPLICATION_PATH prefix:1&
-    RETVAL=$?
+    RETVAL=0
+    for prefix in 0 1 ; do
+        PIDFILE="$PID_DIR/${NAME}_${prefix}.pid"
+        LOGFILE="$LOG_DIR/${NAME}_${prefix}-forever.log"
+        if [ -f $PIDFILE ]; then
+            echo "${NAME}_${prefix} already running"
+        else
+            echo "Starting ${NAME}_${prefix}"
+            $FOREVER \
+              --pidFile $PIDFILE \
+              -a \
+              -l $LOGFILE \
+              --minUptime $MIN_UPTIME \
+              --spinSleepTime $SPIN_SLEEP_TIME \
+              start $APPLICATION_PATH prefix:${prefix}
+	        RETVAL=$(( $RETVAL + $? ))
+        fi
+    done
 }
 
 stop() {
-    if [ -f $PIDFILE ]; then
-    #if status() -eq 0  then
-        echo "Shutting down $NAME"
-        # Tell Forever to stop the process.
-        $FOREVER stop $APPLICATION_PATH 2>&1 > /dev/null
-        # Get rid of the pidfile, since Forever won't do that.
-        rm -f $PIDFILE
-        RETVAL=$?
-    else
-        echo "$NAME is not running."
-        RETVAL=0
-    fi
+    RETVAL=0
+    for prefix in 0 1 ; do
+        PIDFILE="$PID_DIR/${NAME}_${prefix}.pid"
+        if [ -f $PIDFILE ]; then
+            echo "Shutting down ${NAME}_${prefix}"
+            # Tell Forever to stop the process.
+            $FOREVER stop $( cat $PIDFILE )
+	    RETVAL=$(( $RETVAL + $? ))
+            # Get rid of the pidfile, since Forever won't do that.
+        else
+            echo "${NAME}_${prefix} is not running."
+        fi
+    done
 }
 
 restart() {
@@ -71,14 +78,29 @@ restart() {
 }
 
 status() {
-    STATUS=$($FOREVER list | grep -i "app.js" | awk '{print $8}' | wc -l)
-    if [ -z "$STATUS" ]; then
-        echo "$NAME is not running."
-        RETVAL=3
-    else
-        echo "$NAME is running."
-        RETVAL=0
-    fi
+    RETVAL=0
+    for prefix in 0 1 ; do
+        PIDFILE="$PID_DIR/${NAME}_${prefix}.pid"
+        if [ -f $PIDFILE ] ; then
+	    VAL=`( cat ${PIDFILE} | xargs ps -p ) | wc -l`
+	    if [ $VAL -gt 1 ] ; then
+		echo "${NAME}_${prefix} is running with PID $( cat $PIDFILE )"
+	    else
+		echo "${NAME}_${prefix} is not running but there is stale pidFile: $PIDFILE"
+		RETVAL=$(( $RETVAL + 1 ))
+ 	    fi
+        else
+            echo "${NAME}_${prefix} is not running."
+	    RETVAL=$(( $RETVAL + 1 ))
+        fi
+    done
+}
+
+killApp() {
+    echo "Aggressively kill all Live processes"
+    pkill -f $APPLICATION_PATH 
+    echo "Remove all PID files"
+    rm -f ${PID_DIR}/${NAME}*.pid
 }
 
 logRotated() {
@@ -105,12 +127,15 @@ case "$1" in
     restart)
         restart
         ;;
+    kill)
+        killApp
+        ;;
  	logRotated)
         logRotated
         ;;
 
     *)
-        echo "Usage: {start|stop|status|restart|logRotated}"
+        echo "Usage: {start|stop|status|restart|kill|logRotated}"
         exit 1
         ;;
 esac
