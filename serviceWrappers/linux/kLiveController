@@ -29,13 +29,13 @@ MIN_UPTIME="5000"
 SPIN_SLEEP_TIME="2000"
 export PATH=$PATH:$NODE_PATH/forever/bin:/usr/local/bin
 
-# This loads nvm
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" || (echo "nvm not found in $NVM_DIR, this is a must, Exiting!" ; exit 1 )
-
-cd $KLIVE_CONTROLLER_PREFIX
-nvm install
+loadNvm() {
+    # This loads nvm
+    [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" || (echo "nvm not found in $NVM_DIR, this is a must, Exiting!" ; exit 1 )
+}
 
 start() {
+    loadNvm
     RETVAL=0
     for prefix in 0 1 ; do
         PIDFILE="$PID_DIR/${NAME}_${prefix}.pid"
@@ -57,6 +57,7 @@ start() {
 }
 
 stop() {
+    loadNvm
     RETVAL=0
     for prefix in 0 1 ; do
         PIDFILE="$PID_DIR/${NAME}_${prefix}.pid"
@@ -64,7 +65,7 @@ stop() {
             echo "Shutting down ${NAME}_${prefix}"
             # Tell Forever to stop the process.
             $FOREVER stop $( cat $PIDFILE )
-	    RETVAL=$(( $RETVAL + $? ))
+	        RETVAL=$(( $RETVAL + $? ))
             # Get rid of the pidfile, since Forever won't do that.
         else
             echo "${NAME}_${prefix} is not running."
@@ -82,16 +83,16 @@ status() {
     for prefix in 0 1 ; do
         PIDFILE="$PID_DIR/${NAME}_${prefix}.pid"
         if [ -f $PIDFILE ] ; then
-	    VAL=`( cat ${PIDFILE} | xargs ps -p ) | wc -l`
+	    VAL=$( ( cat ${PIDFILE} | xargs ps -p ) | wc -l )
 	    if [ $VAL -gt 1 ] ; then
-		echo "${NAME}_${prefix} is running with PID $( cat $PIDFILE )"
-	    else
-		echo "${NAME}_${prefix} is not running but there is stale pidFile: $PIDFILE"
-		RETVAL=$(( $RETVAL + 1 ))
+            echo "${NAME}_${prefix} is running with PID $( cat $PIDFILE )"
+            else
+            echo "${NAME}_${prefix} is not running but there is stale pidFile: $PIDFILE"
+            RETVAL=$(( $RETVAL + 1 ))
  	    fi
         else
             echo "${NAME}_${prefix} is not running."
-	    RETVAL=$(( $RETVAL + 1 ))
+	        RETVAL=$(( $RETVAL + 1 ))
         fi
     done
 }
