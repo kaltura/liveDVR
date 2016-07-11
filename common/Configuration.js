@@ -22,7 +22,8 @@ module.exports = (function(){
     {
         var mappingContent = fs.readFileSync(mappingFilePath, 'utf8');
         var mappingObj=JSON.parse(mappingContent);
-        _.each(mappingObj,function(value,key) {
+        _.each(mappingObj, function(value, key) {
+            console.log("Matching configurations arguments. Key: [%s] => Match: [%s]", key, machineName.match(key));
             if (machineName.match(key)) {
                 assignValues(value, configObj);
             }
