@@ -103,17 +103,6 @@ killApp() {
     rm -f ${PID_DIR}/${NAME}*.pid
 }
 
-logRotated() {
-        if [ -f $PIDFILE ]; then
-                echo "Notify log rotate for $NAME."
-                kill -USR1 `cat $PIDFILE`
-                RETVAL=1
-        else
-                echo "$NAME is not running."
-                RETVAL=0
-        fi
-}
-
 case "$1" in
     start)
         start
@@ -130,12 +119,9 @@ case "$1" in
     kill)
         killApp
         ;;
- 	logRotated)
-        logRotated
-        ;;
 
     *)
-        echo "Usage: {start|stop|status|restart|kill|logRotated}"
+        echo "Usage: {start|stop|status|restart|kill}"
         exit 1
         ;;
 esac
