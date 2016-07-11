@@ -33,7 +33,7 @@ export PATH=$PATH:$NODE_PATH/forever/bin:/usr/local/bin
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" || (echo "nvm not found in $NVM_DIR, this is a must, Exiting!" ; exit 1 )
 
 cd $KLIVE_CONTROLLER_PREFIX
-nvm use
+nvm install
 
 start() {
     RETVAL=0
