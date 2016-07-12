@@ -1,12 +1,14 @@
 #! /bin/bash
 
 dirname=`dirname $0`
+
+[[ $dirname =~ ^/ ]] || dirname="`pwd`/$dirname"
+
 cd $dirname
 
 scriptName=`basename $0`
 
 os_name=`uname`
-release_name=`lsb_release -d | awk '{print $2}'`
 
 confDir=$dirname/../config/
 
@@ -19,7 +21,13 @@ case  $os_name in
     binDir=darwin
     ;;
 "Linux")
+
+    which lsb_release &>/dev/null || yum install -y redhat-lsb
+
+    release_name=`lsb_release -d | awk '{print $2}'`
+
     binDir=linux
+
     case $release_name in
     "CentOS")
       binDir="$binDir/centos"
