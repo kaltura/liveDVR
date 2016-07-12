@@ -25,7 +25,7 @@ describe('Playlist Generator spec', function() {
         "enablePlaylistHistory": false,
         "skipPathCheck": true
     });
-    config.set('logToConsole',true);
+    config.set('logToConsole',false);
     var fs = require('fs');
     var path = require('path');
     var PlaylistGenerator = require('./../../lib/PlaylistGenerator/PlaylistGenerator');
@@ -117,6 +117,8 @@ describe('Playlist Generator spec', function() {
 
     // produce fileInfo with all fileds offset by same <offset>
     var offsetFileInfo = function(fi,offset){
+
+        offset = offset || (fi.video ? fi.video.duration : fi.audio.duration);
         var n = _.clone(fi);
         n.startTime += offset;
         if(n.video) {
@@ -164,8 +166,35 @@ describe('Playlist Generator spec', function() {
                 path: '/var/tmp/media-u774d8hoj_w20128143_1.mp4',
                 flavor: "32"
             };
-            Q.allSettled(plGen.update([fi])).then(function () {
-                expect(jsonize(plGen).durations[0]).to.eql(Math.ceil(fi.video.duration));
+            updatePlaylist(plGen,[fi]).then(function (result) {
+                expect(result.durations[0]).to.eql(Math.ceil(fi.video.duration));
+                done();
+            }).catch(function (err) {
+                done(err);
+            });
+        });
+    });
+
+
+    it('should reject item with duplicate filename', function(done)
+    {
+        createPlaylistGenerator().then( function(plGen) {
+            var fi = { startTime: 1459270805911,
+                sig: 'C53429E60F33B192FD124A2CC22C8717',
+                video:
+                { duration: 16224.699999999999,
+                    firstDTS: 1459270805911,
+                    firstEncoderDTS: 83,
+                    wrapEncoderDTS: 95443718 },
+                path: '/var/tmp/media-u774d8hoj_w20128143_1.mp4',
+                flavor: "32"
+            }, bad = offsetFileInfo(fi);
+
+            bad.path = fi.path;
+
+            updatePlaylist(plGen,[fi,bad]).then(function (result) {
+                expect(result.durations[0]).to.eql(Math.ceil(fi.video.duration));
+                expect(result.sequences[0].clips[0].sources[0].paths.length).to.eql(1);
                 done();
             }).catch(function (err) {
                 done(err);
@@ -210,7 +239,7 @@ describe('Playlist Generator spec', function() {
 
         createPlaylistGenerator(Math.ceil(windowSize / 1000)).then( function(plGen) {
             updatePlaylist(plGen,fis).then(function (obj) {
-                expect(obj.durations[0]).to.below(windowSize+fi.video.duration);
+                expect(obj.durations[0]).to.at.most(windowSize+fi.video.duration);
                 done();
             }).catch(function (err) {
                 done(err);
