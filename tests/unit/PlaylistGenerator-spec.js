@@ -219,11 +219,11 @@ describe('Playlist Generator spec', function() {
                     wrapEncoderDTS: 95443718 },
                 path: '/var/tmp/media-u774d8hoj_w20128143_1.mp4',
                 flavor: "32"
-            }, bad = offsetFileInfo(fi);
+            }, duplicate = offsetFileInfo(fi);
 
-            bad.path = fi.path;
+            duplicate.path = fi.path;
 
-            updatePlaylist(plGen,[fi,bad]).then(function (result) {
+            updatePlaylist(plGen,[fi,duplicate]).then(function (result) {
                 expect(result.durations[0]).to.eql(Math.ceil(fi.video.duration));
                 expect(result.sequences[0].clips[0].sources[0].paths.length).to.eql(1);
                 done();
@@ -238,6 +238,29 @@ describe('Playlist Generator spec', function() {
         createPlaylistGenerator().then( function(plGen) {
             updatePlaylist(plGen,[fileInfos[0],fileInfos[fileInfos.length-1]]).then(function(obj) {
                 expect(obj.durations.length).to.eql(2);
+                done();
+            }).catch(function(err){
+                done(err);
+            });
+        });
+    });
+
+    it('handle dts wrap', function(done)
+    {
+        var before = { startTime: 1459270805911,
+            sig: 'C53429E60F33B192FD124A2CC22C8717',
+            video:
+            { duration: 16224.699999999999,
+                firstDTS: 1459270805911,
+                firstEncoderDTS: 95443718-100,
+                wrapEncoderDTS: 95443718 },
+            path: '/var/tmp/media-u774d8hoj_w20128143_1.mp4',
+            flavor: "32"
+        }, after = offsetFileInfo(before);
+
+        createPlaylistGenerator().then( function(plGen) {
+            updatePlaylist(plGen,[before,after]).then(function(obj) {
+                expect(obj.durations[0]).to.eql(Math.ceil(before.video.duration)+Math.ceil(after.video.duration));
                 done();
             }).catch(function(err){
                 done(err);
