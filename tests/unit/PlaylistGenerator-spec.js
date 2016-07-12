@@ -115,20 +115,29 @@ describe('Playlist Generator spec', function() {
         return retval;
     };
 
+    var deepCloneFileInfo = function(fi) {
+        var n = _.clone(fi);
+        if(fi.video){
+            n.video = _.clone(fi.video);
+        }
+        if(fi.audio){
+            n.audio = _.clone(fi.audio);
+        }
+        return n;
+    };
+
     // produce fileInfo with all fileds offset by same <offset>
     var offsetFileInfo = function(fi,offset){
 
         offset = offset || (fi.video ? fi.video.duration : fi.audio.duration);
-        var n = _.clone(fi);
+        var n = deepCloneFileInfo(fi);
         n.startTime += offset;
         if(n.video) {
-            n.video = _.clone(n.video);
             n.video.firstDTS += offset;
             n.video.firstEncoderDTS += offset;
             n.video.firstEncoderDTS %= n.video.wrapEncoderDTS;
         }
         if(n.audio) {
-            n.audio = _.clone(n.audio);
             n.audio.firstDTS += offset;
             n.audio.firstEncoderDTS += offset;
             n.audio.firstEncoderDTS %= n.audio.wrapEncoderDTS;
@@ -175,6 +184,28 @@ describe('Playlist Generator spec', function() {
         });
     });
 
+    it('should update duration when add an audio only item', function(done)
+    {
+        createPlaylistGenerator().then( function(plGen) {
+            var fi = { startTime: 1459270805911,
+                sig: 'C53429E60F33B192FD124A2CC22C8717',
+                audio:
+                { duration: 16224.699999999999,
+                    firstDTS: 1459270805911,
+                    firstEncoderDTS: 83,
+                    wrapEncoderDTS: 95443718 },
+                path: '/var/tmp/media-u774d8hoj_w20128143_1.mp4',
+                flavor: "32"
+            };
+            updatePlaylist(plGen,[fi]).then(function (result) {
+                expect(result.durations[0]).to.eql(Math.ceil(fi.audio.duration));
+                done();
+            }).catch(function (err) {
+                done(err);
+            });
+        });
+    });
+
 
     it('should reject item with duplicate filename', function(done)
     {
@@ -206,6 +237,22 @@ describe('Playlist Generator spec', function() {
     {
         createPlaylistGenerator().then( function(plGen) {
             updatePlaylist(plGen,[fileInfos[0],fileInfos[fileInfos.length-1]]).then(function(obj) {
+                expect(obj.durations.length).to.eql(2);
+                done();
+            }).catch(function(err){
+                done(err);
+            });
+        });
+    });
+
+    it('should create gap audio only', function(done)
+    {
+        var a1 = deepCloneFileInfo(fileInfos[0]),
+            a2 = deepCloneFileInfo(fileInfos[fileInfos.length-1]);
+        delete a1.video;
+        delete a2.video;
+        createPlaylistGenerator().then( function(plGen) {
+            updatePlaylist(plGen,[a1,a2]).then(function(obj) {
                 expect(obj.durations.length).to.eql(2);
                 done();
             }).catch(function(err){
