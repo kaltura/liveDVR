@@ -16,7 +16,8 @@
     "grunt-mocha-istanbul": "3.0.1",
     "proxyquire": "1.7.0",
     "tmp": "0.0.27",
-    "rimraf": "2.4.3"
+    "rimraf": "2.4.3",
+    "chai-as-promised":"4.1.1"
   },
   "dependencies": {
     "curry": "1.2.0",

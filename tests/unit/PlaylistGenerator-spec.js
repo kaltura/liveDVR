@@ -7,7 +7,8 @@ var chai = require('chai');
 var expect = chai.expect;
 var sinon = require('sinon');
 var Q = require('Q');
-
+var chaiAsPromised = require("chai-as-promised");
+chai.use(chaiAsPromised);
 
 describe('Playlist Generator spec', function() {
 
@@ -161,6 +162,16 @@ describe('Playlist Generator spec', function() {
 
             expect(JSON.stringify(playlist)).to.eql(expectedPlaylist);
             done();
+        });
+
+        it('playlist generator should be successfully created and started', function () {
+            return expect(createPlaylistGenerator()).to.eventually.have.property("playlistImp");
+        });
+
+        it('playlist generator should be successfully created , started and stopped', function () {
+            return expect(createPlaylistGenerator().then(function(plGen) {
+                return plGen.stop();
+            })).to.eventually.be.fullfilled;
         });
 
         it('should update duration when add an item', function (done) {
