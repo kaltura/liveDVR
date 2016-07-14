@@ -88,13 +88,17 @@ module.exports = (function(){
     var startWatch = function() {
         var that = this;
 
-        fs.watch(options.file, {persistent: false}, watch.bind(this))
-            .on('error', function (err) {
-                console.log('watch file %j error %j', options.file, util.inspect(err));
-                that.emit('configChangeError', err);
-            }).on('open', function () {
-                console.log('opened watcher on file %j', options.file);
-            });
+        try {
+            fs.watch(options.file, {persistent: false}, watch.bind(this))
+                .on('error', function (err) {
+                    console.log('watch file %j error %j', options.file, util.inspect(err));
+                    that.emit('configChangeError', err);
+                }).on('open', function () {
+                    console.log('opened watcher on file %j', options.file);
+                });
+        } catch(err){
+            console.log('startWatch %j while setting a watch on file %j', util.inspect(err), options.file);
+        }
     };
 
     var watch = function () {
