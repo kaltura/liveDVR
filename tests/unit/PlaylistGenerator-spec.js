@@ -164,10 +164,6 @@ describe('Playlist Generator spec', function() {
             done();
         });
 
-        it('playlist generator should be successfully created and started', function () {
-            return expect(createPlaylistGenerator()).to.eventually.have.property("playlistImp");
-        });
-
         it('playlist generator should be successfully created , started and stopped', function () {
             return expect(createPlaylistGenerator().then(function(plGen) {
                 return plGen.stop();
@@ -221,32 +217,6 @@ describe('Playlist Generator spec', function() {
         });
 
 
-        it('should reject item with duplicate filename', function (done) {
-            createPlaylistGenerator().then(function (plGen) {
-                var fi = {
-                    startTime: 1459270805911,
-                    sig: 'C53429E60F33B192FD124A2CC22C8717',
-                    video: {
-                        duration: 16224.699999999999,
-                        firstDTS: 1459270805911,
-                        firstEncoderDTS: 83,
-                        wrapEncoderDTS: 95443718
-                    },
-                    path: '/var/tmp/media-u774d8hoj_w20128143_1.mp4',
-                    flavor: "32"
-                }, duplicate = offsetFileInfo(fi);
-
-                duplicate.path = fi.path;
-
-                updatePlaylist(plGen, [fi, duplicate]).then(function (result) {
-                    expect(result.durations[0]).to.eql(Math.ceil(fi.video.duration));
-                    expect(result.sequences[0].clips[0].sources[0].paths.length).to.eql(1);
-                    done();
-                }).catch(function (err) {
-                    done(err);
-                });
-            });
-        });
 
         it('handle dts wrap', function(done)
         {
@@ -394,6 +364,59 @@ describe('Playlist Generator spec', function() {
                 updatePlaylist(plGen, [fis, bad, good]).then(function (result) {
                     expect(result.durations.length).eql(2);
                     expect(result.clipTimes[1]).to.be.within(good.video.firstDTS - 1, good.video.firstDTS + 1);
+                    done();
+                }).catch(function (err) {
+                    done(err);
+                });
+            });
+        });
+
+
+        it('should reject item wiht overlapping time range', function (done) {
+            createPlaylistGenerator().then(function (plGen) {
+                var fi = {
+                    startTime: 1459270805911,
+                    sig: 'C53429E60F33B192FD124A2CC22C8717',
+                    video: {
+                        duration: 16224.699999999999,
+                        firstDTS: 1459270805911,
+                        firstEncoderDTS: 83,
+                        wrapEncoderDTS: 95443718
+                    },
+                    path: '/var/tmp/media-u774d8hoj_w20128143_1.mp4',
+                    flavor: "32"
+                }, overlap = offsetFileInfo(fi,-1000);
+
+                updatePlaylist(plGen, [fi, overlap]).then(function (result) {
+                    expect(result.durations[0]).to.eql(Math.ceil(fi.video.duration));
+                    expect(result.sequences[0].clips[0].sources[0].paths.length).to.eql(1);
+                    done();
+                }).catch(function (err) {
+                    done(err);
+                });
+            });
+        });
+
+        it('should reject item with duplicate filename', function (done) {
+            createPlaylistGenerator().then(function (plGen) {
+                var fi = {
+                    startTime: 1459270805911,
+                    sig: 'C53429E60F33B192FD124A2CC22C8717',
+                    video: {
+                        duration: 16224.699999999999,
+                        firstDTS: 1459270805911,
+                        firstEncoderDTS: 83,
+                        wrapEncoderDTS: 95443718
+                    },
+                    path: '/var/tmp/media-u774d8hoj_w20128143_1.mp4',
+                    flavor: "32"
+                }, duplicate = offsetFileInfo(fi);
+
+                duplicate.path = fi.path;
+
+                updatePlaylist(plGen, [fi, duplicate]).then(function (result) {
+                    expect(result.durations[0]).to.eql(Math.ceil(fi.video.duration));
+                    expect(result.sequences[0].clips[0].sources[0].paths.length).to.eql(1);
                     done();
                 }).catch(function (err) {
                     done(err);
