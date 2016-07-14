@@ -22,14 +22,20 @@
   "logFileName" : "~/dvr/kDvrWorker.log",
   "regressionAdapter": {
       "enable":false,
-      "dataWarehouseRootFolderPath" : "/Users/lilach.maliniak/Desktop/dev/repositories/live-monitor/live-testing",
+      "dataWarehouseRootFolderPath" : "instructions: put here root path to data warehouse (e.g. /var/tmp/regression/data_warehouse)",
       "maxChunkCount": 10,
       "entries" : [{
             "entryId": "abc",
             "flavorParamsIds": "32",
             "serverType": 0,
             "firstChunklistIndex" : 0,
-            "playWindow": 150
+            "entryPath": "instructions: put here the relative path from data warehouse root to entry stream data (e.g. abc)",
+            "playWindow": 150,
+             "validator": {
+               "path": "instructions: put here the root path to save and read regression results (e.g. /var/tmp/regression/results)",
+               "override": true,
+               "history_count": 0
+             }
         }]
   },
   "simulateStreams": {
