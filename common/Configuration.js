@@ -6,6 +6,8 @@ var path = require('path');
 var fs = require('fs');
 var _ = require('underscore')
 var hostname = require('./utils/hostname');
+var events = require("events");
+var util = require("util");
 
 module.exports = (function(){
 
@@ -42,18 +44,71 @@ module.exports = (function(){
         }
     }
 
-    fs.writeFileSync(path.join(__dirname, './config/config.json'), JSON.stringify(configObj, null, 2));
+    // setup watch after configuration file
+    var options = { file: path.join(__dirname, './config/config.json') };
 
-    var nconf = require('nconf');
+    var inheritFromEmitter = function (){
+        var that = this;
 
-    // Setup nconf to use (in-order):
-    //   1. Command-line arguments
-    //   2. Environment variables
-    //   3. A file located at 'path/to/config.json'
-    //
-    nconf.argv()
-        .env()
-        .file({ file: path.join(__dirname, './config/config.json') });
+        var emitter = new events.EventEmitter();
 
-    return nconf;
+        _.each(_.keys(events.EventEmitter.prototype),function(key){
+            var member = events.EventEmitter.prototype[key];
+            if(_.isFunction(member) && !_.has(that,key) ) {
+                that[key] = member.bind(this);
+            }
+        },emitter);
+    };
+
+    var Nconf = {prototype:require('nconf')};
+
+    var loadConfig = function(opts){
+        this.argv()
+            .env()
+            .file(opts);
+    };
+
+    function Configuration(){
+
+        Nconf.prototype.constructor.call(this);
+
+        fs.writeFileSync(options.file, JSON.stringify(configObj, null, 2));
+
+        inheritFromEmitter.call(this);
+
+        loadConfig.call(this,options);
+
+        startWatch.call(this);
+    }
+
+    util.inherits(Configuration,Nconf);
+
+    var startWatch = function() {
+        var that = this;
+
+        fs.watch(options.file, {persistent: false}, watch.bind(this))
+            .on('error', function (err) {
+                console.log('watch file %j error %j', options.file, util.inspect(err));
+                that.emit('configChangeError', err);
+            }).on('open', function () {
+                console.log('opened watcher on file %j', options.file);
+            });
+    };
+
+    var watch = function () {
+        var that = this;
+
+        try {
+            loadConfig.call(this,options);
+            that.emit('configChanged');
+        } catch (err) {
+            console.log('unable to reload configuration file %j due to %j', options.file, util.inspect(err));
+            that.emit('configChangeError', err);
+        } finally {
+            startWatch.call(that);
+        }
+    };
+
+    return new Configuration();
+
 })();

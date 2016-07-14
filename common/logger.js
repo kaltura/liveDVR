@@ -9,47 +9,65 @@ var mkdirp = require('mkdirp');
 var util = require('util');
 var hostname = require('./utils/hostname');
 var log4js = require( "log4js" );
+var _ = require( "underscore" );
 
-
-var logFullPath = path.resolve(config.get('logFileName'));
+var logFullPath = config.get('logFileName');
 logFullPath= logFullPath.replace(/~/g,hostname.homedir());
 mkdirp.sync(path.dirname(logFullPath));
 
-var appenders = [
-    {
-        "type": "file",
-        "filename": logFullPath,
-        "timezoneOffset" : 300 // NYC timezone offset relative to UTC (5 * 60)
-    }
-];
 
-if (config.get('logToConsole'))
-{
-    appenders.push({
-        "type": "console",
-        "layout": {
-            "type": "pattern",
-            pattern: "%d{ABSOLUTE} %[%-5p%] %c %m"
-        },
-    });
-}
+var getLoggerConfig = function(){
+    var appenders = [
+        {
+            "type": "file",
+            "filename": logFullPath,
+            "timezoneOffset": 300 // NYC timezone offset relative to UTC (5 * 60)
+        }
+    ];
 
-var log4jsConfiguration = {
-    "appenders": appenders,
-    "replaceConsole": false,
-    "levels": {
-        "[all]":config.get('logLevel')
+    if (config.get('logToConsole')) {
+        appenders.push({
+            "type": "console",
+            "layout": {
+                "type": "pattern",
+                pattern: "%d{ABSOLUTE} %[%-5p%] %c %m"
+            },
+        });
     }
+
+    return {
+        "appenders": appenders,
+        "replaceConsole": false,
+        "levels": {
+            "[all]": config.get('logLevel')
+        }
+    };
 };
+
+var log4jsConfiguration = getLoggerConfig();
 
 log4js.configure(log4jsConfiguration);
 
-// Support log rotate - this is the signal that is used
-process.on('SIGUSR1', function() {
+var reloadLogger = function() {
     log4js.clearAppenders();
     log4js.configure(log4jsConfiguration);
-});
+};
 
+var isEqualLoggerConfig = function(newConfig){
+    return JSON.stringify(newConfig) === JSON.stringify(_.omit(log4jsConfiguration,['makers']));
+};
+
+// Support log rotate - this is the signal that is used
+process.on('SIGUSR1', reloadLogger);
+
+// register on configChanged notification to react on the run-time configuration changes
+config.on('configChanged',function(){
+    var newConfig = getLoggerConfig();
+    if( !isEqualLoggerConfig(newConfig) ){
+        log4jsConfiguration = newConfig;
+        reloadLogger();
+    }
+});
 
 function decorate(logger, id) {
 
