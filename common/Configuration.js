@@ -63,9 +63,18 @@ module.exports = (function(){
     var Nconf = {prototype:require('nconf')};
 
     var loadConfig = function(opts){
+        var def = Q.defer();
+
         this.argv()
             .env()
-            .stores.file.loadSync();
+            .stores.file.load(function(err){
+                if(err){
+                    def.reject(err);
+                } else {
+                    def.resolve();
+                }
+            });
+        return def.promise;
     };
 
     function Configuration(){
@@ -89,7 +98,16 @@ module.exports = (function(){
         var that = this;
 
         try {
-            fs.watch(options.file, {persistent: false}, watch.bind(this))
+            if(that.fsWatch){
+                var wOld = that.fsWatch;
+                that.fsWatch = null;
+                wOld.close();
+            }
+            that.fsWatch = fs.watch(options.file, {persistent: false})
+                .on('rename',function(){
+                    startWatch.call(that);
+                })
+                .on('change',watch.bind(this))
                 .on('error', function (err) {
                     console.log('watch file %j error %j', options.file, util.inspect(err));
                     that.emit('configChangeError', err);
@@ -101,17 +119,29 @@ module.exports = (function(){
         }
     };
 
-    var watch = function () {
+    var watch = function (event) {
         var that = this;
 
         try {
-            loadConfig.call(this,options);
-            that.emit('configChanged');
+            loadConfig.call(this, options)
+                .then(function(){
+                that.emit('configChanged');
+            })
+                .catch(function(err){
+                console.log('unable to reload configuration file %j due to %j', options.file, util.inspect(err));
+                that.emit('configChangeError', err);
+            })
+                .done(function(){
+                    if(event === 'rename') {
+                        startWatch.call(that);
+                    }
+                });
         } catch (err) {
             console.log('unable to reload configuration file %j due to %j', options.file, util.inspect(err));
             that.emit('configChangeError', err);
-        } finally {
-            startWatch.call(that);
+            if(event === 'rename') {
+                startWatch.call(that);
+            }
         }
     };
 
