@@ -8,6 +8,7 @@ var _ = require('underscore')
 var hostname = require('./utils/hostname');
 var events = require("events");
 var util = require("util");
+var Q = require("q");
 
 module.exports = (function(){
 
