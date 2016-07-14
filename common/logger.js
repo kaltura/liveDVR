@@ -9,6 +9,12 @@ var mkdirp = require('mkdirp');
 var util = require('util');
 var hostname = require('./utils/hostname');
 var log4js = require( "log4js" );
+/*
+HACK: log4js leaks (file) appender when reloaded...
+ log4js.shutdown  cleans up but disables all logging
+ loggerModule must be accessed directly to enable logging back...
+*/
+var loggerModule = require( "./../node_modules/log4js/lib/logger" );
 var _ = require( "underscore" );
 
 var logFullPath = config.get('logFileName');
@@ -49,7 +55,8 @@ var log4jsConfiguration = getLoggerConfig();
 log4js.configure(log4jsConfiguration);
 
 var reloadLogger = function() {
-    log4js.clearAppenders();
+    log4js.shutdown();
+    loggerModule.enableAllLogWrites();
     log4js.configure(log4jsConfiguration);
 };
 
