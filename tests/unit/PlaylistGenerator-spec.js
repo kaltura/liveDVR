@@ -13,20 +13,10 @@ chai.use(chaiAsPromised);
 describe('Playlist Generator spec', function() {
 
     var config = require('./../../common/Configuration');
-    config.set('playlistConfig', {
-        "debug": false,
-        "waitTimeBeforeRemoval": 100000,
-        "maxChunkGapSize": 10000,
-        "maxAllowedPTSDrift": 500,
-        "timestampToleranceMs": 2,
-        "humanReadable": true,
-        "keyFrameSearchOffsetMs": 1,
-        "segmentDuration": 10000,
-        "dontInitializePlaylist" : false,
-        "enablePlaylistHistory": false,
-        "skipPathCheck": true
-    });
     config.set('logToConsole',false);
+    var pc = config.get('playlistConfig');
+    pc.debug = false;
+    config.set('playlistConfig',pc);
     var fs = require('fs');
     var path = require('path');
     var PlaylistGenerator = require('./../../lib/PlaylistGenerator/PlaylistGenerator');
@@ -243,11 +233,53 @@ describe('Playlist Generator spec', function() {
 
     });
 
+    var minDTS = function(fi){
+        var retval;
+        if(fi.video && fi.audio){
+            retval = Math.min(fi.video.firstDTS,fi.audio.firstDTS);
+        } else if(fi.video) {
+            retval = fi.video.firstDTS;
+        } else {
+            retval = fi.audio.firstDTS;
+        }
+        return Math.ceil(retval);
+    };
+
+    var sum = function(arr){
+        return _.reduce(arr,function(val,s){
+            return val + s;
+        },0);
+    };
+
     describe('gap handling', function() {
         it('should create gap', function (done) {
             createPlaylistGenerator().then(function (plGen) {
-                updatePlaylist(plGen, [fileInfos[0], fileInfos[fileInfos.length - 1]]).then(function (obj) {
+
+                var before = { startTime: 1459270805911,
+                    sig: 'C53429E60F33B192FD124A2CC22C8717',
+                    video:
+                    { duration: 16224.699999999999,
+                        firstDTS: 1459270805911,
+                        firstEncoderDTS: 95443718,
+                        wrapEncoderDTS: 95443718,
+                        keyFrameDTS: [0,2000,4000,6000,8000,10000,12000,14000]},
+                    path: '/var/tmp/media-u774d8hoj_w20128143_1.mp4',
+                    flavor: "32"
+                }, after = offsetFileInfo(before,100000);
+
+                updatePlaylist(plGen, [before, after]).then(function (obj) {
                     expect(obj.durations.length).to.eql(2);
+                    expect(obj.durations[0]).to.eql(Math.ceil(before.video.duration));
+                    expect(obj.durations[1]).to.eql(Math.ceil(after.video.duration));
+                    expect(obj.clipTimes.length).to.eql(2);
+                    expect(obj.sequences[0].clips.length).to.eql(2);
+                    expect(obj.clipTimes[1]).to.eql(minDTS(after));
+                    expect(obj.sequences[0].clips[1].sources[0].offset).to.eql(0);
+                    expect(obj.sequences[0].clips[0].sources[0].offset).to.eql(0);
+
+                    expect(sum(obj.sequences[0].keyFrameDurations)).to.eql(Math.ceil(before.video.duration) + 100000);
+                    expect(obj.sequences[0].keyFrameDurations.length).to.eql(2 * before.video.keyFrameDTS.length);
+                    expect(obj.sequences[0].firstKeyFrameOffset).to.eql(0);
                     done();
                 }).catch(function (err) {
                     done(err);
@@ -256,14 +288,64 @@ describe('Playlist Generator spec', function() {
         });
 
         it('should create gap audio only', function (done) {
-            var a1 = deepCloneFileInfo(fileInfos[0]),
-                a2 = deepCloneFileInfo(fileInfos[fileInfos.length - 1]);
-            delete a1.video;
-            delete a2.video;
             createPlaylistGenerator().then(function (plGen) {
-                updatePlaylist(plGen, [a1, a2]).then(function (obj) {
+
+                var before = {
+                    startTime: 1459270805911,
+                    sig: 'C53429E60F33B192FD124A2CC22C8717',
+                    audio: {
+                        duration: 16224.699999999999,
+                        firstDTS: 1459270805911,
+                        firstEncoderDTS: 95443718,
+                        wrapEncoderDTS: 95443718
+                    },
+                    path: '/var/tmp/media-u774d8hoj_w20128143_1.mp4',
+                    flavor: "32"
+                }, after = offsetFileInfo(before, 100000);
+
+                updatePlaylist(plGen, [before, after]).then(function (obj) {
                     expect(obj.durations.length).to.eql(2);
+                    expect(obj.durations[0]).to.eql(Math.ceil(before.audio.duration));
+                    expect(obj.durations[1]).to.eql(Math.ceil(after.audio.duration));
+                    expect(obj.clipTimes.length).to.eql(2);
+                    expect(obj.sequences[0].clips.length).to.eql(2);
+                    expect(obj.clipTimes[1]).to.eql(minDTS(after));
+                    expect(obj.sequences[0].clips[1].sources[0].offset).to.eql(0);
+                    expect(obj.sequences[0].clips[0].sources[0].offset).to.eql(0);
                     done();
+                }).catch(function (err) {
+                    done(err);
+                });
+            });
+        });
+
+        it('should roll window over gap', function (done) {
+            var before = { startTime: 1459270805911,
+                sig: 'C53429E60F33B192FD124A2CC22C8717',
+                video:
+                { duration: 16224.699999999999,
+                    firstDTS: 1459270805911,
+                    firstEncoderDTS: 95443718,
+                    wrapEncoderDTS: 95443718,
+                    keyFrameDTS: [0,2000,4000,6000,8000,10000,12000,14000]},
+                path: '/var/tmp/media-u774d8hoj_w20128143_1.mp4',
+                flavor: "32"
+            };
+
+            createPlaylistGenerator(Math.ceil(before.video.duration * 2 / 1000)).then(function (plGen) {
+
+                var after = offsetFileInfo(before,100000),
+                    after1 = offsetFileInfo(after),
+                    after2 = offsetFileInfo(after1);
+
+                updatePlaylist(plGen, [before, after]).then(function (obj) {
+                    expect(obj.durations.length).to.eql(2);
+                    expect(obj.clipTimes.length).to.eql(2);
+                    return updatePlaylist(plGen, [after1, after2]).then(function (obj) {
+                        expect(obj.durations.length).to.eql(1);
+                        expect(obj.clipTimes.length).to.eql(1);
+                        done();
+                    });
                 }).catch(function (err) {
                     done(err);
                 });
