@@ -65,7 +65,7 @@ module.exports = (function(){
     var loadConfig = function(opts){
         this.argv()
             .env()
-            .file(opts);
+            .stores.file.loadSync();
     };
 
     function Configuration(){
@@ -76,7 +76,9 @@ module.exports = (function(){
 
         inheritFromEmitter.call(this);
 
-        loadConfig.call(this,options);
+        this.argv()
+            .env()
+            .file(options);
 
         startWatch.call(this);
     }
