@@ -18,8 +18,9 @@
   "apiUpdateInterval" : 60000,
   "flavorDownloaderTeardownInterval" : 15000,
   "logLevel" : "DEBUG",
-  "logToConsole" : true,
+  "logToConsole" : false,
   "logFileName" : "~/dvr/kDvrWorker.log",
+  "monitorPort": 4390,
   "regressionAdapter": {
       "enable":false
   },
@@ -44,13 +45,7 @@
     "serviceUrl" : "http://serviceURL",
     "ksSessionRefreshIntervalMinutes" : 720
   },
-  "heapDumpParams" : {
-    "timeInterval" : 900000,
-    "windowSize" : 3,
-    "enabled" : false
-  },
   "playlistConfig" : {
-    "debug" : false,
     "waitTimeBeforeRemoval" : 100000,
     "maxChunkGapSize" : 10000,
     "maxAllowedPTSDrift": 1000,

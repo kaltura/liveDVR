@@ -72,7 +72,7 @@ extern "C"{
                pkt->flags);
         
     }
-}
+};
 
 namespace converter{
     

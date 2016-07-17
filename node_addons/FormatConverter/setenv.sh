@@ -1,8 +1,8 @@
 # !/bin/bash
 
-Release=${DEBUG:-1}
+[ "$1" = "DEBUG" ] && build_conf=Debug || build_conf=Release
 
-[ "$Release" != "" ] && echo "target config: release" ||  echo "target config: debug"
+[ "$build_conf" != "Debug" ] && echo "target config: release" ||  echo "target config: debug"
 
 os_name=`uname`
 
@@ -16,7 +16,8 @@ function makeFFmpeg()
 
     if [ ! -d "$ffmpegDir" ]
     then
-        wget https://github.com/FFmpeg/FFmpeg/releases/download/n3.0/ffmpeg-3.0.tar.gz -O  /var/tmp/ffmpeg-3.0.tar.gz
+        curl -OL https://github.com/FFmpeg/FFmpeg/releases/download/n3.0/ffmpeg-3.0.tar.gz
+        mv ./ffmpeg-3.0.tar.gz /var/tmp/ffmpeg-3.0.tar.gz
         case $os_name in
          'Linux')
             devFFmpegDir=~/
@@ -39,11 +40,8 @@ function makeFFmpeg()
     configFileName=$ffmpegDir/lastConfigure
 
 
-
-    confCmd="./configure --disable-everything --disable-doc --enable-protocol=file \
-    --enable-demuxer=mpegts --enable-muxer=rtp_mpegts --enable-parser=h264 --enable-parser=aac \
-    --enable-muxer=mp4   --enable-zlib --enable-bsf=aac_adtstoasc --enable-decoder=aac --enable-decoder=h264 \
-    $debug_specifics"
+    confCmd="./configure --disable-everything --disable-doc --enable-protocol=file --enable-demuxer=mpegts --enable-muxer=rtp_mpegts --enable-parser=h264 --enable-parser=aac --enable-muxer=mp4 --enable-zlib --enable-bsf=aac_adtstoasc --enable-decoder=aac --enable-decoder=h264"
+    $debug_specifics
 
     [ "$os_name" == "Linux" ] && confCmd="$confCmd --enable-pic"
 
@@ -53,14 +51,15 @@ function makeFFmpeg()
 
     echo -e "actualCmd=\n<$actualCmd>"
     echo -e "confCmd=\n<$confCmd>"
-
     if [ "$actualCmd" != "$confCmd" ]
     then
         echo "configuring ffmpeg..."
          eval "$confCmd"
+    else
+        echo "no need to run configure"
     fi
 
-    echo $confCmd > $configFileName
+    echo "$confCmd" > $configFileName
 
     make &> /dev/null
 
@@ -82,8 +81,6 @@ makeFFmpeg $path/build
 
 cd $path
 
-
-
 gyp_args=''
 
 case $os_name in
@@ -95,11 +92,24 @@ case $os_name in
 esac
 
 echo "$gyp_args"
-
+echo "Installing NAN"
 npm install nan
+echo "Start node-gyp configure"
+node-gyp configure $gyp_args
 
-node-gyp configure $gyp_args -v
-
-gyp_debug=${Release:---debug}
-
+if [ "$build_conf" = "Debug" ]; then
+    gyp_debug="--debug"
+    debugExt=".debug"
+fi
+echo "Start node-gyp build. $gyp_debug"
 node-gyp build $gyp_debug -v
+
+case $os_name in
+ 'Linux')
+    cp `pwd`/build/$build_conf/FormatConverter.so "`pwd`/../../bin/linux/FormatConverter.node$debugExt"
+    ;;
+'Darwin')
+    cp `pwd`/build/$build_conf/FormatConverter.dylib "`pwd`/../../bin/linux/FormatConverter.node$debugExt"
+    ;;
+*) ;;
+esac
