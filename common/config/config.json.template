@@ -27,7 +27,8 @@
   "simulateStreams": {
       "enable":false,
       "count": 1,
-      "dvrWindow": 7200,
+      "entryId": "0_simstream%d",
+      "playWindow": 7200,
       "maxChunkCount": 5,
       "useNginx":false,
       "wowzaUrl": "http://kalsegsec-a.akamaihd.net/dc-0/m/pa-live-publish2/kLive/smil:1_oorxcge2_all.smil/playlist.m3u8"
