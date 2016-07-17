@@ -11,4 +11,4 @@ brew install yasm
 - ./setenv.sh
 
 * to build debug version use:
-- ./setenv.sh <DEBUG>
+- ./setenv.sh DEBUG
