@@ -33,7 +33,7 @@
             "playWindow": 150,
              "validator": {
                "path": "instructions: put here the root path to save and read regression results (e.g. /var/tmp/regression/results)",
-               "override": true,
+               "override": false,
                "history_count": 0
              }
         }]
