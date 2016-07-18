@@ -7,10 +7,10 @@
 //
 
 #include "Converter.h"
-
+#include <bitset>
 extern "C"{
 #include <libavformat/movenc.h>
-#include <bitset>    
+   
     
     //invalid suffix on literal C++11 requires...
     // thus, some code is replicated
@@ -72,7 +72,7 @@ extern "C"{
                pkt->flags);
         
     }
-}
+};
 
 namespace converter{
     

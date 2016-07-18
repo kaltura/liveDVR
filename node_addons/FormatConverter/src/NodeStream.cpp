@@ -94,15 +94,15 @@ namespace converter {
     
     std::atomic_int gc_count(0);
     
-    void NodeOutputStream::FreeCallback(char* data, void* hint){
+    void NodeOutputStream::FreeCallback(char* data, void* hint) {
         int tc = --gc_count;
         av_log(nullptr, AV_LOG_TRACE, "FreeCallback data %p total count %d", data,tc);
         NodeOutputStream *stream = reinterpret_cast<NodeOutputStream*>(hint);
         stream->unlock_shared_ptr();
     }
     
-    Local<Object> NodeOutputStream::createFastBuffer(){
-        
+    Local<Object> NodeOutputStream::createFastBuffer() {
+        Isolate* isolate = v8::Isolate::GetCurrent();
         if(m_output.size() == 0){
             return Local<Object>();
         }
@@ -113,7 +113,7 @@ namespace converter {
         
         size_t toWrite = m_output.size() - m_written;
         
-        Local<Buffer> slowBuffer = Buffer::New((char *)&m_output.at(0) + m_written,toWrite,FreeCallback,this);
+        MaybeLocal<Object> slowBuffer = node::Buffer::New(isolate, (char *)&m_output.at(0) + m_written, toWrite, FreeCallback, this);
         
         m_written += m_output.size();
         
@@ -124,19 +124,20 @@ namespace converter {
         // First argument is the JS object Handle for the SlowBuffer.
         // Second arg is the length of the SlowBuffer.
         // Third arg is the offset in the SlowBuffer we want the .. "Fast"Buffer to start at.
-        v8::Handle<v8::Value> constructorArgs[3] = { slowBuffer->handle_,
-            v8::Integer::New(toWrite),
-            v8::Integer::New(0) };
         
         // Now we have our constructor, and our constructor args. Let's create the
         // damn Buffer already!
-        v8::Local<v8::Object> actualBuffer = TS2MP4Convertor::bufferConstructor->NewInstance(3, constructorArgs);
+        //.v8::MaybeLocal<v8::Object> actualBuffer =  TS2MP4Convertor::bufferConstructor->NewInstance(3, constructorArgs);
+        //Nan::CopyBuffer((char *)&m_output.at(0) + m_written, toWrite) ; */
         
-        if(actualBuffer->IsObject()){
+        
+        Local<Object> retval = slowBuffer.ToLocalChecked();
+        
+        if(retval->IsObject()){
             lock_shared_ptr();
         }
         
-        return actualBuffer;
+        return retval;
     }
     
     Local<Value> NodeOutputStream::GetData(Isolate *isolate)
@@ -153,27 +154,27 @@ namespace converter {
     Local<Value> NodeOutputStream::GetFileInfo(Isolate *isolate){
         Local<Object> fileInfo = Nan::New<Object>();
         
-        fileInfo->Set(String::New("startTime"),Number::New(m_fileInfo.startTimeUnixMs));
-        fileInfo->Set(String::New("sig"),String::New(m_fileInfo.sig.c_str()));
+        fileInfo->Set(String::NewFromUtf8(isolate, "startTime"),Number::New(isolate, m_fileInfo.startTimeUnixMs));
+        fileInfo->Set(String::NewFromUtf8(isolate, "sig"), String::NewFromUtf8(isolate, m_fileInfo.sig.c_str()));
         for(std::vector<MediaTrackInfo>::iterator iter = m_fileInfo.tracks.begin();
             iter != m_fileInfo.tracks.end(); iter++){
             switch(iter->mtype){
                 case AVMEDIA_TYPE_VIDEO:
                 case AVMEDIA_TYPE_AUDIO:
                 {
-                    Local<Array> vecKeyFrameDtsMsec = Array::New(iter->vecKeyFrameDtsMsec.size());
+                    Local<Array> vecKeyFrameDtsMsec = Array::New(isolate, iter->vecKeyFrameDtsMsec.size());
                   
                     for(uint32_t i = 0; i < vecKeyFrameDtsMsec->Length();i++){
-                        vecKeyFrameDtsMsec->Set(i, Number::New(iter->vecKeyFrameDtsMsec[i]));
+                        vecKeyFrameDtsMsec->Set(i, Number::New(isolate ,iter->vecKeyFrameDtsMsec[i]));
                     }
                     
                     Local<Object> trackInfo = Nan::New<Object>();
-                    fileInfo->Set(String::New(iter->mtype == AVMEDIA_TYPE_VIDEO ? "video" : "audio"),trackInfo);
-                    trackInfo->Set(String::New("duration"),Number::New(iter->durationMsec));
-                    trackInfo->Set(String::New("firstDTS"),Number::New(iter->firstDtsMsec));
-                    trackInfo->Set(String::New("firstEncoderDTS"),Number::New(iter->firstEncoderDtsMsec));
-                    trackInfo->Set(String::New("wrapEncoderDTS"),Number::New(iter->wrapEncoderDtsMsec));
-                    trackInfo->Set(String::New("keyFrameDTS"),vecKeyFrameDtsMsec);
+                    fileInfo->Set(String::NewFromUtf8(isolate, iter->mtype == AVMEDIA_TYPE_VIDEO ? "video" : "audio"),trackInfo);
+                    trackInfo->Set(String::NewFromUtf8(isolate, "duration"),Number::New(isolate, iter->durationMsec));
+                    trackInfo->Set(String::NewFromUtf8(isolate, "firstDTS"),Number::New(isolate, iter->firstDtsMsec));
+                    trackInfo->Set(String::NewFromUtf8(isolate, "firstEncoderDTS"),Number::New(isolate, iter->firstEncoderDtsMsec));
+                    trackInfo->Set(String::NewFromUtf8(isolate, "wrapEncoderDTS"),Number::New(isolate, iter->wrapEncoderDtsMsec));
+                    trackInfo->Set(String::NewFromUtf8(isolate, "keyFrameDTS"),vecKeyFrameDtsMsec);
                 }
                     break;
                 default:

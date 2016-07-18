@@ -1,4 +1,8 @@
 ## File Format Converter addon for node
+# prerequisite
+on OSX  make sure you have yasm
+which yasm
+brew install yasm
 
 #Mac and linux:
 
@@ -7,5 +11,4 @@
 - ./setenv.sh
 
 * to build debug version use:
-- DEBUG=1
-- ./setenv.sh
+- ./setenv.sh DEBUG

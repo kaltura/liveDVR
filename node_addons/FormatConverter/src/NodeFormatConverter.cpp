@@ -21,8 +21,9 @@ namespace converter {
     void TS2MP4Convertor::Init(v8::Handle<v8::Object> exports){
         
         // Prepare constructor template
-        Local<FunctionTemplate> tpl = FunctionTemplate::New(New);
-        tpl->SetClassName(String::New("TS2MP4Convertor"));
+        v8::Isolate* isolate = exports->GetIsolate();
+        Local<FunctionTemplate> tpl = FunctionTemplate::New(isolate,TS2MP4Convertor::New);
+        tpl->SetClassName(String::NewFromUtf8(isolate, "TS2MP4Convertor"));
         tpl->InstanceTemplate()->SetInternalFieldCount(1);
         
         // Prototype
@@ -30,23 +31,22 @@ namespace converter {
         Nan::SetPrototypeMethod(tpl, "on", on);
         Nan::SetPrototypeMethod(tpl, "end", end);
         
-        constructor = v8::Persistent<v8::Function>::New(tpl->GetFunction());
-        exports->Set(String::New( "TS2MP4Convertor"),
+        constructor.Reset(isolate, tpl->GetFunction());
+        exports->Set(String::NewFromUtf8(isolate, "TS2MP4Convertor"),
                      tpl->GetFunction());
         
         Nan::HandleScope scope;
         // Now we need to create the JS version of the Buffer I was telling you about.
         // To do that we need to actually pull it from the execution context.
         // First step is to get a handle to the global object.
-        v8::Local<v8::Object> globalObj = v8::Context::GetCurrent()->Global();
+        v8::Local<v8::Object> globalObj = isolate->GetCurrentContext()->Global();
         
         // Now we need to grab the Buffer constructor function.
-        bufferConstructor = v8::Persistent<Function>::New(globalObj->Get(v8::String::New("Buffer")).As<Function>());
+        bufferConstructor.Reset(isolate, globalObj->Get(v8::String::NewFromUtf8(isolate, "Buffer")).As<Function>());
         
     }
     
     NAN_METHOD(TS2MP4Convertor::NewInstance) {
-        
         const unsigned argc = 0;
         Local<Value> argv[argc] = {  };
         Local<Function> cons = Nan::New<Function>(constructor);
@@ -70,17 +70,19 @@ namespace converter {
         av_log(nullptr,AV_LOG_TRACE,"TS2MP4Convertor::~TS2MP4Convertor");
     }
     
-    Handle<Value> TS2MP4Convertor::New(const Arguments& args) {
+    void TS2MP4Convertor::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
+        Isolate* isolate = args.GetIsolate();
         if (args.IsConstructCall()) {
             TS2MP4Convertor* obj = new TS2MP4Convertor();
             obj->Wrap(args.This());
-            return args.This();
+            args.GetReturnValue().Set(args.This());
         } else {
-            // Invoked as plain function `MyObject(...)`, turn into construct call.
             const int argc = 0;
             Local<Value> argv[argc] = {  };
-            Local<Function> cons = Nan::New<Function>(constructor);
-            return cons->NewInstance(argc, argv);
+            Local<Context> context = isolate->GetCurrentContext();
+            Local<Function> cons = Local<Function>::New(isolate, constructor);
+            Local<Object> instance = cons->NewInstance(context, argc, argv).ToLocalChecked();
+            args.GetReturnValue().Set(instance);
         }
     }
     
@@ -122,7 +124,7 @@ namespace converter {
             }
         }
         
-        String::AsciiValue eventName (info[0]);
+        String::Utf8Value eventName (info[0]);
         std::string strEvent(*eventName);
         SUBS_iter found = m_callSubscriptions.find(strEvent);
         if( found == m_callSubscriptions.end() ){
@@ -303,10 +305,9 @@ namespace converter {
         };
         
         
-        static Handle<Value> ModuleConfigure(const Arguments& args){
-            
+        static void ModuleConfigure(const FunctionCallbackInfo<Value>& args){
+            Isolate* isolate = args.GetIsolate();
             Nan::HandleScope scope;
-            
             
             if(args[0]->IsObject()){
                 
@@ -320,7 +321,7 @@ namespace converter {
                 int avlog_level = AV_LOG_WARNING;
                 
                 Local<Object> opts = args[0].As<Object>();
-                String::AsciiValue strLevel (opts->Get(v8::String::New("logLevel")));
+                String::Utf8Value strLevel (opts->Get(v8::String::NewFromUtf8(isolate, "logLevel")));
                 
                 predefined<std::string,int>::iterator found =  logLevels.find(*strLevel);
                 if( found != logLevels.end() ){
@@ -336,13 +337,14 @@ namespace converter {
                     Nan::ThrowTypeError("failed to initialize ffmpeg runtime");
                 }
             }
-            return Handle<Value>();
+            args.GetReturnValue().Set(Handle<Value>());
         }
         
         static void Initialize(Handle<Object> exports)
         {
-            Local<FunctionTemplate> tpl = FunctionTemplate::New(ModuleConfigure);
-            exports->Set(String::New( "Configure"),
+            v8::Isolate* isolate = exports->GetIsolate();
+            Local<FunctionTemplate> tpl = FunctionTemplate::New(isolate,ModuleConfigure);
+            exports->Set(String::NewFromUtf8(isolate, "Configure"),
                          tpl->GetFunction());
             
             if(ConverterAppInst::instance().init()){

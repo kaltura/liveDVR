@@ -45,7 +45,7 @@ function getLocalMachineFullHostname() {
         {
             throw new Error('Error getting hostname for local machine');
         }
-        res = hostnameCmd.output.replace(/\n$/, ''); // Remove line ending at the end
+        res = hostnameCmd.stdout.replace(/\n$/, ''); // Remove line ending at the end
     }
     return res;
 }

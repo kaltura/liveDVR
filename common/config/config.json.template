@@ -18,8 +18,9 @@
   "apiUpdateInterval" : 60000,
   "flavorDownloaderTeardownInterval" : 15000,
   "logLevel" : "DEBUG",
-  "logToConsole" : true,
+  "logToConsole" : false,
   "logFileName" : "~/dvr/kDvrWorker.log",
+  "monitorPort": 4390,
   "regressionAdapter": {
       "enable":false,
       "dataWarehouseRootFolderPath" : "instructions: put here root path to data warehouse (e.g. /var/tmp/regression/data_warehouse)",
@@ -41,7 +42,8 @@
   "simulateStreams": {
       "enable":false,
       "count": 1,
-      "dvrWindow": 7200,
+      "entryId": "0_simstream%d",
+      "playWindow": 7200,
       "maxChunkCount": 5,
       "useNginx":false,
       "wowzaUrl": "http://kalsegsec-a.akamaihd.net/dc-0/m/pa-live-publish2/kLive/smil:1_oorxcge2_all.smil/playlist.m3u8"
@@ -59,13 +61,7 @@
     "serviceUrl" : "http://serviceURL",
     "ksSessionRefreshIntervalMinutes" : 720
   },
-  "heapDumpParams" : {
-    "timeInterval" : 900000,
-    "windowSize" : 3,
-    "enabled" : false
-  },
   "playlistConfig" : {
-    "debug" : false,
     "waitTimeBeforeRemoval" : 100000,
     "maxChunkGapSize" : 10000,
     "maxAllowedPTSDrift": 1000,
