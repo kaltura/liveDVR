@@ -1,6 +1,6 @@
 {
   "mockNetwork" : false,
-  "mockBackend" : true,
+  "mockBackend" : false,
   "readMockBackendResponseFromFile" : false,
   "rootFolderPath" : "~/dvr/dvrContentRootPath",
   "oldContentFolderPath" : "~/dvr/dvrOldContentRootPath",
