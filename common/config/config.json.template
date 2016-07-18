@@ -21,6 +21,7 @@
   "logToConsole" : false,
   "logFileName" : "~/dvr/kDvrWorker.log",
   "monitorPort": 4390,
+  "preserveOriginalHLS": false,
   "regressionAdapter": {
       "enable":false,
       "dataWarehouseRootFolderPath" : "instructions: put here root path to data warehouse (e.g. /var/tmp/regression/data_warehouse)",
