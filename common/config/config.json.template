@@ -2,8 +2,8 @@
   "mockNetwork" : false,
   "mockBackend" : false,
   "readMockBackendResponseFromFile" : false,
-  "rootFolderPath" : "~/dvr/dvrContentRootPath",
-  "oldContentFolderPath" : "~/dvr/dvrOldContentRootPath",
+  "rootFolderPath" : "~/kLive_content/live",
+  "oldContentFolderPath" : "~/kLive_content/archive",
   "requestTimeout" : 20000,
   "flavorSuccessPollingInterval" : 2000,
   "flavorFailPollingInterval" : 10000,
@@ -19,7 +19,7 @@
   "flavorDownloaderTeardownInterval" : 15000,
   "logLevel" : "DEBUG",
   "logToConsole" : false,
-  "logFileName" : "~/dvr/kDvrWorker.log",
+  "logFileName" : "~/dvr/kLiveController.log",
   "monitorPort": 4390,
   "regressionAdapter": {
       "enable":false
@@ -28,7 +28,7 @@
       "enable":false,
       "count": 1,
       "entryId": "0_simstream%d",
-      "playWindow": 7200,
+      "playWindow": 240,
       "maxChunkCount": 5,
       "useNginx":false,
       "wowzaUrl": "http://kalsegsec-a.akamaihd.net/dc-0/m/pa-live-publish2/kLive/smil:1_oorxcge2_all.smil/playlist.m3u8"
