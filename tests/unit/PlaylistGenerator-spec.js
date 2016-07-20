@@ -309,6 +309,8 @@ describe('Playlist Generator spec', function() {
                     expect(obj.durations[1]).to.eql(Math.ceil(after.audio.duration));
                     expect(obj.clipTimes.length).to.eql(2);
                     expect(obj.sequences[0].clips.length).to.eql(2);
+                    expect(obj.sequences[0].firstKeyFrameOffset).to.be.undefined;
+                    expect(obj.sequences[0].keyFrameDurations).to.be.undefined;
                     expect(obj.clipTimes[1]).to.eql(minDTS(after));
                     expect(obj.sequences[0].clips[1].sources[0].offset).to.eql(0);
                     expect(obj.sequences[0].clips[0].sources[0].offset).to.eql(0);
