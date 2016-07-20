@@ -46,16 +46,16 @@ http {
         #HLS
 
         #Rules for requesting playlist from packager
-        rewrite  /kLive\/smil:(\w+)_(?:all|pass).smil\/playlist.m3u8           /hls/$1/playlist.json/master.m3u8 last;
-        rewrite  /kLive\/smil:(\w+)_(?:all|pass).smil\/([^\/]*(?:ts|m3u8).*)   /hls/$1/playlist.json/$2 last;
+        rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/playlist.m3u8                  /hls/$1/playlist.json/master.m3u8 last;
+        rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/([^\/]*(?:ts|m3u8).*)          /hls/$1/playlist.json/$2 last;
 
         #Rules if backend builds playlist
-        rewrite  /kLive\/smil:(\w+)_(?:all|pass).smil\/(.*)\/chunklist.m3u8    /hls/$1/playlist.json/index-s$2-v1-a1.m3u8 last;
-        rewrite  /kLive\/smil:(\w+)_(?:all|pass).smil\/(.*)\/(.*)(.ts|.m3u8)   /hls/$1/playlist.json/$3$4 last;
+        rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/(.*)\/chunklist.m3u8           /hls/$1/playlist.json/index-s$2-v1-a1.m3u8 last;
+        rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/([^\/]*)\/([^.]*)(.ts|.m3u8)   /hls/$1/playlist.json/$3$4 last;
 
         #HDS
-        rewrite  /kLive\/smil:(\w+)_(?:all|pass).smil\/manifest.f4m            /hds/$1/playlist.json/manifest.f4m last;
-        rewrite  /kLive\/smil:(\w+)_(?:all|pass).smil\/(.*).abst               /hds/$1/playlist.json/$2.abst last;
+        rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/manifest.f4m                    /hds/$1/playlist.json/manifest.f4m last;
+        rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/(.*).abst                       /hds/$1/playlist.json/$2.abst last;
 
 
         add_header 'Access-Control-Allow-Headers' 'Origin,Range';
@@ -105,6 +105,36 @@ http {
         location / {
             expires 1d;
             root   @WWW_DIR@;
+        }
+
+    }
+
+    proxy_cache_path @CONTENT_DIR@/../nginxCache  levels=1:2 keys_zone=one:20m inactive=5h max_size=11023M ;
+    proxy_cache_use_stale updating;
+    proxy_cache_lock on;
+    proxy_cache_lock_timeout 15s;
+    proxy_cache_valid 404   10s;
+    proxy_cache_valid 502   0s;
+    proxy_ignore_client_abort on;
+
+    server {
+
+        proxy_cache one;
+        listen 2000;
+
+        location ~ /entry/(?<entryId>.*)/origin/(?<origin>.*) {
+
+            proxy_cache_valid 403   0s;
+            proxy_cache_valid 404   0s;
+            resolver 8.8.8.8;
+            proxy_cache_key "$origin";
+            proxy_pass $scheme://$origin$is_args$args;
+
+            add_header x-nginx-real-url "$origin" always;
+            add_header x-nginx-proxy_cache_key "$origin" always;
+            add_header x-nginx-cache-control "$upstream_http_cache_control" always;
+            add_header x-nginx-req-entryId "$entryId" always;
+
         }
 
     }
