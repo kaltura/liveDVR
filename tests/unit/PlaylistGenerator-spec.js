@@ -387,6 +387,58 @@ describe('Playlist Generator spec', function() {
                 });
             });
         });
+
+
+        it('should produce valid playlist after one of flavors has empty clip', function (done) {
+
+            var fi = {
+                startTime: 1459270805911,
+                sig: 'C53429E60F33B192FD124A2CC22C8717',
+                video: {
+                    duration: 16225,
+                    firstDTS: 1459270805911,
+                    firstEncoderDTS: 83,
+                    wrapEncoderDTS: 95443718
+                },
+                path: '/var/tmp/media-u774d8hoj_w20128143_1.mp4',
+                flavor: "32"
+            },fi_0 = offsetFileInfo(fi) ;
+
+            fi_0.flavor = "33";
+
+            var gapSize = fi.video.duration * 10;
+
+            var fis = [];
+            fis.push(fi);
+            fis.push(fi_0);
+
+            fi = offsetFileInfo(fi, gapSize );
+            fi_0 = offsetFileInfo(fi_0, gapSize );
+
+            var fillFis = function(fi, count) {
+                var arr = [];
+
+                for (var i = 0; i < count; i++) {
+                    arr.push(fi);
+                    fi = offsetFileInfo(fi, fi.video.duration);
+                }
+                return arr;
+            };
+
+            fis = fis.concat(fillFis(fi, 10)).concat(fillFis(fi_0, 1));
+
+            var windowSize = fi.video.duration * 2;
+
+            createPlaylistGenerator(Math.ceil(windowSize / 1000)).then(function (plGen) {
+                updatePlaylist(plGen, fis).then(function (obj) {
+                    expect(obj.durations[0]).to.be.above(0);
+                    expect(obj.durations[0]).to.at.most(windowSize + fi.video.duration);
+                    done();
+                }).catch(function (err) {
+                    done(err);
+                });
+            });
+        });
     });
 
     describe('anomalities', function() {
