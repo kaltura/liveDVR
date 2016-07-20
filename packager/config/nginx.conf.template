@@ -137,5 +137,10 @@ http {
 
         }
 
+        # fetch files from CONTENT_DIR
+        location / {
+            alias @CONTENT_DIR@;
+        }
+
     }
 }
