@@ -332,7 +332,12 @@ describe('Playlist Generator spec', function() {
                     keyFrameDTS: [0,2000,4000,6000,8000,10000,12000,14000]},
                 path: '/var/tmp/media-u774d8hoj_w20128143_1.mp4',
                 flavor: "32"
-            };
+            }, before_flv1 = deepCloneFileInfo(before);
+
+            before_flv1.flavor = "33";
+
+              var  after_flv1 = offsetFileInfo(before_flv1,100000),
+                after_flv12 = offsetFileInfo(after_flv1);
 
             createPlaylistGenerator(Math.ceil(before.video.duration * 2 / 1000)).then(function (plGen) {
 
@@ -340,12 +345,15 @@ describe('Playlist Generator spec', function() {
                     after1 = offsetFileInfo(after),
                     after2 = offsetFileInfo(after1);
 
-                updatePlaylist(plGen, [before, after]).then(function (obj) {
+                updatePlaylist(plGen, [before,before_flv1, after,after_flv1]).then(function (obj) {
                     expect(obj.durations.length).to.eql(2);
                     expect(obj.clipTimes.length).to.eql(2);
                     return updatePlaylist(plGen, [after1, after2]).then(function (obj) {
                         expect(obj.durations.length).to.eql(1);
                         expect(obj.clipTimes.length).to.eql(1);
+                        _.each(plGen.playlistImp.inner.sequences,function(seq){
+                            expect(seq.clips.length).to.be.eql(plGen.playlistImp.inner.durations.length);
+                        });
                         done();
                     });
                 }).catch(function (err) {
@@ -353,6 +361,54 @@ describe('Playlist Generator spec', function() {
                 });
             });
         });
+
+
+        it('should defer window rolling until first clip is empty', function (done) {
+            // insert *large* clip
+            var before = { startTime: 1459270805911,
+                sig: 'C53429E60F33B192FD124A2CC22C8717',
+                video:
+                { duration: 20000,
+                    firstDTS: 1459270805911,
+                    firstEncoderDTS: 95443718,
+                    wrapEncoderDTS: 95443718,
+                    keyFrameDTS: [0,2000,4000,6000,8000,10000,12000,14000,16000,18000]},
+                path: '/var/tmp/media-u774d8hoj_w20128143_1.mp4',
+                flavor: "32"
+            };
+
+            var windowSec = 35;
+            // window 36
+            createPlaylistGenerator(windowSec).then(function (plGen) {
+
+                var after = offsetFileInfo(before,100000);
+                after.video.duration = 16000;
+                after.video.keyFrameDTS = _.filter(after.video.keyFrameDTS,function(dts){
+                    dts < after.video.duration;
+                });
+                var after1 = offsetFileInfo(after);
+
+                // create gap and total duration of 20 + 16 = 36
+                updatePlaylist(plGen, [before,after]).then(function (obj) {
+                    expect(obj.durations.length).to.eql(2);
+                    expect(obj.clipTimes.length).to.eql(2);
+                    // add chunk 16 sec. -> 20 + 16 + 16 = 52.
+                    // which is > 36, however 52-20 < 36, so nothing should happen
+                    return updatePlaylist(plGen, [after1]).then(function (obj) {
+                        expect(obj.durations.length).to.eql(2);
+                        expect(obj.sequences[0].clips[1].sources[0].durations.length).to.eql(2);
+                        var expectedDuration = after.video.duration + after1.video.duration;
+                        expect(obj.durations[1]).to.eql(expectedDuration);
+                        expect(sum(obj.durations)).to.be.above(windowSec*1000 + after.video.duration);
+                        expect(obj.clipTimes.length).to.eql(2);
+                        done();
+                    });
+                }).catch(function (err) {
+                    done(err);
+                });
+            });
+        });
+
     });
 
     describe('rolling window', function() {
