@@ -251,6 +251,15 @@ describe('Playlist Generator spec', function() {
         },0);
     };
 
+    var batchAppend = function(ch,n,arr){
+        arr = arr || [];
+        arr.push(ch);
+        for(var j = 0; j < n; j++) {
+            arr.push(offsetFileInfo(arr.last));
+        }
+        return arr;
+    };
+
     describe('gap handling', function() {
         it('should create gap', function (done) {
             createPlaylistGenerator().then(function (plGen) {
@@ -321,6 +330,8 @@ describe('Playlist Generator spec', function() {
             });
         });
 
+
+
         it('should roll window over gap', function (done) {
             var before = { startTime: 1459270805911,
                 sig: 'C53429E60F33B192FD124A2CC22C8717',
@@ -342,13 +353,12 @@ describe('Playlist Generator spec', function() {
             createPlaylistGenerator(Math.ceil(before.video.duration * 2 / 1000)).then(function (plGen) {
 
                 var after = offsetFileInfo(before,100000),
-                    after1 = offsetFileInfo(after),
-                    after2 = offsetFileInfo(after1);
+                   afterArr = batchAppend(after,10);
 
                 updatePlaylist(plGen, [before,before_flv1, after,after_flv1]).then(function (obj) {
                     expect(obj.durations.length).to.eql(2);
                     expect(obj.clipTimes.length).to.eql(2);
-                    return updatePlaylist(plGen, [after1, after2]).then(function (obj) {
+                    return updatePlaylist(plGen,afterArr).then(function (obj) {
                         expect(obj.durations.length).to.eql(1);
                         expect(obj.clipTimes.length).to.eql(1);
                         _.each(plGen.playlistImp.inner.sequences,function(seq){
@@ -378,28 +388,33 @@ describe('Playlist Generator spec', function() {
             };
 
             var windowSec = 35;
-            // window 36
+
             createPlaylistGenerator(windowSec).then(function (plGen) {
 
+                var beforeArr = batchAppend(before,2);
+
                 var after = offsetFileInfo(before,100000);
-                after.video.duration = 16000;
+                after.video.duration = 6000;
                 after.video.keyFrameDTS = _.filter(after.video.keyFrameDTS,function(dts){
                     dts < after.video.duration;
                 });
-                var after1 = offsetFileInfo(after);
+                var afterArr = batchAppend(after,10);
 
-                // create gap and total duration of 20 + 16 = 36
-                updatePlaylist(plGen, [before,after]).then(function (obj) {
+                var expectedDuration1,expectedDuration2;
+
+                updatePlaylist(plGen, beforeArr.concat([after])).then(function (obj) {
                     expect(obj.durations.length).to.eql(2);
                     expect(obj.clipTimes.length).to.eql(2);
+                    expectedDuration1 = obj.durations[0];
+                    expectedDuration2 = obj.durations[1];
                     // add chunk 16 sec. -> 20 + 16 + 16 = 52.
                     // which is > 36, however 52-20 < 36, so nothing should happen
-                    return updatePlaylist(plGen, [after1]).then(function (obj) {
+                    return updatePlaylist(plGen, afterArr).then(function (obj) {
                         expect(obj.durations.length).to.eql(2);
-                        expect(obj.sequences[0].clips[1].sources[0].durations.length).to.eql(2);
-                        var expectedDuration = after.video.duration + after1.video.duration;
-                        expect(obj.durations[1]).to.eql(expectedDuration);
-                        expect(sum(obj.durations)).to.be.above(windowSec*1000 + after.video.duration);
+                        expect(obj.sequences[0].clips[1].sources[0].durations.length).to.eql(11);
+                        expect(obj.durations[0]).to.eql(expectedDuration1-before.video.duration);
+                        expect(obj.durations[1]).to.eql(after.video.duration * obj.sequences[0].clips[1].sources[0].durations.length);
+                        expect(sum(obj.durations)).to.be.above(2 * windowSec*1000 + after.video.duration);
                         expect(obj.clipTimes.length).to.eql(2);
                         done();
                     });
@@ -438,7 +453,7 @@ describe('Playlist Generator spec', function() {
 
             createPlaylistGenerator(Math.ceil(windowSize / 1000)).then(function (plGen) {
                 updatePlaylist(plGen, fis).then(function (obj) {
-                    expect(obj.durations[0]).to.at.most(windowSize + fi.video.duration);
+                    expect(obj.durations[0]).to.at.most(plGen.actualWindowSize + fi.video.duration);
                     done();
                 }).catch(function (err) {
                     done(err);
@@ -490,7 +505,7 @@ describe('Playlist Generator spec', function() {
             createPlaylistGenerator(Math.ceil(windowSize / 1000)).then(function (plGen) {
                 updatePlaylist(plGen, fis).then(function (obj) {
                     expect(obj.durations[0]).to.be.above(0);
-                    expect(obj.durations[0]).to.at.most(windowSize + fi.video.duration);
+                    expect(obj.durations[0]).to.at.most(plGen.actualWindowSize + fi.video.duration);
                     done();
                 }).catch(function (err) {
                     done(err);
