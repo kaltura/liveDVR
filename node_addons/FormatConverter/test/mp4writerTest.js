@@ -5,7 +5,7 @@ var Url = require('url');
 var _ = require('underscore');
 var util = require('util');
 
-var tsFilePath = '/Users/igors/Documents/media-uh6rg3op2_8712.ts';//"/Users/igors/dvr/dvrContentRootPath/1_abc123/1/media-ul0o1lom6_w1600782441_670.ts.mp4_saved.ts";//__dirname+'/../resources/media-uixh2a1qh_w1892051821_472.ts';
+var tsFilePath = '/Users/igors/media-uh6sbv3i0_251.ts';//"/Users/igors/dvr/dvrContentRootPath/1_abc123/1/media-ul0o1lom6_w1600782441_670.ts.mp4_saved.ts";//__dirname+'/../resources/media-uixh2a1qh_w1892051821_472.ts';
 var httpPath = 'http://localhost/wn/media-uhe4wm3o6_b475136_144354218.ts';
 console.log("tsFilePath=",tsFilePath);
 var ts2mp4 = new MP4WRITER.MP4WriteStream(tsFilePath + '.mp4', {
