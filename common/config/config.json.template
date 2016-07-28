@@ -16,6 +16,7 @@
   "minDurationForPlaybackInSec" : 30,
   "sessionDuration" : 180000,
   "apiUpdateInterval" : 60000,
+  "streaInfoUpdateInterval" : 300000,
   "flavorDownloaderTeardownInterval" : 15000,
   "logLevel" : "DEBUG",
   "logToConsole" : false,
