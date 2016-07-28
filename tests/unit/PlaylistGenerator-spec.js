@@ -169,7 +169,8 @@ describe('Playlist Generator spec', function() {
                         duration: 16224.699999999999,
                         firstDTS: 1459270805911,
                         firstEncoderDTS: 83,
-                        wrapEncoderDTS: 95443718
+                        wrapEncoderDTS: 95443718,
+                        keyFrameDTS: [0,2000,4000,6000,8000,10000,12000,14000]
                     },
                     path: '/var/tmp/media-u774d8hoj_w20128143_1.mp4',
                     flavor: "32"
@@ -216,7 +217,8 @@ describe('Playlist Generator spec', function() {
                 { duration: 16224.699999999999,
                     firstDTS: 1459270805911,
                     firstEncoderDTS: 95443718-100,
-                    wrapEncoderDTS: 95443718 },
+                    wrapEncoderDTS: 95443718,
+                    keyFrameDTS: [0,2000,4000,6000,8000,10000,12000,14000] },
                 path: '/var/tmp/media-u774d8hoj_w20128143_1.mp4',
                 flavor: "32"
             }, after = offsetFileInfo(before);
@@ -224,6 +226,32 @@ describe('Playlist Generator spec', function() {
             createPlaylistGenerator().then( function(plGen) {
                 updatePlaylist(plGen,[before,after]).then(function(obj) {
                     expect(obj.durations[0]).to.eql(Math.ceil(before.video.duration)+Math.ceil(after.video.duration));
+                    done();
+                }).catch(function(err){
+                    done(err);
+                });
+            });
+        });
+
+        it('handle reference pts to pts distance getting larger than dts wrap value', function(done)
+        {
+            var referencePTS = { startTime: 1459270805911,
+                sig: 'C53429E60F33B192FD124A2CC22C8717',
+                video:
+                { duration: 16224.699999999999,
+                    firstDTS: 1459270805911,
+                    firstEncoderDTS: 95443718-100,
+                    wrapEncoderDTS: 95443718,
+                    keyFrameDTS: [0,2000,4000,6000,8000,10000,12000,14000]
+                    },
+                path: '/var/tmp/media-u774d8hoj_w20128143_1.mp4',
+                flavor: "32"
+            }, afterManyHours = offsetFileInfo(referencePTS,referencePTS.video.wrapEncoderDTS / 2);
+
+            createPlaylistGenerator().then( function(plGen) {
+                updatePlaylist(plGen,[referencePTS,afterManyHours]).then(function(obj) {
+                    expect(sum(obj.durations)).to.eql(Math.ceil(referencePTS.video.duration+afterManyHours.video.duration));
+                    expect(obj.sequences[0].clips.length).to.eql(2);
                     done();
                 }).catch(function(err){
                     done(err);
@@ -286,9 +314,10 @@ describe('Playlist Generator spec', function() {
                     expect(obj.sequences[0].clips[1].sources[0].offset).to.eql(0);
                     expect(obj.sequences[0].clips[0].sources[0].offset).to.eql(0);
 
-                    expect(sum(obj.sequences[0].keyFrameDurations)).to.eql(Math.ceil(before.video.duration) + 100000);
-                    expect(obj.sequences[0].keyFrameDurations.length).to.eql(2 * before.video.keyFrameDTS.length);
-                    expect(obj.sequences[0].firstKeyFrameOffset).to.eql(0);
+                    obj.sequences[0].clips.forEach(function(c,index) {
+                        expect(sum(c.keyFrameDurations)).to.eql(sum(c.sources[0].durations) - plGen.playlistImp.sequences[0].clips[index].sources[0].keyFrameDurations.last.last);
+                        expect(c.firstKeyFrameOffset).to.eql(c.sources[0].offset);
+                    });
                     done();
                 }).catch(function (err) {
                     done(err);
@@ -579,7 +608,7 @@ describe('Playlist Generator spec', function() {
         });
 
 
-        it('should reject item wiht overlapping time range', function (done) {
+        it('should reject item with overlapping time range', function (done) {
             createPlaylistGenerator().then(function (plGen) {
                 var fi = {
                     startTime: 1459270805911,
@@ -595,7 +624,7 @@ describe('Playlist Generator spec', function() {
                 }, overlap = offsetFileInfo(fi,-1000);
 
                 updatePlaylist(plGen, [fi, overlap]).then(function (result) {
-                    expect(result.durations[0]).to.eql(Math.ceil(fi.video.duration));
+                    expect(sum(result.durations)).to.eql(Math.ceil(fi.video.duration));
                     expect(result.sequences[0].clips[0].sources[0].paths.length).to.eql(1);
                     done();
                 }).catch(function (err) {

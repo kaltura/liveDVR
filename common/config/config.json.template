@@ -52,7 +52,6 @@
     "maxAllowedPTSDrift": 1000,
     "timestampToleranceMs": 2,
     "humanReadable" : false,
-    "keyFrameSearchOffsetMs" : 1,
     "segmentDuration" : 10000,
     "enablePlaylistHistory": false
   }
