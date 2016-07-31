@@ -52,6 +52,7 @@
     "maxAllowedPTSDrift": 1000,
     "timestampToleranceMs": 2,
     "humanReadable" : false,
+    "preserveAllChunks": false,
     "segmentDuration" : 10000,
     "enablePlaylistHistory": false
   }
