@@ -52,7 +52,7 @@
     "maxAllowedPTSDrift": 1000,
     "timestampToleranceMs": 2,
     "humanReadable" : false,
-    "keyFrameSearchOffsetMs" : 1,
+    "preserveMP4Chunks": false,
     "segmentDuration" : 10000,
     "enablePlaylistHistory": false
   }

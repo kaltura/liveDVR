@@ -199,15 +199,18 @@ function analyzeChunk {
         if [[ "$use_dts_times" -eq "1" ]]
         then
             dts_pat="dts=";   initial_dts="9090"
+            pts_pat="pts=";
         else
             dts_pat="dts_time=";   initial_dts="11"
+            pts_pat="pts_time=";
         fi
         #NB: 9090 is packager initial offset for dts
         line=`ffprobe "$urlPrefix/$chunk"  -show_packets  -select_streams $media  | \
-         awk -v dtspat=$dts_pat -v dts_initial_dts=$initial_dts\
+         awk -v dtspat=$dts_pat -v ptspat=$pts_pat -v dts_initial_dts=$initial_dts\
            'BEGIN{ offset=length(dtspat)+1; dur_offset=length(dts_durationpat)+1; durCnt = 0; durSum = 0 } \
+            $0 ~ ptspat  {  if(!first_pts){ first_pts=substr($0,offset); first_pts=((first_pts+8589934592)-dts_initial_dts)%8589934592 } } \
             $0 ~ dtspat  {  cur=substr($0,offset); if(last){ durCnt++;durSum += cur-last; } last = cur; if(!first){first=last} } \
-          END{ if(durCnt==0){durCnt=1} duration_time=int(durSum/durCnt);  last=((last+8589934592)-dts_initial_dts)%8589934592; first=((first+8589934592)-dts_initial_dts)%8589934592; last+=duration_time; print first" "last" "(last-first)}'`
+          END{ if(durCnt==0){durCnt=1} duration_time=int(durSum/durCnt);  last=((last+8589934592)-dts_initial_dts)%8589934592; first=((first+8589934592)-dts_initial_dts)%8589934592; last+=duration_time; print first_pts" "((first_pts+(last-first)+8589934592)%8589934592)" "(last-first)}'`
 
          medias[index]="$media $line"
          #>> $outfile
@@ -232,9 +235,10 @@ function analyzeChunk {
 
             echo "${video[@]}  ${audio[@]}" >> $outfile;
             chunkStartDTSDiff=`echo "${video[1]} -${audio[1]}" | bc`
+            cumulativeDiff=`echo "$cumulativeDiff+$chunkStartDTSDiff" | bc`
             chunkStartEndTSDiff=`echo "${video[2]} -${audio[2]}" | bc`
             #there's no double processing in bash...
-            [[ `echo "$chunkStartEndTSDiff >= $align_threshold" | bc` = "1" ]]  || [[ `echo "$chunkStartEndTSDiff >= $align_threshold" | bc` = "1" ]]  && warning="$warning video/audio track alignment: $chunkStartEndTSDiff > $align_threshold"
+            [[ `echo "$chunkStartEndTSDiff >= $align_threshold" | bc` = "1" ]]  || [[ `echo "$chunkStartEndTSDiff >= $align_threshold" | bc` = "1" ]]  && warning="$warning video/audio track alignment: $chunkStartEndTSDiff > $align_threshold sync=$cumulativeDiff"
 
             [[ "$warning" =~ [A-Za-z] ]] && warning="errors: $warning"
             echo "diffs: $chunkStartDTSDiff $chunkStartEndTSDiff `echo "${video[3]} - ${audio[3]}" | bc` $warning" >> $outfile;
