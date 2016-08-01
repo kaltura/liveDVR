@@ -23,10 +23,19 @@ case  $os_name in
 esac
 
 
-if [ ! -d "$devRootDir/nginx-vod-module" ]
+if which git &> /dev/null
 then
-    git clone https://github.com/igorshevach/nginx-vod-module
+    packagerDir="$devRootDir/nginx-vod-module"
+    if [ ! -d "$packagerDir" ]
+    then
+        echo "$packagerDir does not exist."
+        git clone https://github.com/kaltura/nginx-vod-module || echo "error $?"
+    fi
+    cd $packagerDir
+    git checkout master
+    git pull
 fi
+
 
 nginxVersion=${nginxVersion:-1.8.1}
 
