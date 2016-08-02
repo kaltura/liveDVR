@@ -37,8 +37,8 @@ def add_new_tasks():
                 time = m.group(2)
                 src = os.path.join(recording_uploader_path, file_name)
                 shutil.move(src, recording_uploader_path_processing)  # todo check it works for diffrent disk-isilon
-                task = [entry_id, os.path.join(recording_uploader_path_processing, file_name), ffmpeg_path,
-                        file_name]
+                output_file = file_name +'.mp4'
+                task = [entry_id, os.path.join(recording_uploader_path_processing, file_name), ffmpeg_path, output_file]
 
                 queue_first_stage.put(task)
             except IOError, e:

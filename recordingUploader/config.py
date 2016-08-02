@@ -5,7 +5,7 @@ Config = ConfigParser.ConfigParser()
 Config.read("config.ini")
 hostname = socket.gethostname()
 config_json = {}
-logger = logging.getLogger('config')
+logger = logging.getLogger(__name__)
 
 
 def fill(section):
