@@ -3,15 +3,17 @@ import logging
 import os
 import sys
 
+
+
 DEFAULT_LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
 }
 
 
-def init_logger(): #todo fixig logger
+def init_logger():
 
-    #todo replace with configuration!!!
+
     __root__ = os.path.dirname(__file__)
     path = __root__ + '/log'
     filename = 'live-testing.log'
@@ -26,7 +28,7 @@ def init_logger(): #todo fixig logger
     logging.basicConfig(
         filename=logfullpath,
         level=logging.DEBUG,
-        format='[%(asctime)s.%(msecs)d] [%(levelname)s] [%(name)s] [%(funcName)s():%(lineno)s] %(message)s',
+        format='[%(asctime)s.%(msecs)d][%(process)d/%(threadName)s] [%(levelname)s] [%(name)s]: [%(funcName)s():%(lineno)s] %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
     file_handler = logging.handlers.RotatingFileHandler(logfullpath, maxBytes=10485760, backupCount=300,
@@ -35,7 +37,7 @@ def init_logger(): #todo fixig logger
 
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.INFO)
-    console_formatter = logging.Formatter('[%(asctime)s.%(msecs)d] [%(levelname)s] [%(name)s] [%(funcName)s():%(lineno)s] %(message)s')
+    console_formatter = logging.Formatter('[%(process)d/%(threadName)s][%(levelname)s] [%(name)s] [%(name)s] [%(funcName)s():%(lineno)s] %(message)s')
     console_handler.setFormatter(console_formatter)
 
     logging.root.setLevel(logging.INFO)
@@ -46,3 +48,4 @@ def init_logger(): #todo fixig logger
 
 
 init_logger()
+print "inital logger"
