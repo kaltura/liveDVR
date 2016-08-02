@@ -1,13 +1,18 @@
 # !/bin/bash
 
-cd ~/
+currentDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-devRootDir=${devRootDir:-`pwd`}
+echo $currentDir
+devRootDir=${devRootDir:-"$currentDir/../build"}
+mkdir $devRootDir
+echo "$devRootDir"
+
 ffmpegLibsDir=${ffmpegLibsDir:-$devRootDir/liveDVR/node_addons/FormatConverter/build/FFmpeg}
 packagerDir="$devRootDir/nginx-vod-module"
 nginxVersion=${nginxVersion:-1.8.1}
 nginxDir="$devRootDir/nginx-$nginxVersion"
 os_name=`uname`
+
 
 export LIB_AV_CODEC="$ffmpegLibsDir/libavcodec/libavcodec__.a"
 export LIB_AV_FILTER="$ffmpegLibsDir/libavfilter/libavfilter.a"
@@ -28,6 +33,9 @@ then
     rm -rf $nginxDir
 fi
 
+
+cd $devRootDir
+
 if which git &> /dev/null
 then
     if [ ! -d "$packagerDir" ]
@@ -42,11 +50,11 @@ fi
 
 cd $devRootDir
 
-
 if [ ! -d "$nginxDir" ]
 then
     wget http://nginx.org/download/nginx-$nginxVersion.tar.gz
     tar -zxvf nginx-$nginxVersion.tar.gz
+    rm nginx-$nginxVersion.tar.gz -f
 fi
 
 
@@ -56,3 +64,6 @@ cd $nginxDir
 ./configure --add-module=$packagerDir --with-debug --with-cc-opt="-O0"
 make
 #make install
+
+
+cp $nginxDir/objs/nginx $currentDir/../../bin/$os_name
