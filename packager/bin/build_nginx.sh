@@ -1,13 +1,12 @@
 # !/bin/bash
 
-
 cd ~/
 
 devRootDir=${devRootDir:-`pwd`}
-
 ffmpegLibsDir=${ffmpegLibsDir:-$devRootDir/liveDVR/node_addons/FormatConverter/build/FFmpeg}
-
-
+packagerDir="$devRootDir/nginx-vod-module"
+nginxVersion=${nginxVersion:-1.8.1}
+nginxDir="$devRootDir/nginx-$nginxVersion"
 os_name=`uname`
 
 export LIB_AV_CODEC="$ffmpegLibsDir/libavcodec/libavcodec__.a"
@@ -22,10 +21,15 @@ case  $os_name in
    ;;
 esac
 
+if [ "$1" = "clean" ]
+then
+    echo "Cleaning $packagerDir and $nginxDir directories"
+    rm -rf $packagerDir
+    rm -rf $nginxDir
+fi
 
 if which git &> /dev/null
 then
-    packagerDir="$devRootDir/nginx-vod-module"
     if [ ! -d "$packagerDir" ]
     then
         echo "$packagerDir does not exist."
@@ -36,19 +40,19 @@ then
     git pull
 fi
 
+cd $devRootDir
 
-nginxVersion=${nginxVersion:-1.8.1}
 
-if [ ! -d "$devRootDir/nginx-$nginxVersion" ]
+if [ ! -d "$nginxDir" ]
 then
     wget http://nginx.org/download/nginx-$nginxVersion.tar.gz
     tar -zxvf nginx-$nginxVersion.tar.gz
 fi
 
-echo "$devRootDir/nginx-$nginxVersion"
 
-cd $devRootDir/nginx-$nginxVersion
+echo "$nginxDir"
+cd $nginxDir
 
-./configure --add-module=$devRootDir/nginx-vod-module --with-debug --with-cc-opt="-O0"
+./configure --add-module=$packagerDir --with-debug --with-cc-opt="-O0"
 make
-make install
+#make install
