@@ -6,7 +6,7 @@ import logging.handlers
 import time
 import recording_logger
 import shutil
-
+import json
 
 class Singleton(object):
     """ A pythonic singleton"""
@@ -19,7 +19,6 @@ class Singleton(object):
 class KalturaAPI(Singleton):
 
     def __init__(self):
-        recording_logger.init_logger()
         self.admin_secret = get_config('admin_secret')
         self.partner_id = get_config('partner_id')
         self.url = os.path.join(get_config('api_service_url'), 'api_v3', 'index.php')
@@ -27,7 +26,7 @@ class KalturaAPI(Singleton):
         self.logger = logging.getLogger(__name__)
         self.mode = get_config('mode')
 
-    def append_recoridng(self, file_path):
+    def append_recording(self, file_path):
         shutil.move(file_path,
                     '/Users/ron.yadgar/dvr/isilon')  # if any file are in procceing dir, move to archive
 
@@ -47,7 +46,7 @@ class KalturaAPI(Singleton):
             'secret': self.admin_secret,
             'partnerId': self.partner_id,
             'expiry': self.session_duration,
-            'format': 2   #json
+            'format': 2   #todo use json
         }
         try:
             r = requests.post(self.url, data=data)  # todo check for error-KALTURAAPI exception status code is not 200
@@ -71,9 +70,11 @@ class KalturaAPI(Singleton):
             'service': 'uploadToken',
             'action': 'add',
             'ks': self._get_kaltura_session(),
-            'format': 2  # xml
+            'format': 2  #todo use json
         }
-        r = requests.post(self.url, data=data)  # todo check for error-KALTURAAPI exception
+        r = requests.post(self.url, data=data)  #
+        #  todo check for error-KALTURAAPI exception
+        #json.loads(r)
         result = objectify.fromstring(r.content).result
         return result.id.text
 
