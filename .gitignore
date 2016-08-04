@@ -31,3 +31,4 @@ node_modules
 node_addons/FormatConverter/build
 
 common/config/config.json
+packager/build
