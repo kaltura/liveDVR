@@ -49,6 +49,7 @@ loadNvm() {
 }
 
 start() {
+    [ -d ${LOG_DIR} ] || mkdir -p ${LOG_DIR}
     loadNvm
     RETVAL=0
     for prefix in 0 1 ; do
