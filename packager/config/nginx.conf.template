@@ -43,6 +43,11 @@ http {
         #rewrite_log on;
         #error_log    /usr/local/nginx/logs/example.com.error.log debug;
 
+        #HDS
+        rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/manifest.f4m                    /hds/$1/playlist.json/manifest.f4m last;
+        rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/(.*).abst                       /hds/$1/playlist.json/$2.abst last;
+        rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/frag-(.*)                       /hds/$1/playlist.json/frag-$2 last;
+
         #HLS
 
         #Rules for requesting playlist from packager
@@ -52,10 +57,6 @@ http {
         #Rules if backend builds playlist
         rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/(.*)\/chunklist.m3u8           /hls/$1/playlist.json/index-s$2-v1-a1.m3u8 last;
         rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/([^\/]*)\/([^.]*)(.ts|.m3u8)   /hls/$1/playlist.json/$3$4 last;
-
-        #HDS
-        rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/manifest.f4m                    /hds/$1/playlist.json/manifest.f4m last;
-        rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/(.*).abst                       /hds/$1/playlist.json/$2.abst last;
 
 
         add_header 'Access-Control-Allow-Headers' 'Origin,Range';
