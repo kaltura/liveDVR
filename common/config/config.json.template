@@ -21,6 +21,7 @@
   "logLevel" : "DEBUG",
   "logToConsole" : false,
   "logFileName" : "~/dvr/kLiveController.log",
+  "logTimeZoneOffset" : 300,
   "monitorPort": 4390,
   "regressionAdapter": {
       "enable":false

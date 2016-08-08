@@ -21,7 +21,7 @@ var appenders = [
         "filename": logFullPath,
         "pattern": ".yyyy-MM-dd",
         "alwaysIncludePattern": false,
-        "timezoneOffset" : 300 // NYC timezone offset relative to UTC (5 * 60)
+        "timezoneOffset" : config.get('logTimeZoneOffset') // NYC timezone offset relative to UTC (5 * 60)
     }
 ];
 
