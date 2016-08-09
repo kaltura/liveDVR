@@ -4,6 +4,7 @@
 
 [ "$build_conf" != "Debug" ] && echo "target config: release" ||  echo "target config: debug"
 
+
 os_name=`uname`
 
 function makeFFmpeg()
@@ -34,14 +35,14 @@ function makeFFmpeg()
 
     cd $ffmpegDir
 
-    debug_specifics=""
-    [ "$Release" == "" ] &&  debug_specifics='--enable-debug --disable-optimizations'
+    debug_specifics=
+    [ "$build_conf" = "Debug" ] &&  debug_specifics='--enable-debug --disable-optimizations'
 
     configFileName=$ffmpegDir/lastConfigure
 
 
-    confCmd="./configure --disable-everything --disable-doc --enable-protocol=file --enable-demuxer=mpegts --enable-muxer=rtp_mpegts --enable-parser=h264 --enable-parser=aac --enable-muxer=mp4 --enable-zlib --enable-bsf=aac_adtstoasc --enable-decoder=aac --enable-decoder=h264 --enable-muxer=flv --enable-protocol=rtmp --enable-encoder=libmp3lame"
-    $debug_specifics
+    confCmd="./configure --disable-everything --disable-doc --enable-protocol=file --enable-demuxer=mpegts --enable-muxer=rtp_mpegts --enable-parser=h264 --enable-parser=aac --enable-muxer=mp4 --enable-zlib --enable-bsf=aac_adtstoasc --enable-decoder=aac --enable-decoder=h264 --enable-muxer=flv --enable-protocol=rtmp --enable-encoder=libmp3lame $debug_specifics"
+
 
     [ "$os_name" == "Linux" ] && confCmd="$confCmd --enable-pic"
 
