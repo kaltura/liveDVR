@@ -12,17 +12,34 @@
 
 #include <vector>
 #include <string>
+#include <set>
 #include "Stream.h"
 #include "AVFormat.h"
 
 namespace converter{
     
-    
+    class AvLogFilter {
+        
+        struct Partial{
+          bool operator ()(const std::string &l,const std::string &r) const{
+              return std::strncmp(l.c_str(),r.c_str(),std::min(r.length(),l.length()));
+        }
+        };
+        std::set<std::string,Partial> m_patterns;
+        std::set<const char*> m_cached;
+    public:
+        void addFilter(const std::string &f);
+        bool filter(const char * szFmt);
+    };
+       
     class ConverterAppInst{
+        AvLogFilter m_filter;
+        static void avlog_cb(void *data, int level, const char * szFmt, va_list varg);
     public:
         ConverterAppInst();
         
         int init(int logLevel = AV_LOG_TRACE);
+        
         
         static ConverterAppInst &instance();
         

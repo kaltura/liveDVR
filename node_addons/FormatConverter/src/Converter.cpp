@@ -8,6 +8,7 @@
 
 #include "Converter.h"
 #include <bitset>
+#include <set>
 extern "C"{
 #include <libavformat/movenc.h>
    
@@ -75,31 +76,24 @@ extern "C"{
 };
 
 namespace converter{
-    
-    std::string Sprintf(const char *fmt,...){
-        va_list args1;
-        va_start(args1, fmt);
-        va_list args2;
-        va_copy(args2, args1);
-        std::string buf;
-        buf.resize(1+std::vsnprintf(nullptr, 0, fmt, args1));
-        va_end(args1);
-        std::vsnprintf(&buf.at(0), buf.size(), fmt, args2);
-        va_end(args2);
-        return  buf;
+  
+    void AvLogFilter::addFilter(const std::string &s){
+        m_patterns.insert(s);
     }
     
-    int64_t checkDelay(const int64_t &pts,const int64_t &dts,AVStream *stream,std::string &error,const std::string &user = "") {
-        if(AV_NOPTS_VALUE != dts){
-            int delay = pts - dts;
-            if(abs(delay) >= stream->time_base.den / stream->time_base.num){
-                error = Sprintf("%s codec_id %d dts %lld pts %lld: delay is too big %d", user.c_str(), stream->codec->codec_id, dts, pts, delay);
-                return dts;
+    bool AvLogFilter::filter(const char * szFmt) {
+        if(m_patterns.size()){
+            if(m_cached.find(szFmt) != m_cached.end()){
+                return false;
+            }
+            if(m_patterns.find(szFmt) != m_patterns.end()){
+                m_cached.insert(szFmt);
+                return false;
             }
         }
-        return pts;
+        return true;
     }
-   
+    
     
     ConverterAppInst appInst;
     
@@ -116,7 +110,21 @@ namespace converter{
     int ConverterAppInst::init(int logLevel){
         av_log_set_level(logLevel);
         av_register_all();
+        if(logLevel <= AV_LOG_WARNING){
+            m_filter.addFilter("Not writing any edit list");
+            av_log_set_callback(avlog_cb);
+        }
         return 0;
+    }
+
+    void ConverterAppInst::avlog_cb(void *data, int level, const char * szFmt, va_list varg){
+        if(level > av_log_get_level()){
+            return;
+        }
+        if(!ConverterAppInst::instance().m_filter.filter(szFmt)){
+            return;
+        }
+        av_log_default_callback(data,level,szFmt,varg);
     }
     
     
@@ -209,17 +217,6 @@ namespace converter{
             
             AVStream *in_stream =input->streams[i];
             
-            if(in_stream->first_dts > in_stream->start_time ){
-                errors.push_back(Sprintf("stream %u first_dts %lld start_time %lld", in_stream->codec->codec_id, in_stream->first_dts, in_stream->start_time));
-                in_stream->start_time = in_stream->first_dts;
-            }
-         
-            std::string error;
-            in_stream->start_time = checkDelay(in_stream->start_time,in_stream->first_dts,in_stream,error,"stream:");
-            if(!error.empty()){
-                errors.push_back(error);
-            }
-            
             int64_t stmStartTimeMs = av_rescale(in_stream->start_time,1000 * in_stream->time_base.num,in_stream->time_base.den);
             
             m_minStartDTSMsec = std::min(m_minStartDTSMsec,stmStartTimeMs);
@@ -256,7 +253,11 @@ namespace converter{
             }
         }
         
-        _S(avformat_write_header(*output, nullptr));
+         AVDictionary *opts = nullptr;
+        _S(av_dict_set(&opts, "use_editlist", "0", 0));
+        std::unique_ptr<AVDictionary> optsptr(opts);
+        _S(avformat_write_header(*output, &opts));
+        optsptr.release();
         
         state = PUSHING;
         
@@ -312,13 +313,6 @@ namespace converter{
                 AVStream *out_stream = output->streams[pkt.stream_index];
                 
                 ExtraTrackInfo &xtra = m_extraTrackInfo[pkt.stream_index];
-                
-                
-                std::string error;
-                pkt.pts  = checkDelay(pkt.pts ,pkt.dts ,out_stream,error,"pkt:");
-                if(!error.empty()){
-                     xtra.warnings.push_back(error);
-                }
                 
                 /* copy packet */
                 
@@ -466,11 +460,6 @@ namespace converter{
                             keyFrames,
                             stream->codec->codec_type
                         });
-                        if(extraInfo.warnings.size() > 0){
-                            mfi.vecWarnings.insert( mfi.vecWarnings.end(),
-                                                   extraInfo.warnings.begin(),
-                                                   extraInfo.warnings.end());
-                        }
                     }
                         break;
                     default:
