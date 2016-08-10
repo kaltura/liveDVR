@@ -175,6 +175,7 @@ namespace converter {
                     trackInfo->Set(String::NewFromUtf8(isolate, "firstEncoderDTS"),Number::New(isolate, iter->firstEncoderDtsMsec));
                     trackInfo->Set(String::NewFromUtf8(isolate, "wrapEncoderDTS"),Number::New(isolate, iter->wrapEncoderDtsMsec));
                     trackInfo->Set(String::NewFromUtf8(isolate, "keyFrameDTS"),vecKeyFrameDtsMsec);
+                  
                 }
                     break;
                 default:
