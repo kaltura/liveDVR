@@ -77,7 +77,7 @@ extern "C"{
 
 namespace converter{
   
-    void AvLogFilter::addFilter(const std::string &s){
+    void AvLogFilter::addFilter(const char *s){
         m_patterns.insert(s);
     }
     

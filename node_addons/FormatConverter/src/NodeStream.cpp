@@ -182,14 +182,6 @@ namespace converter {
                     break;
             };
         }
-        if(m_fileInfo.vecWarnings.size()){
-            Local<Array> vecWarnings = Array::New(isolate, m_fileInfo.vecWarnings.size());
-            
-            for(uint32_t i = 0; i < vecWarnings->Length();i++){
-                vecWarnings->Set(i,String::NewFromUtf8(isolate,m_fileInfo.vecWarnings[i].c_str()));
-            }
-            fileInfo->Set(String::NewFromUtf8(isolate, "diagnosticMessages"),vecWarnings);
-        }
         return fileInfo;
     }
 }

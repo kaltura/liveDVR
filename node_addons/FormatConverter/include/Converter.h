@@ -21,14 +21,21 @@ namespace converter{
     class AvLogFilter {
         
         struct Partial{
-          bool operator ()(const std::string &l,const std::string &r) const{
-              return std::strncmp(l.c_str(),r.c_str(),std::min(r.length(),l.length()));
+          bool operator ()(const char* l,const char* r) const{
+              
+              while(*l && *r){
+                  if( *l != *r )
+                      return *l - *r;
+                  l++;
+                  r++;
+              }
+              return 0;
         }
         };
-        std::set<std::string,Partial> m_patterns;
+        std::set<const char*,Partial> m_patterns;
         std::set<const char*> m_cached;
     public:
-        void addFilter(const std::string &f);
+        void addFilter(const char *p);
         bool filter(const char * szFmt);
     };
        
