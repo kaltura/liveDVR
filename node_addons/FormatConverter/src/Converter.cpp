@@ -159,7 +159,7 @@ namespace converter{
     }
     
     int Converter::checkForStreams(){
-        
+
         if(!input->nb_streams){
             _S(input.checkStreams());
             if(!input->nb_streams){
@@ -260,7 +260,7 @@ namespace converter{
         optsptr.release();
         
         state = PUSHING;
-        
+
         _S(pushData());
         
         return 0;
@@ -404,9 +404,12 @@ namespace converter{
             }
         }
         
-        auto diff = result[0];
+        if(result.size()){
         
-        std::transform(result.begin(),result.end(),result.begin(),[ diff ] (double val) -> double { return val - diff; });
+            auto diff = result[0];
+        
+            std::transform(result.begin(),result.end(),result.begin(),[ diff ] (double val) -> double { return val - diff; });
+        }
         
         return 0;
     }
