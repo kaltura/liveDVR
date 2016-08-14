@@ -22,6 +22,7 @@
   "logFileName" : "~/dvr/kLiveController.log",
   "monitorPort": 4390,
   "preserveOriginalHLS": false,
+  "recordingDurationMinutes": 5,
   "regressionAdapter": {
       "enable":false,
       "dataWarehouseRootFolderPath" : "instructions: put here root path to data warehouse (e.g. /var/tmp/regression/data_warehouse)",
@@ -30,7 +31,6 @@
             "entryId": "abc",
             "flavorParamsIds": "32",
             "serverType": 0,
-            "firstChunklistIndex" : 0,
             "entryPath": "instructions: put here the relative path from data warehouse root to entry stream data (e.g. abc)",
             "playWindow": 150,
              "validator": {
