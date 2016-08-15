@@ -9,6 +9,8 @@
 #include "Converter.h"
 #include <bitset>
 #include <set>
+#include <chrono>
+
 extern "C"{
 #include <libavformat/movenc.h>
    
@@ -117,6 +119,7 @@ namespace converter{
         return 0;
     }
 
+    const char szDateTimeormat [] = "%F %T %z"; 
     void ConverterAppInst::avlog_cb(void *data, int level, const char * szFmt, va_list varg){
         if(level > av_log_get_level()){
             return;
@@ -124,7 +127,16 @@ namespace converter{
         if(!ConverterAppInst::instance().m_filter.filter(szFmt)){
             return;
         }
-        av_log_default_callback(data,level,szFmt,varg);
+        //include date-time
+        std::time_t t = std::time(nullptr);
+        std::gmtime(&t);
+        std::tm *tm = std::gmtime(&t);
+        char szDateTime[sizeof("2016-08-15 08:45:07 +0200\0")];
+        
+        std::strftime(szDateTime,sizeof(szDateTime),szDateTimeormat,tm);
+        std::string formatDateTime(szDateTime);
+        formatDateTime += std::string(" ") + szFmt;
+        av_log_default_callback(data,level,formatDateTime.c_str(),varg);
     }
     
     
@@ -403,10 +415,13 @@ namespace converter{
                 break;
             }
         }
-        
-        auto diff = result[0];
-        
-        std::transform(result.begin(),result.end(),result.begin(),[ diff ] (double val) -> double { return val - diff; });
+       
+        if(result.size()){
+            
+            auto diff = result[0];
+            
+            std::transform(result.begin(),result.end(),result.begin(),[ diff ] (double val) -> double { return val - diff; });
+        }
         
         return 0;
     }
