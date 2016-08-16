@@ -1,7 +1,5 @@
 from config import get_config
 import os
-import requests
-from lxml import objectify
 import logging.handlers
 import time
 import recording_logger
@@ -12,15 +10,21 @@ import gzip
 from StringIO import StringIO
 import socket
 from poster.streaminghttp import register_openers
-from poster.encode import multipart_encode
+from poster.encode import *
 import urllib2
 from xml.parsers.expat import ExpatError
 from xml.dom import minidom
+from KalturaClient.Plugins.Core import KalturaMediaEntry
+
 
 
 # Register the streaming http handlers with urllib2
 register_openers()
 
+class KalturaUploadedFileTokenResource():
+    def __init__(self, token):
+        self.token = token
+        self.objectType = 'KalturaUploadedFileTokenResource'
 
 # Exception class for server errors
 class KalturaException(Exception):
@@ -40,7 +44,7 @@ class KalturaParams(object):   # todo check if all method are necessary
         return self.params
 
     def put(self, key, value=None):
-        if value == None:
+        if value is None:
             self.params[key + '__null'] = ''
         elif isinstance(value, unicode):
             self.params[key] = value.encode('utf8')
@@ -53,66 +57,10 @@ class KalturaParams(object):   # todo check if all method are necessary
     def add(self, key, objectProps):
         self.params[key] = objectProps
 
-    def addObjectIfDefined(self, key, obj):
-        if obj == NotImplemented:
-            return
-        if obj == None:
-            self.put(key)
-            return
-        self.add(key, obj.toParams().get())
-
-    def addArrayIfDefined(self, key, array):
-        if array == NotImplemented:
-            return
-        if array == None:
-            self.put(key)
-            return
-        if len(array) == 0:
-            self.params[key] = {'-': ''}
-        else:
-            arr = []
-            for curIndex in xrange(len(array)):
-                arr.append(array[curIndex].toParams().get())
-            self.params[key] = arr
-
-    def addStringIfDefined(self, key, value):
-        if value != NotImplemented:
-            self.put(key, value)
-
-    def addIntIfDefined(self, key, value):
-        if value != NotImplemented:
-            self.put(key, value)
-
-    def addStringEnumIfDefined(self, key, value):
-        if value == NotImplemented:
-            return
-        if value == None:
-            self.put(key)
-            return
-        if type(value) == str:
-            self.addStringIfDefined(key, value)
-        else:
-            self.addStringIfDefined(key, value.getValue())
-
-    def addIntEnumIfDefined(self, key, value):
-        if value == NotImplemented:
-            return
-        if value == None:
-            self.put(key)
-            return
-        if type(value) == int:
-            self.addIntIfDefined(key, value)
-        else:
-            self.addIntIfDefined(key, value.getValue())
-
-    def addFloatIfDefined(self, key, value):
-        if value != NotImplemented:
-            self.put(key, value)
-
     def addBoolIfDefined(self, key, value):
         if value == NotImplemented:
             return
-        if value == None:
+        if value is None:
             self.put(key)
             return
         if value:
@@ -120,26 +68,16 @@ class KalturaParams(object):   # todo check if all method are necessary
         else:
             self.put(key, '0')
 
-    def sort(self, params):
-        for key in params:
-            if isinstance(params[key], dict):
-                params[key] = self.sort(params[key])
+    def add_object_if_defined(self, key, obj):
+        if obj == NotImplemented:
+            return
+        if obj == None:
+            self.put(key)
+            return
+        self.add(key, obj.toParams().get())
 
-        sortedKeys = sorted(params.keys())
-        sortedDict = {}
-        for key in sortedKeys:
-            sortedDict[key] = params[key]
-
-        return sortedDict
-
-    def toJson(self):
+    def to_json(self):
         return json.dumps(self.params)
-
-    def signature(self, params=None):
-        if params == None:
-            params = self.params
-        params = self.sort(params)
-        return self.md5(self.toJson())
 
 
 # Request files container
@@ -189,7 +127,7 @@ class Singleton(object):
 class KalturaAPI(Singleton):
 # todo init should not called each time!
     def __init__(self):
-        self.requestHeaders = {}
+        self.request_headers = {}
         self.admin_secret = get_config('admin_secret')
         self.partner_id = get_config('partner_id')
         self.url = os.path.join(get_config('api_service_url'))
@@ -200,52 +138,77 @@ class KalturaAPI(Singleton):
         self.request_timeout = 120
         self.expiration_time_ks = -1
 
-    def append_recording(self, file_path):
+    @staticmethod
+    def append_recording(file_path):
         shutil.move(file_path,
                     '/Users/ron.yadgar/dvr/isilon')  # if any file are in procceing dir, move to archive
-
-
-
-    def _print_error(self, result, headers):
-        try:
-            self.logger.error("%s: objectType: %s, message: %s \n Headers: %s", result.error.code.text, result.error.objectType, result.error.message.text,  headers._store)
-        except AttributeError:
-            self.logger.error("API request failed: unknown error occurred")
 
     # todo check the cdde of api of that !
     def _create_new_session(self):
         kparams = KalturaParams()
-        kparams.addStringIfDefined("secret", self.admin_secret)
-        kparams.addIntIfDefined("partnerId", self.partner_id)
-        kparams.addIntIfDefined("expiry", self.session_duration)
+        kparams.put("secret", self.admin_secret)
+        kparams.put("partnerId", self.partner_id)
+        kparams.put("expiry", self.session_duration)
         kparams.put("format", self.format)
+        kparams.put('ignoreNull', '1') # TODO check if needed
         url = os.path.join(self.url, "api_v3", "service", 'session', "action", 'start')
 
-        resultNode = self.doQueue(url, kparams) # todo modularity is not good!
-        self.ks = self.getXmlNodeText(resultNode) # todo should be static
+        result_node = self.do_queue(url, kparams) # todo modularity is not good!
+        self.ks = self.get_xml_node_text(result_node)
         self.expiration_time_ks = int(self.session_duration) * 0.95 + int(time.time())
-
 
     def _get_kaltura_session(self):
         if (not hasattr(self, 'ks')) or self.expiration_time_ks > int(time.time()):
             self._create_new_session()
         return self.ks
 
+    def create_entry(self, name, description):
+        kparams = KalturaParams()
+        entry = {}
+        entry['name'] = "test"
+        entry['description'] = "www"
+        entry['mediaType'] = 1
+        kparams.add('entry', entry)
+        (url, params, files) = self.get_request_params('media', 'add', kparams)
+        result_node = self.do_queue(url, params, files)
+        obj_type_node = self.get_child_node_by_path(result_node, 'id')
+        if obj_type_node is None:
+            raise KalturaClientException('Could not find id node in response xml',  KalturaClientException
+                                         .ERROR_RESULT_NOT_FOUND)
+        result = self.get_xml_node_text(obj_type_node)
+        return result
+
+    def set_media_content(self, entry_id, token_id):
+        resource = {}
+        resource['token'] = token_id
+        resource['objectType'] = 'KalturaUploadedFileTokenResource'
+        kparams = KalturaParams()
+        kparams.add('entryId', entry_id)
+        kparams.add('resource', resource)
+        (url, params, files) = self.get_request_params('media', 'addContent', kparams)
+        result_node = self.do_queue(url, params, files)
+        obj_type_node = self.get_child_node_by_path(result_node, 'id')
+
     def upload_token_add(self):
 
-        (url, params, files) = self.getRequestParams('uploadToken', 'add')
-        resultNode = self.doQueue(url, params, files)
-        objTypeNode = self.getChildNodeByXPath(resultNode, 'id')
-        if objTypeNode == None:
+        (url, params, files) = self.get_request_params('uploadToken', 'add')
+        result_node = self.do_queue(url, params, files)
+        obj_type_node = self.get_child_node_by_path(result_node, 'id')
+        if obj_type_node is None:
             raise KalturaClientException('Could not find id node in response xml',
                                          KalturaClientException.ERROR_RESULT_NOT_FOUND)
-        result = self.getXmlNodeText(objTypeNode)
+        result = self.get_xml_node_text(obj_type_node)
         return result
-    #@staticmethod
-    def readHttpResponse(self, f, requestTimeout):    #todo check all comment and static method
-    #    if requestTimeout != None:
-    #        readTimer = Timer(requestTimeout, KalturaClient.closeHandle, [f])
-    #        readTimer.start()
+
+
+    @staticmethod
+    def close_handle(fh):
+        fh.close()
+
+    def read_http_response(self, f, request_timeout):
+        if request_timeout is not None:
+            read_timer = Timer(request_timeout, self.close_handle, [f])
+            read_timer.start()
         try:
             try:
                 data = f.read()
@@ -260,11 +223,10 @@ class KalturaAPI(Singleton):
                 except IOError, e:
                     raise KalturaClientException(e, KalturaClientException.ERROR_READ_GZIP_FAILED)
         finally:
-            print 'readHttpResponse'
-    #        if requestTimeout != None:
-    #            readTimer.cancel()
+            print 'read_http_response'
+            if request_timeout is not None:
+                read_timer.cancel()
         return data
-
 
     # Send http request
     def do_http_request(self, url, params=KalturaParams(), files=KalturaFiles()):
@@ -273,33 +235,33 @@ class KalturaAPI(Singleton):
         else:
             request_timeout = None
 
-        if request_timeout != None: # todo if needed, why not move it to the if
-            origSocketTimeout = socket.getdefaulttimeout()
+        if request_timeout is not None: # todo if needed, why not move it to the if
+            orig_socket_timeout = socket.getdefaulttimeout()
             socket.setdefaulttimeout(request_timeout)
         try:
-            f = self.openRequestUrl(url, params, files, self.requestHeaders)
-            data = self.readHttpResponse(f, request_timeout)
-            responseHeaders = f.info().headers
+            f = self.open_request_url(url, params, files, self.request_headers)
+            data = self.read_http_response(f, request_timeout)
+            response_headers = f.info().headers
         finally:
-            if request_timeout != None:
-                socket.setdefaulttimeout(origSocketTimeout)
-        return (data, responseHeaders)
+            if request_timeout is not None:
+                socket.setdefaulttimeout(orig_socket_timeout)
+        return (data, response_headers)
 
     @staticmethod
-    def openRequestUrl(url, params, files, requestHeaders):
-        requestHeaders['Accept'] = 'text/xml'
-        requestHeaders['Accept-encoding'] = 'gzip'
+    def open_request_url(url, params, files, request_headers):  #todo check why need request_headers
+        request_headers['Accept'] = 'text/xml'
+        request_headers['Accept-encoding'] = 'gzip'
         if len(files.get()) == 0:
-            requestHeaders['Content-Type'] = 'application/json'
-            request = urllib2.Request(url, params.toJson(), requestHeaders)
+            request_headers['Content-Type'] = 'application/json'
+            request = urllib2.Request(url, params.to_json(), request_headers)
         else:
-            if 'Content-Type' in requestHeaders:
-                del requestHeaders['Content-Type']
-            fullParams = KalturaParams()
-            fullParams.put('json', params.toJson())
-            fullParams.update(files.get())
-            datagen, headers = multipart_encode(fullParams.get())
-            headers.update(requestHeaders)
+            if 'Content-Type' in request_headers:
+                del request_headers['Content-Type']
+            full_params = KalturaParams()
+            full_params.put('json', params.to_json())
+            full_params.update(files.get())
+            datagen, headers = multipart_encode(full_params.get())
+            headers.update(request_headers)
             request = urllib2.Request(url, datagen, headers)
 
         try:
@@ -309,113 +271,100 @@ class KalturaAPI(Singleton):
         return f
 
     # Xml utility functions
-    #todo all these are functios from  core, if decieeded to use them, check if better to use static
     @staticmethod
-    def getXmlNodeText(xmlNode):
-        if xmlNode.firstChild == None:
+    def get_xml_node_text(xml_node):
+        if xml_node.firstChild is None:
             return ''
-        return xmlNode.firstChild.nodeValue
+        return xml_node.firstChild.nodeValue
 
-
-    def getXmlNodeFloat(self, xmlNode):
-        text = self.getXmlNodeText(xmlNode)
+    def get_xml_node(self, xml_node):
+        text = self.get_xml_node_text(xml_node)
         if text == '':
             return None
         try:
             return float(text)
         except ValueError:
             return None
+
     @staticmethod
-    def getChildNodeByXPath(node, nodePath):
+    def get_child_node_by_path(node, nodePath):
         for curName in nodePath.split('/'):
             nextChild = None
             for childNode in node.childNodes:
                 if childNode.nodeName == curName:
                     nextChild = childNode
                     break
-            if nextChild == None:
+            if nextChild is None:
                 return None
             node = nextChild
         return node
 
-    def getExceptionIfError(self, resultNode):
-        errorNode = self.getChildNodeByXPath(resultNode, 'error')
-        if errorNode == None:
+    def get_exception_if_error(self, result_node):
+        error_node = self.get_child_node_by_path(result_node, 'error')
+        if error_node is None:
             return None
-        messageNode = self.getChildNodeByXPath(errorNode, 'message')
-        codeNode = self.getChildNodeByXPath(errorNode, 'code')
-        if messageNode == None or codeNode == None:
+        message_node = self.get_child_node_by_path(error_node, 'message')
+        code_node = self.get_child_node_by_path(error_node, 'code')
+        if message_node is None or code_node is None:
             return None
-        return KalturaException(self.getXmlNodeText(messageNode), self.getXmlNodeText(codeNode))
+        return KalturaException(self.get_xml_node_text(message_node), self.get_xml_node_text(code_node))
 
     # Validate the result xml node and raise exception if its an error
-    def throwExceptionIfError(self, resultNode):
-        exceptionObj = self.getExceptionIfError(resultNode)
-        if exceptionObj == None:
+    def throw_exception_if_error(self, result_node):
+        exception_obj = self.get_exception_if_error(result_node)
+        if exception_obj is None:
             return
-        raise exceptionObj
+        raise exception_obj
 
-
-    def parsePostResult(self, postResult):
-        if len(postResult) > 1024:
-            self.logger.debug("result (xml): %s bytes" % len(postResult))
+    def parse_post_result(self, post_result):
+        if len(post_result) > 1024:
+            self.logger.debug("result (xml): %s bytes" % len(post_result))
         else:
-            self.logger.debug("result (xml): %s" % postResult)
+            self.logger.debug("result (xml): %s" % post_result)
 
         try:
-            resultXml = minidom.parseString(postResult)
+            result_xml = minidom.parseString(post_result)
         except ExpatError, e:
             raise KalturaClientException(e, KalturaClientException.ERROR_INVALID_XML)
 
-        resultNode = self.getChildNodeByXPath(resultXml, 'xml/result')
-        if resultNode == None:
+        result_node = self.get_child_node_by_path(result_xml, 'xml/result')
+        if result_node is None:
             raise KalturaClientException('Could not find result node in response xml',
                                          KalturaClientException.ERROR_RESULT_NOT_FOUND)
 
-        execTime = self.getChildNodeByXPath(resultXml, 'xml/executionTime')
-        if execTime != None: # todo why we need self.executionTime?
-            self.executionTime = self.getXmlNodeFloat(execTime)
+        self.throw_exception_if_error(result_node)  # todo who catch it
+        return result_node
 
-        self.throwExceptionIfError(resultNode)  # todo who catch it
-        return resultNode
-
-    def upload_token_upload(self, item):
+    def upload_token_upload(self, item):    # todo if we just copy object, better to use function
         resume = not item['chunks_to_upload'] == 1
         kparams = KalturaParams()
-        kparams.addStringIfDefined("uploadTokenId",  item['token_id'])
+        kparams.put("uploadTokenId",  item['token_id'])
         kparams.addBoolIfDefined("resume", resume)
         kparams.addBoolIfDefined("finalChunk", item['is_last_chunk'])
         if resume:
-            kparams.addFloatIfDefined("resumeAt", self.upload_token_buffer_size * (item['sequence_number']-1)) # todo check why float
+            kparams.put("resumeAt", item['resumeAt'])
             kparams.addBoolIfDefined("finalChunk", item['is_last_chunk'])
         kfiles = KalturaFiles()
-        fule =open('/tmp/1.txt', 'rb')
-        fule.seek(4)
-        kfiles.put("fileData", fule)
+        kfiles.put("fileData", item['data_stream'])
 
         # get request params
-        (url, params, files) = self.getRequestParams('uploadToken', 'upload', kparams, kfiles)
-        self.doQueue(url, params, files)
+        (url, params, files) = self.get_request_params('uploadToken', 'upload', kparams, kfiles)
+        self.do_queue(url, params, files)
 
-    def getRequestParams(self, service, action, kparams =KalturaParams(), kfiles =KalturaFiles()):
+    def get_request_params(self, service, action, kparams =KalturaParams(), kfiles =KalturaFiles()):
 
         kparams.put("format", self.format)
         kparams.put("ks", self._get_kaltura_session())
+        kparams.put("parnerId", 102)
         url = os.path.join(self.url, "api_v3", "service", service, "action", action)
-
-        # todo check if we need it
-        #signature = kparams.signature()
-        #kparams.put("kalsig", signature)
-
         return (url, kparams, kfiles)
 
             # Call all API services that are in queue
     # todo change function name
-    def doQueue(self, url, params, files =KalturaFiles()):
+    def do_queue(self, url, params, files =KalturaFiles()):
         response_headers = None # todo why self?
-        self.executionTime = None
         self.logger.debug("request url: [%s]" % url)
-        self.logger.debug("request json: [%s]" % params.toJson())
+        self.logger.debug("request json: [%s]" % params.to_json())
 
         start_time = time.time()
 
@@ -433,10 +382,9 @@ class KalturaAPI(Singleton):
                 server_name = curHeader.split(':', 1)[1].strip()
             elif curHeader.startswith('X-Kaltura-Session:'):
                 server_name = curHeader.split(':', 1)[1].strip()
-        if server_name != None or server_session != None:
+        if server_name is not None or server_session is not None:
             self.logger.debug("server: [%s], session [%s]" % (server_name, server_session))
 
         # parse the result
-        resultNode = self.parsePostResult(post_result)
-
-        return resultNode
+        result_node = self.parse_post_result(post_result)
+        return result_node
