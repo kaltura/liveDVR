@@ -18,5 +18,6 @@ module.exports = function (grunt) {
 
 
     // Default task(s).
-    grunt.registerTask('default', ['jshint:dev', 'execute:regression_test', 'unit-test:dev', 'component-test:dev', 'mocha_istanbul:dev']);
+   // grunt.registerTask('default', ['jshint:dev', 'execute:regression_test', 'unit-test:dev', 'component-test:dev', 'mocha_istanbul:dev']);
+    grunt.registerTask('default', ['jshint:dev', 'unit-test:dev', 'component-test:dev', 'regression-tests:dev', 'mocha_istanbul:dev']);
 };

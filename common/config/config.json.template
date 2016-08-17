@@ -23,6 +23,7 @@
   "monitorPort": 4390,
   "preserveOriginalHLS": false,
   "recordingDurationMinutes": 5,
+  "overrideOldRecordedHLS": true,
   "regressionAdapter": {
       "enable":false,
       "dataWarehouseRootFolderPath" : "instructions: put here root path to data warehouse (e.g. /var/tmp/regression/data_warehouse)",
