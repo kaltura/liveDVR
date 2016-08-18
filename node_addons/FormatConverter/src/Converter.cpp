@@ -170,6 +170,21 @@ namespace converter{
         };
     }
     
+    void clipUnrealisticPTS(AVStream *stream){
+    
+        if( stream->first_dts != AV_NOPTS_VALUE && stream->first_dts != stream->start_time && stream->avg_frame_rate.den > 0 && stream->time_base.num > 0 ) {
+            uint64_t wrap = 1ULL << stream->pts_wrap_bits,
+            diff = (stream->start_time - stream->first_dts + wrap ) % wrap,
+            threasholdMsec = av_rescale(10,stream->avg_frame_rate.num , stream->avg_frame_rate.den),
+            threshold = av_rescale( threasholdMsec, stream->time_base.den, stream->time_base.num);
+            
+            if( diff > threshold ){
+                av_log(nullptr,AV_LOG_WARNING,"pts to dts diff is too big (pts=%lld - dts=%lld > threshold=%lld) for stream %d\n", stream->start_time, stream->first_dts, threshold, stream->index );
+                stream->start_time = stream->first_dts;
+            }
+        }
+    }
+    
     int Converter::checkForStreams(){
         
         if(!input->nb_streams){
@@ -228,6 +243,9 @@ namespace converter{
             std::vector<std::string> errors;
             
             AVStream *in_stream =input->streams[i];
+            
+            // check for streams with unrealistic delay
+            clipUnrealisticPTS(in_stream);
             
             int64_t stmStartTimeMs = av_rescale(in_stream->start_time,1000 * in_stream->time_base.num,in_stream->time_base.den);
             
@@ -463,16 +481,7 @@ namespace converter{
                     }
                     case AVMEDIA_TYPE_AUDIO:
                     {
-                        // check for streams with unrealistic delay
-                        if( stream->first_dts != AV_NOPTS_VALUE && stream->first_dts != stream->start_time && stream->avg_frame_rate.den > 0 ) {
-                            int64_t wrap = 1ULL << stream->pts_wrap_bits,
-                            diff = (stream->start_time - stream->first_dts + wrap ) % wrap;
-                            if( diff > stream->avg_frame_rate.num / stream->avg_frame_rate.den * 10 ){
-                                av_log(*input,AV_LOG_WARNING,"pts to dts diff is too big (pts=%lld dts=%lld) for stream %zu", stream->start_time, stream->first_dts, i );
-                                stream->start_time = stream->first_dts;
-                            }
-                        }
-                      
+                        
                         double wrapDTS = ::ceil(dts2msec(1ULL << stream->pts_wrap_bits,stream->time_base));
                         ExtraTrackInfo &extraInfo = this->m_extraTrackInfo[this->m_streamMapper[i]];
                         double duration = dts2msec(extraInfo.maxDTS - stream->first_dts,stream->time_base);
