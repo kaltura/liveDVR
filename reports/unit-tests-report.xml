@@ -1,0 +1,58 @@
+Matching configurations arguments. Key: [.*] => Match: [IL-LILACHM-BE-1889.local]
+
+[0m[0m
+[0m  Backend client factory spec[0m
+[2K[0G  [32m  ✓[0m[90m should return mock in case configuration mandates so [0m
+[2K[0G  [32m  ✓[0m[90m should return real client in case configuration mandates so [0m
+
+[0m  Entry downloader spec[0m
+[2K[0G  [31m  1) should succeed starting if all downloaders and manifest generator succeed starting[0m
+[2K[0G  [31m  2) should fail starting if manifest generator fails to start[0m
+[2K[0G  [31m  3) should fail starting if all of the downloaders fail to start[0m
+[2K[0G  [31m  4) should succeed starting if one of the downloader fails to start[0m
+[2K[0G  [31m  5) should succeed stopping if all the downloaders succeed to stop[0m
+
+[0m  MasterManifestGenerator spec[0m
+[2K[0G  [31m  6) should get master manifest[0m
+[2K[0G  [31m  7) should request correct manifest[0m
+[2K[0G  [31m  8) should not use any port if port is not supplied[0m
+[2K[0G  [31m  9) should request all manifest by default[0m
+[2K[0G  [31m  10) should get all flavors for absolute URLs[0m
+[2K[0G  [31m  11) should get all flavors for relative URLs[0m
+
+[0m  Network client factory spec[0m
+[2K[0G  [32m  ✓[0m[90m should return mock in case configuration mandates so [0m[31m(156ms)[0m
+[2K[0G  [32m  ✓[0m[90m should return real client in case configuration mandates so [0m
+
+[0m  PersistenceFormat spec[0m
+[2K[0G  [32m  ✓[0m[90m should get a path for an entry [0m
+[2K[0G  [32m  ✓[0m[90m should get a path for a flavor [0m
+
+[0m  Playlist Generator spec[0m
+[0m    basics[0m
+[2K[0G    [31m  12) should correctly serialize from existing playlist and to JSON[0m
+[2K[0G    [32m  ✓[0m[90m playlist generator should be successfully created , started and stopped [0m
+[2K[0G    [32m  ✓[0m[90m should update duration when add an item [0m
+[2K[0G    [32m  ✓[0m[90m should update duration when add an audio only item [0m
+[2K[0G    [32m  ✓[0m[90m handle dts wrap [0m
+[0m    gap handling[0m
+[2K[0G    [32m  ✓[0m[90m should create gap [0m
+[2K[0G    [32m  ✓[0m[90m should create gap audio only [0m
+[2K[0G    [32m  ✓[0m[90m should roll window over gap [0m
+[2K[0G    [32m  ✓[0m[90m should defer window rolling until first clip is empty [0m
+[0m    rolling window[0m
+[2K[0G    [32m  ✓[0m[90m should pop item when window rolls on [0m
+[2K[0G    [32m  ✓[0m[90m should produce valid playlist after one of flavors has empty clip [0m
+[0m    anomalities[0m
+[2K[0G    [32m  ✓[0m[90m should be able to add item despite wrong id 3 tamestamp [0m
+[2K[0G    [32m  ✓[0m[90m should produce gap despite id3 timestamp = 0 [0m
+[2K[0G    [32m  ✓[0m[90m should reject item wiht overlapping time range [0m
+[2K[0G    [32m  ✓[0m[90m should reject item with duplicate filename [0m
+
+[0m  Session manager spec[0m
+[2K[0G  [32m  ✓[0m[90m should return true when there is no folder of the entry [0m
+[2K[0G  [32m  ✓[0m[90m should return false when the timestamp is recent [0m
+[2K[0G  [32m  ✓[0m[90m should return true when there are several manifests, all were created in the (distant) past [0m
+
+[0m  flavor-downloader tests[0m
+[2K[2K[2K
