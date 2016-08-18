@@ -463,7 +463,14 @@ namespace converter{
                     }
                     case AVMEDIA_TYPE_AUDIO:
                     {
-                       
+                        // check for streams with unrealistic delay
+                        if( stream->first_dts != AV_NOPTS_VALUE && stream->first_dts != stream->start_time && stream->avg_frame_rate.den > 0 ) {
+                            int64_t wrap = 1ULL << stream->pts_wrap_bits,
+                            diff = (stream->start_time - stream->first_dts + wrap ) % wrap;
+                            if( diff > stream->avg_frame_rate.num / stream->avg_frame_rate.den * 10 ){
+                                stream->start_time = stream->first_dts;
+                            }
+                        }
                       
                         double wrapDTS = ::ceil(dts2msec(1ULL << stream->pts_wrap_bits,stream->time_base));
                         ExtraTrackInfo &extraInfo = this->m_extraTrackInfo[this->m_streamMapper[i]];
