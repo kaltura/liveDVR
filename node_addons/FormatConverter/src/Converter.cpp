@@ -468,6 +468,7 @@ namespace converter{
                             int64_t wrap = 1ULL << stream->pts_wrap_bits,
                             diff = (stream->start_time - stream->first_dts + wrap ) % wrap;
                             if( diff > stream->avg_frame_rate.num / stream->avg_frame_rate.den * 10 ){
+                                av_log(*input,AV_LOG_WARNING,"pts to dts diff is too big (pts=%lld dts=%lld) for stream %zu", stream->start_time, stream->first_dts, i );
                                 stream->start_time = stream->first_dts;
                             }
                         }
