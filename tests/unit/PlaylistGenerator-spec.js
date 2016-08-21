@@ -453,6 +453,42 @@ describe('Playlist Generator spec', function() {
             });
         });
 
+        it('should produce zero duration for clip with flavors having disjoint ranges', function (done) {
+
+            createPlaylistGenerator(Math.ceil(f1.video.duration * 10 / 1000)).then(function (plGen) {
+
+                var f1 = { startTime: 1459270805911,
+                    sig: 'C53429E60F33B192FD124A2CC22C8717',
+                    video:
+                    { duration: 16224.699999999999,
+                        firstDTS: 1459270805911,
+                        firstEncoderDTS: 95443718,
+                        wrapEncoderDTS: 95443718,
+                        keyFrameDTS: [0,2000,4000,6000,8000,10000,12000,14000]},
+                    path: '/var/tmp/media-u774d8hoj_w20128143_1.mp4',
+                    flavor: "32"
+                }, f2 = deepCloneFileInfo(f1);
+                f2.flavor = "33";
+
+                var batch = batchAppend(f1,9);
+
+                f1 = batch.last;
+
+                batch = batch.concat(batchAppend(f2,9));
+
+                updatePlaylist(plGen,batch).then(function (obj) {
+                    expect(obj.durations[0]).to.be.above(0);
+                    updatePlaylist(plGen, batchAppend(f1,10) ).then(function (obj) {
+                        expect(obj.durations[0]).to.be.eql(0);
+                        done();
+                    });
+                }).catch(function (err) {
+                    done(err);
+                });
+            });
+        });
+
+
     });
 
     describe('rolling window', function() {
