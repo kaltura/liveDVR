@@ -21,37 +21,7 @@ case  $os_name in
     binDir=darwin
     ;;
 "Linux")
-
-    which lsb_release &>/dev/null || yum install -y redhat-lsb
-
-    release_name=`lsb_release -d | awk '{print $2}'`
-
     binDir=linux
-
-    case $release_name in
-    "CentOS")
-      binDir="$binDir/centos"
-      ;;
-    "Ubuntu")
-       binDir="$binDir/ubuntu"
-       packages=(libpcre3 libpcre3-dev zlibc zlib1g zlib1g-dev libssl-dev git make)
-       to_install=
-       for pkg in ${packages[@]}
-       do
-            dpkg-query -W $pkg &> /dev/null || to_install="$to_install $pkg"
-       done
-       [ -n "$to_install" ] && apt-get install $to_install
-
-       LIBCVER='2.17'
-
-       libcVersion=`dpkg-query -W libc6 | awk '{split($2,b,"-"); print b[1]}'`
-       if [[ "$libcVersion" != "$LIBCVER" ]]
-       then
-          wget http://launchpadlibrarian.net/130794928/libc6_$LIBCVER-0ubuntu4_amd64.deb
-          dpkg -i libc6_$LIBCVER-0ubuntu4_amd64.deb
-       fi
-       ;;
-    esac
     ;;
 esac
 

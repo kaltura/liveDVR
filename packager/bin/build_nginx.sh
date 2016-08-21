@@ -1,14 +1,18 @@
 # !/bin/bash
 
+currentDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-cd ~/
-
-devRootDir=${devRootDir:-`pwd`}
+echo $currentDir
+devRootDir=${devRootDir:-"$currentDir/../build"}
+mkdir $devRootDir
+echo "$devRootDir"
 
 ffmpegLibsDir=${ffmpegLibsDir:-$devRootDir/liveDVR/node_addons/FormatConverter/build/FFmpeg}
-
-
+packagerDir="$devRootDir/nginx-vod-module"
+nginxVersion=${nginxVersion:-1.8.1}
+nginxDir="$devRootDir/nginx-$nginxVersion"
 os_name=`uname`
+
 
 export LIB_AV_CODEC="$ffmpegLibsDir/libavcodec/libavcodec__.a"
 export LIB_AV_FILTER="$ffmpegLibsDir/libavfilter/libavfilter.a"
@@ -22,24 +26,44 @@ case  $os_name in
    ;;
 esac
 
-
-if [ ! -d "$devRootDir/nginx-vod-module" ]
+if [ "$1" = "clean" ]
 then
-    git clone https://github.com/igorshevach/nginx-vod-module
+    echo "Cleaning $packagerDir and $nginxDir directories"
+    rm -rf $packagerDir
+    rm -rf $nginxDir
 fi
 
-nginxVersion=${nginxVersion:-1.8.1}
 
-if [ ! -d "$devRootDir/nginx-$nginxVersion" ]
+cd $devRootDir
+
+if which git &> /dev/null
+then
+    if [ ! -d "$packagerDir" ]
+    then
+        echo "$packagerDir does not exist."
+        git clone https://github.com/kaltura/nginx-vod-module || echo "error $?"
+    fi
+    cd $packagerDir
+    git checkout master
+    git pull
+fi
+
+cd $devRootDir
+
+if [ ! -d "$nginxDir" ]
 then
     wget http://nginx.org/download/nginx-$nginxVersion.tar.gz
     tar -zxvf nginx-$nginxVersion.tar.gz
+    rm nginx-$nginxVersion.tar.gz -f
 fi
 
-echo "$devRootDir/nginx-$nginxVersion"
 
-cd $devRootDir/nginx-$nginxVersion
+echo "$nginxDir"
+cd $nginxDir
 
-./configure --add-module=$devRootDir/nginx-vod-module --with-debug --with-cc-opt="-O0"
+./configure --add-module=$packagerDir --with-debug --with-cc-opt="-O0"
 make
-make install
+#make install
+
+
+cp $nginxDir/objs/nginx $currentDir/../../bin/${os_name,,}/

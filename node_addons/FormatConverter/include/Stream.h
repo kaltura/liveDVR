@@ -22,7 +22,7 @@ namespace converter{
         double durationMsec;
         std::vector<double> vecKeyFrameDtsMsec;
         AVMediaType  mtype;
-    };
+     };
     
     struct MediaFileInfo{
        
@@ -33,6 +33,7 @@ namespace converter{
         std::string sig;
         int64_t startTimeUnixMs;
         std::vector<MediaTrackInfo> tracks;
+        std::vector<std::string> vecWarnings;
     };
 
     

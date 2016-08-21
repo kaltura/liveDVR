@@ -16,10 +16,12 @@
   "minDurationForPlaybackInSec" : 30,
   "sessionDuration" : 180000,
   "apiUpdateInterval" : 60000,
+  "streamInfoUpdateInterval" : 300000,
   "flavorDownloaderTeardownInterval" : 15000,
   "logLevel" : "DEBUG",
   "logToConsole" : false,
   "logFileName" : "~/dvr/kLiveController.log",
+  "logTimeZoneOffset" : 300,
   "monitorPort": 4390,
   "preserveOriginalHLS": false,
   "recordingDurationMinutes": 5,
@@ -69,7 +71,7 @@
     "maxAllowedPTSDrift": 1000,
     "timestampToleranceMs": 2,
     "humanReadable" : false,
-    "keyFrameSearchOffsetMs" : 1,
+    "preserveMP4Chunks": false,
     "segmentDuration" : 10000,
     "enablePlaylistHistory": false
   }

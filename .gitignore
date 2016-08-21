@@ -29,3 +29,6 @@ node_modules
 
 # Build files created by node-gyp
 node_addons/FormatConverter/build
+
+common/config/config.json
+packager/build

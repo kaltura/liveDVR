@@ -12,17 +12,41 @@
 
 #include <vector>
 #include <string>
+#include <set>
 #include "Stream.h"
 #include "AVFormat.h"
 
 namespace converter{
     
-    
+    class AvLogFilter {
+        
+        struct Partial{
+          bool operator ()(const char* l,const char* r) const{
+              
+              while(*l && *r){
+                  if( *l != *r )
+                      return *l - *r;
+                  l++;
+                  r++;
+              }
+              return 0;
+        }
+        };
+        std::set<const char*,Partial> m_patterns;
+        std::set<const char*> m_cached;
+    public:
+        void addFilter(const char *p);
+        bool filter(const char * szFmt);
+    };
+       
     class ConverterAppInst{
+        AvLogFilter m_filter;
+        static void avlog_cb(void *data, int level, const char * szFmt, va_list varg);
     public:
         ConverterAppInst();
         
         int init(int logLevel = AV_LOG_TRACE);
+        
         
         static ConverterAppInst &instance();
         
@@ -46,17 +70,19 @@ namespace converter{
         COutputCtx  output;
         
         struct ExtraTrackInfo{
-            ExtraTrackInfo(const double &dts)
+            ExtraTrackInfo(const double &dts,std::vector<std::string> wars)
             :lastDTS(AV_NOPTS_VALUE),
             lastPTS(AV_NOPTS_VALUE),
             maxDTS(0),
-            startDTS(dts)
+            startDTS(dts),
+            warnings(wars)
             {}
             
             int64_t lastDTS,
                     lastPTS,
                     maxDTS;
             double startDTS;
+            std::vector<std::string> warnings;
          };
         
         std::vector<ExtraTrackInfo> m_extraTrackInfo;
