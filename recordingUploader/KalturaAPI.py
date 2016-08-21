@@ -14,29 +14,42 @@ from poster.encode import *
 import urllib2
 from xml.parsers.expat import ExpatError
 from xml.dom import minidom
-from KalturaClient.Plugins.Core import KalturaMediaEntry
 
 
 
-# Register the streaming http handlers with urllib2
-register_openers()
+# TODO this model should be not block if two thread want to access it, second parterId should be always initalize to -5, and crate seessiiion should create once
 
 class KalturaUploadedFileTokenResource():
     def __init__(self, token):
         self.token = token
         self.objectType = 'KalturaUploadedFileTokenResource'
 
-# Exception class for server errors
-class KalturaException(Exception):
-    def __init__(self, message, code):
-        self.code = code
-        self.message = message
-
-    def __str__(self):
-        return "%s (%s)" % (self.message, self.code)
+    def to_dict(self):
+        return self.__dict__
 
 
-class KalturaParams(object):   # todo check if all method are necessary
+class KalturaUploadToken():
+    def __init__(self, file_name, file_size):
+        self.objectType = 'KalturaUploadedToken'
+        self.fileName = file_name
+        self.fileSize = file_size
+
+    def to_dict(self):
+        return self.__dict__
+
+
+class KalturaMediaEntry():
+    def __init__(self, name, description):
+        self.name = name
+        self.description = description
+        self.mediaType = 1  # video
+        self.objectType = 'KalturaMediaEntry'
+
+    def to_dict(self):
+        return self.__dict__
+
+
+class KalturaParams(object):
     def __init__(self):
         self.params = {}
 
@@ -54,15 +67,11 @@ class KalturaParams(object):   # todo check if all method are necessary
     def update(self, props):
         self.params.update(props)
 
-    def add(self, key, objectProps):
-        self.params[key] = objectProps
+    def add(self, key, object_props):
+        self.params[key] = object_props
 
-    def addBoolIfDefined(self, key, value):
-        if value == NotImplemented:
-            return
-        if value is None:
-            self.put(key)
-            return
+    def add_bool(self, key, value):
+
         if value:
             self.put(key, '1')
         else:
@@ -71,7 +80,7 @@ class KalturaParams(object):   # todo check if all method are necessary
     def add_object_if_defined(self, key, obj):
         if obj == NotImplemented:
             return
-        if obj == None:
+        if obj is None:
             self.put(key)
             return
         self.add(key, obj.toParams().get())
@@ -93,6 +102,16 @@ class KalturaFiles(object):
 
     def update(self, props):
         self.params.update(props)
+
+
+# Exception class for server errors
+class KalturaException(Exception):
+    def __init__(self, message, code):
+        self.code = code
+        self.message = message
+
+    def __str__(self):
+        return "%s (%s)" % (self.message, self.code)
 
 
 # Exception class for client errors
@@ -127,49 +146,47 @@ class Singleton(object):
 class KalturaAPI(Singleton):
 # todo init should not called each time!
     def __init__(self):
-        self.request_headers = {}
         self.admin_secret = get_config('admin_secret')
         self.partner_id = get_config('partner_id')
         self.url = os.path.join(get_config('api_service_url'))
         self.session_duration = get_config('ks_session_refresh_interval_minutes')
         self.logger = logging.getLogger(__name__)
         self.mode = get_config('mode')
-        self.format = 2 # todo add it to config
+        self.format = get_config('api_format')
         self.request_timeout = 120
         self.expiration_time_ks = -1
+        register_openers()  # register the new streaming http handlers
 
     @staticmethod
     def append_recording(file_path):
         shutil.move(file_path,
                     '/Users/ron.yadgar/dvr/isilon')  # if any file are in procceing dir, move to archive
 
-    # todo check the cdde of api of that !
-    def _create_new_session(self):
+
+    # todo should be impersonate
+    def _create_new_session(self):  #todo impersonate
         kparams = KalturaParams()
         kparams.put("secret", self.admin_secret)
         kparams.put("partnerId", self.partner_id)
         kparams.put("expiry", self.session_duration)
         kparams.put("format", self.format)
-        kparams.put('ignoreNull', '1') # TODO check if needed
         url = os.path.join(self.url, "api_v3", "service", 'session', "action", 'start')
 
-        result_node = self.do_queue(url, kparams) # todo modularity is not good!
+        result_node = self.do_queue(url, kparams)
         self.ks = self.get_xml_node_text(result_node)
-        self.expiration_time_ks = int(self.session_duration) * 0.95 + int(time.time())
+        self.expiration_time_ks = int(self.session_duration) + int(time.time())
 
     def _get_kaltura_session(self):
-        if (not hasattr(self, 'ks')) or self.expiration_time_ks > int(time.time()):
+        if (not hasattr(self, 'ks')) or self.expiration_time_ks < int(time.time()):
             self._create_new_session()
         return self.ks
 
-    def create_entry(self, name, description):
+    def create_entry(self, partner_id, name, description):
         kparams = KalturaParams()
-        entry = {}
-        entry['name'] = "test"
-        entry['description'] = "www"
-        entry['mediaType'] = 1
-        kparams.add('entry', entry)
+        entry = KalturaMediaEntry(name, description)
+        kparams.add('entry', entry.to_dict())
         (url, params, files) = self.get_request_params('media', 'add', kparams)
+        self.impersonate(partner_id)
         result_node = self.do_queue(url, params, files)
         obj_type_node = self.get_child_node_by_path(result_node, 'id')
         if obj_type_node is None:
@@ -179,19 +196,34 @@ class KalturaAPI(Singleton):
         return result
 
     def set_media_content(self, entry_id, token_id):
-        resource = {}
-        resource['token'] = token_id
-        resource['objectType'] = 'KalturaUploadedFileTokenResource'
         kparams = KalturaParams()
+        resource = KalturaUploadedFileTokenResource(token_id)
         kparams.add('entryId', entry_id)
-        kparams.add('resource', resource)
+        kparams.add('resource', resource.to_dict())
         (url, params, files) = self.get_request_params('media', 'addContent', kparams)
         result_node = self.do_queue(url, params, files)
         obj_type_node = self.get_child_node_by_path(result_node, 'id')
 
-    def upload_token_add(self):
+    def get_partner_id(self, entry_id):
+        kparams = KalturaParams()
+        kparams.add('entryId', entry_id)
+        (url, params, files) = self.get_request_params('liveStream', 'get', kparams)
+        result_node = self.do_queue(url, params, files)
+        obj_type_node = self.get_child_node_by_path(result_node, 'partnerId')
+        if obj_type_node is None:
+            raise KalturaClientException('Could not find id node in response xml',
+                                         KalturaClientException.ERROR_RESULT_NOT_FOUND)
+        result = self.get_xml_node_text(obj_type_node)
+        return result
 
-        (url, params, files) = self.get_request_params('uploadToken', 'add')
+    def upload_token_add(self, entry_id, file_name, file_size):
+        kparams = KalturaParams()
+        upload_token_obj = KalturaUploadToken(file_name, file_size)
+        kparams.add('uploadToken', upload_token_obj.to_dict())
+        partner_id = self.get_partner_id(entry_id)
+        #self.impersonate(partner_id)
+        (url, params, files) = self.get_request_params('uploadToken', 'add', kparams)
+        self.partner_id = partner_id
         result_node = self.do_queue(url, params, files)
         obj_type_node = self.get_child_node_by_path(result_node, 'id')
         if obj_type_node is None:
@@ -200,6 +232,24 @@ class KalturaAPI(Singleton):
         result = self.get_xml_node_text(obj_type_node)
         return result
 
+    def upload_token_upload(self, item, entry_id):
+        partner_id = self.get_partner_id(entry_id)
+        self.impersonate(partner_id)
+        (kparams, kfiles) = self.get_request_params_for_upload_token(item)
+        (url, params, files) = self.get_request_params('uploadToken', 'upload', kparams, kfiles)
+        self.do_queue(url, params, files)
+
+    def get_request_params_for_upload_token(self, item):
+        kparams = KalturaParams()
+        kparams.put("uploadTokenId", item['token_id'])
+        kparams.add_bool("resume", item['resume'])
+        kparams.add_bool("finalChunk", item['is_last_chunk'])
+        if item['resume']:
+            kparams.put("resumeAt", item['resumeAt'])
+            kparams.add_bool("finalChunk", item['is_last_chunk'])
+        kfiles = KalturaFiles()
+        kfiles.put("fileData", item['data_stream'])
+        return kparams,kfiles
 
     @staticmethod
     def close_handle(fh):
@@ -223,7 +273,6 @@ class KalturaAPI(Singleton):
                 except IOError, e:
                     raise KalturaClientException(e, KalturaClientException.ERROR_READ_GZIP_FAILED)
         finally:
-            print 'read_http_response'
             if request_timeout is not None:
                 read_timer.cancel()
         return data
@@ -239,24 +288,22 @@ class KalturaAPI(Singleton):
             orig_socket_timeout = socket.getdefaulttimeout()
             socket.setdefaulttimeout(request_timeout)
         try:
-            f = self.open_request_url(url, params, files, self.request_headers)
+            f = self.open_request_url(url, params, files)
             data = self.read_http_response(f, request_timeout)
             response_headers = f.info().headers
         finally:
             if request_timeout is not None:
                 socket.setdefaulttimeout(orig_socket_timeout)
-        return (data, response_headers)
+        return data, response_headers
 
     @staticmethod
-    def open_request_url(url, params, files, request_headers):  #todo check why need request_headers
-        request_headers['Accept'] = 'text/xml'
+    def open_request_url(url, params, files):
+        request_headers = {}
         request_headers['Accept-encoding'] = 'gzip'
         if len(files.get()) == 0:
             request_headers['Content-Type'] = 'application/json'
             request = urllib2.Request(url, params.to_json(), request_headers)
         else:
-            if 'Content-Type' in request_headers:
-                del request_headers['Content-Type']
             full_params = KalturaParams()
             full_params.put('json', params.to_json())
             full_params.update(files.get())
@@ -287,17 +334,24 @@ class KalturaAPI(Singleton):
             return None
 
     @staticmethod
-    def get_child_node_by_path(node, nodePath):
-        for curName in nodePath.split('/'):
-            nextChild = None
+    def get_child_node_by_path(node, node_path):
+        for curName in node_path.split('/'):
+            next_child = None
             for childNode in node.childNodes:
                 if childNode.nodeName == curName:
-                    nextChild = childNode
+                    next_child = childNode
                     break
-            if nextChild is None:
+            if next_child is None:
                 return None
-            node = nextChild
+            node = next_child
         return node
+
+    def impersonate(self, partner_id):
+        self.partner_id = 102
+
+
+    def unimpersonate(self):
+        self.partner_id = -5
 
     def get_exception_if_error(self, result_node):
         error_node = self.get_child_node_by_path(result_node, 'error')
@@ -332,37 +386,21 @@ class KalturaAPI(Singleton):
             raise KalturaClientException('Could not find result node in response xml',
                                          KalturaClientException.ERROR_RESULT_NOT_FOUND)
 
-        self.throw_exception_if_error(result_node)  # todo who catch it
+        self.throw_exception_if_error(result_node)
         return result_node
-
-    def upload_token_upload(self, item):    # todo if we just copy object, better to use function
-        resume = not item['chunks_to_upload'] == 1
-        kparams = KalturaParams()
-        kparams.put("uploadTokenId",  item['token_id'])
-        kparams.addBoolIfDefined("resume", resume)
-        kparams.addBoolIfDefined("finalChunk", item['is_last_chunk'])
-        if resume:
-            kparams.put("resumeAt", item['resumeAt'])
-            kparams.addBoolIfDefined("finalChunk", item['is_last_chunk'])
-        kfiles = KalturaFiles()
-        kfiles.put("fileData", item['data_stream'])
-
-        # get request params
-        (url, params, files) = self.get_request_params('uploadToken', 'upload', kparams, kfiles)
-        self.do_queue(url, params, files)
 
     def get_request_params(self, service, action, kparams =KalturaParams(), kfiles =KalturaFiles()):
 
         kparams.put("format", self.format)
         kparams.put("ks", self._get_kaltura_session())
-        kparams.put("parnerId", 102)
+        kparams.put("partnerId", 102)
+        print self.partner_id
         url = os.path.join(self.url, "api_v3", "service", service, "action", action)
-        return (url, kparams, kfiles)
+        return url, kparams, kfiles
 
             # Call all API services that are in queue
-    # todo change function name
-    def do_queue(self, url, params, files =KalturaFiles()):
-        response_headers = None # todo why self?
+
+    def do_queue(self, url, params, files=KalturaFiles()):
         self.logger.debug("request url: [%s]" % url)
         self.logger.debug("request json: [%s]" % params.to_json())
 

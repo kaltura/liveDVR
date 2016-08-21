@@ -6,11 +6,12 @@ import Queue
 from threading import Thread
 import logging.handlers
 
-class file_cust():
-    def __init__(self, _buffer):
+
+class ImpersonateFile():
+    def __init__(self, file_name, _buffer):
         self.length = len(_buffer)
         self.buffer = _buffer
-        self.name = '/tmp/1.txt'
+        self.name = file_name
         self.offset = 0
 
     def read(self, index=-1):
@@ -19,7 +20,7 @@ class file_cust():
             self.offset = self.length
             return result
         result = self.buffer[self.offset:self.offset+index]
-        self.offset = self.offset + index
+        self.offset += index
         if self.offset > self.length:
             self.offset = self.length
         return result
@@ -36,30 +37,6 @@ class file_cust():
 
     def tell(self):
         return self.offset
-
-
-class file_cust2():
-    def __init__(self, obj):
-        self.obj = obj
-        self.name = '/tmp/1.txt'
-
-    def read(self, index = None):
-        if index is None:
-            res = self.obj.read()
-            return res
-        res = self.obj.read(index)
-        return res
-
-    def fileno(self):
-        res = self.obj.fileno()
-        return res
-
-    def seek(self, offset=0):
-        res = self.obj.seek(offset)
-
-    def tell(self):
-        res = self.obj.tell()
-        return res
 
 
 class ServerUploader:
@@ -81,67 +58,45 @@ class ServerUploader:
             t.daemon = True  # todo check it
             t.start()
 
-
     def worker(self, index):
         self.logger.info("Thread %d is start working", index)
         while True:
             item = self.q.get()
             try:
-                KalturaAPI().upload_token_upload(item)
+                KalturaAPI().upload_token_upload(item, '0_yo7ohrxo')
             except IOError as e:  # todo which kind of excepotion? what to do then? verify that no more try is wrapped
-                self.logger.error("Faild to upload file: %s", e.message)
+                self.logger.error("Failed to upload file: %s", e.message)
             self.q.task_done()
-
 
     def upload_file_handler(self):
         while True:
             upload_file = self.input_queue.get()
             self.upload_file(upload_file)
 
-
     def upload_file(self, file_name):
         try:
+            entry_id = '0_yo7ohrxo'
             file_size = os.path.getsize(file_name)
             infile = io.open(file_name, 'rb')
-            files = open(file_name, 'rb')
-            chunks_to_upload = int(file_size / self.upload_token_buffer_size) + 1  # todo check buffer_size not null
-            #entryId = KalturaAPI().create_entry('tesssst','stsssam')
-            token_id = KalturaAPI().upload_token_add()
+            chunks_to_upload = int(file_size / self.upload_token_buffer_size) + 1
+            Upload_entry = KalturaAPI().create_entry(102, "text", "text")
+            token_id = KalturaAPI().upload_token_add(entry_id, file_name, file_size)
 
-            for sequence_number in range(1, chunks_to_upload):
+            for sequence_number in range(1, chunks_to_upload+1):
                 data = infile.read(self.upload_token_buffer_size)
-                chunkfilename = file_name + '_' + str(sequence_number)
-                chunkf = file(chunkfilename, 'wb')
-                chunkf.write(data)
-                chunkf.close()
-                chunkf = file(chunkfilename, 'rb')
                 item = {
                     'file_name': file_name,
-                    'data_stream': chunkf,
+                    'data_stream': ImpersonateFile(file_name, data),
                     'sequence_number': sequence_number,
                     'chunks_to_upload': chunks_to_upload,
                     'token_id': token_id,
-                    'is_last_chunk': False,
-                    "resumeAt": self.upload_token_buffer_size * (sequence_number - 1)
+                    'is_last_chunk': sequence_number == chunks_to_upload,
+                    "resumeAt": self.upload_token_buffer_size * (sequence_number - 1),
+                    'resume': chunks_to_upload is not 1 and sequence_number is not 1
                 }
                 self.q.put(item)
-            data = infile.read(self.upload_token_buffer_size)  # todo check how to verify that its the last chunk
 
-            item = {
-                'file_name': file_name,
-                'data_stream': file_cust(data),
-                #'data_stream': files,
-                #'data_stream': file_cust2(files),
-                'sequence_number': chunks_to_upload,
-                'chunks_to_upload': chunks_to_upload,  # The last one
-                'token_id': token_id,
-                'is_last_chunk': True,
-                "resumeAt": self.upload_token_buffer_size * (chunks_to_upload - 1)
-            }
-            self.q.put(item)
-            #KalturaAPI().set_media_content(entryId, token_id)
-        except IOError as e:
-            self.logger.error("Faild to upload file: %s", e.message)
+            KalturaAPI().set_media_content(Upload_entry, token_id) # todo check if possible to
         except Exception as e:
             self.logger.error("Faild to upload file: %s", e.message)
 
@@ -150,7 +105,6 @@ class ServerUploader:
             KalturaAPI().append_recording(self.output_file)
         except Exception, e:
             self.logger.error(e)
-
 
     def run(self):
         if get_config('mode') == 'ecdn':
