@@ -5,9 +5,10 @@ from config import get_config
 import Queue
 from threading import Thread
 import logging.handlers
+from TaskRunner import TaskBase
 
 
-class ImpersonateFile:
+class ImpersonateFile: #
     def __init__(self, file_name, _buffer):
         self.length = len(_buffer)
         self.buffer = _buffer
@@ -39,7 +40,7 @@ class ImpersonateFile:
         return self.offset
 
 
-class ServerUploader:
+class ServerUploader(TaskBase):
     # Global scope
     kaltura_api = KalturaAPI()
     upload_directory = get_config('upload_task_processing')
@@ -107,8 +108,3 @@ class ServerUploader:
         else:
             self.append_recording_handler()
 
-
-#a=ServerUploader("/tmp/")
-#b= a.upload_file("/tmp/1.txt")
-#b= a.upload_file("/Users/ron.yadgar/Desktop/0_yo7ohrxo.0_2nijzf3v.0_2016-08-10-15.31.58.407-IDT_0.mp4")
-#a.worker(2)

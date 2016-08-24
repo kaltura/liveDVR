@@ -13,7 +13,6 @@ DEFAULT_LOGGING = {
 
 def init_logger():
 
-
     __root__ = os.path.dirname(__file__)
     path = __root__ + '/log'
     filename = 'live-testing.log'
@@ -37,7 +36,7 @@ def init_logger():
 
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setLevel(logging.DEBUG)
-    console_formatter = logging.Formatter('[%(process)d/%(threadName)s][%(levelname)s] [%(name)s] [%(name)s] [%(funcName)s():%(lineno)s] %(message)s')
+    console_formatter = logging.Formatter('[%(process)d/%(threadName)s][%(levelname)s] [%(name)s] [%(funcName)s():%(lineno)s] %(message)s')
     console_handler.setFormatter(console_formatter)
 
     logging.root.setLevel(logging.INFO)

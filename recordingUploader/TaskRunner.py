@@ -7,6 +7,7 @@ from multiprocessing import Queue
 from threading import Thread
 import shutil
 import re
+import abc
 
 
 class TaskRunner:
@@ -84,3 +85,12 @@ class TaskRunner:
             return workers
         except Exception as e:
             self.logger.fatal("Failed to start task runner: %s", e)
+
+
+class TaskBase(object):
+    __metaclass__ = abc.ABCMeta
+
+    @abc.abstractmethod
+    def run(self):
+        """running the task"""
+        return

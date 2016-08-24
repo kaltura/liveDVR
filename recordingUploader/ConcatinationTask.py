@@ -2,11 +2,11 @@ import os
 import subprocess
 import logging.handlers
 from config import get_config
-
+from TaskRunner import TaskBase
 ffmpeg_path = get_config('ffmpeg_path')
 
 
-class ConcatenationTask:
+class ConcatenationTask(TaskBase):
 
     @staticmethod
     def sorted_ls(path):
