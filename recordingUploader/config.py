@@ -1,8 +1,10 @@
 import ConfigParser
 import socket
 import logging.handlers
+import os
 Config = ConfigParser.ConfigParser()
-Config.read("config.ini")
+config_file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'config.ini')
+Config.read(config_file_path)
 hostname = socket.gethostname()
 config_json = {}
 logger = logging.getLogger(__name__)
@@ -13,7 +15,7 @@ def fill(section):
     for option in options:
         try:
             config_json[option] = Config.get(section, option)
-        except:
+        except Exception :
             print("exception on %s!" % option)
             config_json[option] = None
 

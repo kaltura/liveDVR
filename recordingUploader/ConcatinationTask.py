@@ -1,10 +1,12 @@
 import os
 import subprocess
-import recording_logger
 import logging.handlers
 from config import get_config
 
-class ConcatinationTask: #todo change name to concatination job/task -
+ffmpeg_path = get_config('ffmpeg_path')
+
+
+class ConcatenationTask:
 
     @staticmethod
     def sorted_ls(path):
@@ -23,34 +25,30 @@ class ConcatinationTask: #todo change name to concatination job/task -
                 self.logger.warn("file %s is not mp4 file format", file_name)
         fo.close()
 
-    def __init__(self, dir):    # todo change the passing parameter style
-        recording_logger.init_logger()
+    def __init__(self, param):
+        self.entry_directory = param['directory']
+        self.entry_id = param['entry_id']
         self.manifest_input_file = "manifest.txt"
         self.logger = logging.getLogger(__name__)
-        self.entry_id = "entryID"
-        self.recording_path = os.path.join(get_config('recording_uploader_concat'), dir)
-        self.ffmpeg_path = get_config('ffmpeg_path')
-        self.output_file =dir+'_out.mp4' # todo output file should determine in concat
+        self.recording_path = os.path.join(get_config('concat_task_processing'), self.entry_directory)
+        self.output_file = self.entry_directory+'_out.mp4'
 
     def run(self):
         self.create_manifest()
         input_full_path = os.path.join(self.recording_path, self.manifest_input_file)
         output_full_path = os.path.join(self.recording_path, self.output_file)
         self.logger.info("About to concat files from manifest %s, infoi %s", input_full_path, output_full_path)
-        command = ' '.join([self.ffmpeg_path,
-                           "-f concat", "-i",
-                           input_full_path,
-                           "-c:v copy -c:a copy -bsf:a aac_adtstoasc -f mp4 -y",
-                           output_full_path
-                            ])
+        command = ' '.join([ffmpeg_path, "-f concat", "-i", input_full_path,
+                           "-c:v copy -c:a copy -bsf:a aac_adtstoasc -f mp4 -y", output_full_path])
 
         self.logger.debug("Running the following commnad: %s", command)
-        commadOut = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
-        out, err = commadOut.communicate()
-        if commadOut.returncode == 0:
+        command_out = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        out, err = command_out.communicate()
+        if command_out.returncode == 0:
             self.logger.info("Successfully concat files from manifest %s, into %s", input_full_path, output_full_path)
             self.logger.debug("standard output: %s", out)
         else:
-            self.logger.error("Failed to concat file for entry %s: error code %d", self.entry_id, commadOut.returncode);
+            self.logger.error("Failed to concat file for entry %s: error code %d", self.entry_id
+                              , command_out.returncode)
             self.logger.error("standard output: %s", out)
             self.logger.error("standard error: %s", err)

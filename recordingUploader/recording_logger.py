@@ -36,7 +36,7 @@ def init_logger():
     file_handler.setLevel(logging.DEBUG)
 
     console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(logging.INFO)
+    console_handler.setLevel(logging.DEBUG)
     console_formatter = logging.Formatter('[%(process)d/%(threadName)s][%(levelname)s] [%(name)s] [%(name)s] [%(funcName)s():%(lineno)s] %(message)s')
     console_handler.setFormatter(console_formatter)
 
@@ -47,5 +47,3 @@ def init_logger():
     return
 
 
-init_logger()
-print "inital logger"
