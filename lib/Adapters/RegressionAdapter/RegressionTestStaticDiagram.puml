@@ -1,0 +1,46 @@
+@startuml
+
+
+class Controller {
+Adapter adapter
+}
+
+class BaseAdapter {
+
+}
+
+class RegressionAdapter {
+   TestHelper regressionEngine
+   getLiveEntries()
+}
+note top: for each entry (currently only one tested),\n return new WowzaStreamInfo
+
+class TestHelper {
+ EntryInfo[] entries
+ hlsStreamRegressionValidator[] validators
+}
+
+class EntryInfo {
+
+}
+note bottom: regression entries config
+
+class hlsStreamRegressionValidator {
+     this_run_results {}
+     regression_results_db {}
+     ValidateRegressionResults()
+}
+
+class RegressionConfig {
+
+}
+
+Controller --> RegressionAdapter
+BaseAdapter <|-- RegressionAdapter
+RegressionAdapter --> TestHelper
+
+EntryInfo <--* TestHelper
+hlsStreamRegressionValidator <--* TestHelper
+
+
+@enduml
