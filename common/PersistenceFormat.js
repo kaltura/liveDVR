@@ -14,8 +14,9 @@ module.exports = {
         return path.join(config.get('rootFolderPath'), entryId);
     },
 
-    getEntryRelativePath: function (entryId) {
-        return entryId;
+    getEntryBasePath: function (path) {
+        let subString = path.match(/([01]_\w+\/[0-9]+\/)/)[1];
+        return path.substr(0, path.lastIndexOf(subString) + subString.length);
     },
 
     getFlavorFullPath: function (entryId, flavorName) {
