@@ -8,7 +8,7 @@ var sinon = require('sinon');
 var Q = require('q');
 var should = chai.should();
 var util=require('util');
-var ControllerWrapper =  require('./../regression/ControllerWrapper.js');
+var ControllerWrapper =  require('./../regression/ControllerWrapper');
 
 
 describe('Recording HLS stream data', function() {

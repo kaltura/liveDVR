@@ -8,7 +8,7 @@ var expect = chai.expect;
 var sinon = require('sinon');
 var should = chai.should();
 
-var ControllerWrapper =  require('./ControllerWrapper.js');
+var ControllerWrapper =  require('./ControllerWrapper');
 
 
 

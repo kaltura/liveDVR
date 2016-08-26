@@ -10,12 +10,12 @@ class BaseAdapter {
 }
 
 class RegressionAdapter {
-   TestHelper regressionEngine
+   RegressionEngine regressionEngine
    getLiveEntries()
 }
 note top: for each entry (currently only one tested),\n return new WowzaStreamInfo
 
-class TestHelper {
+class RegressionEngine {
  EntryInfo[] entries
  hlsStreamRegressionValidator[] validators
 }
@@ -37,10 +37,10 @@ class RegressionConfig {
 
 Controller --> RegressionAdapter
 BaseAdapter <|-- RegressionAdapter
-RegressionAdapter --> TestHelper
+RegressionAdapter --> RegressionEngine
 
-EntryInfo <--* TestHelper
-hlsStreamRegressionValidator <--* TestHelper
+EntryInfo <--* RegressionEngine
+hlsStreamRegressionValidator <--* RegressionEngine
 
 
 @enduml
