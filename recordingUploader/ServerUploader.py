@@ -6,6 +6,8 @@ import Queue
 from threading import Thread
 import logging.handlers
 from TaskRunner import TaskBase
+import time
+from random import randint
 
 
 class ImpersonateFile: #
@@ -52,7 +54,8 @@ class ServerUploader(TaskBase):
     def __init__(self, param):
         self.entry_directory = param['directory']
         self.entry_id = param['entry_id']
-        self.output_file = os.path.join(self.upload_directory, self.entry_directory, self.entry_directory+'_out.mp4')
+        self.output_filename = self.entry_directory+'_out.mp4'
+        self.output_file = os.path.join(self.upload_directory, self.entry_directory, self.output_filename)
         self.q = Queue.Queue()
         self._generate_upload_thread()
 
@@ -79,7 +82,7 @@ class ServerUploader(TaskBase):
             file_size = os.path.getsize(file_name)
             infile = io.open(file_name, 'rb')
             chunks_to_upload = int(file_size / self.upload_token_buffer_size) + 1
-            upload_session = self.kaltura_api.KalturaUploadSession("0_yo7ohrxo.0_2nijzf3v.0_2016-08-10-15.31.58.407-IDT_0.mp4", file_size, chunks_to_upload, self.entry_id)
+            upload_session = self.kaltura_api.KalturaUploadSession(self.output_filename, file_size, chunks_to_upload, self.entry_id)
 
             for sequence_number in range(1, chunks_to_upload+1):
                 data = infile.read(self.upload_token_buffer_size)
