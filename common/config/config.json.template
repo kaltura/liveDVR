@@ -6,7 +6,7 @@
   "oldContentFolderPath" : "~/dvr/dvrOldContentRootPath",
   "recordingFolderPath" : "~/dvr/recording",
   "recordingUploaderFolderPath" : "~/dvr/recordingUploader",
-  "recordingTimeInverval" : "2000",
+  "recordingTimeInterval" : "2000",
   "rootFolderPath" : "~/kLive_content/live",
   "oldContentFolderPath" : "~/kLive_content/archive",
   "requestTimeout" : 20000,
