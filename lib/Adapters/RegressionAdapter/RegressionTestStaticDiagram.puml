@@ -35,12 +35,27 @@ class RegressionConfig {
 
 }
 
+class StreamRegressionValidatorFactory {
+    getValidator
+}
+
+class StreamRegressionValidatorBase {
+
+}
+
+class  hlsAnalysisStreamRegressionValidator {
+
+}
+
 Controller --> RegressionAdapter
 BaseAdapter <|-- RegressionAdapter
 RegressionAdapter --> RegressionEngine
-
+StreamRegressionValidatorBase <|-- hlsStreamRegressionValidator
+StreamRegressionValidatorBase <|-- hlsAnalysisStreamRegressionValidator
 EntryInfo <--* RegressionEngine
-hlsStreamRegressionValidator <--* RegressionEngine
+StreamRegressionValidatorBase <--* RegressionEngine
+StreamRegressionValidatorFactory ..> hlsStreamRegressionValidator
+StreamRegressionValidatorFactory ..> hlsAnalysisStreamRegressionValidator
 
 
 @enduml
