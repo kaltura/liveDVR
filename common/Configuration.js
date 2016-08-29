@@ -13,7 +13,6 @@ module.exports = (function(){
 
     var configTemplateContent = fs.readFileSync(path.join(__dirname, './config/config.json.template'), 'utf8');
     var updatedConfigContent = configTemplateContent.replace('@HOSTNAME@', machineName);
-    updatedConfigContent= updatedConfigContent.replace(/~/g,hostname.homedir());
 
     var configObj = JSON.parse(updatedConfigContent);
 
@@ -43,7 +42,7 @@ module.exports = (function(){
         }
     }
 
-    fs.writeFileSync(path.join(__dirname, './config/config.json'), JSON.stringify(configObj, null, 2));
+    fs.writeFileSync(path.join(__dirname, './config/config.json'), JSON.stringify(configObj, null, 2).replace(/~/g,hostname.homedir()));
 
     var nconf = require('nconf');
 

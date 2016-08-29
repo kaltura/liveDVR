@@ -8,6 +8,9 @@
 
 #include "Converter.h"
 #include <bitset>
+#include <set>
+#include <chrono>
+
 extern "C"{
 #include <libavformat/movenc.h>
    
@@ -75,8 +78,24 @@ extern "C"{
 };
 
 namespace converter{
+  
+    void AvLogFilter::addFilter(const char *s){
+        m_patterns.insert(s);
+    }
     
-   
+    bool AvLogFilter::filter(const char * szFmt) {
+        if(m_patterns.size()){
+            if(m_cached.find(szFmt) != m_cached.end()){
+                return false;
+            }
+            if(m_patterns.find(szFmt) != m_patterns.end()){
+                m_cached.insert(szFmt);
+                return false;
+            }
+        }
+        return true;
+    }
+    
     
     ConverterAppInst appInst;
     
@@ -93,7 +112,31 @@ namespace converter{
     int ConverterAppInst::init(int logLevel){
         av_log_set_level(logLevel);
         av_register_all();
+        if(logLevel <= AV_LOG_WARNING){
+            m_filter.addFilter("Not writing any edit list");
+            av_log_set_callback(avlog_cb);
+        }
         return 0;
+    }
+
+    const char szDateTimeormat [] = "%F %T %z"; 
+    void ConverterAppInst::avlog_cb(void *data, int level, const char * szFmt, va_list varg){
+        if(level > av_log_get_level()){
+            return;
+        }
+        if(!ConverterAppInst::instance().m_filter.filter(szFmt)){
+            return;
+        }
+        //include date-time
+        std::time_t t = std::time(nullptr);
+        std::gmtime(&t);
+        std::tm *tm = std::gmtime(&t);
+        char szDateTime[sizeof("2016-08-15 08:45:07 +0200\0")];
+        
+        std::strftime(szDateTime,sizeof(szDateTime),szDateTimeormat,tm);
+        std::string formatDateTime(szDateTime);
+        formatDateTime += std::string(" ") + szFmt;
+        av_log_default_callback(data,level,formatDateTime.c_str(),varg);
     }
     
     
@@ -125,6 +168,21 @@ namespace converter{
         default:
             return stream->start_time;
         };
+    }
+    
+    void clipUnrealisticPTS(AVStream *stream){
+    
+        if( stream->first_dts != AV_NOPTS_VALUE && stream->first_dts != stream->start_time && stream->avg_frame_rate.den > 0 && stream->time_base.num > 0 ) {
+            uint64_t wrap = 1ULL << stream->pts_wrap_bits,
+            diff = (stream->start_time - stream->first_dts + wrap ) % wrap,
+            threasholdMsec = av_rescale(10,stream->avg_frame_rate.num , stream->avg_frame_rate.den),
+            threshold = av_rescale( threasholdMsec, stream->time_base.den, stream->time_base.num);
+            
+            if( diff > threshold ){
+                av_log(nullptr,AV_LOG_WARNING,"pts to dts diff is too big (pts=%lld - dts=%lld > threshold=%lld) for stream %d\n", stream->start_time, stream->first_dts, threshold, stream->index );
+                stream->start_time = stream->first_dts;
+            }
+        }
     }
     
     int Converter::checkForStreams(){
@@ -182,7 +240,12 @@ namespace converter{
         
         for( size_t i = 0 , output_stream = 0; i < input->nb_streams; i++){
             
+            std::vector<std::string> errors;
+            
             AVStream *in_stream =input->streams[i];
+            
+            // check for streams with unrealistic delay
+            clipUnrealisticPTS(in_stream);
             
             int64_t stmStartTimeMs = av_rescale(in_stream->start_time,1000 * in_stream->time_base.num,in_stream->time_base.den);
             
@@ -198,7 +261,7 @@ namespace converter{
             
             m_streamMapper[i] = output_stream++;
             
-            m_extraTrackInfo.push_back(ExtraTrackInfo(dts2msec(getStreamStartTime(in_stream),in_stream->time_base)));
+            m_extraTrackInfo.push_back(ExtraTrackInfo(dts2msec(getStreamStartTime(in_stream),in_stream->time_base),errors));
             
             _S(avcodec_copy_context(out_stream->codec, in_stream->codec));
             
@@ -220,7 +283,11 @@ namespace converter{
             }
         }
         
-        _S(avformat_write_header(*output, nullptr));
+         AVDictionary *opts = nullptr;
+        _S(av_dict_set(&opts, "use_editlist", "0", 0));
+        std::unique_ptr<AVDictionary> optsptr(opts);
+        _S(avformat_write_header(*output, &opts));
+        optsptr.release();
         
         state = PUSHING;
         
@@ -366,10 +433,13 @@ namespace converter{
                 break;
             }
         }
-        
-        auto diff = result[0];
-        
-        std::transform(result.begin(),result.end(),result.begin(),[ diff ] (double val) -> double { return val - diff; });
+       
+        if(result.size()){
+            
+            auto diff = result[0];
+            
+            std::transform(result.begin(),result.end(),result.begin(),[ diff ] (double val) -> double { return val - diff; });
+        }
         
         return 0;
     }
@@ -411,8 +481,7 @@ namespace converter{
                     }
                     case AVMEDIA_TYPE_AUDIO:
                     {
-                       
-                      
+                        
                         double wrapDTS = ::ceil(dts2msec(1ULL << stream->pts_wrap_bits,stream->time_base));
                         ExtraTrackInfo &extraInfo = this->m_extraTrackInfo[this->m_streamMapper[i]];
                         double duration = dts2msec(extraInfo.maxDTS - stream->first_dts,stream->time_base);
