@@ -10,25 +10,17 @@ var Q = require('q');
 
 module.exports = {
 
-    getEntryFullPath: function (entryId) {
+    getEntryBasePath: function (entryId) {
         return path.join(config.get('rootFolderPath'), entryId);
     },
 
-    getEntryBasePath: function (path) {
+    getBasePathFromFull: function (path) {
         let subString = path.match(/([01]_\w+\/[0-9]+\/)/)[1];
         return path.substr(0, path.lastIndexOf(subString) + subString.length);
     },
 
     getFlavorFullPath: function (entryId, flavorName) {
         return path.join(config.get('rootFolderPath'), entryId, flavorName.toString());
-    },
-
-    getFlavorRelativePath: function (entryId, flavorName) {
-        return path.join(entryId, flavorName.toString());
-    },
-
-    getManifestName: function () {
-        return 'chunklist.m3u8';
     },
 
     getMasterManifestName: function () {
@@ -40,6 +32,22 @@ module.exports = {
     },
     
     getTSChunknameFromMP4FileName: function(mp4FileName){
-        return mp4FileName.substr(0,mp4FileName.length -'.mp4'.length);    
+        return mp4FileName.substr(0, mp4FileName.length - 4); //'.mp4'.length);
+    },
+    
+    createHierarchyPath: function(destPath, lastFileHash) {
+        let currDay = new Date().getDate().toString();
+        let currHour = new Date().getHours().toString();
+        let hash =  path.join(currDay, currHour);
+        let fileFullPath = path.join(destPath, hash);
+
+        let retVal = {fileFullPath, hash};
+        if (lastFileHash === hash)
+            return Q.resolve(retVal);
+
+        return qio.makeTree(fileFullPath)
+            .then(function() {
+                return retVal;
+            });
     }
 };
