@@ -20,9 +20,10 @@ class RegressionEngine {
  hlsStreamRegressionValidator[] validators
 }
 
-class EntryInfo {
+class RegressionEntryInfo {
 
 }
+
 note bottom: regression entries config
 
 class hlsStreamRegressionValidator {
@@ -52,7 +53,7 @@ BaseAdapter <|-- RegressionAdapter
 RegressionAdapter --> RegressionEngine
 StreamRegressionValidatorBase <|-- hlsStreamRegressionValidator
 StreamRegressionValidatorBase <|-- hlsAnalysisStreamRegressionValidator
-EntryInfo <--* RegressionEngine
+RegressionEntryInfo <--* RegressionEngine
 StreamRegressionValidatorBase <--* RegressionEngine
 StreamRegressionValidatorFactory ..> hlsStreamRegressionValidator
 StreamRegressionValidatorFactory ..> hlsAnalysisStreamRegressionValidator

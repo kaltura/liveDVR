@@ -35,7 +35,7 @@
             "entryId": "abc",
             "flavorParamsIds": "1,2,3,4",
             "start_chunklist_index": -1,
-            "end_chunklist_index": -1,
+            "last_chunklist_index": -1,
             "serverType": 0,
             "entryPath": "instructions: put here the relative path from data warehouse root to entry stream data (e.g. abc)",
             "playWindow": 150,
