@@ -2,6 +2,7 @@ import ConfigParser
 import socket
 import logging.handlers
 import os
+import re
 Config = ConfigParser.ConfigParser()
 config_file_path = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'config.ini')
 Config.read(config_file_path)
@@ -24,7 +25,9 @@ def config_section_map():
     Config.read("configMapping.ini")
     config_sections = Config.sections()
     for config_section in config_sections:
-        if config_section == hostname:
+        pattern = re.compile(config_section)
+        match = pattern.match(hostname)
+        if match:
             fill(config_section)
 
     return config_json
@@ -36,12 +39,11 @@ def config_section_default():
     fill(section)
 
 
-def get_config(key, type = lambda str: str):
+def get_config(key, type = 'str'):
     if key in config_json:
-        if type is 'int':
-            return int(config_json[key])
-        if type is 'float':
-            return float(config_json[key])
+        if type is not 'str':
+            return eval(config_json[key])
+
         return config_json[key]
     else:
         logger.warn("key %s is not configuration list", key)

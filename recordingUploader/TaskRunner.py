@@ -54,7 +54,7 @@ class TaskRunner:
                     self.task_queue.put(param)
                     self.logger.info("Add unhanded directory %s to the task queue", directory_name)
                 except Exception as e:
-                    self.logger.error(e)  # Catch error in case that the job is already taken by other machine
+                    self.logger.error(str(e))  # Catch error in case that the job is already taken by other machine
 
     def work(self, index):
         while True:
@@ -69,9 +69,9 @@ class TaskRunner:
                 shutil.move(src, self.output_directory)
                 self.logger.info("Task %s completed, Move %s to %s", self.task_name, src, self.output_directory)
             except shutil.Error, e:
-                self.logger.error("Error while try to move directory into %s: %s",  self.output_directory, e.message)
+                self.logger.error("Error while try to move directory into %s: %s",  self.output_directory, str(e))
             except Exception as e:
-                self.logger.error("Error: %s", e.message)
+                self.logger.error("Error: %s", str(e))
 
     def start(self):
         try:

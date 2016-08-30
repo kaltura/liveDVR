@@ -3,11 +3,10 @@ import io
 from KalturaAPI import KalturaAPI
 from config import get_config
 import Queue
-from threading import Thread
+from threading import Thread, Lock
 import logging.handlers
 from TaskRunner import TaskBase
-import time
-from random import randint
+
 
 
 class ImpersonateFile: #
@@ -70,40 +69,55 @@ class ServerUploader(TaskBase):
         while True:
             item = self.q.get()
             try:
+                mutex = item['mutex']
+                infile = item['file_obj']
+                pointer_to_read = item['resumeAt']
+                mutex.acquire()  # lock in order to preventing  race conditions while reading
+                try:
+                    infile.seek(pointer_to_read)
+                    data = infile.read(self.upload_token_buffer_size)
+                except IOError as e:
+                    raise e  # if exception then do not continue
+                finally:    # called anyway 
+                    mutex.release()
+                item['data_stream'] = ImpersonateFile(infile.name, data),
                 status = self.kaltura_api.upload_token_upload(item)
                 if status == '2':
                     self.kaltura_api.set_media_content(item['upload_session'])
-            except IOError as e:  # todo which kind of excepotion? what to do then? verify that no more try is wrapped
-                self.logger.error("Failed to upload file: %s", e.message)
+            except Exception as e:  # todo which kind of excepotion? what to do then? verify that no more try is wrapped
+                self.logger.error("Failed to upload file: %s", str(e))
             self.q.task_done()
 
     def upload_file(self, file_name):
         try:
             file_size = os.path.getsize(file_name)
             infile = io.open(file_name, 'rb')
-            chunks_to_upload = int(file_size / self.upload_token_buffer_size) + 1
+            if file_size % self.upload_token_buffer_size == 0:
+                chunks_to_upload = int(file_size / self.upload_token_buffer_size)
+            else:
+                chunks_to_upload = int(file_size / self.upload_token_buffer_size) + 1
             upload_session = self.kaltura_api.KalturaUploadSession(self.output_filename, file_size, chunks_to_upload, self.entry_id)
-
+            mutex = Lock()  # mutex is a resource allocated for each file object
             for sequence_number in range(1, chunks_to_upload+1):
-                data = infile.read(self.upload_token_buffer_size)
                 item = {
                     'upload_session': upload_session,
-                    'data_stream': ImpersonateFile(file_name, data),
+                    'file_obj': infile,
+                    'mutex': mutex,
                     'sequence_number': sequence_number,
                     'is_last_chunk': sequence_number == chunks_to_upload,
                     "resumeAt": self.upload_token_buffer_size * (sequence_number - 1),
-                    'resume': chunks_to_upload is not 1 and sequence_number is not 1
+                    'resume': sequence_number > 1
                 }
                 self.q.put(item)
 
         except Exception as e:
-            self.logger.error("Failed to upload file: %s", e.message)
+            self.logger.error("Failed to upload file: %s", str(e))
 
     def append_recording_handler(self):
         try:
             self.kaltura_api.append_recording(self.output_file)
         except Exception, e:
-            self.logger.error(e)
+            self.logger.error("Failed to append recording : %s", str(e))
 
     def run(self):
         if get_config('mode') == 'ecdn':
