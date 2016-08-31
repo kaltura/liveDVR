@@ -39,14 +39,15 @@
     "shelljs": "0.7.0",
     "touch": "1.0.0",
     "underscore": "1.8.3",
-    "v8-profiler": "5.6.5"
+    "v8-profiler": "5.6.5",
+    "child_process": "1.0.2"
   },
   "description": "DVR implementation built on top of live streams",
   "bugs": {
     "url": "https://github.com/kaltura/liveDVR/issues"
   },
   "homepage": "https://github.com/kaltura/liveDVR#readme",
-  "main": "grunt-config.js",
+  "main": "./lib/App.js",
   "directories": {
     "test": "tests"
   },
