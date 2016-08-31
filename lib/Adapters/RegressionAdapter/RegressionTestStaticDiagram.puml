@@ -52,7 +52,7 @@ Controller --> RegressionAdapter
 BaseAdapter <|-- RegressionAdapter
 RegressionAdapter --> RegressionEngine
 StreamRegressionValidatorBase <|-- hlsStreamRegressionValidator
-StreamRegressionValidatorBase <|-- hlsAnalysisStreamRegressionValidator
+hlsStreamRegressionValidator <|-- hlsAnalysisStreamRegressionValidator
 RegressionEntryInfo <--* RegressionEngine
 StreamRegressionValidatorBase <--* RegressionEngine
 StreamRegressionValidatorFactory ..> hlsStreamRegressionValidator
