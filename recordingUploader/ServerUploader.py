@@ -1,13 +1,12 @@
 import os
 import io
-from KalturaAPI import KalturaAPI
+from BackendClient import *
 from config import get_config
 import Queue
 from threading import Thread, Lock
 import logging.handlers
 from TaskRunner import TaskBase
-
-
+import traceback
 
 class ImpersonateFile: #
     def __init__(self, file_name, _buffer):
@@ -43,11 +42,20 @@ class ImpersonateFile: #
 
 class ServerUploader(TaskBase):
     # Global scope
-    kaltura_api = KalturaAPI()
+    backend_client = BackendClient()
     upload_directory = get_config('upload_task_processing')
     logger = logging.getLogger('ServerUploader')
     num_of_thread = get_config('num_of_thread', 'int')
     upload_token_buffer_size = get_config('upload_token_buffer_size', 'int') * 1000000  # buffer is in MB
+
+    class KalturaUploadSession:  # todo check it maybe should be inheritance from object
+        def __init__(self, file_name, file_size, chunks_to_upload, entry_id):
+            self.file_name = file_name
+            self.file_size = file_size
+            self.chunks_to_upload = chunks_to_upload
+            self.partner_id = ServerUploader.backend_client.get_partner_id(entry_id)
+            self.upload_entry = ServerUploader.backend_client.create_entry(self.partner_id, "text", "text")
+            self.token_id = ServerUploader.backend_client.upload_token_add(self.partner_id, file_name, file_size)
 
     # todo ask Guy, if we want that the thread will be for each task, or it will be shared between all task!
     def __init__(self, param):
@@ -80,12 +88,12 @@ class ServerUploader(TaskBase):
                     raise e  # if exception then do not continue
                 finally:    # called anyway 
                     mutex.release()
-                item['data_stream'] = ImpersonateFile(infile.name, data),
-                status = self.kaltura_api.upload_token_upload(item)
-                if status == '2':
-                    self.kaltura_api.set_media_content(item['upload_session'])
+                item['data_stream'] = ImpersonateFile(infile.name, data)
+                result = self.backend_client.upload_token_upload(item)
+                if result.status.value == 2:
+                    self.backend_client.set_media_content(item['upload_session'])
             except Exception as e:  # todo which kind of excepotion? what to do then? verify that no more try is wrapped
-                self.logger.error("Failed to upload file: %s", str(e))
+                self.logger.error("Failed to upload file: %s\n %s", str(e), traceback.format_exc())
             self.q.task_done()
 
     def upload_file(self, file_name):
@@ -96,7 +104,7 @@ class ServerUploader(TaskBase):
                 chunks_to_upload = int(file_size / self.upload_token_buffer_size)
             else:
                 chunks_to_upload = int(file_size / self.upload_token_buffer_size) + 1
-            upload_session = self.kaltura_api.KalturaUploadSession(self.output_filename, file_size, chunks_to_upload, self.entry_id)
+            upload_session = ServerUploader.KalturaUploadSession(self.output_filename, file_size, chunks_to_upload, self.entry_id)
             mutex = Lock()  # mutex is a resource allocated for each file object
             for sequence_number in range(1, chunks_to_upload+1):
                 item = {
@@ -111,13 +119,15 @@ class ServerUploader(TaskBase):
                 self.q.put(item)
 
         except Exception as e:
-            self.logger.error("Failed to upload file: %s", str(e))
+            self.logger.error("Failed to upload file: %s \n %s", str(e), traceback.format_exc())
+
+
 
     def append_recording_handler(self):
         try:
-            self.kaltura_api.append_recording(self.output_file)
+            self.backend_client.append_recording(self.output_file)
         except Exception, e:
-            self.logger.error("Failed to append recording : %s", str(e))
+            self.logger.error("Failed to append recording : %s\n %s", str(e), traceback.format_exc())
 
     def run(self):
         if get_config('mode') == 'ecdn':
