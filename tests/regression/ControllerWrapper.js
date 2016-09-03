@@ -17,9 +17,9 @@ function onExitLiveController(exit_code) {
         console.log('*************************************************');
     } else {
         // regression failed!
-        console.log('*************************************************');
-        console.log(util.format('@@@ %s failed with error %s!!! @', that.test_description, exit_code));
-        console.log('*************************************************');
+        console.log('******************************************************');
+        console.log(util.format('@@@ %s failed with error %s!!! @@@', that.test_description, exit_code));
+        console.log('******************************************************');
     }
     that.exit_code = exit_code;
     that.regressionEndedPromise.resolve(exit_code);
@@ -32,7 +32,8 @@ class ControllerWrapper extends events.EventEmitter {
         super();
 
         let prefix = "";
-        this.controller = new ControllerCtor(prefix, this);
+        this.controller = new ControllerCtor(prefix);
+        this.controller.getAdapter().setControllerWrapper(this);
         this.test_description = test_description;
         this.regressionEndedPromise = Q.defer();
         this.once('exit', onExitLiveController.bind(this));
@@ -43,8 +44,7 @@ class ControllerWrapper extends events.EventEmitter {
         var deferred = Q.defer();
 
         try {
-
-
+            
             this.controller.start()
                 .catch(function (err) {
                     let err_msg = !isNaN(err) ? util.format('regression failed with exit code %s', err) : util.format('regression failed with error %s', err.message);

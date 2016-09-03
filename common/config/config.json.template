@@ -29,7 +29,7 @@
   "regressionAdapter": {
       "enable":false,
       "analysis": false,
-      "analyzerRootPath" : "TBD",
+      "analyzerRootPath" : "~/live-monitor/",
       "dataWarehouseRootFolderPath" : "instructions: put here root path to data warehouse (e.g. /var/tmp/regression/data_warehouse)",
       "maxChunkCount": 10,
       "entries" : [{

@@ -17,7 +17,7 @@ note top: for each entry (currently only one tested),\n return new WowzaStreamIn
 
 class RegressionEngine {
  EntryInfo[] entries
- hlsStreamRegressionValidator[] validators
+ hlsRegressionValidatorBase[] validators
 }
 
 class RegressionEntryInfo {
@@ -26,7 +26,7 @@ class RegressionEntryInfo {
 
 note bottom: regression entries config
 
-class hlsStreamRegressionValidator {
+class HlsChecksumRegressionValidator {
      this_run_results {}
      regression_results_db {}
      ValidateRegressionResults()
@@ -36,27 +36,27 @@ class RegressionConfig {
 
 }
 
-class StreamRegressionValidatorFactory {
+class RegressionValidatorFactory {
     getValidator
 }
 
-class StreamRegressionValidatorBase {
+class RegressionValidatorBase {
 
 }
 
-class  hlsAnalysisStreamRegressionValidator {
+class  HlsAnalysisRegressionValidator {
 
 }
 
 Controller --> RegressionAdapter
 BaseAdapter <|-- RegressionAdapter
 RegressionAdapter --> RegressionEngine
-StreamRegressionValidatorBase <|-- hlsStreamRegressionValidator
-hlsStreamRegressionValidator <|-- hlsAnalysisStreamRegressionValidator
+RegressionValidatorBase <|-- HlsChecksumRegressionValidator
+HlsChecksumRegressionValidator <|-- HlsAnalysisRegressionValidator
 RegressionEntryInfo <--* RegressionEngine
-StreamRegressionValidatorBase <--* RegressionEngine
-StreamRegressionValidatorFactory ..> hlsStreamRegressionValidator
-StreamRegressionValidatorFactory ..> hlsAnalysisStreamRegressionValidator
+RegressionValidatorBase <--* RegressionEngine
+RegressionValidatorFactory ..> HlsChecksumRegressionValidator
+RegressionValidatorFactory ..> HlsAnalysisRegressionValidator
 
 
 @enduml
