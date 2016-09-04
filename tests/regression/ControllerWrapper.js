@@ -33,7 +33,8 @@ class ControllerWrapper extends events.EventEmitter {
 
         let prefix = "";
         this.controller = new ControllerCtor(prefix);
-        this.controller.getAdapter().setControllerWrapper(this);
+        let adapter = require('./../../lib/Adapters/AdapterFactory.js').getAdapter();
+        adapter.setControllerWrapper(this);
         this.test_description = test_description;
         this.regressionEndedPromise = Q.defer();
         this.once('exit', onExitLiveController.bind(this));
