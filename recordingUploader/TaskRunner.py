@@ -8,7 +8,7 @@ from threading import Thread
 import shutil
 import re
 import abc
-
+import traceback
 
 class TaskRunner:
 
@@ -31,7 +31,7 @@ class TaskRunner:
                 os.makedirs(self.working_directory)
             self.move_and_add_to_queue(self.working_directory)
         except os.error as e:
-            self.logger.fatal("Error %s", e)  # todo should exit program?
+            self.logger.fatal("Error %s \n %s", str(e), traceback.format_exc())
 
     def add_new_task_handler(self):
 
@@ -54,7 +54,7 @@ class TaskRunner:
                     self.task_queue.put(param)
                     self.logger.info("Add unhanded directory %s to the task queue", directory_name)
                 except Exception as e:
-                    self.logger.error(str(e))  # Catch error in case that the job is already taken by other machine
+                    self.logger.error("Error while try to add task:%s \n %s", str(e), traceback.format_exc())
 
     def work(self, index):
         while True:
@@ -69,9 +69,9 @@ class TaskRunner:
                 shutil.move(src, self.output_directory)
                 self.logger.info("Task %s completed, Move %s to %s", self.task_name, src, self.output_directory)
             except shutil.Error, e:
-                self.logger.error("Error while try to move directory into %s: %s",  self.output_directory, str(e))
+                self.logger.error("Error while try to move directory into %s: %s \n %s",  self.output_directory, str(e), traceback.format_exc())
             except Exception as e:
-                self.logger.error("Error: %s", str(e))
+                self.logger.error("Error: %s \n %s", str(e), traceback.format_exc())
 
     def start(self):
         try:
@@ -84,7 +84,7 @@ class TaskRunner:
                 w.start()
             return workers
         except Exception as e:
-            self.logger.fatal("Failed to start task runner: %s", e)
+            self.logger.fatal("Failed to start task runner: %s  \n %s ", str(e), traceback.format_exc())
 
 
 class TaskBase(object):
