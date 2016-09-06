@@ -84,7 +84,7 @@ describe('Playlist Generator spec', function() {
             flavor: "32" }
     ];
 
-    var createPlaylistGenerator = function(windowSize){
+    var createPlaylistGenerator = function(windowSize,playlist){
 
         config.set('rootFolderPath',t.dirSync().name);
 
@@ -96,6 +96,10 @@ describe('Playlist Generator spec', function() {
             };
 
         var plGen = new PlaylistGenerator(entry,true);
+        if(playlist){
+            fs.mkdirSync(path.dirname(plGen.playlistPath));
+            fs.writeFileSync(plGen.playlistPath,playlist);
+        }
         return plGen.start();
     };
 
@@ -157,6 +161,14 @@ describe('Playlist Generator spec', function() {
 
     describe('basics', function() {
 
+        it('playlist generator should be successfully created , started and stopped', function () {
+            return expect(createPlaylistGenerator().then(function(plGen) {
+                return plGen.stop();
+            })).to.eventually.be.fullfilled;
+        });
+
+
+
         it('should correctly serialize from existing playlist and to JSON', function (done) {
             var expectedPlaylist = fs.readFileSync(path.join(__dirname, '/../resources/playlist.json'), 'utf8');
 
@@ -166,9 +178,17 @@ describe('Playlist Generator spec', function() {
             done();
         });
 
-        it('playlist generator should be successfully created , started and stopped', function () {
-            return expect(createPlaylistGenerator().then(function(plGen) {
-                return plGen.stop();
+        it('playlist generator reset', function () {
+            var expectedPlaylist = fs.readFileSync(path.join(__dirname, '/../resources/playlist.json'), 'utf8');
+            return expect(createPlaylistGenerator(3600,expectedPlaylist).then(function(plGen) {
+                expect(_.every(jsonize(plGen).sequences,function(s){
+                    return s.clips.length !== 0;
+                })).to.be.eql(true);
+                return plGen.reset().then(function(){
+                    expect(_.every(jsonize(plGen).sequences,function(s){
+                       return s.clips.length === 0;
+                    })).to.be.eql(true);
+                });
             })).to.eventually.be.fullfilled;
         });
 
@@ -218,9 +238,6 @@ describe('Playlist Generator spec', function() {
                 });
             });
         });
-
-       // var oldTimeout = this.timeout();
-        //this.timeout(0);
 
         it('handle dts for 26 hours', function(done)
         {
