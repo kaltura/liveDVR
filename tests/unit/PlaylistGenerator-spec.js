@@ -159,6 +159,18 @@ describe('Playlist Generator spec', function() {
         return arr;
     };
 
+    var checkKeyFrames = function(playlist){
+        _.each(playlist.inner.sequences,function(seq){
+            _.each(seq.clips,function(c){
+                _.each(c.inner.sources,function(src) {
+                    if(src.isVideo) {
+                        expect(src.keyFrameDurations.length === src.inner.durations.length).to.be.eql(true);
+                    }
+                });
+            });
+        });
+    };
+
     describe('basics', function() {
 
         it('playlist generator should be successfully created , started and stopped', function () {
@@ -167,6 +179,33 @@ describe('Playlist Generator spec', function() {
             })).to.eventually.be.fullfilled;
         });
 
+        //this.timeout(0);
+        it('playlist generator should preserve key frame state when serialized back and forth', function (done) {
+
+            var fis = batchAppend({
+                startTime: 1459270805911,
+                sig: 'C53429E60F33B192FD124A2CC22C8717',
+                video:
+                {
+                    duration: 16000,
+                    firstDTS: 1459270805994,
+                    firstEncoderDTS: 83,
+                    wrapEncoderDTS: 95443718,
+                    keyFrameDTS:[0,8000]
+                },
+                path: '/var/tmp/media-u774d8hoj_w20128143_1.mp4',
+                flavor: "32"
+            },1);
+            fis[1].video.keyFrameDTS = [0];
+
+            expect(createPlaylistGenerator().then(function(plGen) {
+                return updatePlaylist(plGen,fis).then(function(playlist){
+                    var playlist2 = new Playlist('test2',playlist);
+                    checkKeyFrames(playlist2);
+                    done();
+                });
+            })).to.eventually.be.fullfilled;
+        });
 
 
         it('should correctly serialize from existing playlist and to JSON', function (done) {
