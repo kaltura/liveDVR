@@ -1,0 +1,58 @@
+{
+  ".*": {
+    "preserveOriginalHLS": true,
+    "overrideOldRecordedHLS": false,
+    "recordingDurationMinutes": 1,
+    "mockBackend" : true,
+    "requestTimeout" : 1200000,
+    "rootFolderPath" : "/Users/lilach.maliniak/Documents/tmp/DVR",
+    "oldContentFolderPath" : "/Users/lilach.maliniak/Documents/tmp/DVR_Old",
+    "logFileName" : "/Users/lilach.maliniak/Documents/tmp/var/log/kDvrWorker.log",
+    "sessionDuration" : 30000,
+    "logLevel" : "DEBUG",
+    "logToConsole" : true,
+    "mediaServer" : {
+      "hostname" : "localhost",
+      "applicationName" : "Klive",
+      "port" : 8888
+    },
+     "backendClient" : {
+      "adminSecret" :"83cd045877d3029d1d29c4fe752e6547",
+      "partnerId" : -5,
+      "serviceUrl" : "http://dev-backend28.dev.kaltura.com",
+      "ksSessionRefreshIntervalMinutes" : 720
+    },
+    "simulateStreams": {
+      "enable":true,
+      "count": 1,
+      "entryId": "1_oorxcge2",
+      "playWindow": 7200,
+      "maxChunkCount": 5,
+      "useNginx":false,
+      "wowzaUrl": "http://kalsegsec-a.akamaihd.net/dc-0/m/pa-live-publish2/kLive/smil:1_oorxcge2_all.smil/playlist.m3u8"
+    },
+    "playlistConfig" : {
+      "enablePlaylistHistory": false
+    },
+    "regressionAdapter": {
+      "enable": false,
+      "analysis": false,
+      "dataWarehouseRootFolderPath" : "/Users/lilach.maliniak/Documents/tmp/DVR",
+      "maxChunkCount": 5,
+      "entries" : [{
+        "entryId": "1_oorxcge2",
+        "flavorParamsIds": "1,2,3,4",
+        "serverType": 0,
+        "entryPath": "1_oorxcge2-3",
+        "playWindow": 150,
+        "start_chunklist_index": 10113,
+        "last_chunklist_index": 10171,
+        "validator": {
+          "path": "/Users/lilach.maliniak/Documents/tmp/regression",
+          "override": false,
+          "history_count": 0
+        }
+      }]
+    }
+  }
+}
