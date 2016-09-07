@@ -13,9 +13,6 @@ var ControllerWrapper =  require('./../regression/ControllerWrapper');
 
 describe('Recording HLS stream data', function() {
 
-    // Set an appropriate test timeout here to 12 hours: 12 * 3600 * 1000 = 43200000
-    // this.timeout(43200000);
-
     it('should successfully record HLS stream from specified entry', function(done) {
         var controller = new ControllerWrapper('HLS stream recording');
         controller.start()

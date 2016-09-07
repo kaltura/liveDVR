@@ -20,6 +20,7 @@
     "matchdep": "~0.3.0",
     "mocha": "2.2.5",
     "mocha-html-reporter": "0.0.1",
+    "mocha-junit-reporter": "^1.12.0",
     "proxyquire": "1.7.0",
     "rimraf": "2.4.3",
     "sinon": "1.9.0",
@@ -52,7 +53,8 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "MOCHA_FILE=./reports/last_regression_run/regression-tests-report.xml BUILD_ID=$BUILD_NUMBER mocha test --reporter mocha-junit-reporter",
+    "test-jenkins": "JUNIT_REPORT_PATH=.reports/last_regression_run/report.xml mocha --colors --reporter mocha-jenkins-reporter"
   },
   "keywords": [],
   "author": ""
