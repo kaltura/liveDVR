@@ -11,7 +11,9 @@ module.exports = function (grunt) {
     grunt.file.expand('./node_modules/grunt-*/tasks').forEach(grunt.loadTasks);
     grunt.initConfig(userConfig);
 
-    grunt.loadNpmTasks('grunt-execute');
+    //grunt.loadNpmTasks('grunt-execute');
+    // todo: check if required ???
+     grunt.loadNpmTasks('mocha-junit-reporter');
 
     grunt.loadTasks('./lib/grunt/tasks');
     grunt.loadTasks('./lib/grunt/config');
