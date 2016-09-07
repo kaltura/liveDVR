@@ -1,5 +1,5 @@
 from KalturaClient import *
-from KalturaClient.Plugins.Core import KalturaMediaEntry, KalturaParams, KalturaUploadToken, KalturaUploadedFileTokenResource
+from KalturaClient.Plugins.Core import KalturaMediaEntry, KalturaUploadToken, KalturaUploadedFileTokenResource, KalturaUploadTokenFilter
 from config import get_config
 import logging.handlers
 from threading import Lock
@@ -24,7 +24,7 @@ class BackendClient:
     def create_new_session(self):
         self.config = KalturaConfiguration(self.url)
         self.client = KalturaClient(self.config)
-        self.ks = self.client.session.start(self.admin_secret, None, type, self.partner_id, self.session_duration, None)
+        self.ks = self.client.session.start(self.admin_secret, None, type, self.partner_id, None, None)
         self.client.setPartnerId(self.partner_id)
         self.client.setKs(self.ks)
         self.expiration_time_ks = int(self.session_duration) + int(time.time()) - 3600  # confidence interval
@@ -64,6 +64,18 @@ class BackendClient:
         result = client.uploadToken.add(upload_token_obj)
         self.logger.info("Token id : %s, file name: %s, partnerId: %s", result.id, file_name, partner_id)
         return result.id
+
+    def upload_token_list(self, partner_id, file_name):
+
+        client = KalturaClient(KalturaConfiguration(self.url))
+        client.setPartnerId(102)
+        client.setKs('ZTU5ZDZjN2IyZWQxMzU4ZjM3M2RkY2M5NGI1NGFhMTQ4MzE3MTUxM3wxMDI7MTAyOzE0NzMyNTA5MDk7MjsxNDczMTY0NTA5LjA5MjE7cm9uLnlhZGdhckBrYWx1dHJhLmNvbTsqLGRpc2FibGVlbnRpdGxlbWVudDs7')
+        #client = self.impersonate_client(self.config, partner_id)
+
+        upload_token_filter = KalturaUploadTokenFilter()
+        upload_token_filter.fileNameEqual = file_name
+        result = client.uploadToken.list(upload_token_filter)
+        return result
 
     def upload_token_upload(self, upload_chunk_obj):
 

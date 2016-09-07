@@ -9,8 +9,9 @@ from TaskRunner import TaskBase
 import traceback
 from MockFileObject import MockFileObject
 from ThreadWorkers import ThreadWorkers
+import random
 
-
+#todo backend client should be fot all file
 class UploadChunkJob:
     mutex = Lock()  # mutex for prevent race when reading file todo should verify that mutex is create for each file!
 
@@ -27,20 +28,21 @@ class UploadChunkJob:
         self.mutex.acquire()
         try:
             self.infile.seek(pointer_to_read)
-            data = self.infile.read(ServerUploader.upload_token_buffer_size)
+            data = self.infile.read(UploadTask.upload_token_buffer_size)
         except IOError as e:
             raise e  # if exception then do not continue
         finally:  # called anyway
             self.mutex.release()
         self.file_obj = MockFileObject(self.infile.name, data)
-        result = ServerUploader.backend_client.upload_token_upload(self)
+        result = UploadTask.backend_client.upload_token_upload(self)
 
 
-class ServerUploader(TaskBase):
+class UploadTask(TaskBase):
     # Global scope
     backend_client = BackendClient()
-    upload_directory = get_config('upload_task_processing')
-    logger = logging.getLogger('ServerUploader')
+    base_directory = get_config('recording_base_dir')
+    upload_directory = os.path.join(base_directory, __name__, 'processing')
+    logger = logging.getLogger('UploadTask')
 
     upload_token_buffer_size = get_config('upload_token_buffer_size', 'int') * 1000000  # buffer is in MB
 
@@ -56,9 +58,24 @@ class ServerUploader(TaskBase):
             self.file_name = file_name
             self.file_size = file_size
             self.chunks_to_upload = chunks_to_upload
-            self.partner_id = ServerUploader.backend_client.get_partner_id(entry_id)
-            self.upload_entry = ServerUploader.backend_client.create_entry(self.partner_id, "text", "text")
-            self.token_id = ServerUploader.backend_client.upload_token_add(self.partner_id, file_name, file_size)
+            self.partner_id = UploadTask.backend_client.get_partner_id(entry_id)
+            self.upload_entry = UploadTask.backend_client.create_entry(self.partner_id, "text", "text")
+            #self.token_id,self.start_from = ServerUploader.backend_client.get_token(self.partner_id,file_name)
+            #if !self.token_id:
+            upload_token_list_response = UploadTask.backend_client.upload_token_list(self.partner_id, file_name)
+            if upload_token_list_response.totalCount == 0:
+                self.token_id = UploadTask.backend_client.upload_token_add(self.partner_id, file_name, file_size)
+                self.uploaded_file_size = 0
+                return
+            if upload_token_list_response.totalCount == 1:  # if token is exist
+                self.token_id = upload_token_list_response.objects[0].id
+                self.uploaded_file_size = upload_token_list_response.objects[0].uploadedFileSize = 0
+                UploadTask.logger.info("Found token exist for %s, token: %s, stating from %s", self.file_name, self.token_id,
+                                 self.uploaded_file_size)
+                return
+            if upload_token_list_response.totalCount > 1:  # if more then one result, throw exption
+                raise Exception('file '+file_name+' has '+upload_token_list_response.totalCount
+                                + '(more then one) KalturaUploadToken')
 
     def upload_file(self, file_name):
 
@@ -68,22 +85,32 @@ class ServerUploader(TaskBase):
             chunks_to_upload = int(file_size / self.upload_token_buffer_size)
         else:
             chunks_to_upload = int(file_size / self.upload_token_buffer_size) + 1
-        upload_session = ServerUploader.KalturaUploadSession(self.output_filename, file_size, chunks_to_upload,
+        upload_session = UploadTask.KalturaUploadSession(self.output_filename, file_size, chunks_to_upload,
                                                                  self.entry_id)
         for sequence_number in range(1, chunks_to_upload+1):
-            final_chunk = sequence_number == chunks_to_upload
             resume_at = self.upload_token_buffer_size * (sequence_number - 1)
+            if resume_at < upload_session.uploaded_file_size:
+                self.logger.info('Chunk %s of %s has already upload skipped it (stating from %s bytes), ',
+                                 sequence_number, file_name, upload_session.uploaded_file_size)
+                continue
+            final_chunk = sequence_number == chunks_to_upload
             resume = sequence_number > 1
-            chunk = UploadChunkJob(upload_session, infile, sequence_number, final_chunk, resume_at, resume)
+            if random.uniform(0, 1) > 0.25:
+                chunk = UploadChunkJob(upload_session, infile, sequence_number, final_chunk, resume_at, resume)
+            else:
+                chunk = UploadChunkJob(upload_session, None, sequence_number, final_chunk, resume_at, resume)
 
             ThreadWorkers().add_job(chunk)
 
         result = ThreadWorkers().wait_for_all_jobs_done()
-        if result == 1:
+        upload_session_json = str(vars(upload_session))
+        if len(result) == 0:
             self.logger.info("successfully upload all chunks, call append recording")
-            ServerUploader.backend_client.set_media_content(upload_session)
+            UploadTask.backend_client.set_media_content(upload_session)
+
         else:
-            raise Exception("fail to upload all chunks")
+            raise Exception("Failed to upload file, "+str(len(result))+" chunks from "+str(chunks_to_upload)+ " where failed:"
+                            + upload_session_json)
 
     def append_recording_handler(self):
         try:
@@ -92,8 +119,7 @@ class ServerUploader(TaskBase):
             self.logger.error("Failed to append recording : %s\n %s", str(e), traceback.format_exc())
 
     def run(self):
-        if get_config('mode') == 'ecdn':
+        if get_config('mode') == 'remote':
             self.upload_file(self.output_file)
         else:
             self.append_recording_handler()
-

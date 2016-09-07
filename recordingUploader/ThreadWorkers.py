@@ -36,6 +36,7 @@ class ThreadWorkers:  # singleton object,
     def generate_upload_thread(self):
         for i in range(1, self.num_of_thread+1):
             t = Thread(target=self.worker, args=(i,))  # todo change name
+            t.setName("UploadTasks-"+str(i)) # note this is not work for multiple uploader process
             t.daemon = True  # todo check it
             t.start()
 
@@ -47,7 +48,7 @@ class ThreadWorkers:  # singleton object,
                 upload_chunk_job.upload()
             except Exception as e:
                 self.logger.error("Failed to upload chunk %s from file %s : %s \n %s", upload_chunk_job.sequence_number,
-                                  upload_chunk_job.infile.name,  str(e), traceback.format_exc())
+                                  upload_chunk_job.upload_session.file_name,  str(e), traceback.format_exc())
                 self.job_failed.append(upload_chunk_job)
             finally:
                 self.q.task_done()
@@ -56,9 +57,7 @@ class ThreadWorkers:  # singleton object,
         self.q.put(job)
 
     def wait_for_all_jobs_done(self):
-        self.q.join()
-        if len(self.job_failed) == 0:
-            return 1
-        else: # if at least one of the chunks failed, then returm 0, and clear array, for the next job
-            self.job_failed = []
-            return 0
+        self.q.join()  # wait for all task finish
+        job_failed_to_return = self.job_failed
+        self.job_failed = []    # initial array for the next job
+        return job_failed_to_return
