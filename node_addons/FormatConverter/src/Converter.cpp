@@ -510,7 +510,7 @@ namespace converter{
                         break;
                 };
             }
-            output.Close();
+           
             assert(mfi.tracks.size() > 0);
             mfi.startTimeUnixMs = this->m_creationTime;
 
