@@ -53,6 +53,7 @@ namespace converter{
         const size_t STREAM_BUFFER_SIZE;
         const std::string INPUT_FORMAT ;
         const std::string OUTPUT_FORMAT;
+        const bool m_bStrict;
     };
     
     
