@@ -12,8 +12,6 @@ module.exports = function (grunt) {
     grunt.initConfig(userConfig);
 
     //grunt.loadNpmTasks('grunt-execute');
-    // todo: check if required ???
-     grunt.loadNpmTasks('mocha-junit-reporter');
 
     grunt.loadTasks('./lib/grunt/tasks');
     grunt.loadTasks('./lib/grunt/config');
