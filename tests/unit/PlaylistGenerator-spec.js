@@ -213,7 +213,13 @@ describe('Playlist Generator spec', function() {
 
             var playlist = new Playlist('test', JSON.parse(expectedPlaylist));
 
-            expect(JSON.stringify(playlist)).to.eql(expectedPlaylist);
+            expectedPlaylist = JSON.parse(expectedPlaylist);
+
+            // toJSON will do all the job of transforming Playlist object to json string
+            playlist = JSON.parse(JSON.stringify(playlist));
+
+            //compare  all fields but history
+            expect(_.isEqual(_.omit(playlist,['history']),_.omit(expectedPlaylist,['history']))).to.eql(true);
             done();
         });
 
