@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuites name="Mocha Tests" time="30.995" tests="1" failures="0">
-  <testsuite name="Root Suite" timestamp="2016-09-08T07:56:01" tests="0" failures="0" time="0">
-  </testsuite>
-  <testsuite name="Regression test for HLS stream" timestamp="2016-09-08T07:56:01" tests="1" failures="0" time="30.995">
-    <testcase name="Root Suite Regression test for HLS stream should run regression and receive same result as ground truth" time="30.995" classname="should run regression and receive same result as ground truth">
-    </testcase>
-  </testsuite>
-</testsuites>
