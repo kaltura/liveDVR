@@ -36,10 +36,8 @@ module.exports = {
     },
     
     createHierarchyPath: function(destPath, lastFileHash) {
-        let currDay = new Date().getDate().toString();
-        let currHour = new Date().getHours().toString();
-        let hash =  path.join(currDay, currHour);
-        let fileFullPath = path.join(destPath, hash);
+        let hash = new Date().getHours().toString();
+        let fileFullPath = path.join(destPath, (hash) < 10 ? ("0" + hash) : hash);
 
         let retVal = {fileFullPath, hash};
         if (lastFileHash === hash)
