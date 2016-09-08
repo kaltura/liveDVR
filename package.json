@@ -53,8 +53,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "MOCHA_FILE=./reports/last_regression_run/regression-tests-report.xml BUILD_ID=$BUILD_NUMBER mocha test --reporter mocha-junit-reporter",
-    "test-jenkins": "JUNIT_REPORT_PATH=.reports/last_regression_run/report.xml mocha --colors --reporter mocha-jenkins-reporter"
+    "test": "mocha"
   },
   "keywords": [],
   "author": ""
