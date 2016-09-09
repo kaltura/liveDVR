@@ -53,7 +53,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "MOCHA_FILE=./reports/last_regression_test/file.xml mocha test --reporter mocha-junit-reporter"
   },
   "keywords": [],
   "author": ""

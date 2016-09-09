@@ -9,12 +9,13 @@ var sinon = require('sinon');
 var should = chai.should();
 
 var ControllerWrapper =  require('./ControllerWrapper');
+var testsuite = process.env.JOB_NAME ? process.env.JOB_NAME : 'HLS Regression Test';
 
 
 
-describe('Regression test for HLS stream', function() {
+describe('Live-Regression', function() {
     
-    it('should run regression and receive same result as ground truth', function(done) {
+    it (testsuite, function(done) {
        var controller = new ControllerWrapper("regression test");
        controller.start()
            .then(function(exit_code) {

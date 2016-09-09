@@ -9,11 +9,12 @@ var Q = require('q');
 var should = chai.should();
 var util=require('util');
 var ControllerWrapper =  require('./../regression/ControllerWrapper');
+var testsuite = process.env.JOB_NAME ? process.env.JOB_NAME : 'HLS Recording';
 
 
-describe('Recording HLS stream data', function() {
+describe('Live-Recording (for regression)', function() {
 
-    it('should successfully record HLS stream from specified entry', function(done) {
+    it (testsuite, function(done) {
         var controller = new ControllerWrapper('HLS stream recording');
         controller.start()
             .then(function(exit_code) {
