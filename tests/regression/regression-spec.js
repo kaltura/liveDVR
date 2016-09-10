@@ -7,9 +7,9 @@ var chai = require('chai');
 var expect = chai.expect;
 var sinon = require('sinon');
 var should = chai.should();
-
 var ControllerWrapper =  require('./ControllerWrapper');
-var testsuite = process.env.JOB_NAME ? process.env.JOB_NAME : 'HLS Regression Test';
+
+var testsuite = process.env.TEST_CLASS ? process.env.TEST_CLASS : 'hls-regression-test';
 
 
 

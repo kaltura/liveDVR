@@ -9,7 +9,8 @@ var Q = require('q');
 var should = chai.should();
 var util=require('util');
 var ControllerWrapper =  require('./../regression/ControllerWrapper');
-var testsuite = process.env.JOB_NAME ? process.env.JOB_NAME : 'HLS Recording';
+
+var testsuite = process.env.TEST_CLASS ? process.env.TEST_CLASS : 'hls-recording';
 
 
 describe('Live-Recording (for regression)', function() {
