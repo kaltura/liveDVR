@@ -58,8 +58,6 @@ http {
         vod_hls_output_id3_timestamps on;
         vod_dash_manifest_format segmenttemplate;
         vod_dash_profiles urn:mpeg:dash:profile:isoff-live:2011;
-        vod_hds_manifest_file_name_prefix manifest;
-        vod_hds_fragment_file_name_prefix frag;
 
 
         gzip  on;
