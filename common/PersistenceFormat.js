@@ -8,34 +8,46 @@ var qio = require('q-io/fs');
 var _ = require('underscore');
 var Q = require('q');
 
+var regEx = new RegExp(/([01]_\w+\/[0-9]+\/)/);
+
 module.exports = {
 
-    getEntryFullPath: function (entryId) {
+    getEntryBasePath: function (entryId) {
         return path.join(config.get('rootFolderPath'), entryId);
     },
 
-    getEntryRelativePath: function (entryId) {
-        return entryId;
+    getBasePathFromFull: function (path) {
+        let subString = path.match(regEx)[1];
+        return path.substr(0, path.lastIndexOf(subString) + subString.length);
     },
 
     getFlavorFullPath: function (entryId, flavorName) {
         return path.join(config.get('rootFolderPath'), entryId, flavorName.toString());
     },
 
-    getFlavorRelativePath: function (entryId, flavorName) {
-        return path.join(entryId, flavorName.toString());
-    },
-
-    getManifestName: function () {
-        return 'chunklist.m3u8';
-    },
-
     getMasterManifestName: function () {
         return 'playlist.json';
     },
+    
     getMP4FileNamefromInfo: function(chunkPath){
         return path.basename(chunkPath) + '.mp4';
     },
+    
     getTSChunknameFromMP4FileName: function(mp4FileName){
-        return mp4FileName.substr(0,mp4FileName.length -'.mp4'.length);    }
+        return mp4FileName.substr(0, mp4FileName.length - 4); //'.mp4'.length);
+    },
+    
+    createHierarchyPath: function(destPath, lastFileHash) {
+        let hash = new Date().getHours().toString();
+        let fileFullPath = path.join(destPath, (hash) < 10 ? ("0" + hash) : hash);
+
+        let retVal = {fileFullPath, hash};
+        if (lastFileHash === hash)
+            return Q.resolve(retVal);
+
+        return qio.makeTree(fileFullPath)
+            .then(function() {
+                return retVal;
+            });
+    }
 };
