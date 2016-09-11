@@ -1,6 +1,6 @@
 {
   ".*": {
-    "preserveOriginalHLS": true,
+    "preserveOriginalHLS": false,
     "overrideOldRecordedHLS": false,
     "recordingDurationMinutes": 1,
     "mockBackend" : true,
@@ -23,7 +23,7 @@
       "ksSessionRefreshIntervalMinutes" : 720
     },
     "simulateStreams": {
-      "enable":true,
+      "enable":false,
       "count": 1,
       "entryId": "1_oorxcge2",
       "playWindow": 7200,
@@ -35,8 +35,9 @@
       "enablePlaylistHistory": false
     },
     "regressionAdapter": {
-      "enable": false,
+      "enable": true,
       "analysis": false,
+      "analyzerRootPath" : "/Users/lilach.maliniak/Desktop/dev/repositories/live-monitor",
       "dataWarehouseRootFolderPath" : "/Users/lilach.maliniak/Documents/tmp/DVR",
       "maxChunkCount": 5,
       "entries" : [{
@@ -45,12 +46,13 @@
         "serverType": 0,
         "entryPath": "1_oorxcge2-3",
         "playWindow": 150,
-        "start_chunklist_index": 10113,
-        "last_chunklist_index": 10171,
+        "start_chunklist_index": -1,
+        "last_chunklist_index": -1,
         "validator": {
-          "path": "/Users/lilach.maliniak/Documents/tmp/regression",
+          "path": "./reports",
           "override": false,
-          "history_count": 0
+          "history_count": 0,
+          "analyzerAlertsIgnoreList": "'INFTagDurationDoesntMatch','BitrateOutsideOfTargetAlert','InvalidKeyFrameIntervalAlert','SegmentCountMismatchAlert'"
         }
       }]
     }

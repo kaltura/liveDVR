@@ -43,31 +43,28 @@ http {
         #rewrite_log on;
         #error_log    /usr/local/nginx/logs/example.com.error.log debug;
 
-        #HDS
-        rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/manifest.f4m                    /hds/$1/playlist.json/manifest.f4m last;
-        rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/(.*).abst                       /hds/$1/playlist.json/$2.abst last;
-        rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/frag-(.*)                       /hds/$1/playlist.json/frag-$2 last;
-
-        #HLS
-
-        #Rules for requesting playlist from packager
-        rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/playlist.m3u8                  /hls/$1/playlist.json/master.m3u8 last;
-        rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/([^\/]*(?:ts|m3u8).*)          /hls/$1/playlist.json/$2 last;
-
-        #Rules if backend builds playlist
-        rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/(.*)\/chunklist.m3u8           /hls/$1/playlist.json/index-s$2-v1-a1.m3u8 last;
-        rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/([^\/]*)\/([^.]*)(.ts|.m3u8)   /hls/$1/playlist.json/$3$4 last;
-
-
-        add_header 'Access-Control-Allow-Headers' 'Origin,Range';
-        add_header 'Access-Control-Expose-Headers' 'Server,Content-Length,Content-Range,Date';
-        add_header 'Access-Control-Allow-Methods' 'GET, HEAD, OPTIONS';
-        add_header 'Access-Control-Allow-Origin' '*';
 
         vod_last_modified 'Sun, 19 Nov 2000 08:52:00 GMT';
         vod_last_modified_types *;
+        vod_align_segments_to_key_frames on;
+        vod_max_mapping_response_size 1000K;
+        vod_mode mapped;
         vod_expires 1d;
-        vod_expires_live 5;
+        vod_expires_live 30;
+        vod_expires_live_time_dependent 3;
+        vod_live_window_duration 0;
+        vod_hls_absolute_master_urls off;
+        vod_hls_absolute_index_urls off;
+        vod_hls_output_id3_timestamps on;
+        vod_dash_manifest_format segmenttemplate;
+        vod_dash_profiles urn:mpeg:dash:profile:isoff-live:2011;
+        vod_hds_manifest_file_name_prefix manifest;
+        vod_hds_fragment_file_name_prefix frag;
+
+
+        gzip  on;
+        gzip_types application/vnd.apple.mpegurl video/f4m application/dash+xml text/xml;
+
 
         location = /serverip {
 
@@ -75,33 +72,28 @@ http {
             return 200 "Kaltura";
         }
 
-        location /hls/ {
-             vod hls;
-             alias @CONTENT_DIR@;
-             vod_max_mapping_response_size 1000K;
-             vod_align_segments_to_key_frames on;
-             vod_mode mapped;
-             vod_hls_absolute_master_urls off;
-             vod_hls_absolute_index_urls off;
-             gzip on;
-             gzip_types application/vnd.apple.mpegurl;
-             expires off;
-             vod_live_window_duration 0;
-             vod_hls_output_id3_timestamps on;
+
+        location ~ /live/hls/p/\d+/entryId/(?<entryId>[^/]+)/(playlist/(?<playlist>[^/]+)/)? {
+            include nginx.conf.live.bootstrap;
+            vod hls;
         }
 
-        location /hds/ {
-             vod hds;
-             alias @CONTENT_DIR@;
-             vod_max_mapping_response_size 1000K;
-             vod_align_segments_to_key_frames on;
-             vod_mode mapped;
-             gzip on;
-             gzip_types application/vnd.apple.mpegurl;
-             expires off;
-             vod_hds_manifest_file_name_prefix manifest;
-             vod_hds_fragment_file_name_prefix frag;
+        location ~ /live/hds/p/\d+/entryId/(?<entryId>[^/]+)/(playlist/(?<playlist>[^/]+)/)?  {
+            include nginx.conf.live.bootstrap;
+            vod hds;
         }
+
+        location ~ /live/dash/p/\d+/entryId/(?<entryId>[^/]+)/(playlist/(?<playlist>[^/]+)/)? {
+            include nginx.conf.live.bootstrap;
+            vod dash;
+        }
+
+        location ~ /live/mss/p/\d+/entryId/(?<entryId>[^/]+)/(playlist/(?<playlist>[^/]+)/)? {
+            include nginx.conf.live.bootstrap;
+            vod mss;
+        }
+
+        include nginx.conf.redirect.rules;
 
         location / {
             expires 1d;
