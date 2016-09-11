@@ -42,7 +42,14 @@ echo wwwDir = $wwwDir
 port=${2:-8080}
 
 rm -rf "/var/tmp/*nginx.conf*"
-sed  -e "s#@CONTENT_DIR@#$contentDir/#" -e "s#@PORT@#$port#" -e "s#@WWW_DIR@#$wwwDir#"  $confDir/nginx.conf.template > /var/tmp/nginx.conf
+
+echo "copying $confDir*"
+for file in $confDir* ; do
+    filename=${file##*/}
+    newFile="/var/tmp/${filename/.template/}"
+    echo "$file"  to  "$newFile"
+    sed  -e "s#@CONTENT_DIR@#$contentDir/#" -e "s#@PORT@#$port#" -e "s#@WWW_DIR@#$wwwDir#"  ${file} > ${newFile}
+done
 
 function getNginxPids(){
     ps -fA | grep nginx | grep -vE "grep|$scriptName" | awk '{print $2}'
