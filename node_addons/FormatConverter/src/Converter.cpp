@@ -206,7 +206,9 @@ namespace converter{
             }
         }
         
-        if( avformat_find_stream_info(*input,NULL) < 0 && (ConverterAppInst::instance().m_bStrict || input->nb_streams == 0)){
+        int status =  avformat_find_stream_info(*input,NULL);
+        
+        if( status < 0 && (ConverterAppInst::instance().m_bStrict || input->nb_streams == 0)){
             av_log(nullptr,AV_LOG_WARNING,"%s (%d) failed to parse stream info\n",__FILE__,__LINE__);
             return -1;
         }
@@ -372,7 +374,7 @@ namespace converter{
                 
                 pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
                 pkt.pos = -1;
-       
+
                 log_packet(*input, &pkt, "in");
                 
                 _S(av_interleaved_write_frame(*output, &pkt));
@@ -481,6 +483,17 @@ namespace converter{
             for(size_t i = 0; i < input->nb_streams;i++)
             {
                 AVStream *stream = this->input->streams[i];
+                
+                bool bFound = false;
+                for(size_t j = 0; j < output->nb_streams && false == bFound;j++){
+                    AVStream *out_stream = this->output->streams[j];
+                    if(out_stream->codec->codec_type == stream->codec->codec_type ){
+                        bFound = true;
+                    }
+                }
+                
+                if(!bFound)
+                    continue;
                 
                 std::vector<double> keyFrames;
                 
