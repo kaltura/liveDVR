@@ -1,0 +1,15 @@
+#HDS
+rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/manifest.f4m                    /live/hds/p/0/entryId/$1/manifest.f4m last;
+rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/(.*).abst                       /live/hds/p/0/entryId/$1/$2.abst last;
+rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/frag-(.*)                       /live/hds/p/0/entryId/$1/frag-$2 last;
+
+#HLS
+
+#Rules for requesting playlist from packager
+rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/playlist.m3u8                  /live/hls/p/0/entryId/$1/master.m3u8 last;
+rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/([^\/]*(?:ts|m3u8).*)          /live/hls/p/0/entryId/$1/$2 last;
+
+#Rules if backend builds playlist
+rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/(.*)\/chunklist.m3u8           /live/hls/p/0/entryId/$1/index-s$2-v1-a1.m3u8 last;
+rewrite  /kLive\/smil:([01]_[^_]+)_[^.]+\.smil\/([^\/]*)\/([^.]*)(.ts|.m3u8)   /live/hls/p/0/entryId/$1/$3$4 last;
+
