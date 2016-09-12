@@ -18,6 +18,7 @@
 extern "C"{
 #include "libavutil/log.h"
 #include "libavutil/dict.h"
+#include "libavformat/avformat.h"
 }
 
 #define _S(e)  { \
@@ -252,6 +253,46 @@ return "";\
     
     const double TIMESTAMP_RESOLUTION = 1000.0;
     
+    class dtsUtils
+    {
+    public:
+        
+        static int64_t to_ms(AVStream *stream,const int64_t &dts){
+            return av_rescale(dts,TIMESTAMP_RESOLUTION * stream->time_base.num,
+                              stream->time_base.den);
+        }
+        
+        static int64_t to_dts(AVStream *stream,const int64_t &ms){
+            return av_rescale(ms,stream->time_base.den,1000 * stream->time_base.num);
+        }
+        
+        static int64_t diff(AVStream *stream,const int64_t &dts,const int64_t &startTime,bool conv = true){
+            int64_t start_dts = conv ? to_dts(stream,startTime) : startTime;
+            int64_t w = 1ULL << stream->pts_wrap_bits;
+            int64_t retval = diff_wrap(dts,start_dts,w);
+            if(retval > w / 2){
+                //diff is negative
+                retval = dts - start_dts;
+            }
+            return conv ? to_ms(stream,retval) : retval;
+        }
+        
+        static int64_t min(int64_t val,AVStream *stream){
+            
+            if(diff(stream,stream->start_time,val) < 0 ){
+                return to_ms(stream,stream->start_time);
+            }
+            return val;
+        }
+        
+        static int64_t add(const int64_t &a,const int64_t &b,const int64_t &w){
+            return (a+b)%w;
+        }
+        
+        static int64_t diff_wrap(const int64_t &a,const int64_t &b,const int64_t &w){
+            return add(a-b,w,w);
+        }
+    };
     
     
 };
