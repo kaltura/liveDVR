@@ -23,9 +23,6 @@
   "logFileName" : "~/dvr/kLiveController.log",
   "logTimeZoneOffset" : 300,
   "monitorPort": 4390,
-  "preserveOriginalHLS": false,
-  "recordingDurationMinutes": 5,
-  "overrideOldRecordedHLS": true,
   "regressionAdapter": {
       "enable":false,
       "analysis": false,
@@ -47,6 +44,11 @@
                "analyzerAlertsIgnoreList": "'INFTagDurationDoesntMatch','BitrateOutsideOfTargetAlert','InvalidKeyFrameIntervalAlert'"
              }
         }]
+  },
+  "preserveOriginalHLS": {
+      "enable": false,
+      "createFolderPerSession": true,
+      "runDurationInMinutes": 5
   },
   "simulateStreams": {
       "enable":false,
