@@ -439,15 +439,26 @@ namespace converter{
                 track->has_keyframes && track->has_keyframes < track->entry){
                 for (int i = 0; i < track->entry; i++) {
                     if (track->cluster[i].flags & MOV_SYNC_SAMPLE) {
-                        uint64_t millis = av_rescale_rnd(track->cluster[i].dts,1000,
-                                                         track->timescale,AV_ROUND_ZERO);
-                        result.push_back(millis);
+                        int64_t dts = track->cluster[i].dts;
+                        if(AV_NOPTS_VALUE == dts){
+                            av_log(NULL,AV_LOG_WARNING,"getKeyFrames. undefined dts value for keyframe %d",
+                                   i);
+                        } else {
+                            int64_t millis = av_rescale_rnd(dts,1000,
+                                                            track->timescale,AV_ROUND_ZERO);
+                            if(millis < 0){
+                                av_log(NULL,AV_LOG_WARNING,"getKeyFrames. negative dts value for keyframe %i dts=%lld timescale=%u millis=%lld",
+                                       i, dts , track->timescale, millis );
+                            } else {
+                                result.push_back(millis);
+                            }
+                        }
                     }
                 }
                 break;
             }
         }
-       
+        
         if(result.size()){
             
             auto diff = result[0];
