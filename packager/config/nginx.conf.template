@@ -43,7 +43,6 @@ http {
         #rewrite_log on;
         #error_log    /usr/local/nginx/logs/example.com.error.log debug;
 
-<<<<<<< HEAD
 
         vod_last_modified 'Sun, 19 Nov 2000 08:52:00 GMT';
         vod_last_modified_types *;
@@ -68,36 +67,12 @@ http {
         gzip_types application/vnd.apple.mpegurl video/f4m application/dash+xml text/xml;
 
 
-=======
-
-        vod_last_modified 'Sun, 19 Nov 2000 08:52:00 GMT';
-        vod_last_modified_types *;
-        vod_align_segments_to_key_frames on;
-        vod_max_mapping_response_size 1000K;
-        vod_mode mapped;
-        vod_expires 1d;
-        vod_expires_live 30;
-        vod_expires_live_time_dependent 3;
-        vod_live_window_duration 0;
-        vod_hls_absolute_master_urls off;
-        vod_hls_absolute_index_urls off;
-        vod_hls_output_id3_timestamps on;
-        vod_dash_manifest_format segmenttemplate;
-        vod_dash_profiles urn:mpeg:dash:profile:isoff-live:2011;
-
-
-        gzip  on;
-        gzip_types application/vnd.apple.mpegurl video/f4m application/dash+xml text/xml;
-
->>>>>>> origin/1.0
-
         location = /serverip {
 
             expires 1d;
             return 200 "Kaltura";
         }
 
-<<<<<<< HEAD
         location ~ ^/live/(?<tokenKey>.*/p/\d+/entryId/(?<entryId>[^/]+)(/playlist/(?<playlist>[^/]+))?)(/token/(?<token>[^/]+))?/ {
 
             #secure_link $token;
@@ -132,29 +107,7 @@ http {
             }
         }
 
-=======
 
-        location ~ /live/hls/p/\d+/entryId/(?<entryId>[^/]+)/(playlist/(?<playlist>[^/]+)/)? {
-            include nginx.conf.live.bootstrap;
-            vod hls;
-        }
-
-        location ~ /live/hds/p/\d+/entryId/(?<entryId>[^/]+)/(playlist/(?<playlist>[^/]+)/)?  {
-            include nginx.conf.live.bootstrap;
-            vod hds;
-        }
-
-        location ~ /live/dash/p/\d+/entryId/(?<entryId>[^/]+)/(playlist/(?<playlist>[^/]+)/)? {
-            include nginx.conf.live.bootstrap;
-            vod dash;
-        }
-
-        location ~ /live/mss/p/\d+/entryId/(?<entryId>[^/]+)/(playlist/(?<playlist>[^/]+)/)? {
-            include nginx.conf.live.bootstrap;
-            vod mss;
-        }
-
->>>>>>> origin/1.0
         include nginx.conf.redirect.rules;
 
         location / {
