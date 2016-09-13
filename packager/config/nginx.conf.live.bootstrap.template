@@ -11,6 +11,7 @@ if ($playlist = '') {
 alias @CONTENT_DIR@/$entryId/$playlist;
 
 
+<<<<<<< HEAD
 add_header X-DEBUG-HEADER "entryId=$entryId; token=$token; key=$tokenKey; host=$host";
 
 #if ($secure_link = "") {
@@ -20,3 +21,6 @@ add_header X-DEBUG-HEADER "entryId=$entryId; token=$token; key=$tokenKey; host=$
 #if ($secure_link = "0") {
 #    return 410;
 #}
+=======
+add_header X-my-header "$entryId and $playlist and $vod_suburi";
+>>>>>>> origin/1.0
