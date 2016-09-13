@@ -181,7 +181,7 @@ namespace converter{
             threshold = dtsUtils::to_dts(stream,10000);
             
             if( diff > threshold ){
-                av_log(nullptr,AV_LOG_WARNING,"pts to dts diff is too big (pts=%lld - dts=%lld > threshold=%lld) for stream %d\n", stream->start_time, stream->first_dts, threshold, stream->index );
+                av_log(nullptr,AV_LOG_WARNING,"pts to dts diff is too big (pts=%lld - dts=%llu > threshold=%llu) for stream %d\n", stream->start_time, stream->first_dts, threshold, stream->index );
                 stream->start_time = stream->first_dts;
             }
         }
@@ -264,7 +264,7 @@ namespace converter{
             };
             
             if(!bValidStream){
-                 av_log(nullptr,AV_LOG_WARNING,"%s (%d) skipping stream %d\n",__FILE__,__LINE__,i);
+                 av_log(nullptr,AV_LOG_WARNING,"%s (%d) skipping stream %lu\n",__FILE__,__LINE__,i);
                 continue;
             }
 
