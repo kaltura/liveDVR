@@ -47,7 +47,10 @@ http {
         vod_last_modified 'Sun, 19 Nov 2000 08:52:00 GMT';
         vod_last_modified_types *;
         vod_align_segments_to_key_frames on;
-        vod_max_mapping_response_size 1000K;
+	    vod_response_cache response_cache 128m 30;
+	    vod_max_mapping_response_size 1m;
+        vod_live_mapping_cache live_mapping_cache 128m 2;
+        vod_live_response_cache live_response_cache 128m 2;
         vod_mode mapped;
         vod_expires 1d;
         vod_expires_live 30;
@@ -70,26 +73,40 @@ http {
             return 200 "Kaltura";
         }
 
+        location ~ ^/live/(?<tokenKey>.*/p/\d+/entryId/(?<entryId>[^/]+)(/playlist/(?<playlist>[^/]+))?)(/token/(?<token>[^/]+))?/ {
 
-        location ~ /live/hls/p/\d+/entryId/(?<entryId>[^/]+)/(playlist/(?<playlist>[^/]+)/)? {
-            include nginx.conf.live.bootstrap;
-            vod hls;
+            #secure_link $token;
+            #secure_link_md5 "KKK $http_host $tokenKey";
+
+            location ~ ^/live/hls/ {
+                include nginx.conf.live.bootstrap;
+                vod hls;
+            }
+
+#            location ~ ^/live/enc/hls/ {
+#                include nginx.conf.live.bootstrap;
+#                vod hls;
+#                vod_secret_key "jKsf!hAuaJak $vod_uri";
+#                vod_hls_encryption_method aes-128;
+#            }
+
+
+            location ~ ^/live/hds/ {
+                include nginx.conf.live.bootstrap;
+                vod hds;
+            }
+
+            location ~ /live/dash/ {
+                include nginx.conf.live.bootstrap;
+                vod dash;
+            }
+
+            location ~ /live/mss/ {
+                include nginx.conf.live.bootstrap;
+                vod mss;
+            }
         }
 
-        location ~ /live/hds/p/\d+/entryId/(?<entryId>[^/]+)/(playlist/(?<playlist>[^/]+)/)?  {
-            include nginx.conf.live.bootstrap;
-            vod hds;
-        }
-
-        location ~ /live/dash/p/\d+/entryId/(?<entryId>[^/]+)/(playlist/(?<playlist>[^/]+)/)? {
-            include nginx.conf.live.bootstrap;
-            vod dash;
-        }
-
-        location ~ /live/mss/p/\d+/entryId/(?<entryId>[^/]+)/(playlist/(?<playlist>[^/]+)/)? {
-            include nginx.conf.live.bootstrap;
-            vod mss;
-        }
 
         include nginx.conf.redirect.rules;
 

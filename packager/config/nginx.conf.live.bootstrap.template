@@ -11,4 +11,12 @@ if ($playlist = '') {
 alias @CONTENT_DIR@/$entryId/$playlist;
 
 
-add_header X-my-header "$entryId and $playlist and $vod_suburi";
+add_header X-DEBUG-HEADER "entryId=$entryId; token=$token; key=$tokenKey; host=$host";
+
+#if ($secure_link = "") {
+#    return 403 "Incorrect Url provided";
+#}
+
+#if ($secure_link = "0") {
+#    return 410;
+#}
