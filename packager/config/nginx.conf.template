@@ -86,7 +86,7 @@ http {
 #            location ~ ^/live/enc/hls/ {
 #                include nginx.conf.live.bootstrap;
 #                vod hls;
-#                vod_secret_key "MuKkAuKk1$vod_filepath";
+#                vod_secret_key "jKsf!hAuaJak $vod_uri";
 #                vod_hls_encryption_method aes-128;
 #            }
 
