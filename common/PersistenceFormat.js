@@ -9,7 +9,7 @@ var _ = require('underscore');
 var Q = require('q');
 
 //var regEx = new RegExp(/([01]_\w+\/[0-9]+\/)/);
-var regEx = new RegExp(/(.*\/[0-9]+\/)/);
+var regEx = new RegExp(/(.*?\/[0-9]+\/)/);
 
 module.exports = {
 

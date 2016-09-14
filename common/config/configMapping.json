@@ -1,0 +1,63 @@
+{
+  ".*": {
+    "mockBackend" : true,
+    "requestTimeout" : 1200000,
+    "rootFolderPath" : "/Users/lilach.maliniak/Documents/tmp/DVR",
+    "oldContentFolderPath" : "/Users/lilach.maliniak/Documents/tmp/DVR_Old",
+    "logFileName" : "/Users/lilach.maliniak/Documents/tmp/var/log/kDvrWorker.log",
+    "sessionDuration" : 30000,
+    "logLevel" : "DEBUG",
+    "logToConsole" : true,
+    "mediaServer" : {
+      "hostname" : "localhost",
+      "applicationName" : "Klive",
+      "port" : 8888
+    },
+     "backendClient" : {
+      "adminSecret" :"83cd045877d3029d1d29c4fe752e6547",
+      "partnerId" : -5,
+      "serviceUrl" : "http://dev-backend28.dev.kaltura.com",
+      "ksSessionRefreshIntervalMinutes" : 720
+    },
+    "preserveOriginalHLS": {
+      "enable": true,
+      "createFolderPerSession": true,
+      "runDurationInMinutes": 5
+    },
+    "simulateStreams": {
+      "enable":true,
+      "count": 1,
+      "entryId": "1_exd8bai9",
+      "path": "1_exd8bai9_test_after_merge_120916",
+      "playWindow": 7200,
+      "maxChunkCount": 5,
+      "useNginx":false,
+      "wowzaUrl": "http://kalsegsec-a.akamaihd.net:80/dc-1/m/ny-live-publish3/kLive/smil:1_i6ys8wtx_all.smil/playlist.m3u8"
+    },
+    "playlistConfig" : {
+      "enablePlaylistHistory": false
+    },
+    "regressionAdapter": {
+      "enable": false,
+      "analysis": true,
+      "analyzerRootPath" : "/Users/lilach.maliniak/Desktop/dev/repositories/live-monitor",
+      "dataWarehouseRootFolderPath" : "/Users/lilach.maliniak/Documents/tmp/DVR",
+      "maxChunkCount": 5,
+      "entries" : [{
+        "entryId": "1_exd8bai9",
+        "flavorParamsIds": "1,2,3,4",
+        "serverType": 0,
+        "entryPath": "1_exd8bai9_test_after_merge_120916-8",
+        "playWindow": 150,
+        "start_chunklist_index": -1,
+        "last_chunklist_index": -1,
+        "validator": {
+          "path": "./reports",
+          "override": false,
+          "history_count": 0,
+          "analyzerAlertsIgnoreList": "'INFTagDurationDoesntMatch','BitrateOutsideOfTargetAlert','InvalidKeyFrameIntervalAlert','SegmentCountMismatchAlert'"
+        }
+      }]
+    }
+  }
+}
