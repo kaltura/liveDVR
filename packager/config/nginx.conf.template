@@ -83,12 +83,12 @@ http {
                 vod hls;
             }
 
-#            location ~ ^/live/enc/hls/ {
-#                include nginx.conf.live.bootstrap;
-#                vod hls;
-#                vod_secret_key "jKsf!hAuaJak $vod_uri";
-#                vod_hls_encryption_method aes-128;
-#            }
+            location ~ ^/live/enc/hls/ {
+                include nginx.conf.live.bootstrap;
+                vod hls;
+                vod_secret_key "jKsf!hAuaJak $vod_suburi";
+                vod_hls_encryption_method aes-128;
+            }
 
 
             location ~ ^/live/hds/ {
