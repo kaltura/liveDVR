@@ -11,6 +11,7 @@
 
 #include <Utils.h>
 #include <vector>
+#include <iostream>
 
 namespace converter{
     
@@ -22,6 +23,14 @@ namespace converter{
         double durationMsec;
         std::vector<double> vecKeyFrameDtsMsec;
         AVMediaType  mtype;
+        
+        static const std::string fld_duration,
+            fld_firstDTS,
+            fld_firstEncoderDTS,
+            fld_wrapEncoderDTS,
+            fld_keyFrameDTS;
+        
+        friend std::ostream& operator<<(std::ostream& os, const MediaTrackInfo& mti);
      };
     
     struct MediaFileInfo{
@@ -30,10 +39,16 @@ namespace converter{
         :startTimeUnixMs(0)
         {}
      
+        static const std::string fld_sig,
+            fld_startTime,
+            fld_video,
+            fld_audio;
+        
         std::string sig;
         int64_t startTimeUnixMs;
         std::vector<MediaTrackInfo> tracks;
-        std::vector<std::string> vecWarnings;
+        
+        friend std::ostream& operator<<(std::ostream& os, const MediaFileInfo& mfi);
     };
 
     

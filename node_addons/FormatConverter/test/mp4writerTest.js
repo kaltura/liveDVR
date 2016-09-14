@@ -1,3 +1,5 @@
+var config = require('../../../common/Configuration');
+config.set('preserveOriginalChunk',false);
 var MP4WRITER = require('../../../lib/MP4WriteStream');
 var fs = require('fs');
 var http = require('http');
@@ -5,7 +7,7 @@ var Url = require('url');
 var _ = require('underscore');
 var util = require('util');
 
-var tsFilePath = '/Users/igors/media-u3f95g2zn_21849.ts';//"/Users/igors/dvr/dvrContentRootPath/1_abc123/1/media-ul0o1lom6_w1600782441_670.ts.mp4_saved.ts";//__dirname+'/../resources/media-uixh2a1qh_w1892051821_472.ts';
+var tsFilePath = process.argv[2];//'/Users/igors/media-u4cc7m30h_b1496000_3383.ts';//"/Users/igors/dvr/dvrContentRootPath/1_abc123/1/media-ul0o1lom6_w1600782441_670.ts.mp4_saved.ts";//__dirname+'/../resources/media-uixh2a1qh_w1892051821_472.ts';
 var httpPath = 'http://localhost/wn/media-uhe4wm3o6_b475136_144354218.ts';
 console.log("tsFilePath=",tsFilePath);
 var ts2mp4 = new MP4WRITER.MP4WriteStream(tsFilePath + '.mp4', "");
