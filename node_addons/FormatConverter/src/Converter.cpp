@@ -181,7 +181,7 @@ namespace converter{
             threshold = dtsUtils::to_dts(stream,10000);
             
             if( diff > threshold ){
-                av_log(nullptr,AV_LOG_WARNING,"pts to dts diff is too big (pts=%lld - dts=%lld > threshold=%lld) for stream %d\n", stream->start_time, stream->first_dts, threshold, stream->index );
+                av_log(nullptr,AV_LOG_WARNING,"pts to dts diff is too big (pts=%lld - dts=%llu > threshold=%llu) for stream %d\n", stream->start_time, stream->first_dts, threshold, stream->index );
                 stream->start_time = stream->first_dts;
             }
         }
@@ -264,7 +264,7 @@ namespace converter{
             };
             
             if(!bValidStream){
-                 av_log(nullptr,AV_LOG_WARNING,"%s (%d) skipping stream %d\n",__FILE__,__LINE__,i);
+                 av_log(nullptr,AV_LOG_WARNING,"%s (%d) skipping stream %lu\n",__FILE__,__LINE__,i);
                 continue;
             }
 
@@ -439,15 +439,26 @@ namespace converter{
                 track->has_keyframes && track->has_keyframes < track->entry){
                 for (int i = 0; i < track->entry; i++) {
                     if (track->cluster[i].flags & MOV_SYNC_SAMPLE) {
-                        uint64_t millis = av_rescale_rnd(track->cluster[i].dts,1000,
-                                                         track->timescale,AV_ROUND_ZERO);
-                        result.push_back(millis);
+                        int64_t dts = track->cluster[i].dts;
+                        if(AV_NOPTS_VALUE == dts){
+                            av_log(NULL,AV_LOG_WARNING,"getKeyFrames. undefined dts value for keyframe %d",
+                                   i);
+                        } else {
+                            int64_t millis = av_rescale_rnd(dts,1000,
+                                                            track->timescale,AV_ROUND_ZERO);
+                            if(millis < 0){
+                                av_log(NULL,AV_LOG_WARNING,"getKeyFrames. negative dts value for keyframe %i dts=%lld timescale=%u millis=%lld",
+                                       i, dts , track->timescale, millis );
+                            } else {
+                                result.push_back(millis);
+                            }
+                        }
                     }
                 }
                 break;
             }
         }
-       
+        
         if(result.size()){
             
             auto diff = result[0];
