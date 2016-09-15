@@ -73,17 +73,17 @@ http {
             return 200 "Kaltura";
         }
 
-        location ~ ^/live/(?<tokenKey>.*/p/\d+/entryId/(?<entryId>[^/]+)(/playlist/(?<playlist>[^/]+))?)(/token/(?<token>[^/]+))?/ {
+        location ~ ^(?<tokenKey>/(scf|s/)?.*/\d+/entryId/(?<entryId>[^/]+)(/playlist/(?<playlist>[^/]+))?)(/token/(?<token>[^/]+))?/ {
 
-            #secure_link $token;
-            #secure_link_md5 "KKK $http_host $tokenKey";
+            secure_link $token;
+            secure_link_md5 "test $scheme://$http_host$tokenKey";
 
-            location ~ ^/live/hls/ {
+            location ~ /live/hls/ {
                 include nginx.conf.live.bootstrap;
                 vod hls;
             }
 
-            location ~ ^/live/enc/hls/ {
+            location ~ /live/enc/hls/ {
                 include nginx.conf.live.bootstrap;
                 vod hls;
                 vod_secret_key "jKsf!hAuaJak $vod_suburi";
@@ -91,7 +91,7 @@ http {
             }
 
 
-            location ~ ^/live/hds/ {
+            location ~ /live/hds/ {
                 include nginx.conf.live.bootstrap;
                 vod hds;
             }
