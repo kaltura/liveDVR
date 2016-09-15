@@ -377,7 +377,12 @@ namespace converter{
 
                 log_packet(*input, &pkt, "in");
                 
-                _S(av_interleaved_write_frame(*output, &pkt));
+                if(!pkt.size){
+                    av_log(*input,AV_LOG_WARNING,"Converter::pushData. zero sized packet stream=%d time=%lld",
+                           pkt.stream_index, pkt.pts);
+                } else {
+                    _S(av_interleaved_write_frame(*output, &pkt));
+                }
             }
             
             av_packet_unref(&pkt);
