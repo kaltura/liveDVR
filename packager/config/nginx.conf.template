@@ -72,10 +72,10 @@ http {
             return 200 "Kaltura";
         }
 
-        location ~ ^(?<tokenKey>/(scf|s/)?.*/\d+/e/(?<entryId>[^/]+)(/playlist/(?<playlist>[^/]+))?)(/t/(?<token>[^/]+))?/ {
+        location ~ ^(?<tokenKey>/.*?/\d+/e/(?<entryId>[^/]+)(/playlist/(?<playlist>[^/]+))?)(/t/(?<token>[^/]+))?/ {
 
             secure_link $token;
-            secure_link_md5 "test $scheme://$http_host$tokenKey";
+            secure_link_md5 "test $scheme://$http_host$tokenKey/";
 
             location ~ /live/hls/ {
                 include nginx.conf.live.bootstrap;
