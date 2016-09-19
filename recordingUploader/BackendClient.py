@@ -8,18 +8,17 @@ import json
 
 class BackendClient:
 
-    def __init__(self):
-        self.admin_secret = get_config('admin_secret')
-        self.partner_id = get_config('partner_id')
-        self.url = get_config('api_service_url')
-        self.session_duration = get_config('session_duration')
-        self.mode = get_config('mode')
-        self.format = get_config('api_format')
-        self.request_timeout = 120
-        self.expiration_time_ks = -1
-        self.logger = logging.getLogger(__name__)
-        self.logger.info("initialize Kaltura API")
-        self.mutex = Lock()
+    admin_secret = get_config('admin_secret')
+    partner_id = get_config('partner_id')
+    url = get_config('api_service_url')
+    session_duration = get_config('session_duration')
+    mode = get_config('mode')
+    format = get_config('api_format')
+    request_timeout = 120
+    expiration_time_ks = -1
+    logger = logging.getLogger(__name__)
+    logger.info("initialize Kaltura API")
+    mutex = Lock()
 
     def create_new_session(self):
         self.config = KalturaConfiguration(self.url)
@@ -69,7 +68,7 @@ class BackendClient:
 
         client = KalturaClient(KalturaConfiguration(self.url))
         client.setPartnerId(102)
-        client.setKs('ZTU5ZDZjN2IyZWQxMzU4ZjM3M2RkY2M5NGI1NGFhMTQ4MzE3MTUxM3wxMDI7MTAyOzE0NzMyNTA5MDk7MjsxNDczMTY0NTA5LjA5MjE7cm9uLnlhZGdhckBrYWx1dHJhLmNvbTsqLGRpc2FibGVlbnRpdGxlbWVudDs7')
+        client.setKs('OGRjNjg4ZDk5NzBiZmE4OTQ3MmRjYTFkMzYwYzQ1YTRjMWJlYmFlZnwxMDI7MTAyOzE0NzM0MzEwODQ7MjsxNDczMzQ0Njg0LjMxMTQ7cm9uLnlhZGdhckBrYWx1dHJhLmNvbTsqLGRpc2FibGVlbnRpdGxlbWVudDs7')
         #client = self.impersonate_client(self.config, partner_id)
 
         upload_token_filter = KalturaUploadTokenFilter()

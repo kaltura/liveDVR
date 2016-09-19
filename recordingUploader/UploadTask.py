@@ -11,9 +11,12 @@ from MockFileObject import MockFileObject
 from ThreadWorkers import ThreadWorkers
 import random
 
-#todo backend client should be fot all file
+backend_client = BackendClient()
+
+
 class UploadChunkJob:
-    mutex = Lock()  # mutex for prevent race when reading file todo should verify that mutex is create for each file!
+    global backend_client
+    mutex = Lock()  # mutex for prevent race when reading file
 
     def __init__(self, upload_session, infile, sequence_number, final_chunk, resume_at, resume):
         self.upload_session = upload_session
@@ -34,15 +37,15 @@ class UploadChunkJob:
         finally:  # called anyway
             self.mutex.release()
         self.file_obj = MockFileObject(self.infile.name, data)
-        result = UploadTask.backend_client.upload_token_upload(self)
+        result = backend_client.upload_token_upload(self)
 
 
 class UploadTask(TaskBase):
     # Global scope
-    backend_client = BackendClient()
+    global backend_client
     base_directory = get_config('recording_base_dir')
     upload_directory = os.path.join(base_directory, __name__, 'processing')
-    logger = logging.getLogger('UploadTask')
+    logger = logging.getLogger(__name__)
 
     upload_token_buffer_size = get_config('upload_token_buffer_size', 'int') * 1000000  # buffer is in MB
 
@@ -54,17 +57,19 @@ class UploadTask(TaskBase):
         self.logger.info("init")
 
     class KalturaUploadSession:
+        global backend_client
+
         def __init__(self, file_name, file_size, chunks_to_upload, entry_id):
             self.file_name = file_name
             self.file_size = file_size
             self.chunks_to_upload = chunks_to_upload
-            self.partner_id = UploadTask.backend_client.get_partner_id(entry_id)
-            self.upload_entry = UploadTask.backend_client.create_entry(self.partner_id, "text", "text")
+            self.partner_id = backend_client.get_partner_id(entry_id)
+            self.upload_entry = backend_client.create_entry(self.partner_id, entry_id, "recording entry")
             #self.token_id,self.start_from = ServerUploader.backend_client.get_token(self.partner_id,file_name)
             #if !self.token_id:
-            upload_token_list_response = UploadTask.backend_client.upload_token_list(self.partner_id, file_name)
+            upload_token_list_response = backend_client.upload_token_list(self.partner_id, file_name)
             if upload_token_list_response.totalCount == 0:
-                self.token_id = UploadTask.backend_client.upload_token_add(self.partner_id, file_name, file_size)
+                self.token_id = backend_client.upload_token_add(self.partner_id, file_name, file_size)
                 self.uploaded_file_size = 0
                 return
             if upload_token_list_response.totalCount == 1:  # if token is exist
@@ -95,7 +100,7 @@ class UploadTask(TaskBase):
                 continue
             final_chunk = sequence_number == chunks_to_upload
             resume = sequence_number > 1
-            if random.uniform(0, 1) > 0.25:
+            if random.uniform(0, 1) > -1:
                 chunk = UploadChunkJob(upload_session, infile, sequence_number, final_chunk, resume_at, resume)
             else:
                 chunk = UploadChunkJob(upload_session, None, sequence_number, final_chunk, resume_at, resume)
@@ -106,7 +111,7 @@ class UploadTask(TaskBase):
         upload_session_json = str(vars(upload_session))
         if len(result) == 0:
             self.logger.info("successfully upload all chunks, call append recording")
-            UploadTask.backend_client.set_media_content(upload_session)
+            backend_client.set_media_content(upload_session)
 
         else:
             raise Exception("Failed to upload file, "+str(len(result))+" chunks from "+str(chunks_to_upload)+ " where failed:"
@@ -114,7 +119,7 @@ class UploadTask(TaskBase):
 
     def append_recording_handler(self):
         try:
-            self.backend_client.append_recording(self.output_file)
+            backend_client.append_recording(self.output_file)
         except Exception, e:
             self.logger.error("Failed to append recording : %s\n %s", str(e), traceback.format_exc())
 

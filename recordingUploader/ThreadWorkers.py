@@ -24,20 +24,19 @@ class Singleton(type):
 
 class ThreadWorkers:  # singleton object,
     __metaclass__ = Singleton
+    num_of_thread = get_config('num_of_thread', 'int')
+    logger = logging.getLogger(__name__)
 
     def __init__(self):
-        self.num_of_thread = get_config('num_of_thread', 'int')
-        self.logger = logging.getLogger('TreadWorkers')
         self.q = Queue.Queue()
         self.generate_upload_thread()
-        self.logger.info("init")
         self.job_failed = []
 
     def generate_upload_thread(self):
         for i in range(1, self.num_of_thread+1):
-            t = Thread(target=self.worker, args=(i,))  # todo change name
+            t = Thread(target=self.worker, args=(i,))
             t.setName("UploadTasks-"+str(i)) # note this is not work for multiple uploader process
-            t.daemon = True  # todo check it
+            t.daemon = True
             t.start()
 
     def worker(self, index):

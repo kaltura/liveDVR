@@ -8,6 +8,11 @@ ffmpeg_path = get_config('ffmpeg_path')
 
 class ConcatenationTask(TaskBase):
 
+    # global variables
+    manifest_input_file = "manifest.txt"
+    logger = logging.getLogger(__name__)
+    base_directory = get_config('recording_base_dir')
+
     @staticmethod
     def sorted_ls(path):
         mtime = lambda f: os.stat(os.path.join(path, f)).st_mtime
@@ -25,14 +30,11 @@ class ConcatenationTask(TaskBase):
                 self.logger.warn("file %s is not mp4 file format", file_name)
         fo.close()
 
-    def __init__(self, param): # todo move all global var
+    def __init__(self, param):
         self.entry_directory = param['directory']
         self.entry_id = param['entry_id']
-        self.manifest_input_file = "manifest.txt"
-        self.logger = logging.getLogger(__name__)
-        base_directory = get_config('recording_base_dir')
-        concat_task_processing = os.path.join(base_directory, self.__class__.__name__, 'processing')
-        self.recording_path = os.path.join(concat_task_processing, self.entry_directory)
+        concat_task_processing_dir = os.path.join(self.base_directory, self.__class__.__name__, 'processing')
+        self.recording_path = os.path.join(concat_task_processing_dir, self.entry_directory)
         self.output_file = self.entry_directory+'_out.mp4'
 
     def run(self):

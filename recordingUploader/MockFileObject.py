@@ -20,7 +20,7 @@ class MockFileObject:
         if whence == 0:
             self.offset = offset
         if whence == 1:
-            self.offset = self.offset - offset # todo check if its plus 0r minus
+            self.offset = self.offset - offset
         if whence == 2:
             self.offset = self.length - offset
         if self.offset > self.length:

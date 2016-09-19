@@ -1,19 +1,18 @@
 from multiprocessing import Process
 import logging.handlers
-import time
 import os
 from config import get_config
 from multiprocessing import Queue
-from threading import Thread, Timer
+from threading import Timer
 import shutil
 import re
 import abc
 import traceback
-from KalturaTaskException import KalturaTaskException
-
 
 #  Currently not support multiple machine pulling from one incoming dir.
 # If need, just add incoming dir in the constructor
+
+
 class TaskRunner:
 
     def __init__(self, task, number_of_processes, output_directory, max_task_count):
@@ -31,7 +30,7 @@ class TaskRunner:
         self.working_directory = os.path.join(base_directory, self.task_name, 'processing')
         self.output_directory = output_directory
         self.task_queue = Queue(max_task_count)
-        self.logger = logging.getLogger(self.task_name)  # todo should decorate with task name
+        self.logger = logging.getLogger(__name__+'-'+self.task_name)  # todo should decorate with task name
         self.on_startup()
 
     def on_startup(self):
@@ -74,10 +73,9 @@ class TaskRunner:
                     self.logger.error("Error while try to add task:%s \n %s", str(e), traceback.format_exc())
 
     def work(self, index):
+        self.logger.info("Worker %s start working", index)
         while True:
             task_parameter = self.task_queue.get()
-            if self.task is None:   # todo checkit
-                break
             self.logger.info("Task is performed by %d", index)
             try:
                 src = os.path.join(self.working_directory, task_parameter['directory'])
@@ -109,7 +107,7 @@ class TaskRunner:
                 retries_file = open(retries_file_path, "r+")
                 retries = retries_file.read()
                 retries = int(retries) - 1
-                retries_file.seek(0)
+                retries_file.seek(0) # todo tix it!
                 retries_file.write(str(retries))
                 retries_file.close()
                 return retries
@@ -118,11 +116,15 @@ class TaskRunner:
             return 0
 
     def add_new_task_handler(self):
-        Timer(self.polling_interval, self.add_new_task_handler).start()
+        thread = Timer(self.polling_interval, self.add_new_task_handler)
+        thread.daemon = True
+        thread.start()
         self.move_and_add_to_queue(self.input_directory)
 
     def failed_task_handler(self):
-        Timer(self.failed_tasks_handling_interval, self.failed_task_handler).start()
+        thread = Timer(self.failed_tasks_handling_interval, self.failed_task_handler)
+        thread.daemon = True
+        thread.start()
         self.move_and_add_to_queue(self.failed_tasks_directory)
 
     def start(self):
@@ -131,14 +133,12 @@ class TaskRunner:
             self.add_new_task_handler()
             self.failed_task_handler()
             self.logger.info("starting %d workers", self.number_of_processes)
-            workers = [Process(target=self.work, args=(i,)) for i in xrange(self.number_of_processes)]
+            workers = [Process(target=self.work, args=(i,)) for i in xrange(1, self.number_of_processes+1)]
             for w in workers:
                 w.start()
             return workers
         except Exception as e:
             self.logger.fatal("Failed to start task runner: %s  \n %s ", str(e), traceback.format_exc())
-
-
 
 
 class TaskBase(object):
@@ -148,8 +148,3 @@ class TaskBase(object):
     def run(self):
         """running the task"""
         return
-
-    #@abc.abstractmethod
-    #def error_handler(self):
-    #    """handing error"""
-    #    return

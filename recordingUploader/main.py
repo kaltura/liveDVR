@@ -6,25 +6,33 @@ from config import get_config
 from os import path
 # todo fix the issue with the logger
 # todo categorize logger between debug and info
+# support upload token change yosi made
+# recirdubg should not be than 24 hours
+# How to recover from case that live-controller crash, when need to cread hard link/Wrote to json
+# support upload token list by partner -5
+# support get source id (especially for audio)
+# support create recording entry and set media recording entry
+# the recording entry should created after session ended, and the
+# recrding limitation - playlist obj should not remore obj q
+# initial logger
 recording_logger.init_logger()
 
-max_jobs_count = get_config("max_jobs_count", 'int')
+max_task_count = get_config("max_task_count", 'int')
 ffmpeg_path = get_config('ffmpeg_path')
-output_file_name = get_config('output_file_name')
-polling_interval = get_config('polling_interval', 'float')
 concat_processors_count = get_config('concat_processors_count', 'int')
 uploading_processors_count = get_config('uploading_processors_count', 'int')
 base_directory = get_config('recording_base_dir')
-jobs_done_directory = path.join(base_directory, 'done')
+tasks_done_directory = path.join(base_directory, 'done')
 incoming_upload_directory = path.join(base_directory, UploadTask.__name__, 'incoming')
 
-ConcatenationRunnerTask = TaskRunner(ConcatenationTask, concat_processors_count,
-                                      incoming_upload_directory, max_jobs_count).start()
+ConcatenationTaskRunner = TaskRunner(ConcatenationTask, concat_processors_count, incoming_upload_directory,
+                                     max_task_count).start()
 
-UploadTaskRunner = TaskRunner(UploadTask, uploading_processors_count,
-                                  jobs_done_directory, max_jobs_count).start()
 
-for p in ConcatenationRunnerTask:
+UploadTaskRunner = TaskRunner(UploadTask, uploading_processors_count, tasks_done_directory, max_task_count).start()
+
+
+for p in ConcatenationTaskRunner:
     p.join()
 
 for p in UploadTaskRunner:
