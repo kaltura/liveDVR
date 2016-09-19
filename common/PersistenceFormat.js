@@ -8,6 +8,7 @@ var qio = require('q-io/fs');
 var _ = require('underscore');
 var Q = require('q');
 
+const mp4ConvertMatch =  new RegExp(/media-([^_]+).*_([\d]+)\..*/);
 
 module.exports = {
 
@@ -28,7 +29,13 @@ module.exports = {
     },
     
     getMP4FileNamefromInfo: function(chunkPath){
-        return path.basename(chunkPath) + '.mp4';
+
+        var filename =  path.basename(chunkPath);
+        var matched = mp4ConvertMatch.exec( filename );
+        if(matched){
+            return matched[1] + '_' + matched[2] + '.mp4';
+        }
+        return filename + '.mp4';
     },
     
     getTSChunknameFromMP4FileName: function(mp4FileName){
