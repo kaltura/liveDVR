@@ -18,6 +18,7 @@
   "apiUpdateInterval" : 60000,
   "streamInfoUpdateInterval" : 300000,
   "flavorDownloaderTeardownInterval" : 15000,
+  "numOfManifestRetries" : 5,
   "logLevel" : "DEBUG",
   "logToConsole" : false,
   "logFileName" : "~/dvr/kLiveController.log",

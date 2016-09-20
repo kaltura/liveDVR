@@ -62,7 +62,6 @@ http {
         vod_dash_manifest_format segmenttemplate;
         vod_dash_profiles urn:mpeg:dash:profile:isoff-live:2011;
 
-
         gzip  on;
         gzip_types application/vnd.apple.mpegurl video/f4m application/dash+xml text/xml;
 
@@ -73,25 +72,25 @@ http {
             return 200 "Kaltura";
         }
 
-        location ~ ^/live/(?<tokenKey>.*/p/\d+/entryId/(?<entryId>[^/]+)(/playlist/(?<playlist>[^/]+))?)(/token/(?<token>[^/]+))?/ {
+        location ~ ^(?<tokenKey>/.*?/\d+/e/(?<entryId>[^/]+)(/playlist/(?<playlist>[^/]+))?)(/t/(?<token>[^/]+))?/ {
 
-            #secure_link $token;
-            #secure_link_md5 "KKK $http_host $tokenKey";
+            secure_link $token;
+            secure_link_md5 "test $scheme://$http_host$tokenKey/";
 
-            location ~ ^/live/hls/ {
+            location ~ /live/hls/ {
                 include nginx.conf.live.bootstrap;
                 vod hls;
             }
 
-#            location ~ ^/live/enc/hls/ {
-#                include nginx.conf.live.bootstrap;
-#                vod hls;
-#                vod_secret_key "MuKkAuKk1$vod_filepath";
-#                vod_hls_encryption_method aes-128;
-#            }
+            location ~ /live/ehls/ {
+                include nginx.conf.live.bootstrap;
+                vod hls;
+                vod_secret_key "jKsf!hAuaJak $vod_suburi";
+                vod_hls_encryption_method aes-128;
+            }
 
 
-            location ~ ^/live/hds/ {
+            location ~ /live/hds/ {
                 include nginx.conf.live.bootstrap;
                 vod hds;
             }

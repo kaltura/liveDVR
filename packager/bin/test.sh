@@ -4,15 +4,15 @@ partnerId=123
 address=http://localhost:8080
 set -x
 echo HLS:
-curl $address/live/hls/p/$partnerId/entryId/$entryId/master.m3u8 -i
-curl $address/live/hls/p/$partnerId/entryId/$entryId/index-f1.m3u8 -i
+curl $address/live/hls/p/$partnerId/e/$entryId/master.m3u8 -i
+curl $address/live/hls/p/$partnerId/e/$entryId/index-f1.m3u8 -i
 echo HDS
-curl $address/live/hds/p/$partnerId/entryId/$entryId/manifest.f4m  -i
-curl $address/live/hds/p/$partnerId/entryId/$entryId/bootstrap-v1-a1.abst -i
+curl $address/live/hds/p/$partnerId/e/$entryId/manifest.f4m  -i
+curl $address/live/hds/p/$partnerId/e/$entryId/bootstrap-v1-a1.abst -i
 echo MSS
-curl $address/live/mss/p/$partnerId/entryId/$entryId/manifest -i
+curl $address/live/mss/p/$partnerId/e/$entryId/manifest -i
 echo DASH
-curl $address/live/dash/p/$partnerId/entryId/$entryId/manifest.mpd -i
+curl $address/live/dash/p/$partnerId/e/$entryId/manifest.mpd -i
 
 
 

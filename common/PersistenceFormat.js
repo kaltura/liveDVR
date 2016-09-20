@@ -8,15 +8,16 @@ var qio = require('q-io/fs');
 var _ = require('underscore');
 var Q = require('q');
 
+const tsChunktMatch =  new RegExp(/media-([^_]+).*(_[\d]+.ts).*/);
 
 module.exports = {
 
     getEntryBasePath: function (entryId) {
         return path.join(config.get('rootFolderPath'), entryId);
     },
-    
+
     getBasePathFromFull: function (directory) {
-            return path.dirname(path.dirname(directory));
+        return path.dirname(path.dirname(directory));
     },
 
     getFlavorFullPath: function (entryId, flavorName) {
@@ -28,11 +29,12 @@ module.exports = {
     },
     
     getMP4FileNamefromInfo: function(chunkPath){
-        return path.basename(chunkPath) + '.mp4';
+         return chunkPath.replace('.ts','.mp4');
     },
-    
+
+
     getTSChunknameFromMP4FileName: function(mp4FileName){
-        return mp4FileName.substr(0, mp4FileName.length - 4); //'.mp4'.length);
+        return mp4FileName.replace('.mp4','.ts');
     },
     
     createHierarchyPath: function(destPath, lastFileHash) {
@@ -47,5 +49,14 @@ module.exports = {
             .then(function() {
                 return retVal;
             });
+    },
+
+    normalizeChunkName: function(tsChunkName){
+        var matched = tsChunktMatch.exec( tsChunkName );
+        if(matched){
+            return matched[1] + matched[2];
+        }
+        return tsChunkName;
     }
+
 };
