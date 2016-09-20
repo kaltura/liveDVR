@@ -19,6 +19,8 @@
   "streamInfoUpdateInterval" : 300000,
   "flavorDownloaderTeardownInterval" : 15000,
   "numOfManifestRetries" : 5,
+  "minChunkDurationInSec": 2,
+  "maxChunkDurationInSec": 15,
   "logLevel" : "DEBUG",
   "logToConsole" : false,
   "logFileName" : "~/dvr/kLiveController.log",
