@@ -50,7 +50,7 @@ class ControllerWrapper extends events.EventEmitter {
                 .catch(function (err) {
                     let err_msg = !isNaN(err) ? util.format('regression failed with exit code %s', err) : util.format('regression failed with error %s', err.message);
                     console.log(err_msg);
-                    deferred.resolve(-1);
+                    deferred.resolve(err);
                 });
 
             this.regressionEndedPromise.promise
