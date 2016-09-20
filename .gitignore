@@ -37,3 +37,5 @@ packager/build
 # grunt results ignore directory
 #todo: remove or create dir in gruntfile
 reports
+
+common/config/configMapping.json
