@@ -23,6 +23,7 @@
   "logFileName" : "~/dvr/kLiveController.log",
   "logTimeZoneOffset" : 300,
   "monitorPort": 4390,
+  "streamPersistenceTimerMSec": 60000,
   "regressionAdapter": {
       "enable":false
   },
