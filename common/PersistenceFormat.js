@@ -10,7 +10,7 @@ var Q = require('q');
 
 const tsChunktMatch =  new RegExp(/media-([^_]+).*(_[\d]+.ts).*/);
 
-module.exports = {
+module.exports = persistenceFormat = {
 
     getEntryBasePath: function (entryId) {
         return path.join(config.get('rootFolderPath'), entryId);
@@ -18,6 +18,10 @@ module.exports = {
 
     getBasePathFromFull: function (directory) {
         return path.dirname(path.dirname(directory));
+    },
+
+    getRelativePathFromFull: function (fullPath) {
+        return fullPath.substr(persistenceFormat.getBasePathFromFull(fullPath).length);
     },
 
     getFlavorFullPath: function (entryId, flavorName) {
@@ -51,7 +55,7 @@ module.exports = {
             });
     },
 
-    normalizeChunkName: function(tsChunkName){
+    compressChunkName: function(tsChunkName){
         var matched = tsChunktMatch.exec( tsChunkName );
         if(matched){
             return matched[1] + matched[2];
