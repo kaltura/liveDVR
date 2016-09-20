@@ -14,6 +14,8 @@ var testsuite = process.env.TEST_CLASS ? process.env.TEST_CLASS : 'hls-recording
 
 
 describe('Live-Recording (for regression)', function() {
+    process.env['MOCHA_FILE'] = './reports/last_recording_run/recording-report.xml';
+    process.env['PROPERTIES'] = `BUILD_ID:${process.env.BUILD_NUMBER}`;
 
     it (testsuite, function(done) {
         var controller = new ControllerWrapper('HLS stream recording');
