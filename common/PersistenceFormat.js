@@ -8,18 +8,15 @@ var qio = require('q-io/fs');
 var _ = require('underscore');
 var Q = require('q');
 
-//var regEx = new RegExp(/([01]_\w+\/[0-9]+\/)/);
-var regEx = new RegExp(/(.*?\/[0-9]+\/)/);
 
 module.exports = {
 
     getEntryBasePath: function (entryId) {
         return path.join(config.get('rootFolderPath'), entryId);
     },
-
-    getBasePathFromFull: function (path) {
-        let subString = path.match(regEx)[1];
-        return path.substr(0, path.lastIndexOf(subString) + subString.length);
+    
+    getBasePathFromFull: function (directory) {
+            return path.dirname(path.dirname(directory));
     },
 
     getFlavorFullPath: function (entryId, flavorName) {
