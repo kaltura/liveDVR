@@ -21,7 +21,9 @@ namespace converter{
     const std::string MediaFileInfo::fld_startTime = "startTime";
     const std::string MediaFileInfo::fld_video = "video";
     const std::string MediaFileInfo::fld_audio = "audio";
-    
+    const std::string MediaFileInfo::fld_metaData = "metaData";
+
+
     std::ostream& quotes(std::ostream& os,const std::string &s) {
         return os << "\"" << s << "\"";
     }
@@ -94,8 +96,32 @@ namespace converter{
                     break;
             };
         }
+
+        if(mfi.bSerializeMetaData){
+            os << ",";
+            field(os,MediaFileInfo::fld_metaData) << mfi.metadata;
+        }
         os << "}";
          return os;
+    }
+
+    std::ostream& operator<<(std::ostream& os, const MediaMetadata& md){
+
+        os << "{";
+        if(md.width > 0 && md.height > 0 ){
+            field(os,"resolution") << "[" << md.width << "," << md.height << "]" << ",";
+        }
+        field(os,"bitrate_kbps") << md.kbps;
+        if(md.framerate){
+            os << ",";
+            field(os,"framerate") << md.framerate;
+        }
+        if(md.keyFrameDistance){
+            os << ",";
+            field(os,"keyFrameDistance") << md.keyFrameDistance;
+        }
+        os << "}";
+        return os;
     }
 
 };
