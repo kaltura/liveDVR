@@ -8,7 +8,7 @@ var qio = require('q-io/fs');
 var _ = require('underscore');
 var Q = require('q');
 
-const tsChunktMatch =  new RegExp(/media-([^_]+).*(_[\d]+.ts).*/);
+const tsChunktMatch =  new RegExp(/media-([^_]+).*([\d]+)\.ts.*/);
 
 module.exports = persistenceFormat = {
 
@@ -40,7 +40,7 @@ module.exports = persistenceFormat = {
     getTSChunknameFromMP4FileName: function(mp4FileName){
         return mp4FileName.replace('.mp4','.ts');
     },
-    
+
     createHierarchyPath: function(destPath, lastFileHash) {
         let hash = new Date().getHours().toString();
         let fileFullPath = path.join(destPath, (hash) < 10 ? ("0" + hash) : hash);
@@ -58,7 +58,7 @@ module.exports = persistenceFormat = {
     compressChunkName: function(tsChunkName){
         var matched = tsChunktMatch.exec( tsChunkName );
         if(matched){
-            return matched[1] + matched[2];
+            return matched[1] + '-' + matched[2] + '.mp4';
         }
         return tsChunkName;
     }
