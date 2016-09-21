@@ -64,7 +64,7 @@ class UploadTask(TaskBase):
             self.file_size = file_size
             self.chunks_to_upload = chunks_to_upload
             self.partner_id = backend_client.get_partner_id(entry_id)
-            self.upload_entry = backend_client.create_entry(self.partner_id, entry_id, "recording entry")
+            self.upload_entry = entry_id
             #self.token_id,self.start_from = ServerUploader.backend_client.get_token(self.partner_id,file_name)
             #if !self.token_id:
             upload_token_list_response = backend_client.upload_token_list(self.partner_id, file_name)
@@ -112,7 +112,7 @@ class UploadTask(TaskBase):
         if len(result) == 0:
             self.logger.info("successfully upload all chunks, call append recording")
             backend_client.set_media_content(upload_session)
-
+            os.rename(self.output_file, self.output_file+'.done')
         else:
             raise Exception("Failed to upload file, "+str(len(result))+" chunks from "+str(chunks_to_upload)+ " where failed:"
                             + upload_session_json)

@@ -38,17 +38,17 @@ class BackendClient:
         finally:
             self.mutex.release()
 
-    def impersonate_client(self, config, partner_id):
+    def impersonate_client(self, partner_id):
 
-        clone_client = KalturaClient(config)
-        clone_client.setPartnerId(partner_id)
         self.get_kaltura_session()  # generate KS in case that not existed or expired
+        clone_client = KalturaClient(self.config)
+        clone_client.setPartnerId(partner_id)
         clone_client.setKs(self.ks)
         return clone_client
 
-    def create_entry(self, partner_id, name, description):
+    def create_entry(self, partner_id, name, description): # todo not in use
 
-        client = self.impersonate_client(self.config, partner_id)
+        client = self.impersonate_client( partner_id)
         entry = KalturaMediaEntry(name, description)
         entry.mediaType = 1
         result = client.media.add(entry)
@@ -56,7 +56,7 @@ class BackendClient:
 
     def upload_token_add(self, partner_id, file_name, file_size):
 
-        client = self.impersonate_client(self.config, partner_id)
+        client = self.impersonate_client(partner_id)
         upload_token_obj = KalturaUploadToken()
         upload_token_obj.fileName = file_name
         upload_token_obj.fileSize = file_size
@@ -66,10 +66,7 @@ class BackendClient:
 
     def upload_token_list(self, partner_id, file_name):
 
-        client = KalturaClient(KalturaConfiguration(self.url))
-        client.setPartnerId(102)
-        client.setKs('OGRjNjg4ZDk5NzBiZmE4OTQ3MmRjYTFkMzYwYzQ1YTRjMWJlYmFlZnwxMDI7MTAyOzE0NzM0MzEwODQ7MjsxNDczMzQ0Njg0LjMxMTQ7cm9uLnlhZGdhckBrYWx1dHJhLmNvbTsqLGRpc2FibGVlbnRpdGxlbWVudDs7')
-        #client = self.impersonate_client(self.config, partner_id)
+        client = self.impersonate_client(partner_id)
 
         upload_token_filter = KalturaUploadTokenFilter()
         upload_token_filter.fileNameEqual = file_name
@@ -78,7 +75,7 @@ class BackendClient:
 
     def upload_token_upload(self, upload_chunk_obj):
 
-        client = self.impersonate_client(self.config, upload_chunk_obj.upload_session.partner_id)
+        client = self.impersonate_client(upload_chunk_obj.upload_session.partner_id)
         token = upload_chunk_obj.upload_session.token_id
         file_name = upload_chunk_obj.upload_session.file_name
         chunks_to_upload = upload_chunk_obj.upload_session.chunks_to_upload
@@ -115,12 +112,13 @@ class BackendClient:
         upload_entry = upload_session.upload_entry
         partner_id = upload_session.partner_id
         resource = KalturaUploadedFileTokenResource(token_id)
-        client = self.impersonate_client(self.config, partner_id)
-        client.media.addContent(upload_entry, resource)
+        client = self.impersonate_client(partner_id)
+        client.media.updateContent(upload_entry, resource) #todo change to upldate
         self.logger.info("Set media content with entryId %s and token %s", upload_entry, token_id)
 
     def get_partner_id(self, entry_id):
-        self.get_kaltura_session()
-        result = self.client.liveStream.get(entry_id)
-        return result.partnerId
+        #self.get_kaltura_session()
+        #result = self.client.liveStream.get(entry_id)
+        #return result.partnerId
+        return 105  # todo fix it
 

@@ -61,7 +61,7 @@ fi
 echo "$nginxDir"
 cd $nginxDir
 
-./configure --add-module=$packagerDir --with-debug --with-cc-opt="-O0"
+./configure --with-http_secure_link_module --add-module=$packagerDir --with-debug --with-cc-opt="-O0"
 make
 #make install
 

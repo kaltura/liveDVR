@@ -7,13 +7,13 @@ from os import path
 # todo fix the issue with the logger
 # todo categorize logger between debug and info
 # support upload token change yosi made
-# recirdubg should not be than 24 hours
-# How to recover from case that live-controller crash, when need to cread hard link/Wrote to json
-# support upload token list by partner -5
+# recirdubg should not be than 24 hours - stop recording
+# How to recover from case that live-controller crash, when need to cread hard link/Wrote to json- maybe flavor download should send event to all his chunks on disk
 # support get source id (especially for audio)
 # support create recording entry and set media recording entry
 # the recording entry should created after session ended, and the
 # recrding limitation - playlist obj should not remore obj q
+# change output file name and remove manifest, cause make problem after stream again
 # initial logger
 recording_logger.init_logger()
 

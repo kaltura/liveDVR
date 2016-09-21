@@ -12,6 +12,7 @@
     "src/Converter.cpp" ,
     "src/AVFormat.cpp" ,
     "src/NodeStream.cpp",
+    "src/Stream.cpp",
     "include/Utils.h",
     "include/Stream.h",
     "include/Converter.h",
