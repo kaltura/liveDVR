@@ -2,8 +2,6 @@
   "mockNetwork" : false,
   "mockBackend" : false,
   "readMockBackendResponseFromFile" : false,
-  "rootFolderPath" : "~/dvr/dvrContentRootPath",
-  "oldContentFolderPath" : "~/dvr/dvrOldContentRootPath",
   "recordingFolderPath" : "~/dvr/recording/Open_sessions",
   "completedRecordingFolderPath" : "~/dvr/recording/ConcatenationTask/incoming",
   "recordingTimeInterval" : "60000",
