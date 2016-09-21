@@ -8,7 +8,7 @@ var qio = require('q-io/fs');
 var _ = require('underscore');
 var Q = require('q');
 
-const tsChunktMatch =  new RegExp(/media-([^_]+).*([\d]+)\.ts.*/);
+const tsChunktMatch =  new RegExp(/media-([^_]+).*?([\d]+)\.ts.*/);
 
 module.exports = persistenceFormat = {
 
