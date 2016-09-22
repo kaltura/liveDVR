@@ -29,6 +29,10 @@
   "regressionAdapter": {
       "enable":false
   },
+  "diagnostics": {
+      "errorsWindowSizeInMsec" : 5000,
+      "ptsMaxMisalignmentAllowed" : 5
+  },
   "simulateStreams": {
       "enable":false,
       "count": 1,
