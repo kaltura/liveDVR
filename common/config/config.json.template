@@ -30,8 +30,8 @@
       "enable":false
   },
   "diagnostics": {
-      "errorsWindowSizeInMsec" : 5000,
-      "ptsMaxMisalignmentAllowed" : 5
+      "errorsWindowSizeInSec" : 360,
+      "ptsMaxMisalignmentAllowedInSec" : 5
   },
   "simulateStreams": {
       "enable":false,
