@@ -52,6 +52,7 @@ class UploadTask(TaskBase):
     def __init__(self, param):
         self.entry_directory = param['directory']
         self.entry_id = param['entry_id']
+        self.recorded_id = param['recorded_id']
         self.output_filename = self.entry_directory+'_out.mp4'
         self.output_file = os.path.join(self.upload_directory, self.entry_directory, self.output_filename)
         self.logger.info("init")
@@ -59,12 +60,12 @@ class UploadTask(TaskBase):
     class KalturaUploadSession:
         global backend_client
 
-        def __init__(self, file_name, file_size, chunks_to_upload, entry_id):
+        def __init__(self, file_name, file_size, chunks_to_upload, entry_id, recorded_id):
             self.file_name = file_name
             self.file_size = file_size
             self.chunks_to_upload = chunks_to_upload
-            self.partner_id = backend_client.get_partner_id(entry_id)
-            self.upload_entry = entry_id
+            self.partner_id = backend_client.get_live_entry(entry_id).partnerId
+            self.recorded_id = recorded_id
             #self.token_id,self.start_from = ServerUploader.backend_client.get_token(self.partner_id,file_name)
             #if !self.token_id:
             upload_token_list_response = backend_client.upload_token_list(self.partner_id, file_name)
@@ -74,7 +75,7 @@ class UploadTask(TaskBase):
                 return
             if upload_token_list_response.totalCount == 1:  # if token is exist
                 self.token_id = upload_token_list_response.objects[0].id
-                self.uploaded_file_size = upload_token_list_response.objects[0].uploadedFileSize = 0
+                self.uploaded_file_size = upload_token_list_response.objects[0].uploadedFileSize
                 UploadTask.logger.info("Found token exist for %s, token: %s, stating from %s", self.file_name, self.token_id,
                                  self.uploaded_file_size)
                 return
@@ -91,7 +92,7 @@ class UploadTask(TaskBase):
         else:
             chunks_to_upload = int(file_size / self.upload_token_buffer_size) + 1
         upload_session = UploadTask.KalturaUploadSession(self.output_filename, file_size, chunks_to_upload,
-                                                                 self.entry_id)
+                                                         self.entry_id, self.recorded_id)
         for sequence_number in range(1, chunks_to_upload+1):
             resume_at = self.upload_token_buffer_size * (sequence_number - 1)
             if resume_at < upload_session.uploaded_file_size:
@@ -111,6 +112,11 @@ class UploadTask(TaskBase):
         upload_session_json = str(vars(upload_session))
         if len(result) == 0:
             self.logger.info("successfully upload all chunks, call append recording")
+
+            #Check if need to call cancel_replace
+            recorded_obj = backend_client.get_recorded_entry(upload_session.partner_id, self.recorded_id)
+            if (recorded_obj.replacementStatus == "some value"):
+                backend_client.cancel_replace(upload_session.partner_id, self.recorded_id)
             backend_client.set_media_content(upload_session)
             os.rename(self.output_file, self.output_file+'.done')
         else:
@@ -119,7 +125,7 @@ class UploadTask(TaskBase):
 
     def append_recording_handler(self):
         try:
-            backend_client.append_recording(self.output_file)
+            backend_client.append_recording(self.recorded_id, self.output_file) # todo check it full path
         except Exception, e:
             self.logger.error("Failed to append recording : %s\n %s", str(e), traceback.format_exc())
 

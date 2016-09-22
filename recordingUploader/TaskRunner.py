@@ -56,7 +56,7 @@ class TaskRunner:
             self.logger.fatal("Error %s \n %s", str(e), traceback.format_exc())
 
     def move_and_add_to_queue(self, src_dir):
-        entry_regex = '^([01]_\w{8})_'
+        entry_regex = '^([01]_\w{8})_([01]_\w{8})_'
         pattern = re.compile(entry_regex)
         for directory_name in os.listdir(src_dir):
             directory_path = os.path.join(src_dir, directory_name)
@@ -66,7 +66,8 @@ class TaskRunner:
                         shutil.move(directory_path, self.working_directory)
                     m = re.search(entry_regex, directory_name)
                     entry_id = m.group(1)
-                    param = {'entry_id': entry_id, 'directory': directory_name}
+                    recorded_id = m.group(2)
+                    param = {'entry_id': entry_id, 'directory': directory_name, 'recorded_id': recorded_id}
                     self.task_queue.put(param)
                     self.logger.info("Add unhanded directory %s from %s to the task queue", directory_name, src_dir)
                 except Exception as e:

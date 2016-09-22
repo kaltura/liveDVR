@@ -1,5 +1,5 @@
 from KalturaClient import *
-from KalturaClient.Plugins.Core import KalturaMediaEntry, KalturaUploadToken, KalturaUploadedFileTokenResource, KalturaUploadTokenFilter
+from KalturaClient.Plugins.Core import KalturaMediaEntry, KalturaUploadToken, KalturaUploadedFileTokenResource, KalturaUploadTokenFilter, KalturaServerFileResource
 from config import get_config
 import logging.handlers
 from threading import Lock
@@ -54,6 +54,20 @@ class BackendClient:
         result = client.media.add(entry)
         return result.id
 
+    def cancel_replace(self, partner_id, entry_id):
+        client = self.impersonate_client(partner_id)
+        result = client.media.cancelReplace(entry_id)
+        return result # need to return value?
+
+    def get_recorded_entry(self, partner_id, entry_id):
+        client = self.impersonate_client(partner_id)
+        result = client.media.get(entry_id)
+        return result
+
+    def get_live_entry(self, entry_id):
+        self.get_kaltura_session()  # generate KS in case that not existed or expired
+        return self.client.liveStream.get(entry_id)
+
     def upload_token_add(self, partner_id, file_name, file_size):
 
         client = self.impersonate_client(partner_id)
@@ -80,12 +94,12 @@ class BackendClient:
         file_name = upload_chunk_obj.upload_session.file_name
         chunks_to_upload = upload_chunk_obj.upload_session.chunks_to_upload
         sequence_number = upload_chunk_obj.sequence_number
-        entry_id = upload_chunk_obj.upload_session.upload_entry
+        recorded_id = upload_chunk_obj.upload_session.recorded_id
         resume = upload_chunk_obj.resume
         final_chunk = upload_chunk_obj.final_chunk
         resume_at = upload_chunk_obj.resume_at
         self.logger.info("About to upload chunk %s from %s in file %s for recorded entry %s token:%s, resume:%s, "
-                         "final_chunk %s, resume_at: %s", sequence_number, chunks_to_upload, file_name, entry_id, token,
+                         "final_chunk %s, resume_at: %s", sequence_number, chunks_to_upload, file_name, recorded_id, token,
                          resume, final_chunk, resume_at)
         result = client.uploadToken.upload(token,  upload_chunk_obj.file_obj, resume, final_chunk, resume_at)
         self.logger.info("Finish to upload, result: %s", self.upload_token_result_to_json(result))
@@ -109,16 +123,19 @@ class BackendClient:
     def set_media_content(self, upload_session):
 
         token_id = upload_session.token_id
-        upload_entry = upload_session.upload_entry
+        recorded_id = upload_session.recorded_id
         partner_id = upload_session.partner_id
         resource = KalturaUploadedFileTokenResource(token_id)
         client = self.impersonate_client(partner_id)
-        client.media.updateContent(upload_entry, resource) #todo change to upldate
-        self.logger.info("Set media content with entryId %s and token %s", upload_entry, token_id)
+        client.media.updateContent(recorded_id, resource) #todo change to upldate
+        self.logger.info("Set media content with entryId %s and token %s", recorded_id, token_id)
 
-    def get_partner_id(self, entry_id):
-        #self.get_kaltura_session()
-        #result = self.client.liveStream.get(entry_id)
-        #return result.partnerId
-        return 105  # todo fix it
+    def append_recording(self, partner_id, recorded_id, output_file): # todo check it
+        resource = KalturaServerFileResource()
+        resource.localFilePath = output_file
+        client = self.impersonate_client(partner_id)
+        client.media.updateContent(recorded_id, resource)  # todo change to upldate
+        self.logger.info("Append recording for content %s recorded entryId %s.", output_file, recorded_id)
+
+
 

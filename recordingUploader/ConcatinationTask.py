@@ -45,7 +45,7 @@ class ConcatenationTask(TaskBase):
         command = ' '.join([ffmpeg_path, "-f concat", "-i", input_full_path,
                            "-c:v copy -c:a copy -bsf:a aac_adtstoasc -f mp4 -y", output_full_path])
 
-        self.logger.debug("Running the following commnad: %s", command)
+        self.logger.debug("Running the following command: %s", command)
         command_out = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         out, err = command_out.communicate()
         if command_out.returncode == 0:
