@@ -22,7 +22,8 @@ def fill(section):
 
 
 def config_section_map():
-    Config.read("configMapping.ini")
+    current_path = os.path.dirname(os.path.abspath(__file__))
+    Config.read(os.path.join(current_path, "configMapping.ini"))
     config_sections = Config.sections()
     for config_section in config_sections:
         pattern = re.compile(config_section)
