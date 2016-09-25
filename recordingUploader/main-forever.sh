@@ -47,8 +47,8 @@ stop() {
         fi
     fi
     rm -f $LCK_FILE
-    echo `ps aux | grep "Python -u /Users/ron.yadgar/Documents/Repositories/liveDVR/recordingUploader/main.py"`
-    pid=`ps aux | grep 'Python -u /Users/ron.yadgar/Documents/Repositories/liveDVR/recordingUploader/main.py' | awk '{ print $2 }'`
+    echo `ps aux | grep "Python -u $APPLICATION_PATH"`
+    pid=`ps aux | grep 'Python -u $APPLICATION_PATH' | awk '{ print $2 }'`
     echo "killing pid {$pid}"
     sudo kill $pid
 }

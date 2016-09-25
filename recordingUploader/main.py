@@ -6,6 +6,7 @@ from config import get_config
 from os import path
 # todo fix the issue with the logger
 # todo categorize logger between debug and info
+# version is 2.7.11
 # support upload token change yosi made
 # recirdubg should not be than 24 hours - stop recording
 # How to recover from case that live-controller crash, when need to cread hard link/Wrote to json- maybe flavor download should send event to all his chunks on disk
