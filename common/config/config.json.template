@@ -24,6 +24,7 @@
   "logTimeZoneOffset" : 300,
   "monitorPort": 4390,
   "streamPersistenceTimerMSec": 60000,
+  "stoppedEntriesPath": "~/kLivePersistence",
   "regressionAdapter": {
       "enable":false
   },
