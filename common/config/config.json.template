@@ -25,7 +25,8 @@
   "logTimeZoneOffset" : 300,
   "monitorPort": 4390,
   "regressionAdapter": {
-      "enable":false,
+      "verbose": false,
+      "enable": false,
       "analysis": false,
       "analyzerRootPath" : "~/live-monitor/",
       "dataWarehouseRootFolderPath" : "instructions: put here root path to data warehouse (e.g. /var/tmp/regression/data_warehouse)",
@@ -49,7 +50,10 @@
   "preserveOriginalHLS": {
       "enable": false,
       "createFolderPerSession": true,
-      "runDurationInMinutes": 5
+      "runDurationInMinutes": 5,
+      "validate": true,
+      "fix": true,
+      "prepareForRegression": true
   },
   "simulateStreams": {
       "enable":false,
