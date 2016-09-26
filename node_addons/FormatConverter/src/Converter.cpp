@@ -235,7 +235,7 @@ namespace converter{
         
         //ffmpeg can shorten firt sample provided it's dts < pts
         //it provides, however, means of overriding mechanism of mapping input dts on the output one.
-        output->output_ts_offset = std::numeric_limits<int64_t>::min();
+        output->output_ts_offset = dtsUtils::INVALID_VALUE;
         output->avoid_negative_ts = 0;
         
         for( size_t i = 0 , output_stream = 0; i < input->nb_streams; i++){
