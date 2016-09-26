@@ -116,7 +116,7 @@ class UploadTask(TaskBase):
             #Check if need to call cancel_replace
             recorded_obj = backend_client.get_recorded_entry(upload_session.partner_id, self.recorded_id)
             if (recorded_obj.status.value == '4'): #pending //todo import KalturaEntryStatus
-                self.logger.info("entry %s has pending status, calling set media content add")
+                self.logger.info("entry %s has pending status, calling set media content add", self.recorded_id)
                 backend_client.set_media_content_add(upload_session)
             else:
                 if (recorded_obj.replacementStatus.value != '0'):
