@@ -74,7 +74,7 @@ namespace converter{
          
          for(std::vector<MediaTrackInfo>::const_iterator iter = mfi.tracks.begin();
             iter != mfi.tracks.end(); iter++){
-           
+            
             switch(iter->mtype){
                 case AVMEDIA_TYPE_VIDEO:
                 case AVMEDIA_TYPE_AUDIO:
@@ -111,7 +111,7 @@ namespace converter{
         if(md.width > 0 && md.height > 0 ){
             field(os,"resolution") << "[" << md.width << "," << md.height << "]" << ",";
         }
-        field(os,"bitrate_kbps") << md.kbps;
+        field(os,"fileSize_kbits") << md.fileSize;
         if(md.framerate){
             os << ",";
             field(os,"framerate") << md.framerate;

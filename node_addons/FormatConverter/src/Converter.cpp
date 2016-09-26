@@ -382,7 +382,7 @@ namespace converter{
                     av_log(*input,AV_LOG_WARNING,"Converter::pushData. zero sized packet stream=%d time=%lld",
                            pkt.stream_index, pkt.pts);
                 } else {
-                    m_totalBitrate += pkt.size;
+                    m_totalBitrate += (pkt.size * 8.f);
                     _S(av_interleaved_write_frame(*output, &pkt));
                 }
             }
@@ -528,7 +528,6 @@ namespace converter{
                         if(stream->r_frame_rate.den){
                             mfi.metadata.framerate = (float)stream->r_frame_rate.num / stream->r_frame_rate.den;
                         }
-
                     }
                     case AVMEDIA_TYPE_AUDIO:
                     {
@@ -552,8 +551,8 @@ namespace converter{
                         break;
                 };
             }
-
-            mfi.metadata.kbps = m_totalBitrate * 8.f / 1024;
+            
+            mfi.metadata.fileSize = m_totalBitrate / 1024;
 
             assert(mfi.tracks.size() > 0);
             mfi.startTimeUnixMs = this->m_creationTime;
@@ -564,7 +563,7 @@ namespace converter{
                 av_dict_set(&output->metadata, "comment", ostr.str().c_str(), 0);
             }
             output.Close();
-                      output.EmitInfo(mfi);
+            output.EmitInfo(mfi);
             input.Close();
             state = CLOSED;
         }

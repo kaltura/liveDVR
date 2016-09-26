@@ -38,14 +38,14 @@ namespace converter{
         MediaMetadata()
         :width(-1),
         height(-1),
-        kbps(0.f),
+        fileSize(0.f),
         keyFrameDistance(0.f),
         framerate(0.f)
         {}
 
         int32_t     width,
                     height;
-        float       kbps;
+        float       fileSize;
         float       keyFrameDistance;
         float       framerate;
 
