@@ -31,6 +31,8 @@ class ControllerWrapper extends events.EventEmitter {
     {
         super();
 
+        let isRegression = test_description.indexOf('regression') >= 0;
+        this.setEnv4Test(isRegression);
         let prefix = "";
         this.controller = new ControllerCtor(prefix);
         let adapter = require('./../../lib/Adapters/AdapterFactory.js').getAdapter();
@@ -63,6 +65,17 @@ class ControllerWrapper extends events.EventEmitter {
             deferred.resolve(-1);
         }
         return deferred.promise;
+    }
+
+    setEnv4Test(isRegression) {
+        
+        if (isRegression) {
+            process.env['MOCHA_FILE'] = './reports/last_regression_run/regression-test-report.xml';
+            process.env['PROPERTIES'] = `BUILD_ID:${process.env.BUILD_NUMBER}`;
+        } else {
+            process.env['MOCHA_FILE'] = './reports/last_recording_run/recording-report.xml';
+            process.env['PROPERTIES'] = `BUILD_ID:${process.env.BUILD_NUMBER}`;
+        }
     }
 }
 

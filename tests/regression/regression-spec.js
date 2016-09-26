@@ -14,8 +14,6 @@ var testsuite = process.env.TEST_CLASS ? process.env.TEST_CLASS : 'hls-regressio
 
 
 describe('Live-Regression', function() {
-    process.env['MOCHA_FILE'] = './reports/last_regression_run/regression-test-report.xml';
-    process.env['PROPERTIES'] = `BUILD_ID:${process.env.BUILD_NUMBER}`;
     
     it (testsuite, function(done) {
        var controller = new ControllerWrapper("regression test");
