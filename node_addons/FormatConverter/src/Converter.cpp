@@ -535,7 +535,9 @@ namespace converter{
                         double wrapDTS = ::ceil(dts2msec(1ULL << stream->pts_wrap_bits,stream->time_base));
                         ExtraTrackInfo &extraInfo = this->m_extraTrackInfo[this->m_streamMapper[i]];
                         double duration = dts2msec(extraInfo.maxDTS - stream->first_dts,stream->time_base);
-                        if(keyFrames.size()){
+                        if(keyFrames.size()) {
+                            std::vector<double>::iterator last = std::unique(keyFrames.begin(), keyFrames.end());
+                            keyFrames.erase(last,keyFrames.end());
                             mfi.metadata.keyFrameDistance = (float)duration / keyFrames.size();
                         }
                         mfi.tracks.push_back({ (double)(this->m_creationTime + dtsUtils::diff(stream,stream->start_time,m_minStartDTSMsec)),
