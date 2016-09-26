@@ -32,7 +32,8 @@ class ControllerWrapper extends events.EventEmitter {
         super();
 
         let isRegression = test_description.indexOf('regression') >= 0;
-        this.setEnv4Test(isRegression);
+        // not working as expected
+        //this.setEnv4Test(isRegression);
         let prefix = "";
         this.controller = new ControllerCtor(prefix);
         let adapter = require('./../../lib/Adapters/AdapterFactory.js').getAdapter();

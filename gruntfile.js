@@ -5,6 +5,8 @@ var match = require('matchdep');
 
 module.exports = function (grunt) {
     'use strict';
+    process.env['MOCHA_FILE'] = './reports/junit_test_report.xml';
+    process.env['PROPERTIES'] = `BUILD_ID:${process.env.BUILD_NUMBER}`;
 
     var userConfig = require('./grunt-config.js');
 
