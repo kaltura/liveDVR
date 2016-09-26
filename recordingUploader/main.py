@@ -1,9 +1,9 @@
-import recording_logger
 from TaskRunner import TaskRunner
 from ConcatinationTask import ConcatenationTask
 from UploadTask import UploadTask
 from config import get_config
 from os import path
+import recording_logger
 # todo fix the issue with the logger
 # todo categorize logger between debug and info
 # version is 2.7.11
@@ -16,6 +16,7 @@ from os import path
 # recrding limitation - playlist obj should not remore obj q
 # change output file name and remove manifest, cause make problem after stream again
 # initial logger
+
 recording_logger.init_logger()
 
 max_task_count = get_config("max_task_count", 'int')

@@ -2,7 +2,7 @@ from logging.config import dictConfig
 import logging
 import os
 import sys
-
+from config import get_config
 
 
 DEFAULT_LOGGING = {
@@ -13,15 +13,8 @@ DEFAULT_LOGGING = {
 
 def init_logger():
 
-    __root__ = os.path.dirname(__file__)
-    path = __root__ + '/log'
-    filename = 'live-testing.log'
 
-    if not os.path.isdir(path):
-        os.makedirs(path)
-
-    logfullpath = '%s/%s' % (path, filename)
-
+    logfullpath = get_config('log_file_name')
     dictConfig(DEFAULT_LOGGING)
 
     logging.basicConfig(
@@ -39,7 +32,7 @@ def init_logger():
     console_formatter = logging.Formatter('[%(process)d/%(threadName)s][%(levelname)s] [%(name)s] [%(funcName)s():%(lineno)s] %(message)s')
     console_handler.setFormatter(console_formatter)
 
-    logging.root.setLevel(logging.INFO)
+    logging.root.setLevel(logging.DEBUG)
     logging.root.addHandler(file_handler)
     logging.root.addHandler(console_handler)
 

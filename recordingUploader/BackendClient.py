@@ -120,15 +120,26 @@ class BackendClient:
         except Exception:
             return result.toParams().toJson()
 
-    def set_media_content(self, upload_session):
+    def set_media_content_add(self, upload_session):
 
         token_id = upload_session.token_id
         recorded_id = upload_session.recorded_id
         partner_id = upload_session.partner_id
         resource = KalturaUploadedFileTokenResource(token_id)
         client = self.impersonate_client(partner_id)
-        client.media.updateContent(recorded_id, resource) #todo change to upldate
-        self.logger.info("Set media content with entryId %s and token %s", recorded_id, token_id)
+        client.media.addContent(recorded_id, resource)
+        self.logger.info("Set media content add with entryId %s and token %s", recorded_id, token_id)
+
+    def set_media_content_update(self, upload_session):
+
+        token_id = upload_session.token_id
+        recorded_id = upload_session.recorded_id
+        partner_id = upload_session.partner_id
+        resource = KalturaUploadedFileTokenResource(token_id)
+        client = self.impersonate_client(partner_id)
+        client.media.updateContent(recorded_id, resource)
+        self.logger.info("Set media content with update entryId %s and token %s", recorded_id, token_id)
+
 
     def append_recording(self, partner_id, recorded_id, output_file): # todo check it
         resource = KalturaServerFileResource()
