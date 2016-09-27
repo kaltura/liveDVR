@@ -147,6 +147,7 @@ namespace converter{
     m_hash(nullptr),
     m_minStartDTSMsec(0),
     m_bDataPending(true),
+    m_totalBitrate(0),
     state(CLOSED)
     {}
     
@@ -381,6 +382,7 @@ namespace converter{
                     av_log(*input,AV_LOG_WARNING,"Converter::pushData. zero sized packet stream=%d time=%lld",
                            pkt.stream_index, pkt.pts);
                 } else {
+                    m_totalBitrate += (pkt.size * 8.f);
                     _S(av_interleaved_write_frame(*output, &pkt));
                 }
             }
@@ -496,6 +498,7 @@ namespace converter{
                 }
                 //mfi.sig[mfi.sig.length()-1] = '\0';
             }
+
             for(size_t i = 0; i < input->nb_streams;i++)
             {
                 AVStream *stream = this->input->streams[i];
@@ -512,13 +515,19 @@ namespace converter{
                     continue;
                 
                 std::vector<double> keyFrames;
-                
+
                 switch(stream->codec->codec_type){
                     case AVMEDIA_TYPE_VIDEO:
                     {
                         MOVMuxContext *mov = reinterpret_cast<MOVMuxContext*>(output->priv_data);
                         
                         _V(getKeyFrames(mov,keyFrames));
+
+                        mfi.metadata.width = stream->codec->width;
+                        mfi.metadata.height = stream->codec->height;
+                        if(stream->r_frame_rate.den){
+                            mfi.metadata.framerate = (float)stream->r_frame_rate.num / stream->r_frame_rate.den;
+                        }
                     }
                     case AVMEDIA_TYPE_AUDIO:
                     {
@@ -529,6 +538,7 @@ namespace converter{
                         if(keyFrames.size()) {
                             std::vector<double>::iterator last = std::unique(keyFrames.begin(), keyFrames.end());
                             keyFrames.erase(last,keyFrames.end());
+                            mfi.metadata.keyFrameDistance = (float)duration / keyFrames.size();
                         }
                         mfi.tracks.push_back({ (double)(this->m_creationTime + dtsUtils::diff(stream,stream->start_time,m_minStartDTSMsec)),
                             extraInfo.startDTS,
@@ -543,7 +553,9 @@ namespace converter{
                         break;
                 };
             }
-           
+            
+            mfi.metadata.fileSize = m_totalBitrate / 1024;
+
             assert(mfi.tracks.size() > 0);
             mfi.startTimeUnixMs = this->m_creationTime;
 
@@ -553,7 +565,7 @@ namespace converter{
                 av_dict_set(&output->metadata, "comment", ostr.str().c_str(), 0);
             }
             output.Close();
-                      output.EmitInfo(mfi);
+            output.EmitInfo(mfi);
             input.Close();
             state = CLOSED;
         }
