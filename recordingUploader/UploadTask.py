@@ -10,6 +10,7 @@ import traceback
 from MockFileObject import MockFileObject
 from ThreadWorkers import ThreadWorkers
 import random
+from KalturaClient.Plugins.Core import KalturaEntryStatus, KalturaEntryReplacementStatus
 
 backend_client = BackendClient()
 
@@ -115,15 +116,15 @@ class UploadTask(TaskBase):
 
             #Check if need to call cancel_replace
             recorded_obj = backend_client.get_recorded_entry(upload_session.partner_id, self.recorded_id)
-            if (recorded_obj.status.value == '4'): #pending //todo import KalturaEntryStatus
-                self.logger.info("entry %s has pending status, calling set media content add", self.recorded_id)
-                backend_client.set_media_content_add(upload_session)
-            else:
-                if (recorded_obj.replacementStatus.value != '0'):
-                    self.logger.info("entry %s has replacementStatus %s, calling cancel_replace", self.recorded_id,
-                                     recorded_obj.replacementStatus)
-                    backend_client.cancel_replace(upload_session.partner_id, self.recorded_id)
-                backend_client.set_media_content_update(upload_session)
+            #if (recorded_obj.status.value == KalturaEntryStatus.PENDING):
+             #   self.logger.info("entry %s has pending status, calling set media content add", self.recorded_id)
+             #   backend_client.set_media_content_add(upload_session)
+            #else:
+            if (recorded_obj.replacementStatus.value != KalturaEntryReplacementStatus.NONE):
+                self.logger.info("entry %s has replacementStatus %s, calling cancel_replace", self.recorded_id,
+                                recorded_obj.replacementStatus)
+                backend_client.cancel_replace(upload_session.partner_id, self.recorded_id)
+            backend_client.set_media_content_update(upload_session)
             os.rename(self.output_file, self.output_file + '.done')
         else:
             raise Exception("Failed to upload file, "+str(len(result))+" chunks from "+str(chunks_to_upload)+ " where failed:"
