@@ -5,6 +5,7 @@
   "recordingFolderPath" : "~/dvr/recording/Open_sessions",
   "completedRecordingFolderPath" : "~/dvr/recording/ConcatenationTask/incoming",
   "recordingTimeInterval" : "60000",
+  "recordingMaxDuration" : "86400",
   "recordingSessionDuration" : "180000",
   "rootFolderPath" : "~/kLive_content/live",
   "oldContentFolderPath" : "~/kLive_content/archive",

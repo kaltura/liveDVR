@@ -36,8 +36,8 @@ start() {
         echo "${NAME} already running"
     else
         echo "Starting ${NAME}"
-        python $APPLICATION_PATH &  2>&1
-        echo "Starting ${NAME} with pid $!"
+        python $APPLICATION_PATH >> $LOGFILE  2>&1 &
+        echo "started ${NAME} with pid $!"
         echo $! > $PIDFILE
 	    RETVAL=$(( $RETVAL + $? ))
         fi
@@ -45,11 +45,12 @@ start() {
 
 stop() {
     RETVAL=0
+    LOGFILE="$LOG_DIR/${NAME}-forever.log"
     PIDFILE="$PID_DIR/${NAME}.pid"
     if [ -f $PIDFILE ]; then
         echo "Shutting down ${NAME}"
         # Tell Forever to stop the process.
-        kill $( cat $PIDFILE )  >> $LOGFILE
+        kill $( cat $PIDFILE ) >> $LOGFILE
         rm -f $PIDFILE
 	    RETVAL=$(( $RETVAL + $? ))
             # Get rid of the pidfile, since Forever won't do that.
@@ -108,5 +109,4 @@ case "$1" in
         exit 1
         ;;
 esac
-echo "return value $RETVAL"
 exit $RETVAL
