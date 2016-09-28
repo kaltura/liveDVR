@@ -143,6 +143,7 @@ namespace converter {
     Local<Value> NodeOutputStream::GetFileInfo(Isolate *isolate){
         
         std::ostringstream ostr;
+        m_fileInfo.bSerializeMetaData = true;
         ostr << m_fileInfo;
         const std::string &str = ostr.str();
         return JSON::Parse(isolate,String::NewFromUtf8(isolate,str.c_str())).ToLocalChecked();

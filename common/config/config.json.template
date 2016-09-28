@@ -31,6 +31,12 @@
   "regressionAdapter": {
       "enable":false
   },
+  "diagnostics": {
+      "minChunkDurationInSec": 1,
+      "maxChunkDurationInSec": 60,
+      "errorsWindowSizeInMin" : 60,
+      "ptsMaxMisalignmentAllowedInMSec" : 5000
+  },
   "simulateStreams": {
       "enable":false,
       "count": 1,

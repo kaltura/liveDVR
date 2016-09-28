@@ -91,7 +91,8 @@ namespace converter{
         AVMD5            *m_hash;
         int64_t          m_minStartDTSMsec;
         bool             m_bDataPending;
-        
+        uint64_t         m_totalBitrate;
+
         std::vector<int> m_streamMapper;
         
         enum { INIT, CREATING , PUSHING , CLOSING,  CLOSED, ERROR } state;
