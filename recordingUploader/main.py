@@ -4,8 +4,11 @@ from UploadTask import UploadTask
 from config import get_config
 from os import path
 import recording_logger
+import sys
+import signal
 # todo fix the issue with the logger
 # todo categorize logger between debug and info
+# todo verify to kill also the subprocess of ffmpeg
 # version is 2.7.11
 # support upload token change yosi made
 # recirdubg should not be than 24 hours - stop recording
@@ -18,7 +21,7 @@ import recording_logger
 # initial logger
 
 recording_logger.init_logger()
-
+processes = []
 max_task_count = get_config("max_task_count", 'int')
 ffmpeg_path = get_config('ffmpeg_path')
 concat_processors_count = get_config('concat_processors_count', 'int')
@@ -33,9 +36,17 @@ ConcatenationTaskRunner = TaskRunner(ConcatenationTask, concat_processors_count,
 
 UploadTaskRunner = TaskRunner(UploadTask, uploading_processors_count, tasks_done_directory, max_task_count).start()
 
+def signal_term_handler(signal, frame):
+    print 'got SIGTERM'
+    for process in processes:
+        print ("kill process "+str(process.pid))
+        process.terminate()
+    sys.exit(0)
+
+signal.signal(signal.SIGTERM, signal_term_handler)
 
 for p in ConcatenationTaskRunner:
-    p.join()
+    processes.append(p)
 
 for p in UploadTaskRunner:
-    p.join()
+    processes.append(p)
