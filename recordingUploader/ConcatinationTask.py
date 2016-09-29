@@ -10,7 +10,6 @@ class ConcatenationTask(TaskBase):
 
     # global variables
     manifest_input_file = "manifest.txt"
-    logger = logging.getLogger(__name__)
     base_directory = get_config('recording_base_dir')
 
     @staticmethod
@@ -30,12 +29,13 @@ class ConcatenationTask(TaskBase):
                 self.logger.warn("file %s is not mp4 file format", file_name)
         fo.close()
 
-    def __init__(self, param):
+    def __init__(self, param, logger_info):
         self.entry_directory = param['directory']
         self.entry_id = param['entry_id']
         concat_task_processing_dir = os.path.join(self.base_directory, self.__class__.__name__, 'processing')
         self.recording_path = os.path.join(concat_task_processing_dir, self.entry_directory)
         self.output_file = self.entry_directory+'_out.mp4'
+        self.logger = logging.getLogger(logger_info)
 
     def run(self):
         self.create_manifest()

@@ -1,6 +1,5 @@
 from logging.config import dictConfig
 import logging
-import os
 import sys
 from config import get_config
 
@@ -13,28 +12,29 @@ DEFAULT_LOGGING = {
 
 def init_logger():
 
-
-    logfullpath = get_config('log_file_name')
+    log_full_path = get_config('log_file_name')
     dictConfig(DEFAULT_LOGGING)
 
     logging.basicConfig(
-        filename=logfullpath,
+        filename=log_full_path,
         level=logging.DEBUG,
         format='[%(asctime)s.%(msecs)d][%(process)d/%(threadName)s] [%(levelname)s] [%(name)s]: [%(funcName)s():%(lineno)s] %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
-    file_handler = logging.handlers.RotatingFileHandler(logfullpath, maxBytes=10485760, backupCount=300,
+    file_handler = logging.handlers.RotatingFileHandler(log_full_path, maxBytes=10485760, backupCount=300,
                                                         encoding='utf-8')
-    file_handler.setLevel(logging.DEBUG)
+    file_handler.setLevel(get_config('log_level'))
 
-    console_handler = logging.StreamHandler(sys.stdout)
-    console_handler.setLevel(logging.DEBUG)
-    console_formatter = logging.Formatter('[%(process)d/%(threadName)s][%(levelname)s] [%(name)s] [%(funcName)s():%(lineno)s] %(message)s')
-    console_handler.setFormatter(console_formatter)
+    if get_config('log_to_console', bool)== True :
+        console_handler = logging.StreamHandler(sys.stdout)
+        console_handler.setLevel(logging.DEBUG)
+        console_formatter = logging.Formatter(
+            '[%(process)d/%(threadName)s][%(levelname)s] [%(name)s] [%(funcName)s():%(lineno)s] %(message)s')
+        console_handler.setFormatter(console_formatter)
+        logging.root.addHandler(console_handler)
 
-    logging.root.setLevel(logging.DEBUG)
+    logging.root.setLevel(get_config('log_level'))
     logging.root.addHandler(file_handler)
-    logging.root.addHandler(console_handler)
 
     return
 

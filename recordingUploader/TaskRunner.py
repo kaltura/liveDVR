@@ -80,7 +80,8 @@ class TaskRunner:
             self.logger.info("Task is performed by %d", index)
             try:
                 src = os.path.join(self.working_directory, task_parameter['directory'])
-                job = self.task(task_parameter)  # operate the function task_job, with argument task_parameters
+                logger_info = self.task_name + '][' + task_parameter['entry_id'] +  '][' + task_parameter['recorded_id']
+                job = self.task(task_parameter, logger_info)  # operate the function task_job, with argument task_parameters
                 job.run()
                 shutil.move(src, self.output_directory)
                 self.logger.info("Task %s completed, Move %s to %s", self.task_name, src, self.output_directory)
@@ -133,7 +134,7 @@ class TaskRunner:
 
             self.add_new_task_handler()
             self.failed_task_handler()
-            self.logger.info("starting %d workers", self.number_of_processes)
+            self.logger.info("Starting %d workers", self.number_of_processes)
             workers = [Process(target=self.work, args=(i,)) for i in xrange(1, self.number_of_processes+1)]
             for w in workers:
                 w.start()

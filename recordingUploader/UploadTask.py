@@ -46,16 +46,16 @@ class UploadTask(TaskBase):
     global backend_client
     base_directory = get_config('recording_base_dir')
     upload_directory = os.path.join(base_directory, __name__, 'processing')
-    logger = logging.getLogger(__name__)
 
     upload_token_buffer_size = get_config('upload_token_buffer_size', 'int') * 1000000  # buffer is in MB
 
-    def __init__(self, param):
+    def __init__(self, param, logger_info):
         self.entry_directory = param['directory']
         self.entry_id = param['entry_id']
         self.recorded_id = param['recorded_id']
         self.output_filename = self.entry_directory+'_out.mp4'
         self.output_file = os.path.join(self.upload_directory, self.entry_directory, self.output_filename)
+        self.logger = logging.getLogger(logger_info)
         self.logger.info("init")
 
     class KalturaUploadSession:
