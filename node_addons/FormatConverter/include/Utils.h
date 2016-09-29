@@ -257,6 +257,8 @@ return "";\
     {
     public:
         
+        static const int64_t INVALID_VALUE = std::numeric_limits<int64_t>::max();
+        
         static int64_t to_ms(AVStream *stream,const int64_t &dts){
             return av_rescale(dts,TIMESTAMP_RESOLUTION * stream->time_base.num,
                               stream->time_base.den);
@@ -279,7 +281,7 @@ return "";\
         
         static int64_t min(int64_t val,AVStream *stream){
             
-            if(diff(stream,stream->start_time,val) < 0 ){
+            if(INVALID_VALUE == val || diff(stream,stream->start_time,val) < 0 ){
                 return to_ms(stream,stream->start_time);
             }
             return val;

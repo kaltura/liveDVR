@@ -18,6 +18,7 @@
   "apiUpdateInterval" : 60000,
   "streamInfoUpdateInterval" : 300000,
   "flavorDownloaderTeardownInterval" : 15000,
+  "numOfManifestRetries" : 5,
   "logLevel" : "DEBUG",
   "logToConsole" : false,
   "logFileName" : "~/dvr/kLiveController.log",
@@ -27,6 +28,12 @@
   "stoppedEntriesPath": "~/kLivePersistence",
   "regressionAdapter": {
       "enable":false
+  },
+  "diagnostics": {
+      "minChunkDurationInSec": 1,
+      "maxChunkDurationInSec": 60,
+      "errorsWindowSizeInMin" : 5,
+      "ptsMaxMisalignmentAllowedInMSec" : 5000
   },
   "simulateStreams": {
       "enable":false,

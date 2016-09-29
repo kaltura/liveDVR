@@ -147,6 +147,7 @@ namespace converter{
     m_hash(nullptr),
     m_minStartDTSMsec(0),
     m_bDataPending(true),
+    m_totalBitrate(0),
     state(CLOSED)
     {}
     
@@ -181,7 +182,7 @@ namespace converter{
             threshold = dtsUtils::to_dts(stream,10000);
             
             if( diff > threshold ){
-                av_log(nullptr,AV_LOG_WARNING,"pts to dts diff is too big (pts=%lld - dts=%lld > threshold=%lld) for stream %d\n", stream->start_time, stream->first_dts, threshold, stream->index );
+                av_log(nullptr,AV_LOG_WARNING,"pts to dts diff is too big (pts=%lld - dts=%llu > threshold=%llu) for stream %d\n", stream->start_time, stream->first_dts, threshold, stream->index );
                 stream->start_time = stream->first_dts;
             }
         }
@@ -234,7 +235,7 @@ namespace converter{
         
         //ffmpeg can shorten firt sample provided it's dts < pts
         //it provides, however, means of overriding mechanism of mapping input dts on the output one.
-        output->output_ts_offset = std::numeric_limits<int64_t>::min();
+        output->output_ts_offset = dtsUtils::INVALID_VALUE;
         output->avoid_negative_ts = 0;
         
         for( size_t i = 0 , output_stream = 0; i < input->nb_streams; i++){
@@ -247,7 +248,7 @@ namespace converter{
             clipUnrealisticPTS(in_stream);
             
             m_minStartDTSMsec = dtsUtils::min(m_minStartDTSMsec,in_stream);
-            
+
             if(in_stream->codec->codec_id == AV_CODEC_ID_TIMED_ID3)
                 continue;
             
@@ -264,7 +265,7 @@ namespace converter{
             };
             
             if(!bValidStream){
-                 av_log(nullptr,AV_LOG_WARNING,"%s (%d) skipping stream %d\n",__FILE__,__LINE__,i);
+                 av_log(nullptr,AV_LOG_WARNING,"%s (%d) skipping stream %lu\n",__FILE__,__LINE__,i);
                 continue;
             }
 
@@ -377,7 +378,13 @@ namespace converter{
 
                 log_packet(*input, &pkt, "in");
                 
-                _S(av_interleaved_write_frame(*output, &pkt));
+                if(!pkt.size){
+                    av_log(*input,AV_LOG_WARNING,"Converter::pushData. zero sized packet stream=%d time=%lld",
+                           pkt.stream_index, pkt.pts);
+                } else {
+                    m_totalBitrate += (pkt.size * 8.f);
+                    _S(av_interleaved_write_frame(*output, &pkt));
+                }
             }
             
             av_packet_unref(&pkt);
@@ -439,15 +446,26 @@ namespace converter{
                 track->has_keyframes && track->has_keyframes < track->entry){
                 for (int i = 0; i < track->entry; i++) {
                     if (track->cluster[i].flags & MOV_SYNC_SAMPLE) {
-                        uint64_t millis = av_rescale_rnd(track->cluster[i].dts,1000,
-                                                         track->timescale,AV_ROUND_ZERO);
-                        result.push_back(millis);
+                        int64_t dts = track->cluster[i].dts;
+                        if(AV_NOPTS_VALUE == dts){
+                            av_log(NULL,AV_LOG_WARNING,"getKeyFrames. undefined dts value for keyframe %d",
+                                   i);
+                        } else {
+                            int64_t millis = av_rescale_rnd(dts,1000,
+                                                            track->timescale,AV_ROUND_ZERO);
+                            if(millis < 0){
+                                av_log(NULL,AV_LOG_WARNING,"getKeyFrames. negative dts value for keyframe %i dts=%lld timescale=%u millis=%lld",
+                                       i, dts , track->timescale, millis );
+                            } else {
+                                result.push_back(millis);
+                            }
+                        }
                     }
                 }
                 break;
             }
         }
-       
+        
         if(result.size()){
             
             auto diff = result[0];
@@ -480,6 +498,7 @@ namespace converter{
                 }
                 //mfi.sig[mfi.sig.length()-1] = '\0';
             }
+
             for(size_t i = 0; i < input->nb_streams;i++)
             {
                 AVStream *stream = this->input->streams[i];
@@ -496,13 +515,19 @@ namespace converter{
                     continue;
                 
                 std::vector<double> keyFrames;
-                
+
                 switch(stream->codec->codec_type){
                     case AVMEDIA_TYPE_VIDEO:
                     {
                         MOVMuxContext *mov = reinterpret_cast<MOVMuxContext*>(output->priv_data);
                         
                         _V(getKeyFrames(mov,keyFrames));
+
+                        mfi.metadata.width = stream->codec->width;
+                        mfi.metadata.height = stream->codec->height;
+                        if(stream->r_frame_rate.den){
+                            mfi.metadata.framerate = (float)stream->r_frame_rate.num / stream->r_frame_rate.den;
+                        }
                     }
                     case AVMEDIA_TYPE_AUDIO:
                     {
@@ -510,6 +535,11 @@ namespace converter{
                         double wrapDTS = ::ceil(dts2msec(1ULL << stream->pts_wrap_bits,stream->time_base));
                         ExtraTrackInfo &extraInfo = this->m_extraTrackInfo[this->m_streamMapper[i]];
                         double duration = dts2msec(extraInfo.maxDTS - stream->first_dts,stream->time_base);
+                        if(keyFrames.size()) {
+                            std::vector<double>::iterator last = std::unique(keyFrames.begin(), keyFrames.end());
+                            keyFrames.erase(last,keyFrames.end());
+                            mfi.metadata.keyFrameDistance = (float)duration / keyFrames.size();
+                        }
                         mfi.tracks.push_back({ (double)(this->m_creationTime + dtsUtils::diff(stream,stream->start_time,m_minStartDTSMsec)),
                             extraInfo.startDTS,
                             wrapDTS,
@@ -523,7 +553,9 @@ namespace converter{
                         break;
                 };
             }
-           
+            
+            mfi.metadata.fileSize = m_totalBitrate / 1024;
+
             assert(mfi.tracks.size() > 0);
             mfi.startTimeUnixMs = this->m_creationTime;
 
@@ -533,7 +565,7 @@ namespace converter{
                 av_dict_set(&output->metadata, "comment", ostr.str().c_str(), 0);
             }
             output.Close();
-                      output.EmitInfo(mfi);
+            output.EmitInfo(mfi);
             input.Close();
             state = CLOSED;
         }

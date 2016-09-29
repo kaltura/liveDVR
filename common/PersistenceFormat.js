@@ -8,17 +8,20 @@ var qio = require('q-io/fs');
 var _ = require('underscore');
 var Q = require('q');
 
-var regEx = new RegExp(/([01]_\w+\/[0-9]+\/)/);
+const tsChunktMatch =  new RegExp(/media-([^_]+).*?([\d]+)\.ts.*/);
 
-module.exports = {
+module.exports = persistenceFormat = {
 
     getEntryBasePath: function (entryId) {
         return path.join(config.get('rootFolderPath'), entryId);
     },
 
-    getBasePathFromFull: function (path) {
-        let subString = path.match(regEx)[1];
-        return path.substr(0, path.lastIndexOf(subString) + subString.length);
+    getBasePathFromFull: function (directory) {
+        return path.dirname(path.dirname(directory));
+    },
+
+    getRelativePathFromFull: function (fullPath) {
+        return fullPath.substr(persistenceFormat.getBasePathFromFull(fullPath).length);
     },
 
     getFlavorFullPath: function (entryId, flavorName) {
@@ -30,13 +33,14 @@ module.exports = {
     },
     
     getMP4FileNamefromInfo: function(chunkPath){
-        return path.basename(chunkPath) + '.mp4';
+         return chunkPath.replace('.ts','.mp4');
     },
-    
+
+
     getTSChunknameFromMP4FileName: function(mp4FileName){
-        return mp4FileName.substr(0, mp4FileName.length - 4); //'.mp4'.length);
+        return mp4FileName.replace('.mp4','.ts');
     },
-    
+
     createHierarchyPath: function(destPath, lastFileHash) {
         let hash = new Date().getHours().toString();
         let fileFullPath = path.join(destPath, (hash) < 10 ? ("0" + hash) : hash);
@@ -49,5 +53,14 @@ module.exports = {
             .then(function() {
                 return retVal;
             });
+    },
+
+    compressChunkName: function(tsChunkName){
+        var matched = tsChunktMatch.exec( tsChunkName );
+        if(matched){
+            return matched[1] + '-' + matched[2] + '.mp4';
+        }
+        return tsChunkName;
     }
+
 };
