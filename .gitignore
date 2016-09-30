@@ -32,3 +32,9 @@ node_addons/FormatConverter/build
 
 common/config/config.json
 packager/build
+common/config/configMapping.json
+
+# ignore reports
+reports
+
+packager/bin/build_log
