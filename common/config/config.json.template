@@ -25,7 +25,7 @@
   "logTimeZoneOffset" : 300,
   "monitorPort": 4390,
   "persistenceCheckIntervalMillisec": 20000,
-  "stoppedEntriesPath": "~/kLivePersistence",
+  "persistenceListPath": "~/kLivePersistence",
   "regressionAdapter": {
       "verbose": false,
       "enable": false,
