@@ -24,44 +24,17 @@
   "logFileName" : "~/dvr/kLiveController.log",
   "logTimeZoneOffset" : 300,
   "monitorPort": 4390,
-  "persistenceCheckIntervalMillisec": 20000,
+  "persistenceCheckIntervalSec": 20,
   "persistenceListPath": "~/kLivePersistence",
+  "expirationTimeWindowSec": "30",
   "regressionAdapter": {
-      "verbose": false,
-      "enable": false,
-      "analysis": false,
-      "analyzerRootPath" : "~/live-monitor/",
-      "dataWarehouseRootFolderPath" : "instructions: put here root path to data warehouse (e.g. /var/tmp/regression/data_warehouse)",
-      "maxChunkCount": 10,
-      "entries" : [{
-            "entryId": "abc",
-            "flavorParamsIds": "1,2,3,4",
-            "start_chunklist_index": -1,
-            "last_chunklist_index": -1,
-            "serverType": 0,
-            "entryPath": "instructions: put here the relative path from data warehouse root to entry stream data (e.g. abc)",
-            "playWindow": 150,
-             "validator": {
-               "path": "instructions: put here the root path to save and read regression results (e.g. /var/tmp/regression/results)",
-               "override": false,
-               "history_count": 0,
-               "analyzerAlertsIgnoreList": "'INFTagDurationDoesntMatch','BitrateOutsideOfTargetAlert','InvalidKeyFrameIntervalAlert'"
-             }
-        }]
+      "enable":false
   },
   "diagnostics": {
       "minChunkDurationInSec": 1,
       "maxChunkDurationInSec": 60,
       "errorsWindowSizeInMin" : 5,
       "ptsMaxMisalignmentAllowedInMSec" : 5000
-  },
-  "preserveOriginalHLS": {
-      "enable": false,
-      "createFolderPerSession": true,
-      "runDurationInMinutes": 5,
-      "validate": true,
-      "fix": true,
-      "prepareForRegression": true
   },
   "simulateStreams": {
       "enable":false,
