@@ -288,6 +288,7 @@ namespace converter{
             if (output->oformat->flags & AVFMT_GLOBALHEADER) {
                 out_stream->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
             }
+            output->oformat->flags |= AVFMT_TS_NONSTRICT;
             switch(out_stream->codec->codec_type){
                 case AVMEDIA_TYPE_AUDIO:
                     if(out_stream->codec->codec_id == AV_CODEC_ID_AAC){
@@ -312,19 +313,26 @@ namespace converter{
         return 0;
     }
     
-    inline void updateLastTimestamp(int64_t &lastValue,int64_t &timestamp){
+    inline void updateLastTimestamp(int64_t &lastValue,int64_t &timestamp,bool bStrictTimestamps){
         
         if(AV_NOPTS_VALUE == timestamp && AV_NOPTS_VALUE != lastValue){
-            timestamp = lastValue+1;
+            timestamp = lastValue;
+            if(bStrictTimestamps){
+                timestamp++;
+            }
         }
-        if(AV_NOPTS_VALUE != lastValue && lastValue == timestamp){
-            timestamp++;
+        if(AV_NOPTS_VALUE != lastValue) {
+            timestamp = std::max(lastValue,timestamp);
+            if(lastValue == timestamp && bStrictTimestamps){
+                timestamp++;
+            }
         }
         lastValue = timestamp;
     }
     
     int Converter::pushData(){
         
+        const bool bStrictTimestamps = (output->oformat->flags & AVFMT_TS_NONSTRICT) ? false : true;
         while(true){
             
             AVPacket pkt;
@@ -363,11 +371,11 @@ namespace converter{
                 
                 //log_packet(*input, &pkt, "in",AV_LOG_FATAL);
                 
-                updateLastTimestamp(xtra.lastPTS, pkt.pts);
+                updateLastTimestamp(xtra.lastPTS, pkt.pts,bStrictTimestamps);
                 
                 pkt.pts = av_rescale_q_rnd(pkt.pts, in_stream->time_base,out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
                 
-                updateLastTimestamp(xtra.lastDTS, pkt.dts);
+                updateLastTimestamp(xtra.lastDTS,pkt.dts,bStrictTimestamps);
                 
                 xtra.maxDTS = pkt.dts + pkt.duration;
                 
