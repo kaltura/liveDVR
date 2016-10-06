@@ -35,7 +35,7 @@
   "diagnostics": {
       "minChunkDurationInSec": 1,
       "maxChunkDurationInSec": 60,
-      "errorsWindowSizeInMin" : 60,
+      "errorsWindowSizeInMin" : 5,
       "ptsMaxMisalignmentAllowedInMSec" : 5000
   },
   "simulateStreams": {
