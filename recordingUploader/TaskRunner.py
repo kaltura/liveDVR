@@ -8,7 +8,8 @@ import shutil
 import re
 import abc
 import traceback
-
+from socket import gethostname
+import time
 #  Currently not support multiple machine pulling from one incoming dir.
 # If need, just add incoming dir in the constructor
 
@@ -21,16 +22,17 @@ class TaskRunner:
         self.task_name = task.__name__
         self.polling_interval = get_config('polling_interval', 'int')
         base_directory = get_config('recording_base_dir')
+        hostname = gethostname()
         self.failed_tasks_handling_interval = get_config('failed_tasks_handling_interval', 'int')*60  # in minutes
         self.failed_tasks_max_retries = get_config('failed_tasks_max_retries')
-        self.task_directory = os.path.join(base_directory, self.task_name)
+        self.task_directory = os.path.join(base_directory, hostname, self.task_name)
         self.error_directory = os.path.join(base_directory, 'error')
-        self.failed_tasks_directory = os.path.join(base_directory, self.task_name, 'failed')
-        self.input_directory = os.path.join(base_directory, self.task_name, 'incoming')
-        self.working_directory = os.path.join(base_directory, self.task_name, 'processing')
+        self.failed_tasks_directory = os.path.join(base_directory, hostname, self.task_name, 'failed')
+        self.input_directory = os.path.join(base_directory, hostname, self.task_name, 'incoming')
+        self.working_directory = os.path.join(base_directory, hostname, self.task_name, 'processing')
         self.output_directory = output_directory
         self.task_queue = Queue(max_task_count)
-        self.logger = logging.getLogger(__name__+'-'+self.task_name)  # todo should decorate with task name
+        self.logger = logging.getLogger(__name__+'-'+self.task_name)
         self.on_startup()
 
     def on_startup(self):
@@ -56,7 +58,7 @@ class TaskRunner:
             self.logger.fatal("Error %s \n %s", str(e), traceback.format_exc())
 
     def move_and_add_to_queue(self, src_dir):
-        entry_regex = '^([01]_\w{8})_([01]_\w{8})_'
+        entry_regex = '^([01]_\w{8})_([01]_\w{8})_(\d+)'
         pattern = re.compile(entry_regex)
         for directory_name in os.listdir(src_dir):
             directory_path = os.path.join(src_dir, directory_name)
@@ -67,7 +69,9 @@ class TaskRunner:
                     m = re.search(entry_regex, directory_name)
                     entry_id = m.group(1)
                     recorded_id = m.group(2)
-                    param = {'entry_id': entry_id, 'directory': directory_name, 'recorded_id': recorded_id}
+                    timestamp =  m.group(3)
+                    param = {'entry_id': entry_id, 'directory': directory_name, 'recorded_id': recorded_id,
+                             'timestamp': timestamp}
                     self.task_queue.put(param)
                     self.logger.info("Add unhanded directory %s from %s to the task queue", directory_name, src_dir)
                 except Exception as e:
@@ -109,7 +113,8 @@ class TaskRunner:
                 retries_file = open(retries_file_path, "r+")
                 retries = retries_file.read()
                 retries = int(retries) - 1
-                retries_file.seek(0) # todo tix it!
+                retries_file.seek(0)
+                retries_file.truncate()
                 retries_file.write(str(retries))
                 retries_file.close()
                 return retries
@@ -144,6 +149,41 @@ class TaskRunner:
 
 
 class TaskBase(object):
+
+    hostname = gethostname()
+    base_directory = os.path.join(get_config('recording_base_dir'), hostname)
+
+    def check_stamp(self):
+        stamp_file = open(self.stamp_full_path, "r")  # w+ since we truncated the file
+        stamp = stamp_file.read()
+        if stamp == self.timestamp:
+            self.logger.debug("Stamp  %s is not changed", stamp)
+        else:
+            msg = "Stamps are not equal! process stamp:%s, found in file: %s, abort directory" % (self.timestamp, stamp)
+            retries_file_path = os.path.join(self.recording_path, 'retries')
+            retries_file = open(retries_file_path, "w+")
+            retries_file.write('0')
+            retries_file.close()
+            raise ValueError(msg)
+
+    def __init__(self, param, logger_info):
+        self.timestamp = param['timestamp']
+        self.recorded_id = param['recorded_id']
+        self.entry_directory = param['directory']
+        self.entry_id = param['entry_id']
+        self.logger = logging.getLogger(logger_info)
+        self.output_filename = self.entry_directory+'_out.mp4'
+        self.recording_path = os.path.join(self.base_directory, self.__class__.__name__, 'processing',
+                                           self.entry_directory)
+        self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
+
+    def write_stamp(self):
+
+        self.logger.info("About to write stamp %s on %s", self.timestamp, self.recording_path)
+        stamp_file = open(self.stamp_full_path, "w+")  # w+ since we truncated the file
+        stamp_file.write(self.timestamp)
+        stamp_file.close()
+
     __metaclass__ = abc.ABCMeta
 
     @abc.abstractmethod

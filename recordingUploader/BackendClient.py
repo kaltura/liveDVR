@@ -127,6 +127,7 @@ class BackendClient:
         partner_id = upload_session.partner_id
         resource = KalturaUploadedFileTokenResource(token_id)
         client = self.impersonate_client(partner_id)
+        client.setConfig()
         client.media.addContent(recorded_id, resource)
         self.logger.info("Set media content add with entryId %s and token %s", recorded_id, token_id)
 
@@ -145,7 +146,7 @@ class BackendClient:
         resource = KalturaServerFileResource()
         resource.localFilePath = output_file
         client = self.impersonate_client(partner_id)
-        client.media.updateContent(recorded_id, resource)  # todo change to upldate
+        client.media.updateContent(recorded_id, resource)
         self.logger.info("Append recording for content %s recorded entryId %s.", output_file, recorded_id)
 
 

@@ -44,19 +44,12 @@ class UploadChunkJob:
 class UploadTask(TaskBase):
     # Global scope
     global backend_client
-    base_directory = get_config('recording_base_dir')
-    upload_directory = os.path.join(base_directory, __name__, 'processing')
 
     upload_token_buffer_size = get_config('upload_token_buffer_size', 'int') * 1000000  # buffer is in MB
 
     def __init__(self, param, logger_info):
-        self.entry_directory = param['directory']
-        self.entry_id = param['entry_id']
-        self.recorded_id = param['recorded_id']
-        self.output_filename = self.entry_directory+'_out.mp4'
-        self.output_file = os.path.join(self.upload_directory, self.entry_directory, self.output_filename)
-        self.logger = logging.getLogger(logger_info)
-        self.logger.info("init")
+        TaskBase.__init__(self, param, logger_info)
+        self.output_file_path = os.path.join(self.recording_path, self.output_filename)
 
     class KalturaUploadSession:
         global backend_client
@@ -86,6 +79,7 @@ class UploadTask(TaskBase):
 
     def upload_file(self, file_name):
 
+        self.check_stamp()
         file_size = os.path.getsize(file_name)
         infile = io.open(file_name, 'rb')
         if file_size % self.upload_token_buffer_size == 0:
@@ -110,6 +104,7 @@ class UploadTask(TaskBase):
             ThreadWorkers().add_job(chunk)
 
         result = ThreadWorkers().wait_for_all_jobs_done()
+        self.check_stamp() # todo check it
         upload_session_json = str(vars(upload_session))
         if len(result) == 0:
             self.logger.info("successfully upload all chunks, call append recording")
@@ -125,19 +120,19 @@ class UploadTask(TaskBase):
                                 recorded_obj.replacementStatus)
                 backend_client.cancel_replace(upload_session.partner_id, self.recorded_id)
             backend_client.set_media_content_update(upload_session)
-            os.rename(self.output_file, self.output_file + '.done')
+            os.rename(self.output_file_path, self.output_file_path + '.done')
         else:
             raise Exception("Failed to upload file, "+str(len(result))+" chunks from "+str(chunks_to_upload)+ " where failed:"
                             + upload_session_json)
 
     def append_recording_handler(self):
         try:
-            backend_client.append_recording(self.recorded_id, self.output_file) # todo check it full path
+            backend_client.append_recording(self.recorded_id, self.output_file_path) # todo check it full path
         except Exception, e:
             self.logger.error("Failed to append recording : %s\n %s", str(e), traceback.format_exc())
 
     def run(self):
         if get_config('mode') == 'remote':
-            self.upload_file(self.output_file)
+            self.upload_file(self.output_file_path)
         else:
             self.append_recording_handler()
