@@ -21,8 +21,7 @@ def init_logger():
         format='[%(asctime)s.%(msecs)d][%(process)d/%(threadName)s] [%(levelname)s] [%(name)s]: [%(funcName)s():%(lineno)s] %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
-    file_handler = logging.handlers.TimedRotatingFileHandler(log_full_path, when="m", interval=1)
-                                              #          encoding='utf-8')
+    file_handler = logging.handlers.TimedRotatingFileHandler(log_full_path, when="d", interval=1)
     file_handler.setLevel(get_config('log_level'))
 
     if get_config('log_to_console', bool)== True :

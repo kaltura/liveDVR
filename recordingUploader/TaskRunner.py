@@ -89,34 +89,36 @@ class TaskRunner:
                 job.run()
                 shutil.move(src, self.output_directory)
                 self.logger.info("Task %s completed, Move %s to %s", self.task_name, src, self.output_directory)
-            except Exception as e: # todo shutil.move should wrapped by try catch?
+            except Exception as e:
                 self.logger.error("Failed to perform task :%s \n %s", str(e), traceback.format_exc())
                 retries = self.get_retry_count(src)
-                if retries > 0:
-                    self.logger.info("Job %s on entry %s has %s retries, move it to failed task directory ",
-                                     self.task_name, task_parameter['directory'], retries)
-                    shutil.move(src, self.failed_tasks_directory)
-                else:
-                    self.logger.fatal("Job %s on entry %s has no more retries or failed to get it, move entry to "
+                try:
+                    if retries > 0:
+                        self.logger.info("Job %s on entry %s has %s retries, move it to failed task directory ",
+                                        self.task_name, task_parameter['directory'], retries)
+                        shutil.move(src, self.failed_tasks_directory)
+                    else:
+                        self.logger.fatal("Job %s on entry %s has no more retries or failed to get it, move entry to "
                                       "failed task directory ", self.task_name, task_parameter['directory'])
-                    shutil.move(src, self.error_directory)
+                        shutil.move(src, self.error_directory)
+                except Exception as e:
+                    self.logger.fatal("Failed to handle failure task %s \n %s", str(e), traceback.format_exc())
 
     def get_retry_count(self, src):
         try:
             retries_file_path = os.path.join(src, 'retries')
             if not os.path.exists(retries_file_path):
-                retries_file = open(retries_file_path, "w")
-                retries_file.write(self.failed_tasks_max_retries)
-                retries_file.close()
+                with open(retries_file_path, "w") as retries_file:
+                    retries_file.write(self.failed_tasks_max_retries)
                 return self.failed_tasks_max_retries
             else:
-                retries_file = open(retries_file_path, "r+")
-                retries = retries_file.read()
-                retries = int(retries) - 1
-                retries_file.seek(0)
-                retries_file.truncate()
-                retries_file.write(str(retries))
-                retries_file.close()
+                with open(retries_file_path, "r+") as retries_file:
+                    retries = retries_file.read()
+                    retries = int(retries) - 1
+                    retries_file.seek(0)
+                    retries_file.truncate()
+                    retries_file.write(str(retries))
+
                 return retries
         except Exception as e:
             self.logger.error("Failed to get retry count for %s: %s \n %s", src, str(e), traceback.format_exc())
@@ -136,7 +138,6 @@ class TaskRunner:
 
     def start(self):
         try:
-
             self.add_new_task_handler()
             self.failed_task_handler()
             self.logger.info("Starting %d workers", self.number_of_processes)
@@ -154,17 +155,16 @@ class TaskBase(object):
     base_directory = os.path.join(get_config('recording_base_dir'), hostname)
 
     def check_stamp(self):
-        stamp_file = open(self.stamp_full_path, "r")  # w+ since we truncated the file
-        stamp = stamp_file.read()
-        if stamp == self.timestamp:
-            self.logger.debug("Stamp  %s is not changed", stamp)
-        else:
-            msg = "Stamps are not equal! process stamp:%s, found in file: %s, abort directory" % (self.timestamp, stamp)
-            retries_file_path = os.path.join(self.recording_path, 'retries')
-            retries_file = open(retries_file_path, "w+")
-            retries_file.write('0')
-            retries_file.close()
-            raise ValueError(msg)
+        with open(self.stamp_full_path, "r") as stamp_file: # w+ since we truncated the file
+            stamp = stamp_file.read()
+            if stamp == self.timestamp:
+                self.logger.debug("Stamp  %s is not changed", stamp)
+            else:
+                msg = "Stamps are not equal! process stamp:%s, found in file: %s, abort directory" % (self.timestamp, stamp)
+                retries_file_path = os.path.join(self.recording_path, 'retries')
+                with open(retries_file_path, "w+") as retries_file:
+                    retries_file.write('0')
+                raise ValueError(msg)
 
     def __init__(self, param, logger_info):
         self.timestamp = param['timestamp']
@@ -180,9 +180,8 @@ class TaskBase(object):
     def write_stamp(self):
 
         self.logger.info("About to write stamp %s on %s", self.timestamp, self.recording_path)
-        stamp_file = open(self.stamp_full_path, "w+")  # w+ since we truncated the file
-        stamp_file.write(self.timestamp)
-        stamp_file.close()
+        with open(self.stamp_full_path, "w+") as stamp_file:  # w+ since we truncated the file
+            stamp_file.write(self.timestamp)
 
     __metaclass__ = abc.ABCMeta
 

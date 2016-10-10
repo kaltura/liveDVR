@@ -81,7 +81,7 @@ class UploadTask(TaskBase):
 
         self.check_stamp()
         file_size = os.path.getsize(file_name)
-        infile = io.open(file_name, 'rb')
+        infile = io.open(file_name, 'rb') # TODO close this file!
         if file_size % self.upload_token_buffer_size == 0:
             chunks_to_upload = int(file_size / self.upload_token_buffer_size)
         else:

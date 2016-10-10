@@ -19,14 +19,14 @@ class ConcatenationTask(TaskBase):
     def create_manifest(self):
         self.logger.info("Creating manifest file for the recorded entry %s", self.entry_id)
         full_path = os.path.join(self.recording_path, self.manifest_input_file)
-        fo = open(full_path, "wb")
         file_list = self.sorted_ls(self.recording_path)
-        for file_name in file_list:
-            if file_name.endswith('.mp4') and not file_name.endswith('_out.mp4'):
-                fo.write("file %s\n" % file_name)
-            else:
-                self.logger.warn("file %s is not mp4 file format", file_name)
-        fo.close()
+        with open(full_path, "wb") as fo:
+            for file_name in file_list:
+                if file_name.endswith('.mp4') and not file_name.endswith('_out.mp4'):
+                    fo.write("file %s\n" % file_name)
+                else:
+                    self.logger.warn("file %s is not mp4 file format", file_name)
+
 
     def __init__(self, param, logger_info):
         TaskBase.__init__(self, param, logger_info)
