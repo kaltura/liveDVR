@@ -56019,8 +56019,8 @@ class KalturaLiveStreamService(KalturaServiceBase):
         self.client.queueServiceActionCall("livestream", "get", KalturaLiveStreamEntry, kparams)
         if self.client.isMultiRequest():
             return self.client.getMultiRequestResult()
-        resultNode = self.client.doQueue()
-        return KalturaObjectFactory.create(resultNode, KalturaLiveStreamEntry)
+        resultNode, header = self.client.doQueue()
+        return KalturaObjectFactory.create(resultNode, KalturaLiveStreamEntry), header
 
     def authenticate(self, entryId, token, hostname = NotImplemented, mediaServerIndex = NotImplemented, applicationName = NotImplemented):
         """Authenticate live-stream entry against stream token and partner limitations"""
@@ -56251,8 +56251,8 @@ class KalturaMediaService(KalturaServiceBase):
         self.client.queueServiceActionCall("media", "addContent", KalturaMediaEntry, kparams)
         if self.client.isMultiRequest():
             return self.client.getMultiRequestResult()
-        resultNode = self.client.doQueue()
-        return KalturaObjectFactory.create(resultNode, KalturaMediaEntry)
+        resultNode, header = self.client.doQueue()
+        return KalturaObjectFactory.create(resultNode, KalturaMediaEntry), header
 
     def addFromBulk(self, mediaEntry, url, bulkUploadId):
         """Adds new media entry by importing an HTTP or FTP URL.
@@ -56366,8 +56366,8 @@ class KalturaMediaService(KalturaServiceBase):
         self.client.queueServiceActionCall("media", "get", KalturaMediaEntry, kparams)
         if self.client.isMultiRequest():
             return self.client.getMultiRequestResult()
-        resultNode = self.client.doQueue()
-        return KalturaObjectFactory.create(resultNode, KalturaMediaEntry)
+        resultNode, header = self.client.doQueue()
+        return KalturaObjectFactory.create(resultNode, KalturaMediaEntry), header
 
     def getMrss(self, entryId, extendingItemsArray = NotImplemented, features = NotImplemented):
         """Get MRSS by entry id
@@ -56392,8 +56392,8 @@ class KalturaMediaService(KalturaServiceBase):
         self.client.queueServiceActionCall("media", "update", KalturaMediaEntry, kparams)
         if self.client.isMultiRequest():
             return self.client.getMultiRequestResult()
-        resultNode = self.client.doQueue()
-        return KalturaObjectFactory.create(resultNode, KalturaMediaEntry)
+        resultNode, header = self.client.doQueue()
+        return KalturaObjectFactory.create(resultNode, KalturaMediaEntry), header
 
     def updateContent(self, entryId, resource, conversionProfileId = NotImplemented, advancedOptions = NotImplemented):
         """Replace content associated with the media entry."""
@@ -56406,8 +56406,8 @@ class KalturaMediaService(KalturaServiceBase):
         self.client.queueServiceActionCall("media", "updateContent", KalturaMediaEntry, kparams)
         if self.client.isMultiRequest():
             return self.client.getMultiRequestResult()
-        resultNode = self.client.doQueue()
-        return KalturaObjectFactory.create(resultNode, KalturaMediaEntry)
+        resultNode, header = self.client.doQueue()
+        return KalturaObjectFactory.create(resultNode, KalturaMediaEntry), header
 
     def delete(self, entryId):
         """Delete a media entry."""
@@ -56438,8 +56438,8 @@ class KalturaMediaService(KalturaServiceBase):
         self.client.queueServiceActionCall("media", "cancelReplace", KalturaMediaEntry, kparams)
         if self.client.isMultiRequest():
             return self.client.getMultiRequestResult()
-        resultNode = self.client.doQueue()
-        return KalturaObjectFactory.create(resultNode, KalturaMediaEntry)
+        resultNode, header = self.client.doQueue()
+        return KalturaObjectFactory.create(resultNode, KalturaMediaEntry), header
 
     def list(self, filter = NotImplemented, pager = NotImplemented):
         """List media entries by filter with paging support."""
@@ -57615,7 +57615,7 @@ class KalturaSessionService(KalturaServiceBase):
         if self.client.isMultiRequest():
             return self.client.getMultiRequestResult()
         resultNode = self.client.doQueue()
-        return getXmlNodeText(resultNode)
+        return (getXmlNodeText(resultNode[0]), resultNode[1])
 
     def end(self):
         """End a session with the Kaltura server, making the current KS invalid."""
@@ -58395,8 +58395,8 @@ class KalturaUploadTokenService(KalturaServiceBase):
         self.client.queueServiceActionCall("uploadtoken", "add", KalturaUploadToken, kparams)
         if self.client.isMultiRequest():
             return self.client.getMultiRequestResult()
-        resultNode = self.client.doQueue()
-        return KalturaObjectFactory.create(resultNode, KalturaUploadToken)
+        resultNode, header = self.client.doQueue()
+        return KalturaObjectFactory.create(resultNode, KalturaUploadToken), header
 
     def get(self, uploadTokenId):
         """Get upload token by id"""
@@ -58406,8 +58406,8 @@ class KalturaUploadTokenService(KalturaServiceBase):
         self.client.queueServiceActionCall("uploadtoken", "get", KalturaUploadToken, kparams)
         if self.client.isMultiRequest():
             return self.client.getMultiRequestResult()
-        resultNode = self.client.doQueue()
-        return KalturaObjectFactory.create(resultNode, KalturaUploadToken)
+        resultNode, header = self.client.doQueue()
+        return KalturaObjectFactory.create(resultNode, KalturaUploadToken), header
 
     def upload(self, uploadTokenId, fileData, resume = False, finalChunk = True, resumeAt = -1):
         """Upload a file using the upload token id, returns an error on failure (an exception will be thrown when using one of the Kaltura clients)
@@ -58430,8 +58430,8 @@ class KalturaUploadTokenService(KalturaServiceBase):
         self.client.queueServiceActionCall("uploadtoken", "upload", KalturaUploadToken, kparams, kfiles)
         if self.client.isMultiRequest():
             return self.client.getMultiRequestResult()
-        resultNode = self.client.doQueue()
-        return KalturaObjectFactory.create(resultNode, KalturaUploadToken)
+        resultNode , header= self.client.doQueue()
+        return KalturaObjectFactory.create(resultNode, KalturaUploadToken), header
 
     def delete(self, uploadTokenId):
         """Deletes the upload token by upload token id"""
@@ -58453,8 +58453,8 @@ class KalturaUploadTokenService(KalturaServiceBase):
         self.client.queueServiceActionCall("uploadtoken", "list", KalturaUploadTokenListResponse, kparams)
         if self.client.isMultiRequest():
             return self.client.getMultiRequestResult()
-        resultNode = self.client.doQueue()
-        return KalturaObjectFactory.create(resultNode, KalturaUploadTokenListResponse)
+        resultNode, header  = self.client.doQueue()
+        return (KalturaObjectFactory.create(resultNode, KalturaUploadTokenListResponse), header)
 
 
 # @package Kaltura

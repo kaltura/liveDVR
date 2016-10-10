@@ -355,8 +355,8 @@ class KalturaClient(object):
         # parse the result            
         resultNode = self.parsePostResult(postResult)
 
-        return resultNode
-        
+        return (resultNode, self.responseHeaders)
+
     def getConfig(self):
         return self.config
         
