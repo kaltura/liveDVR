@@ -9,6 +9,7 @@ import re
 import abc
 import traceback
 from socket import gethostname
+from KalturaClient.Client import KalturaException
 import time
 #  Currently not support multiple machine pulling from one incoming dir.
 # If need, just add incoming dir in the constructor
@@ -69,40 +70,46 @@ class TaskRunner:
                     m = re.search(entry_regex, directory_name)
                     entry_id = m.group(1)
                     recorded_id = m.group(2)
-                    timestamp =  m.group(3)
+                    timestamp = m.group(3)
                     param = {'entry_id': entry_id, 'directory': directory_name, 'recorded_id': recorded_id,
                              'timestamp': timestamp}
                     self.task_queue.put(param)
-                    self.logger.info("Add unhanded directory %s from %s to the task queue", directory_name, src_dir)
+                    self.logger.info("[%s-%s] Add unhanded directory %s from %s to the task queue", entry_id,
+                                     recorded_id, directory_name, src_dir)
                 except Exception as e:
-                    self.logger.error("Error while try to add task:%s \n %s", str(e), traceback.format_exc())
+                    self.logger.error("[%s-%s] Error while try to add task:%s \n %s", entry_id, recorded_id,
+                                      str(e), traceback.format_exc())
 
     def work(self, index):
         self.logger.info("Worker %s start working", index)
         while True:
             task_parameter = self.task_queue.get()
-            self.logger.info("Task is performed by %d", index)
+            logger_info = self.task_name + '][' + task_parameter['entry_id'] + '][' + task_parameter['recorded_id']
+            self.logger.info("[%s] Task is performed by %d", logger_info, index)
             try:
                 src = os.path.join(self.working_directory, task_parameter['directory'])
-                logger_info = self.task_name + '][' + task_parameter['entry_id'] +  '][' + task_parameter['recorded_id']
+
                 job = self.task(task_parameter, logger_info)  # operate the function task_job, with argument task_parameters
                 job.run()
                 shutil.move(src, self.output_directory)
-                self.logger.info("Task %s completed, Move %s to %s", self.task_name, src, self.output_directory)
+                self.logger.info("[%s] Task %s completed, Move %s to %s", logger_info, self.task_name, src,
+                                 self.output_directory)
+
             except Exception as e:
-                self.logger.error("Failed to perform task :%s \n %s", str(e), traceback.format_exc())
+                self.logger.error("[%s] Failed to perform task :%s \n %s", logger_info, str(e), traceback.format_exc())
                 retries = self.get_retry_count(src)
                 try:
                     if retries > 0:
-                        self.logger.info("Job %s on entry %s has %s retries, move it to failed task directory ",
-                                        self.task_name, task_parameter['directory'], retries)
+                        self.logger.info("[%s] Job %s on entry %s has %s retries, move it to failed task directory ",
+                                         logger_info, self.task_name, task_parameter['directory'], retries)
                         shutil.move(src, self.failed_tasks_directory)
                     else:
-                        self.logger.fatal("Job %s on entry %s has no more retries or failed to get it, move entry to "
-                                      "failed task directory ", self.task_name, task_parameter['directory'])
+                        self.logger.fatal("[%s] Job %s on entry %s has no more retries or failed to get it, move entry to "
+                                      "failed task directory ", logger_info, self.task_name, task_parameter['directory'])
                         shutil.move(src, self.error_directory)
                 except Exception as e:
-                    self.logger.fatal("Failed to handle failure task %s \n %s", str(e), traceback.format_exc())
+                    self.logger.fatal("[%s]  Failed to handle failure task %s \n %s", logger_info, str(e)
+                                    , traceback.format_exc())
 
     def get_retry_count(self, src):
         try:

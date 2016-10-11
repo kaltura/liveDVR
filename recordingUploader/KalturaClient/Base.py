@@ -298,12 +298,13 @@ class KalturaServiceBase(object):
 
 # Exception class for server errors
 class KalturaException(Exception):
-    def __init__(self, message, code):
+    def __init__(self, message, code, header = None):
         self.code = code
         self.message = message
+        self.header = header
 
     def __str__(self):
-        return "%s (%s)" % (self.message, self.code)
+        return "%s (%s) \n Header: %s" % (self.message, self.code, self.header)
 
 # Exception class for client errors
 class KalturaClientException(Exception):

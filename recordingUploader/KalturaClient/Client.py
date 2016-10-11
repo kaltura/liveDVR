@@ -352,8 +352,12 @@ class KalturaClient(object):
         if serverName != None or serverSession != None:
             self.log("server: [%s], session [%s]" % (serverName, serverSession))
 
-        # parse the result            
-        resultNode = self.parsePostResult(postResult)
+        try:
+            # parse the result
+            resultNode = self.parsePostResult(postResult)
+        except KalturaException as e:
+            e.header = self.responseHeaders # attach the header
+            raise e
 
         return (resultNode, self.responseHeaders)
 
