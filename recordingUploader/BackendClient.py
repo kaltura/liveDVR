@@ -19,25 +19,25 @@ class BackendClient:
     request_timeout = 120
     expiration_time_ks = -1
     mutex = Lock()
+    config = KalturaConfiguration(url)
+    client = KalturaClient(config)
+    client.setPartnerId(partner_id)
     ks = None
 
     def __init__(self, session_id):
         self.logger = logger_decorator(self.__class__.__name__, session_id)
-        self.config = KalturaConfiguration(self.url)
-        self.client = KalturaClient(self.config)
-        self.client.setPartnerId(self.partner_id)
 
     def create_new_session(self):
         result = self.client.session.start(self.admin_secret, None, type, self.partner_id, None, None)
-        self.ks = result[0]
+        BackendClient.ks = result[0]
+        BackendClient.expiration_time_ks = int(self.session_duration) + int(time.time()) - 3600  # confidence interval
         self.client.setKs(self.ks)
-        self.expiration_time_ks = int(self.session_duration) + int(time.time()) - 3600  # confidence interval
         self.logger.info("Creating a new session, KS= %s \n Header: %s", self.ks, result[1])
 
     def get_kaltura_session(self):
         self.mutex.acquire()
         try:
-            if (self.ks is not None) or self.expiration_time_ks < int(time.time()):
+            if (self.ks is None) or self.expiration_time_ks < int(time.time()):
                 self.create_new_session()
         finally:
             self.mutex.release()
