@@ -1,8 +1,7 @@
 import os
 import subprocess
-import logging.handlers
-from config import get_config
-from TaskRunner import TaskBase
+from Config.config import get_config
+from TaskBase import TaskBase
 ffmpeg_path = get_config('ffmpeg_path')
 
 
@@ -27,12 +26,10 @@ class ConcatenationTask(TaskBase):
                 else:
                     self.logger.warn("file %s is not mp4 file format", file_name)
 
-
     def __init__(self, param, logger_info):
         TaskBase.__init__(self, param, logger_info)
         concat_task_processing_dir = os.path.join(self.base_directory, self.__class__.__name__, 'processing')
         self.recording_path = os.path.join(concat_task_processing_dir, self.entry_directory)
-        self.logger = logging.getLogger(logger_info)
         self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
 
     def run(self):

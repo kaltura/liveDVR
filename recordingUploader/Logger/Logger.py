@@ -1,7 +1,7 @@
 from logging.config import dictConfig
 import logging
 import sys
-from config import get_config
+from Config.config import get_config
 
 
 DEFAULT_LOGGING = {
@@ -24,16 +24,16 @@ def init_logger():
     file_handler = logging.handlers.TimedRotatingFileHandler(log_full_path, when="d", interval=1)
     file_handler.setLevel(get_config('log_level'))
 
-    if get_config('log_to_console', bool)== True :
+    if get_config('log_to_console', bool) is True:
         console_handler = logging.StreamHandler(sys.stdout)
-        console_handler.setLevel(logging.DEBUG)
+        console_handler.setLevel(get_config('log_level'))
         console_formatter = logging.Formatter(
             '[%(process)d/%(threadName)s][%(levelname)s] [%(name)s] [%(funcName)s():%(lineno)s] %(message)s')
         console_handler.setFormatter(console_formatter)
         logging.root.addHandler(console_handler)
 
-    logging.root.setLevel(get_config('log_level'))
-    logging.root.addHandler(file_handler)
+    #logging.root.setLevel(get_config('log_level'))
+    #logging.root.addHandler(file_handler)
 
     return
 

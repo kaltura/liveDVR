@@ -1,15 +1,12 @@
 import os
 import io
 from BackendClient import *
-from config import get_config
-import Queue
+from Config.config import get_config
 from threading import Thread, Lock
-import logging.handlers
-from TaskRunner import TaskBase
+from TaskBase import TaskBase
 import traceback
 from MockFileObject import MockFileObject
 from ThreadWorkers import ThreadWorkers
-import random
 from KalturaClient.Plugins.Core import KalturaEntryStatus, KalturaEntryReplacementStatus
 
 #backend_client = BackendClient()

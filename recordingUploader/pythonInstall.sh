@@ -24,21 +24,22 @@ tar -zxvf /tmp/python_22-06-2016.tar.gz
 cd /tmp/python/
 python setup.py install
 pip install  poster
-mkdir $HOME_DIRECTORY
-mkdir "$HOME_DIRECTORY/recordings"
-mkdir "$HOME_DIRECTORY/error"
-mkdir "$HOME_DIRECTORY/incoming"
-mkdir $HOSTNAME_DIRECTORY
+pip install psutil
+mkdir -p $HOME_DIRECTORY
+mkdir -p "$HOME_DIRECTORY/recordings"
+mkdir -p "$HOME_DIRECTORY/error"
+mkdir -p "$HOME_DIRECTORY/incoming"
+mkdir -p $HOSTNAME_DIRECTORY
 UPLOAD_TASK_DIRECTORY="$HOSTNAME_DIRECTORY/UploadTask"
 CONCATINATION_TASK_DIRECTORY="$HOSTNAME_DIRECTORY/ConcatenationTask"
-mkdir $CONCATINATION_TASK_DIRECTORY
+mkdir  -p $CONCATINATION_TASK_DIRECTORY
 ln -s "$HOME_DIRECTORY/incoming" $CONCATINATION_TASK_DIRECTORY
-mkdir "$CONCATINATION_TASK_DIRECTORY/failed"
-mkdir "$CONCATINATION_TASK_DIRECTORY/processing"
-mkdir $UPLOAD_TASK_DIRECTORY
-mkdir "$UPLOAD_TASK_DIRECTORY/failed"
-mkdir "$UPLOAD_TASK_DIRECTORY/incoming"
-mkdir "$UPLOAD_TASK_DIRECTORY/processing"
+mkdir -p "$CONCATINATION_TASK_DIRECTORY/failed"
+mkdir -p "$CONCATINATION_TASK_DIRECTORY/processing"
+mkdir -p $UPLOAD_TASK_DIRECTORY
+mkdir -p "$UPLOAD_TASK_DIRECTORY/failed"
+mkdir -p "$UPLOAD_TASK_DIRECTORY/incoming"
+mkdir -p "$UPLOAD_TASK_DIRECTORY/processing"
 if [ ! -f $FFMPEG_PATH ]; then
 echo "Warning: can't find ffmpeg path"
 exit

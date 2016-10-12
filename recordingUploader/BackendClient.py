@@ -1,13 +1,13 @@
 from KalturaClient import *
 from KalturaClient.Plugins.Core import KalturaMediaEntry, KalturaUploadToken, KalturaUploadedFileTokenResource, KalturaUploadTokenFilter, KalturaServerFileResource
-from config import get_config
+from Config.config import get_config
 import logging.handlers
+from Logger.LoggerDecorator import logger_decorator
 from threading import Lock
 import time
 import json
 
-# todo add header also if request is failed!, maybe build custum exeption
-# todo maybe add parter Id to init
+# todo maybe add partner Id to init
 class BackendClient:
 
     admin_secret = get_config('admin_secret')
@@ -19,34 +19,31 @@ class BackendClient:
     request_timeout = 120
     expiration_time_ks = -1
     mutex = Lock()
+    ks = None
 
     def __init__(self, session_id):
-        log_decorator = self.__class__.__name__ + '][' + session_id
-        self.logger = logging.getLogger(log_decorator)
-
-        self.logger.info("initialize Kaltura API")
-
-    def create_new_session(self):
+        self.logger = logger_decorator(self.__class__.__name__, session_id)
         self.config = KalturaConfiguration(self.url)
         self.client = KalturaClient(self.config)
+        self.client.setPartnerId(self.partner_id)
+
+    def create_new_session(self):
         result = self.client.session.start(self.admin_secret, None, type, self.partner_id, None, None)
         self.ks = result[0]
-        self.client.setPartnerId(self.partner_id)
         self.client.setKs(self.ks)
         self.expiration_time_ks = int(self.session_duration) + int(time.time()) - 3600  # confidence interval
-        self.logger.info("Creating new session, KS= %s \n Header: %s", self.ks, result[1])
-        return self.ks
+        self.logger.info("Creating a new session, KS= %s \n Header: %s", self.ks, result[1])
 
     def get_kaltura_session(self):
         self.mutex.acquire()
         try:
-            if (not hasattr(self, 'ks')) or self.expiration_time_ks < int(time.time()):
+            if (self.ks is not None) or self.expiration_time_ks < int(time.time()):
                 self.create_new_session()
         finally:
             self.mutex.release()
 
     def impersonate_client(self, partner_id):
-
+        global ks
         self.get_kaltura_session()  # generate KS in case that not existed or expired
         clone_client = KalturaClient(self.config)
         clone_client.setPartnerId(partner_id)
@@ -112,32 +109,25 @@ class BackendClient:
 
     @staticmethod
     def upload_token_result_to_json(result):  # wrapped by try catch in order to prevent upload token to be failed.
-        try:
-            result_dictionary = {
-                "fileName": result.fileName,
-                "fileSize": result.fileSize,
-                "token": result.id,
-                "partnerId": result.partnerId,
-                "status": result.status.value,
-                "uploadFileSize": result.uploadedFileSize
-            }
-            return json.dumps(result_dictionary, ensure_ascii=False)
-        except Exception:
-            return result.toParams().toJson()
+        result_dictionary = {
+            "fileName": result.fileName,
+            "fileSize": result.fileSize,
+            "token": result.id,
+            "partnerId": result.partnerId,
+            "status": result.status.value,
+            "uploadFileSize": result.uploadedFileSize
+        }
+        return json.dumps(result_dictionary, ensure_ascii=False)
 
     def set_media_content_add(self, upload_session):
-        # todo Is it in use? check why callig client.setConfig()
         token_id = upload_session.token_id
         recorded_id = upload_session.recorded_id
         partner_id = upload_session.partner_id
         resource = KalturaUploadedFileTokenResource(token_id)
-        client = self.impersonate_client(partner_id)
-        client.setConfig()
-        client.media.addContent(recorded_id, resource)
+        self.handle_request(partner_id, 'media', 'addContent', recorded_id, resource)
         self.logger.info("Set media content add with entryId [%s] and token [%s]", recorded_id, token_id)
 
     def set_media_content_update(self, upload_session):
-
         token_id = upload_session.token_id
         recorded_id = upload_session.recorded_id
         partner_id = upload_session.partner_id

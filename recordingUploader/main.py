@@ -1,17 +1,17 @@
-from TaskRunner import TaskRunner
-from ConcatinationTask import ConcatenationTask
-from UploadTask import UploadTask
-from config import get_config
-from os import path, kill
-import recording_logger
+from Tasks.TaskRunner import TaskRunner
+from Tasks.ConcatinationTask import ConcatenationTask
+from Tasks.UploadTask import UploadTask
+from Config.config import get_config
+from os import path
+from Logger.Logger import init_logger
 import sys
 import signal
 import psutil
 import socket
 # todo categorize logger between debug and info
 #todo bug - if on start there are too many task, cannot add to queue and then not continiue!
-#todo attach client lib to project and return header!
-# version is 2.7.11
+
+# task runner- try to add id , this is not clear [11885/MainThread][ERROR] [TaskRunner-UploadTask] [work():93] Failed to perform task :The access to service [media->cancelReplace] is forbidden (SERVICE_FORBIDDEN version is 2.7.11
 # install psutil
 # support upload token change yosi made
 # How to recover from case that live-controller crash, when need to cread hard link/Wrote to json- maybe flavor download should send event to all his chunks on disk
@@ -37,10 +37,9 @@ def signal_term_handler(signal, frame):
         my_process.terminate()
     sys.exit(0)
 
-recording_logger.init_logger()
+init_logger()
 processes = []
 max_task_count = get_config("max_task_count", 'int')
-ffmpeg_path = get_config('ffmpeg_path')
 concat_processors_count = get_config('concat_processors_count', 'int')
 uploading_processors_count = get_config('uploading_processors_count', 'int')
 base_directory = get_config('recording_base_dir')
@@ -66,4 +65,4 @@ for p in UploadTaskRunner:
 for process in processes:
     process.join()
 
-# gitodo should add p.join?
+# todo should add p.join?
