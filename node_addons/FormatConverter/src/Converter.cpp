@@ -440,13 +440,15 @@ namespace converter{
     }
     
     
-    int getKeyFrames(MOVMuxContext *mov,std::vector<double> &result){
+    int getKeyFrames(MOVMuxContext *mov,MediaTrackInfo::KEY_FRAME_DTS_VEC_T &result){
     
         if(!mov){
             return -1;
         }
         
         result.resize(0);
+        
+        int64_t firstDTS =AV_NOPTS_VALUE;
         
         // code *stolen* from movenc.c
         for(MOVTrack *track = mov->tracks; track < mov->tracks + mov->nb_streams ; track++){
@@ -459,8 +461,12 @@ namespace converter{
                             av_log(NULL,AV_LOG_WARNING,"getKeyFrames. undefined dts value for keyframe %d",
                                    i);
                         } else {
-                            int64_t millis = av_rescale_rnd(dts,1000,
+                            if(AV_NOPTS_VALUE == firstDTS){
+                                firstDTS = 0;
+                            }
+                            int64_t millis = av_rescale_rnd(dts-firstDTS,1000,
                                                             track->timescale,AV_ROUND_ZERO);
+                         
                             if(millis < 0){
                                 av_log(NULL,AV_LOG_WARNING,"getKeyFrames. negative dts value for keyframe %i dts=%lld timescale=%u millis=%lld",
                                        i, dts , track->timescale, millis );
@@ -478,7 +484,7 @@ namespace converter{
             
             auto diff = result[0];
             
-            std::transform(result.begin(),result.end(),result.begin(),[ diff ] (double val) -> double { return val - diff; });
+            std::transform(result.begin(),result.end(),result.begin(),[ diff ] (MediaTrackInfo::KEY_FRAME_DTS_VEC_T::value_type val) -> MediaTrackInfo::KEY_FRAME_DTS_VEC_T::value_type { return val - diff; });
         }
         
         return 0;
@@ -522,7 +528,7 @@ namespace converter{
                 if(!bFound)
                     continue;
                 
-                std::vector<double> keyFrames;
+                MediaTrackInfo::KEY_FRAME_DTS_VEC_T keyFrames;
 
                 switch(stream->codec->codec_type){
                     case AVMEDIA_TYPE_VIDEO:
@@ -540,15 +546,15 @@ namespace converter{
                     case AVMEDIA_TYPE_AUDIO:
                     {
                         
-                        double wrapDTS = ::ceil(dts2msec(1ULL << stream->pts_wrap_bits,stream->time_base));
+                        MediaTrackInfo::value_type wrapDTS = ::ceil(dts2msec(1ULL << stream->pts_wrap_bits,stream->time_base));
                         ExtraTrackInfo &extraInfo = this->m_extraTrackInfo[this->m_streamMapper[i]];
-                        double duration = dts2msec(extraInfo.maxDTS - stream->first_dts,stream->time_base);
+                        MediaTrackInfo::value_type duration = dts2msec(extraInfo.maxDTS - stream->first_dts,stream->time_base);
                         if(keyFrames.size()) {
-                            std::vector<double>::iterator last = std::unique(keyFrames.begin(), keyFrames.end());
+                            MediaTrackInfo::KEY_FRAME_DTS_VEC_T::iterator last = std::unique(keyFrames.begin(), keyFrames.end());
                             keyFrames.erase(last,keyFrames.end());
                             mfi.metadata.keyFrameDistance = (float)duration / keyFrames.size();
                         }
-                        mfi.tracks.push_back({ (double)(this->m_creationTime + dtsUtils::diff(stream,stream->start_time,m_minStartDTSMsec)),
+                        mfi.tracks.push_back({ (MediaTrackInfo::value_type)(this->m_creationTime + dtsUtils::diff(stream,stream->start_time,m_minStartDTSMsec)),
                             extraInfo.startDTS,
                             wrapDTS,
                             duration,

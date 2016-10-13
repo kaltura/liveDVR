@@ -17,11 +17,15 @@ namespace converter{
     
     
     struct MediaTrackInfo{
-        double firstDtsMsec;
-        double firstEncoderDtsMsec;
-        double wrapEncoderDtsMsec;
-        double durationMsec;
-        std::vector<double> vecKeyFrameDtsMsec;
+        
+        typedef int64_t value_type;
+        typedef std::vector<value_type> KEY_FRAME_DTS_VEC_T;
+        
+        value_type absoluteTimeMsec;
+        value_type ptsMsec;
+        value_type wrapPtsMsec;
+        value_type durationMsec;
+        KEY_FRAME_DTS_VEC_T vecKeyFrameDtsMsec;
         AVMediaType  mtype;
         
         static const std::string fld_duration,
