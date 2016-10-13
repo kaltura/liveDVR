@@ -448,8 +448,6 @@ namespace converter{
         
         result.resize(0);
         
-        int64_t firstDTS =AV_NOPTS_VALUE;
-        
         // code *stolen* from movenc.c
         for(MOVTrack *track = mov->tracks; track < mov->tracks + mov->nb_streams ; track++){
             if (track->enc->codec_type == AVMEDIA_TYPE_VIDEO  &&
@@ -461,10 +459,7 @@ namespace converter{
                             av_log(NULL,AV_LOG_WARNING,"getKeyFrames. undefined dts value for keyframe %d",
                                    i);
                         } else {
-                            if(AV_NOPTS_VALUE == firstDTS){
-                                firstDTS = 0;
-                            }
-                            int64_t millis = av_rescale_rnd(dts-firstDTS,1000,
+                            int64_t millis = av_rescale_rnd(dts,1000,
                                                             track->timescale,AV_ROUND_ZERO);
                          
                             if(millis < 0){
@@ -548,7 +543,7 @@ namespace converter{
                         
                         MediaTrackInfo::value_type wrapDTS = ::ceil(dts2msec(1ULL << stream->pts_wrap_bits,stream->time_base));
                         ExtraTrackInfo &extraInfo = this->m_extraTrackInfo[this->m_streamMapper[i]];
-                        MediaTrackInfo::value_type duration = dts2msec(extraInfo.maxDTS - stream->first_dts,stream->time_base);
+                        double duration = dts2msec(extraInfo.maxDTS - stream->first_dts,stream->time_base);
                         if(keyFrames.size()) {
                             MediaTrackInfo::KEY_FRAME_DTS_VEC_T::iterator last = std::unique(keyFrames.begin(), keyFrames.end());
                             keyFrames.erase(last,keyFrames.end());

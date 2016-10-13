@@ -24,7 +24,7 @@ namespace converter{
         value_type absoluteTimeMsec;
         value_type ptsMsec;
         value_type wrapPtsMsec;
-        value_type durationMsec;
+        double durationMsec;
         KEY_FRAME_DTS_VEC_T vecKeyFrameDtsMsec;
         AVMediaType  mtype;
         
