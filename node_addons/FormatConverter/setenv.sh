@@ -84,19 +84,21 @@ cd $path
 
 gyp_args=''
 
+echo "Installing NAN"
+npm install nan
+
 case $os_name in
 'Darwin')
     echo "Mac OS"
     gyp_args='-- -f xcode'
+    echo "$gyp_args"
+    node-gyp configure $gyp_args
     ;;
 *) ;;
 esac
 
-echo "$gyp_args"
-echo "Installing NAN"
-npm install nan
 echo "Start node-gyp configure"
-node-gyp configure $gyp_args
+node-gyp configure
 
 if [ "$build_conf" = "Debug" ]; then
     gyp_debug="--debug"
