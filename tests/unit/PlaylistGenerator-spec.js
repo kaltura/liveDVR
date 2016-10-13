@@ -183,7 +183,11 @@ describe('Playlist Generator spec', function() {
             _.each(seq.clips,function(c){
                 _.each(c.inner.sources,function(src) {
                     if(src.isVideo) {
-                        expect(src.keyFrameDurations.length === src.inner.durations.length).to.be.eql(true);
+                        expect(src.keyFrameDurations.length).to.be.eql(src.inner.durations.length);
+                        let totalKeyFrameDuration = _.reduce(src.keyFrameDurations,(result,kf)=>{
+                            return result + kf.sum()
+                        },0);
+                        expect(totalKeyFrameDuration).to.be.eql(src.inner.durations.sum());
                     }
                 });
             });
@@ -221,6 +225,36 @@ describe('Playlist Generator spec', function() {
                 return updatePlaylist(plGen,fis).then(function(playlist){
                     var playlist2 = new Playlist('test2',playlist);
                     checkKeyFrames(playlist2);
+                    done();
+                });
+            })).to.eventually.be.fullfilled;
+        });
+
+        it('playlist generator should keep key frames duration in sync with chunk duration', function (done) {
+
+            var fis = batchAppend({
+                startTime: 1459270805911,
+                sig: 'C53429E60F33B192FD124A2CC22C8717',
+                video:
+                {
+                    duration: 16000,
+                    firstDTS: 1459270805994,
+                    firstEncoderDTS: 83,
+                    wrapEncoderDTS: 95443718,
+                    keyFrameDTS:[0,8000]
+                },
+                path: '/var/tmp/1_abc123/2/16/media-u774d8hoj_w20128143_1.mp4',
+                flavor: "32"
+            },2);
+
+            fis[1].video.firstDTS        += 333;
+            fis[1].video.firstEncoderDTS += 333;
+            fis[2].video.firstDTS        -= 111;
+            fis[2].video.firstEncoderDTS -= 111;
+
+            expect(createPlaylistGenerator().then(function(plGen) {
+                return updatePlaylist(plGen,fis).then(function(playlist){
+                    checkKeyFrames(plGen.playlistImp);
                     done();
                 });
             })).to.eventually.be.fullfilled;
