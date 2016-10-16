@@ -322,7 +322,6 @@ namespace converter{
             }
         }
         if(AV_NOPTS_VALUE != lastValue) {
-            timestamp = std::max(lastValue,timestamp);
             if(lastValue == timestamp && bStrictTimestamps){
                 timestamp++;
             }
@@ -374,7 +373,7 @@ namespace converter{
                 updateLastTimestamp(xtra.lastPTS, pkt.pts,bStrictTimestamps);
                 
                 pkt.pts = av_rescale_q_rnd(pkt.pts, in_stream->time_base,out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
-                
+
                 updateLastTimestamp(xtra.lastDTS,pkt.dts,bStrictTimestamps);
                 
                 xtra.maxDTS = pkt.dts + pkt.duration;
