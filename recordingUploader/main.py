@@ -10,9 +10,9 @@ import psutil
 import socket
 # todo categorize logger between debug and info
 #todo bug - if on start there are too many task, cannot add to queue and then not continiue!
-
+# todo  check that Isilon two machine make move, one get it!
 # task runner- try to add id , this is not clear [11885/MainThread][ERROR] [TaskRunner-UploadTask] [work():93] Failed to perform task :The access to service [media->cancelReplace] is forbidden (SERVICE_FORBIDDEN version is 2.7.11
-# install psutil
+# install psutilg
 # support upload token change yosi made
 # How to recover from case that live-controller crash, when need to cread hard link/Wrote to json- maybe flavor download should send event to all his chunks on disk
 # the recording entry should created after session ended, and the
