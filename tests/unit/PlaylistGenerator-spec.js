@@ -84,7 +84,7 @@ describe('Playlist Generator spec', function() {
             flavor: "32" }
     ];
 
-    this.timeout(0);
+    //this.timeout(0);
 
     var createPlaylistGenerator = function(windowSize,playlist){
 
@@ -183,7 +183,11 @@ describe('Playlist Generator spec', function() {
             _.each(seq.clips,function(c){
                 _.each(c.inner.sources,function(src) {
                     if(src.isVideo) {
-                        expect(src.keyFrameDurations.length === src.inner.durations.length).to.be.eql(true);
+                        expect(src.keyFrameDurations.length).to.be.eql(src.inner.durations.length);
+                        let totalKeyFrameDuration = _.reduce(src.keyFrameDurations,(result,kf)=>{
+                            return result + kf.sum()
+                        },0);
+                        expect(totalKeyFrameDuration).to.be.eql(src.inner.durations.sum());
                     }
                 });
             });
@@ -191,6 +195,34 @@ describe('Playlist Generator spec', function() {
     };
 
     describe('basics', function() {
+
+       // this.timeout(0)
+        it('should produce valid diagnostics', function (done) {
+            createPlaylistGenerator().then(function (plGen) {
+
+                let fs1 = {"startTime":1476396840775,"sig":"842168C088B2E6F3FAFEC7AC857069E1","video":{"duration":89551653.688889,"firstDTS":1476396840814,"firstEncoderDTS":5901623,"wrapEncoderDTS":95443718,"keyFrameDTS":[0,2400]},"audio":{"duration":4605.977778,"firstDTS":1476396840775,"firstEncoderDTS":5901584.1,"wrapEncoderDTS":95443718},"metaData":{"resolution":[1280,720],"fileSize_kbits":6632,"framerate":25,"keyFrameDistance":44775828,"bitrate_kbps":0},"path":"/web/content/kLive/live/0_fgq2oej6/32/18/u0qvfgs93-591.mp4","flavor":"32","chunkName":"u0qvfgs93-591.mp4","targetDuration":4289076000,"windowSize":85781520000,"url":"http://pa-live-publish102.kaltura.com:1935/kLive/_definst_/0_fgq2oej6_32"};
+                updatePlaylist(plGen, [fs1]).then((result) => {
+
+                    plGen.playlistImp.ptsReference.absolute = 1476390938546;
+                    plGen.playlistImp.ptsReference.pts = 0;
+                    plGen.on('diagnosticsInfo',(diag)=>{
+                        expect(diag.ptsDelta).to.be.above(-1);
+                        expect(diag.clockDelta).to.be.above(-1);
+                    });
+
+                    let ovfl = {"startTime":1476396854614,"sig":"8CE845B6194E971AF2FF86CFCEE0B620",
+                        "video":{"duration":4800,"firstDTS":1476396854614,"firstEncoderDTS":95453276.688889,"wrapEncoderDTS":95443718,"keyFrameDTS":[0,2400]},"audio":{"duration":4736.866667,"firstDTS":1476402751245,"firstEncoderDTS":5906190.088889,"wrapEncoderDTS":95443718},"metaData":{"resolution":[1280,720],"fileSize_kbits":6932,"framerate":25,"keyFrameDistance":2400,"bitrate_kbps":1444},"path":"/web/content/kLive/live/0_fgq2oej6/32/18/u0qvfgs93-592.mp4","flavor":"32","chunkName":"u0qvfgs93-592.mp4","targetDuration":4289076000,"windowSize":85781520000,"url":"http://pa-live-publish102.kaltura.com:1935/kLive/_definst_/0_fgq2oej6_32"};
+                    return updatePlaylist(plGen, [ovfl]);
+                })
+                    .then((result)=>{
+                        expect(result.sequences[0].clips[0].sources[0].durations.length).eql(1);
+                        done();
+                    })
+                    .catch(function (err) {
+                        done(err);
+                    });
+            });
+        });
 
         it('playlist generator should be successfully created , started and stopped', function () {
             return expect(createPlaylistGenerator().then(function(plGen) {
@@ -221,6 +253,36 @@ describe('Playlist Generator spec', function() {
                 return updatePlaylist(plGen,fis).then(function(playlist){
                     var playlist2 = new Playlist('test2',playlist);
                     checkKeyFrames(playlist2);
+                    done();
+                });
+            })).to.eventually.be.fullfilled;
+        });
+
+        it('playlist generator should keep key frames duration in sync with chunk duration', function (done) {
+
+            var fis = batchAppend({
+                startTime: 1459270805911,
+                sig: 'C53429E60F33B192FD124A2CC22C8717',
+                video:
+                {
+                    duration: 16000,
+                    firstDTS: 1459270805994,
+                    firstEncoderDTS: 83,
+                    wrapEncoderDTS: 95443718,
+                    keyFrameDTS:[0,8000]
+                },
+                path: '/var/tmp/1_abc123/2/16/media-u774d8hoj_w20128143_1.mp4',
+                flavor: "32"
+            },2);
+
+            fis[1].video.firstDTS        += 333;
+            fis[1].video.firstEncoderDTS += 333;
+            fis[2].video.firstDTS        -= 111;
+            fis[2].video.firstEncoderDTS -= 111;
+
+            expect(createPlaylistGenerator().then(function(plGen) {
+                return updatePlaylist(plGen,fis).then(function(playlist){
+                    checkKeyFrames(plGen.playlistImp);
                     done();
                 });
             })).to.eventually.be.fullfilled;
@@ -825,7 +887,8 @@ describe('Playlist Generator spec', function() {
                         keyFrameDTS: [0,2000,4000,8000,10000,12000,14000]
                     },
                     path: '/var/tmp/1_abc123/2/16/media-u774d8hoj_w20128143_1.mp4',
-                    flavor: "32"
+                    flavor: "32",
+                    chunkName:"/16/media-u774d8hoj_w20128143_1.mp4"
                 };
 
                 var bad = offsetFileInfo(fis, 60000);
@@ -861,9 +924,79 @@ describe('Playlist Generator spec', function() {
                     flavor: "32"
                 }, overlap = offsetFileInfo(fi,-1000);
 
+                plGen.on('diagnosticsAlert',(alert) => {
+                    const diagnosticAlerts = require('./../../lib/Diagnostics/DiagnosticsAlerts');
+                    expect(alert).to.be.instanceof(diagnosticAlerts.OverlapPtsAlert);
+                    expect(alert.args.firstDTS).to.be.eql(fi.firstDTS);
+                    expect(alert.args.lastDTS).to.be.eql(overlap.firstDTS);
+                });
+
                 updatePlaylist(plGen, [fi, overlap]).then(function (result) {
                     expect(sum(result.durations)).to.eql(Math.ceil(fi.video.duration));
                     expect(result.sequences[0].clips[0].sources[0].paths.length).to.eql(1);
+                    done();
+                }).catch(function (err) {
+                    done(err);
+                });
+            });
+        });
+
+        it('should reject (video) item without key frames', function (done) {
+            createPlaylistGenerator().then(function (plGen) {
+
+                var fi = {
+                    startTime: 1459270805911,
+                    sig: 'C53429E60F33B192FD124A2CC22C8717',
+                    video: {
+                        duration: 16224.699999999999,
+                        firstDTS: 1459270805911,
+                        firstEncoderDTS: 83,
+                        wrapEncoderDTS: 95443718,
+                        keyFrameDTS: []
+                    },
+                    path: '/var/tmp/1_abc123/2/16/media-u774d8hoj_w20128143_1.mp4',
+                    flavor: "32"
+                };
+
+                plGen.on('diagnosticsAlert',(alert) => {
+                    const diagnosticAlerts = require('./../../lib/Diagnostics/DiagnosticsAlerts');
+                    expect(alert).to.be.instanceof(diagnosticAlerts.InvalidKeyFramesAlert);
+                    expect(alert.args.keyFrames).to.be.eql([]);
+                });
+
+                updatePlaylist(plGen, [fi]).then(function (result) {
+                    expect(sum(result.durations)).to.eql(0);
+                    done();
+                }).catch(function (err) {
+                    done(err);
+                });
+            });
+        });
+
+        it('should reject first item without absolute timestamp', function (done) {
+            createPlaylistGenerator().then(function (plGen) {
+
+                var fi = {
+                    startTime: 1459270805911,
+                    sig: 'C53429E60F33B192FD124A2CC22C8717',
+                    video: {
+                        duration: 16224.699999999999,
+                        firstDTS: 0,
+                        firstEncoderDTS: 83,
+                        wrapEncoderDTS: 95443718,
+                        keyFrameDTS: [0,4000]
+                    },
+                    path: '/var/tmp/1_abc123/2/16/media-u774d8hoj_w20128143_1.mp4',
+                    flavor: "32"
+                };
+
+                plGen.on('diagnosticsAlert',(alert) => {
+                    const diagnosticAlerts = require('./../../lib/Diagnostics/DiagnosticsAlerts');
+                    expect(alert).to.be.instanceof(diagnosticAlerts.NoID3TagAlert);
+                });
+
+                updatePlaylist(plGen, [fi]).then(function (result) {
+                    expect(sum(result.durations)).to.eql(0);
                     done();
                 }).catch(function (err) {
                     done(err);
