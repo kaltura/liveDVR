@@ -46,7 +46,11 @@ describe('TS2MP4 convertor spec', function() {
                     done()
                 })
                 .on('error', (err) => {
-                    done(err)
+                    if(expectedResult === null){
+                        done()
+                    } else {
+                        done(err)
+                    }
                 });
         };
 
@@ -69,6 +73,11 @@ describe('TS2MP4 convertor spec', function() {
                     metaData:  { resolution: [ 1280, 720 ],   fileSize_kbits: 9991,   framerate: 19.333334,   keyFrameDistance: 3950 },
                     path: './u4k5n96yh-101.mp4' },
                 done)
+        });
+
+
+        it('should not crash when exposed to bad input', function (done) {
+            convert(path.join(__dirname, '/../resources/crash.ts'),null,done)
         });
     });
 });
