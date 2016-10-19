@@ -163,7 +163,14 @@ describe('Playlist Generator spec', function() {
         return n;
     };
 
+    let saveAsTsMock = () => {
+        return Q.resolve();
+    };
+
     var updatePlaylist = function(plGen,fis){
+        _.each(fis,(fi)=>{
+            fi.saveAsTS = saveAsTsMock
+        });
         return Q.allSettled(plGen.update(fis)).then(function(){
             return Q.resolve(jsonize(plGen));
         });
@@ -206,8 +213,8 @@ describe('Playlist Generator spec', function() {
                     plGen.playlistImp.ptsReference.absolute = 1476390938546;
                     plGen.playlistImp.ptsReference.pts = 0;
                     plGen.on('diagnosticsInfo',(diag)=>{
-                        expect(diag.ptsDelta).to.be.above(-1);
-                        expect(diag.clockDelta).to.be.above(-1);
+                        expect(diag.ptsDelta).to.not.be.eql(null);
+                        expect(diag.clockDelta).to.not.be.eql(null);
                     });
 
                     let ovfl = {"startTime":1476396854614,"sig":"8CE845B6194E971AF2FF86CFCEE0B620",
@@ -960,8 +967,8 @@ describe('Playlist Generator spec', function() {
 
                 plGen.on('diagnosticsAlert',(alert) => {
                     const diagnosticAlerts = require('./../../lib/Diagnostics/DiagnosticsAlerts');
-                    expect(alert).to.be.instanceof(diagnosticAlerts.InvalidKeyFramesAlert);
-                    expect(alert.args.keyFrames).to.be.eql([]);
+                    expect(alert).to.be.instanceof(diagnosticAlerts.ClipValidationFailedAlert);
+                    expect(alert.args.hints[0]).to.be.instanceof(diagnosticAlerts.InvalidKeyFramesAlert);
                 });
 
                 updatePlaylist(plGen, [fi]).then(function (result) {
