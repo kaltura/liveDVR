@@ -11,6 +11,7 @@
 #include <set>
 #include <chrono>
 #include <sstream>
+#include <csignal>
 
 extern "C"{
 #include <libavformat/movenc.h>
@@ -58,7 +59,7 @@ extern "C"{
         return buf;
     }
     
-    inline void log_packet(const AVFormatContext *fmt_ctx, const AVPacket *pkt, const char *tag,int avlog_level = AV_LOG_TRACE)
+    inline void log_packet(const AVFormatContext *fmt_ctx, const AVPacket *pkt, const char *tag,int avlog_level = AV_LOG_DEBUG)
     {
         AVRational *time_base = &fmt_ctx->streams[pkt->stream_index]->time_base;
         ts_buf a,b,c,d,e,f,h;
@@ -111,6 +112,12 @@ namespace converter{
     m_bStrict(true)
     {}
     
+    void segfault_sigaction(int signal)
+    {
+        throw std::runtime_error(std::to_string(signal));
+    }
+
+    
     int ConverterAppInst::init(int logLevel){
         av_log_set_level(logLevel);
         av_register_all();
@@ -118,6 +125,11 @@ namespace converter{
             m_filter.addFilter("Not writing any edit list");
             av_log_set_callback(avlog_cb);
         }
+        struct sigaction act;
+        act.sa_handler = segfault_sigaction;
+        sigemptyset(&act.sa_mask);
+        act.sa_flags = 0;
+        sigaction(SIGSEGV, &act, 0);
         return 0;
     }
 
@@ -329,7 +341,11 @@ namespace converter{
         lastValue = timestamp;
     }
     
+   
+    
     int Converter::pushData(){
+        
+      
         
         const bool bStrictTimestamps = (output->oformat->flags & AVFMT_TS_NONSTRICT) ? false : true;
         while(true){
