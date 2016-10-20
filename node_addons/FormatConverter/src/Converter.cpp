@@ -419,7 +419,7 @@ namespace converter{
                 
                 /* copy packet */
                 
-                log_packet(*input, &pkt, "in",AV_LOG_FATAL);
+                //log_packet(*input, &pkt, "in",AV_LOG_FATAL);
                 
                 updateLastTimestamp(xtra.lastPTS, pkt.pts,bStrictTimestamps,false);
                 
