@@ -42,7 +42,9 @@ describe('TS2MP4 convertor spec', function() {
                     console.log("data " + chunk.length);
                 })
                 .on('end', (fileInfo) => {
-                    expect(_.omit(fileInfo,['path'])).to.be.eql(_.omit(expectedResult,['path']));
+                    if(expectedResult) {
+                        expect(_.omit(fileInfo, ['path'])).to.be.eql(_.omit(expectedResult, ['path']));
+                    }
                     done()
                 })
                 .on('error', (err) => {
@@ -78,6 +80,12 @@ describe('TS2MP4 convertor spec', function() {
 
         it('should not crash when exposed to bad input', function (done) {
             convert(path.join(__dirname, '/../resources/crash.ts'),null,done)
+        });
+
+        it('should succeed on decreasing pts data', function (done) {
+            convert(path.join(__dirname, '/../resources/decreasing_pts.ts'),
+                {"startTime":1476970881847,"sig":"6538AE061EA671F03369D11DA2F7248F","video":{"duration":10122.366667,"firstDTS":1476970881847,"firstEncoderDTS":90810753,"wrapEncoderDTS":95443718,"keyFrameDTS":[0,4972,8169,8233,8297,8361,8425,8489,8553,8617,8681,8745,8809,8873,8937,9001,9065,9129,9193,9257,9321,9385,9449,9513,9577,9641,9705,9769,9833,9897,9961,10025,10089]},"metaData":{"resolution":[720,480],"fileSize_kbits":7282,"framerate":29.97003,"keyFrameDistance":306.738373}}
+                ,done)
         });
     });
 });

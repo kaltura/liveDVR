@@ -64,7 +64,8 @@ extern "C"{
         AVRational *time_base = &fmt_ctx->streams[pkt->stream_index]->time_base;
         ts_buf a,b,c,d,e,f,h;
         
-        av_log(nullptr,avlog_level,"stm:%d sz:%d (pts-dts)={%s,%s,%s} (pts_time:%s dts_time:%s) duration:%s duration_time:%s stream_index:%d pkt_flags:%x\n",
+        av_log(nullptr,avlog_level,"%s stm:%d sz:%d (pts-dts)={%s,%s,%s} (pts_time:%s dts_time:%s) duration:%s duration_time:%s stream_index:%d pkt_flags:%x\n",
+               tag,
                pkt->stream_index,
                pkt->size,
                av_ts_make_string(a,pkt->pts),
@@ -419,7 +420,7 @@ namespace converter{
                 
                 /* copy packet */
                 
-                //log_packet(*input, &pkt, "in",AV_LOG_FATAL);
+                //log_packet(*input, &pkt, "before",AV_LOG_FATAL);
                 
                 updateLastTimestamp(xtra.lastPTS, pkt.pts,bStrictTimestamps,false);
                 
@@ -509,7 +510,7 @@ namespace converter{
         // code *stolen* from movenc.c
         for(MOVTrack *track = mov->tracks; track < mov->tracks + mov->nb_streams ; track++){
             if (track->enc->codec_type == AVMEDIA_TYPE_VIDEO  &&
-                track->has_keyframes && track->has_keyframes < track->entry){
+                track->has_keyframes && track->has_keyframes <= track->entry){
                 for (int i = 0; i < track->entry; i++) {
                     if (track->cluster[i].flags & MOV_SYNC_SAMPLE) {
                         int64_t dts = track->cluster[i].dts;
