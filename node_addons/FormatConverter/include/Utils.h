@@ -25,7 +25,7 @@ extern "C"{
 int res = (e);\
 if(res < 0) { \
 av_log(nullptr,AV_LOG_WARNING,"%s (%d) error %d\n",__FILE__,__LINE__,res); \
-return e;\
+return res;\
 } \
 }
 

@@ -39,3 +39,5 @@ packager/build
 reports
 
 common/config/configMapping.json
+
+lib/Adapters/RegressionAdapter/notes/Jenkins_jobs

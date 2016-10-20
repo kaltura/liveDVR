@@ -22,6 +22,7 @@ module.exports = {
     },
 
     reports_dir : 'reports',
+
     unit_tests : 'tests/unit/*.js',
     component_tests : 'tests/component/*.js',
     regression_tests : 'tests/regression/*.js',
@@ -41,5 +42,5 @@ module.exports = {
             src: ['lib/App.js']
         }
     }
-
+  
 };
