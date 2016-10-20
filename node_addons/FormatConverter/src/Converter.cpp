@@ -234,7 +234,10 @@ namespace converter{
         if(!input->nb_streams){
             _S(input.checkStreams());
             if(!input->nb_streams){
-                return m_bDataPending ? 0 : -1;
+                if(m_bDataPending)
+                    return AVERROR(EAGAIN);
+                av_log(nullptr,AV_LOG_WARNING,"%s (%d)whole data is consumed and no streams are found",__FILE__,__LINE__);
+                return AVERROR(EINVAL);
             }
         }
         
@@ -252,7 +255,7 @@ namespace converter{
         
         if( status < 0 && (ConverterAppInst::instance().m_bStrict || input->nb_streams == 0)){
             av_log(nullptr,AV_LOG_WARNING,"%s (%d) failed to parse stream info\n",__FILE__,__LINE__);
-            return -1;
+            return AVERROR(EINVAL);
         }
         
         for( size_t i = 0 ; i < input->nb_streams; i++){
@@ -354,7 +357,7 @@ namespace converter{
         return 0;
     }
     
-    inline void updateLastTimestamp(int64_t &lastValue,int64_t &timestamp,bool bStrictTimestamps){
+    inline void updateLastTimestamp(int64_t &lastValue,int64_t &timestamp,bool bStrictTimestamps,bool mustNotDecrease){
         
         if(AV_NOPTS_VALUE == timestamp && AV_NOPTS_VALUE != lastValue){
             timestamp = lastValue;
@@ -363,6 +366,9 @@ namespace converter{
             }
         }
         if(AV_NOPTS_VALUE != lastValue) {
+            if(mustNotDecrease){
+                timestamp = std::max(timestamp,lastValue);
+            }
             if(lastValue == timestamp && bStrictTimestamps){
                 timestamp++;
             }
@@ -413,17 +419,19 @@ namespace converter{
                 
                 /* copy packet */
                 
-                //log_packet(*input, &pkt, "in",AV_LOG_FATAL);
+                log_packet(*input, &pkt, "in",AV_LOG_FATAL);
                 
-                updateLastTimestamp(xtra.lastPTS, pkt.pts,bStrictTimestamps);
+                updateLastTimestamp(xtra.lastPTS, pkt.pts,bStrictTimestamps,false);
                 
                 pkt.pts = av_rescale_q_rnd(pkt.pts, in_stream->time_base,out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
                 
-                updateLastTimestamp(xtra.lastDTS,pkt.dts,bStrictTimestamps);
+                updateLastTimestamp(xtra.lastDTS,pkt.dts,bStrictTimestamps,true);
                 
                 xtra.maxDTS = pkt.dts + pkt.duration;
                 
                 pkt.dts = av_rescale_q_rnd(pkt.dts, in_stream->time_base,out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
+                
+                pkt.pts = std::max(pkt.pts,pkt.dts);
                 
                 pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
                 pkt.pos = -1;
@@ -464,22 +472,28 @@ namespace converter{
     
     int Converter::onData(bool bEOS){
         m_bDataPending = bEOS == false;
+        int errorCode = 0;
         switch(state){
             case CREATING:
-                if(checkForStreams()){
-                    state = ERROR;
-                }
+                errorCode = checkForStreams();
                 break;
             case PUSHING:
-                if(pushData()) {
-                    state = ERROR;
-                }
+                errorCode = pushData();
                 break;
             default:
                 break;
         };
         
-        return state == ERROR ? -1 : 0;
+        switch(errorCode){
+            case 0:
+            case AVERROR(EAGAIN):
+                return 0;
+                break;
+            default:
+                state = ERROR;
+                return errorCode;
+                break;
+        };
         
     }
     
