@@ -59,7 +59,7 @@ class TaskRunner:
         except os.error as e:
             self.logger.fatal("Error %s \n %s", str(e), traceback.format_exc())
 
-    def move_and_add_to_queue(self, src_dir):
+    def move_and_add_to_queue(self, src_dir): # todo check if use whachers...
         entry_regex = '^([01]_\w{8})_([01]_\w{8})_(\d+)'
         pattern = re.compile(entry_regex)
         for directory_name in os.listdir(src_dir):
