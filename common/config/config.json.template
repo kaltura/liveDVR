@@ -68,8 +68,8 @@
   "recording" : {
        "recordingFolderPath" : "/web/content/kLive/recording/recordings",
        "completedRecordingFolderPath" : "/web/content/kLive/recording/incoming",
-       "recordingTimeInterval" : "60000",
-       "recordingMaxDuration" : "86400",
-       "recordingSessionDuration" : "180000"
+       "recordingTimeIntervalInSec" : "60",
+       "recordingMaxDurationInHours" : "24",
+       "recordingSessionDurationInSec" : "180"
      }
 }
