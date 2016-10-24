@@ -170,6 +170,9 @@ describe('Playlist Generator spec', function() {
     var updatePlaylist = function(plGen,fis){
         _.each(fis,(fi)=>{
             fi.saveAsTS = saveAsTsMock
+            if(!fi.path){
+                fi.path = fi.chunkName;
+            }
         });
         return Q.allSettled(plGen.update(fis)).then(function(){
             return Q.resolve(jsonize(plGen));
