@@ -274,7 +274,7 @@ namespace converter{
         
         output->max_interleave_delta = 100;
         
-        m_streamMapper.resize(input->nb_streams);
+        m_streamMapper.resize(input->nb_streams,-1);
         
         m_minStartDTSMsec = std::numeric_limits<int64_t>::max();
         
@@ -392,27 +392,28 @@ namespace converter{
                 break;
             }
             
+            
             av_md5_update(m_hash, (const uint8_t *)&pkt.pts, sizeof(pkt.pts));
             
             AVStream *in_stream  = input->streams[pkt.stream_index];
             
-            if(in_stream->codec->codec_id == AV_CODEC_ID_TIMED_ID3){
-                if( m_creationTime ==0 ){
-                    m_creationTime = extractUnixTimeMsecFromId3Tag(pkt.data,pkt.size);
-                    if(m_creationTime > 0){
-                        av_log(*input,AV_LOG_TRACE,"Converter::pushData. parsed id3 time %lld stream first_dts %lld pts %lld",
-                               m_creationTime, in_stream->first_dts,pkt.pts);
-                        
-                        m_creationTime -= dtsUtils::diff(in_stream,pkt.dts,m_minStartDTSMsec);
-                        
-                        // hack for mp4
-                        MOVMuxContext *mov = reinterpret_cast<MOVMuxContext*>(output->priv_data);
-                        mov->time = m_creationTime / 1000 + 0x7C25B080; // 1970 based -> 1904 based
-                    }
+            if(in_stream->codec->codec_id == AV_CODEC_ID_TIMED_ID3 && m_creationTime ==0 ){
+                m_creationTime = extractUnixTimeMsecFromId3Tag(pkt.data,pkt.size);
+                if(m_creationTime > 0){
+                    av_log(*input,AV_LOG_TRACE,"Converter::pushData. parsed id3 time %lld stream first_dts %lld pts %lld",
+                           m_creationTime, in_stream->first_dts,pkt.pts);
+                    
+                    m_creationTime -= dtsUtils::diff(in_stream,pkt.dts,m_minStartDTSMsec);
+                    
+                    // hack for mp4
+                    MOVMuxContext *mov = reinterpret_cast<MOVMuxContext*>(output->priv_data);
+                    mov->time = m_creationTime / 1000 + 0x7C25B080; // 1970 based -> 1904 based
                 }
-            } else {
-                
-                pkt.stream_index = m_streamMapper[pkt.stream_index];
+            }
+            
+            pkt.stream_index = m_streamMapper[pkt.stream_index];
+
+            if(pkt.stream_index >= 0) {
                 
                 AVStream *out_stream = output->streams[pkt.stream_index];
                 
@@ -509,8 +510,7 @@ namespace converter{
         
         // code *stolen* from movenc.c
         for(MOVTrack *track = mov->tracks; track < mov->tracks + mov->nb_streams ; track++){
-            if (track->enc->codec_type == AVMEDIA_TYPE_VIDEO  &&
-                track->has_keyframes && track->has_keyframes <= track->entry){
+            if (track->enc->codec_type == AVMEDIA_TYPE_VIDEO  && track->has_keyframes > 0){
                 for (int i = 0; i < track->entry; i++) {
                     if (track->cluster[i].flags & MOV_SYNC_SAMPLE) {
                         int64_t dts = track->cluster[i].dts;
