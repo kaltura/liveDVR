@@ -224,7 +224,7 @@ namespace converter{
             threshold = dtsUtils::to_dts(stream,10000);
             
             if( diff > threshold ){
-                av_log(nullptr,AV_LOG_WARNING,"pts to dts diff is too big (pts=%lld - dts=%llu > threshold=%llu) for stream %d\n", stream->start_time, stream->first_dts, threshold, stream->index );
+                av_log(nullptr,AV_LOG_WARNING,"pts to dts diff is too big (pts=%" PRIi64 " - dts=%" PRIu64 " > threshold=%" PRIu64 ") for stream %d\n", stream->start_time, stream->first_dts, threshold, stream->index );
                 stream->start_time = stream->first_dts;
             }
         }
@@ -401,7 +401,7 @@ namespace converter{
             if(in_stream->codec->codec_id == AV_CODEC_ID_TIMED_ID3 && m_creationTime ==0 ){
                 m_creationTime = extractUnixTimeMsecFromId3Tag(pkt.data,pkt.size);
                 if(m_creationTime > 0){
-                    av_log(*input,AV_LOG_TRACE,"Converter::pushData. parsed id3 time %lld stream first_dts %lld pts %lld",
+                    av_log(*input,AV_LOG_TRACE,"Converter::pushData. parsed id3 time %" PRId64 " stream first_dts %" PRId64 " pts %" PRId64 ,
                            m_creationTime, in_stream->first_dts,pkt.pts);
                     
                     m_creationTime -= dtsUtils::diff(in_stream,pkt.dts,m_minStartDTSMsec);
@@ -442,7 +442,7 @@ namespace converter{
                 log_packet(*input, &pkt, "in");
                 
                 if(!pkt.size){
-                    av_log(*input,AV_LOG_WARNING,"Converter::pushData. zero sized packet stream=%d time=%lld",
+                    av_log(*input,AV_LOG_WARNING,"Converter::pushData. zero sized packet stream=%d time=%" PRId64,
                            pkt.stream_index, pkt.pts);
                 } else {
                     m_totalBitrate += (pkt.size * 8.f);
@@ -523,7 +523,7 @@ namespace converter{
                                                             track->timescale,AV_ROUND_ZERO);
                             
                             if(millis < 0){
-                                av_log(NULL,AV_LOG_WARNING,"getKeyFrames. negative dts value for keyframe %i dts=%lld timescale=%u millis=%lld",
+                                av_log(NULL,AV_LOG_WARNING,"getKeyFrames. negative dts value for keyframe %i dts=%" PRId64 " timescale=%u millis=%" PRId64,
                                        i, dts , track->timescale, millis );
                             } else {
                                 result.push_back(millis);
