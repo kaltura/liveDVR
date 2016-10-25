@@ -60,6 +60,7 @@ class UploadTask(TaskBase):
             self.chunks_to_upload = chunks_to_upload
             self.partner_id = backend_client.get_live_entry(entry_id).partnerId
             self.recorded_id = recorded_id
+            self.entry_id = entry_id
             #self.token_id,self.start_from = ServerUploader.backend_client.get_token(self.partner_id,file_name)
             #if !self.token_id:
             upload_token_list_response = backend_client.upload_token_list(self.partner_id, file_name)
@@ -106,22 +107,18 @@ class UploadTask(TaskBase):
             ThreadWorkers().add_job(chunk)
 
         result = ThreadWorkers().wait_for_all_jobs_done()
-        self.check_stamp() # todo check it
+        self.check_stamp()
         upload_session_json = str(vars(upload_session))
         if len(result) == 0:
             self.logger.info("successfully upload all chunks, call append recording")
 
             #Check if need to call cancel_replace
             recorded_obj = self.backend_client.get_recorded_entry(upload_session.partner_id, self.recorded_id)
-            #if (recorded_obj.status.value == KalturaEntryStatus.PENDING):
-             #   self.logger.info("entry %s has pending status, calling set media content add", self.recorded_id)
-             #   backend_client.set_media_content_add(upload_session)
-            #else:
-            if (recorded_obj.replacementStatus.value != KalturaEntryReplacementStatus.NONE):
+            if recorded_obj.replacementStatus.value != KalturaEntryReplacementStatus.NONE:
                 self.logger.info("entry %s has replacementStatus %s, calling cancel_replace", self.recorded_id,
                                 recorded_obj.replacementStatus)
                 self.backend_client.cancel_replace(upload_session.partner_id, self.recorded_id)
-            self.backend_client.set_media_content_update(upload_session)
+            self.backend_client.set_recorded_content(upload_session)
             os.rename(self.output_file_path, self.output_file_path + '.done')
         else:
             raise Exception("Failed to upload file, "+str(len(result))+" chunks from "+str(chunks_to_upload)+ " where failed:"

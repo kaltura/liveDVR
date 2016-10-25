@@ -25,7 +25,7 @@ class ConcatenationTask(TaskBase):
         self.url_source_manifest = os.path.join(self.url_base_entry, 'index-f1.m3u8') # todo how should I find the source
 
     def download_chunks_and_concat(self, chunks, output_full_path):
-        with open(output_full_path, 'wb') as file_output: # todo should truncated the file? try catch?
+        with open(output_full_path, 'wb') as file_output: # todo should truncated the file
             self.logger.info("About to concat %d files from manifest into %s", len(chunks), output_full_path)
             for chunk in chunks:
                 chunks_url = os.path.join(self.url_base_entry, chunk)
