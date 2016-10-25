@@ -79,10 +79,10 @@ namespace converter{
             warnings(wars)
             {}
             
-            int64_t lastDTS,
+            MediaTrackInfo::value_type lastDTS,
                     lastPTS,
-                    maxDTS;
-            double startDTS;
+                    maxDTS,
+                    startDTS;
             std::vector<std::string> warnings;
          };
         
