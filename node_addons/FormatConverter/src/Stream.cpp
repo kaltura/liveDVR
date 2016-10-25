@@ -65,14 +65,14 @@ namespace converter{
     }
     
     
-     std::ostream& operator<<(std::ostream& os, const MediaFileInfo& mfi){
-      
-         os << "{";
-         field(os,MediaFileInfo::fld_startTime) << mfi.startTimeUnixMs << ",";
-         field(os,MediaFileInfo::fld_sig);
-         quotes(os,mfi.sig);
-         
-         for(std::vector<MediaTrackInfo>::const_iterator iter = mfi.tracks.begin();
+    std::ostream& operator<<(std::ostream& os, const MediaFileInfo& mfi){
+        
+        os << "{";
+        field(os,MediaFileInfo::fld_startTime) << mfi.startTimeUnixMs << ",";
+        field(os,MediaFileInfo::fld_sig);
+        quotes(os,mfi.sig);
+        
+        for(std::vector<MediaTrackInfo>::const_iterator iter = mfi.tracks.begin();
             iter != mfi.tracks.end(); iter++){
             
             switch(iter->mtype){
@@ -85,7 +85,7 @@ namespace converter{
                     if(iter->mtype == AVMEDIA_TYPE_VIDEO)
                         field(os,MediaFileInfo::fld_video);
                     else
-                       field(os,MediaFileInfo::fld_audio);
+                        field(os,MediaFileInfo::fld_audio);
                     os << *iter;
                     if(iter < mfi.tracks.end() - 1){
                         os << ",";
@@ -96,13 +96,43 @@ namespace converter{
                     break;
             };
         }
-
+        
+        //dump original ts info
+        if(mfi.before_conversion_tracks.size()){
+            os << ",";
+            field(os,"ts_info");
+            os << "{";
+            for(std::vector<MediaTrackInfo>::const_iterator iter = mfi.before_conversion_tracks.begin();
+                iter != mfi.before_conversion_tracks.end(); iter++){
+                
+                switch(iter->mtype){
+                    case AVMEDIA_TYPE_VIDEO:
+                    case AVMEDIA_TYPE_AUDIO:
+                    {
+                        if(iter->mtype == AVMEDIA_TYPE_VIDEO)
+                            field(os,MediaFileInfo::fld_video);
+                        else
+                            field(os,MediaFileInfo::fld_audio);
+                        os << *iter;
+                        if(iter < mfi.before_conversion_tracks.end() - 1){
+                            os << ",";
+                        }
+                    }
+                        break;
+                    default:
+                        break;
+                };
+            }
+            
+            os << "}";
+        }
+        
         if(mfi.bSerializeMetaData){
             os << ",";
             field(os,MediaFileInfo::fld_metaData) << mfi.metadata;
         }
         os << "}";
-         return os;
+        return os;
     }
 
     std::ostream& operator<<(std::ostream& os, const MediaMetadata& md){

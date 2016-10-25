@@ -292,7 +292,7 @@ namespace converter{
             AVStream *in_stream =input->streams[i];
             
             // check for streams with unrealistic delay
-            clipUnrealisticPTS(in_stream);
+            //clipUnrealisticPTS(in_stream);
             
             m_minStartDTSMsec = dtsUtils::min(m_minStartDTSMsec,in_stream);
             
@@ -393,7 +393,7 @@ namespace converter{
                 break;
             }
             
-            
+           
             av_md5_update(m_hash, (const uint8_t *)&pkt.pts, sizeof(pkt.pts));
             
             AVStream *in_stream  = input->streams[pkt.stream_index];
@@ -616,6 +616,13 @@ namespace converter{
                             keyFrames,
                             stream->codec->codec_type
                         });
+                        mfi.before_conversion_tracks.push_back({ stream->start_time,
+                            stream->first_dts,
+                            MediaTrackInfo::value_type(1ULL << stream->pts_wrap_bits),
+                            dts2msec(stream->duration,stream->time_base),
+                            MediaTrackInfo::KEY_FRAME_DTS_VEC_T(),
+                            stream->codec->codec_type
+                        });
                     }
                         break;
                     default:
@@ -631,6 +638,7 @@ namespace converter{
             if(output->metadata){
                 std::ostringstream ostr;
                 ostr << mfi;
+                av_log(NULL,AV_LOG_WARNING,"result: %s" , ostr.str().c_str() );
                 av_dict_set(&output->metadata, "comment", ostr.str().c_str(), 0);
             }
             output.Close();

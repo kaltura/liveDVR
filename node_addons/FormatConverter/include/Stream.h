@@ -73,6 +73,7 @@ namespace converter{
         int64_t startTimeUnixMs;
         std::vector<MediaTrackInfo> tracks;
         MediaMetadata metadata;
+        std::vector<MediaTrackInfo> before_conversion_tracks;
 
         bool bSerializeMetaData;
 
