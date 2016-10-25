@@ -251,7 +251,9 @@ namespace converter{
                 markedStreamsSet.set(i,true);
             }
         }
-        
+  
+        input->max_analyze_duration =  std::numeric_limits<int64_t>::max();
+
         int status =  avformat_find_stream_info(*input,NULL);
         
         if( status < 0 && (ConverterAppInst::instance().m_bStrict || input->nb_streams == 0)){
@@ -380,7 +382,6 @@ namespace converter{
     
     
     int Converter::pushData(){
-        
         
         
         const bool bStrictTimestamps = (output->oformat->flags & AVFMT_TS_NONSTRICT) ? false : true;
