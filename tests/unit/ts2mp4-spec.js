@@ -46,7 +46,11 @@ describe('TS2MP4 convertor spec', function() {
                     done()
                 })
                 .on('error', (err) => {
-                    done(err)
+                    if(expectedResult === null){
+                        done()
+                    } else {
+                        done(err)
+                    }
                 });
         };
 
@@ -55,11 +59,25 @@ describe('TS2MP4 convertor spec', function() {
             convert(path.join(__dirname, '/../resources/ufhwdejgz-1.ts'),
                 { startTime: 1476098931854, sig: '72C704A5AF7582B8F81540AD0D019BC1', 
                     video: { duration: 11999.666667,    firstDTS: 1476098931854,    firstEncoderDTS: 0,    wrapEncoderDTS: 95443718,
-                        keyFrameDTS: [ 0, 2998, 5998, 8998 ] },
+                        keyFrameDTS: [ 0, 2999, 5999, 8999 ] },
                     audio:   { duration: 12051.144444,    firstDTS: 1476098931854,    firstEncoderDTS: 0,    wrapEncoderDTS: 95443718 },
                     metaData:   { resolution: [ 480, 360 ],    fileSize_kbits: 6010,    framerate: 15,    keyFrameDistance: 2999.916748 },
                     path: './ufhwdejgz-1.mp4' },
                 done)
+        });
+
+        it('should produce valid key frame durations after ts is converted', function (done) {
+            convert(path.join(__dirname, '/../resources/u4k5n96yh-101.ts'),
+                { startTime: 1476355403863,sig: '5A922AD7FB91C94D2D8BDBB5589B0E4A',
+                    video:  { duration: 11850,   firstDTS: 1476355403863,   firstEncoderDTS: 1290843,   wrapEncoderDTS: 95443718,   keyFrameDTS: [ 0, 3984, 7969 ] },
+                    metaData:  { resolution: [ 1280, 720 ],   fileSize_kbits: 9991,   framerate: 19.333334,   keyFrameDistance: 3950 },
+                    path: './u4k5n96yh-101.mp4' },
+                done)
+        });
+
+
+        it('should not crash when exposed to bad input', function (done) {
+            convert(path.join(__dirname, '/../resources/crash.ts'),null,done)
         });
     });
 });
