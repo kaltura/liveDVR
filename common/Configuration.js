@@ -32,9 +32,7 @@ module.exports = (function(){
     function assignValues(configPropertiesObj, configOutputObj) {
         for (var p in configPropertiesObj) {
             if (configPropertiesObj.hasOwnProperty(p)) {
-                if (!_.isArray(configPropertiesObj[p]) &&
-                    _.isObject(configPropertiesObj[p]) &&
-                    _.has(configOutputObj,p)) {
+                if (configPropertiesObj[p] instanceof Object) {
                     assignValues(configPropertiesObj[p], configOutputObj[p]);
                 }
                 else {

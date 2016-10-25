@@ -50,9 +50,9 @@ namespace converter{
     std::ostream& operator<<(std::ostream& os, const MediaTrackInfo& mti){
         os << "{";
         field(os,MediaTrackInfo::fld_duration)  <<  std::fixed << mti.durationMsec << ",";
-        field(os,MediaTrackInfo::fld_firstDTS)  <<  std::fixed << mti.absoluteTimeMsec << ",";
-        field(os,MediaTrackInfo::fld_firstEncoderDTS)  << std::fixed << mti.ptsMsec << ",";
-        field(os,MediaTrackInfo::fld_wrapEncoderDTS)  << std::fixed << mti.wrapPtsMsec;
+        field(os,MediaTrackInfo::fld_firstDTS)  <<  std::fixed << mti.firstDtsMsec << ",";
+        field(os,MediaTrackInfo::fld_firstEncoderDTS)  << std::fixed << mti.firstEncoderDtsMsec << ",";
+        field(os,MediaTrackInfo::fld_wrapEncoderDTS)  << std::fixed << mti.wrapEncoderDtsMsec;
         
         if(mti.vecKeyFrameDtsMsec.size() > 0){
             os << ",";
