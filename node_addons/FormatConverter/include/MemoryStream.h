@@ -71,7 +71,7 @@ namespace converter{
             if(m_last > m_buf + get_length())
                 m_last =  m_buf + get_length();
             
-            av_log(nullptr,AV_LOG_TRACE,"MemoryInputStream::Seek(%lld,%d). total len: %zu pos: %ld",offset,whence,get_length(),m_last - m_buf);
+            av_log(nullptr,AV_LOG_TRACE,"MemoryInputStream::Seek(%lld,%d). total len: %zu pos: %" PRIdPTR,offset,whence,get_length(),m_last - m_buf);
             
             return m_last - m_buf;
         }
