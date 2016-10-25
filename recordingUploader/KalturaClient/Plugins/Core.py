@@ -55917,6 +55917,20 @@ class KalturaLiveChannelService(KalturaServiceBase):
             return self.client.getMultiRequestResult()
         resultNode = self.client.doQueue()
 
+    def setRecordedContent(self, entryId, mediaServerIndex, resource, duration = 0):
+        """Sey recorded video to live entry"""
+
+        kparams = KalturaParams()
+        kparams.addStringIfDefined("entryId", entryId)
+        kparams.addStringIfDefined("mediaServerIndex", mediaServerIndex)
+        kparams.addObjectIfDefined("resource", resource)
+        kparams.addFloatIfDefined("duration", duration)
+        self.client.queueServiceActionCall("livestream", "setRecordedContent", KalturaLiveEntry, kparams)
+        if self.client.isMultiRequest():
+            return self.client.getMultiRequestResult()
+        resultNode = self.client.doQueue()
+        return KalturaObjectFactory.create(resultNode, KalturaLiveEntry)
+
 
 # @package Kaltura
 # @subpackage Client
@@ -56187,6 +56201,20 @@ class KalturaLiveStreamService(KalturaServiceBase):
         if self.client.isMultiRequest():
             return self.client.getMultiRequestResult()
         resultNode = self.client.doQueue()
+
+    def setRecordedContent(self, entryId, mediaServerIndex, resource, duration = 0):
+        """Sey recorded video to live entry"""
+
+        kparams = KalturaParams()
+        kparams.addStringIfDefined("entryId", entryId)
+        kparams.addStringIfDefined("mediaServerIndex", mediaServerIndex)
+        kparams.addObjectIfDefined("resource", resource)
+        kparams.addFloatIfDefined("duration", duration)
+        self.client.queueServiceActionCall("livestream", "setRecordedContent", KalturaLiveEntry, kparams)
+        if self.client.isMultiRequest():
+            return self.client.getMultiRequestResult()
+        resultNode = self.client.doQueue()
+        return KalturaObjectFactory.create(resultNode, KalturaLiveEntry)
 
     def createPeriodicSyncPoints(self, entryId, interval, duration):
         """Creates perioding metadata sync-point events on a live stream"""
