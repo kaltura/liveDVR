@@ -224,7 +224,7 @@ namespace converter{
             threshold = dtsUtils::to_dts(stream,10000);
             
             if( diff > threshold ){
-                av_log(nullptr,AV_LOG_WARNING,"pts to dts diff is too big (pts=%" PRIi64 " - dts=%" PRIu64 " > threshold=%" PRIu64 ") for stream %d\n", stream->start_time, stream->first_dts, threshold, stream->index );
+                av_log(nullptr,AV_LOG_WARNING,"pts to dts diff is too big (pts=%" PRId64 " - dts=%" PRIu64 " > threshold=%" PRIu64 ") for stream %d\n", stream->start_time, stream->first_dts, threshold, stream->index );
                 stream->start_time = stream->first_dts;
             }
         }
