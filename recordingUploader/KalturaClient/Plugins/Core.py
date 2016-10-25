@@ -56213,8 +56213,8 @@ class KalturaLiveStreamService(KalturaServiceBase):
         self.client.queueServiceActionCall("livestream", "setRecordedContent", KalturaLiveEntry, kparams)
         if self.client.isMultiRequest():
             return self.client.getMultiRequestResult()
-        resultNode, header = self.client.doQueue()
-        return KalturaObjectFactory.create(resultNode, KalturaLiveEntry), header
+        resultNode = self.client.doQueue()
+        return KalturaObjectFactory.create(resultNode, KalturaLiveEntry)
 
     def createPeriodicSyncPoints(self, entryId, interval, duration):
         """Creates perioding metadata sync-point events on a live stream"""
