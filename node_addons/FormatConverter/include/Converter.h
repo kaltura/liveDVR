@@ -71,19 +71,20 @@ namespace converter{
         COutputCtx  output;
         
         struct ExtraTrackInfo{
-            ExtraTrackInfo(const double &dts,std::vector<std::string> wars)
+            ExtraTrackInfo(const MediaTrackInfo &info,
+                           const double &dts)
             :lastDTS(AV_NOPTS_VALUE),
             lastPTS(AV_NOPTS_VALUE),
             maxDTS(0),
             startDTS(dts),
-            warnings(wars)
+            tsInfo(info)
             {}
             
             MediaTrackInfo::value_type lastDTS,
                     lastPTS,
                     maxDTS,
                     startDTS;
-            std::vector<std::string> warnings;
+            MediaTrackInfo tsInfo;
          };
         
         std::vector<ExtraTrackInfo> m_extraTrackInfo;

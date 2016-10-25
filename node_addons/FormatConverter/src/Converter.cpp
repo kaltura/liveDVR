@@ -215,19 +215,19 @@ namespace converter{
         };
     }
     
-    void clipUnrealisticPTS(AVStream *stream){
+    int64_t clipUnrealisticPTS(AVStream *stream,const int64_t &dts,const int64_t &pts, bool bReportError = false){
         
-        const AVRational &frame_rate = (stream->r_frame_rate.den > 0 && stream->r_frame_rate.num > 0) ? stream->r_frame_rate : stream->avg_frame_rate;
-        //stream->r_frame_rate
-        if( stream->first_dts != AV_NOPTS_VALUE && stream->first_dts != stream->start_time && frame_rate.den > 0 && frame_rate.num > 0 ) {
-            uint64_t diff = dtsUtils::diff(stream,stream->start_time , stream->first_dts, false ) ,
-            threshold = dtsUtils::to_dts(stream,10000);
-            
-            if( diff > threshold ){
-                av_log(nullptr,AV_LOG_WARNING,"pts to dts diff is too big (pts=%" PRId64 " - dts=%" PRId64 " > threshold=%" PRId64 ") for stream %d\n", stream->start_time, stream->first_dts, threshold, stream->index );
-                stream->start_time = stream->first_dts;
+        if( dts != AV_NOPTS_VALUE && dts != pts ) {
+           
+            int64_t threashold = dtsUtils::to_dts(stream,10000);
+            if( dts + threashold < pts ){
+                if(bReportError){
+                    av_log(nullptr,AV_LOG_WARNING,"pts to dts diff is too big (pts=%" PRId64 " - dts=%" PRId64 " > threshold=%" PRId64 ") for stream %d\n", pts, dts, threashold, stream->index );
+                }
+                return dts;
             }
         }
+        return pts;
     }
     
     int Converter::checkForStreams(){
@@ -287,17 +287,7 @@ namespace converter{
         
         for( size_t i = 0 , output_stream = 0; i < input->nb_streams; i++){
             
-            std::vector<std::string> errors;
-            
             AVStream *in_stream =input->streams[i];
-            
-            // check for streams with unrealistic delay
-            //clipUnrealisticPTS(in_stream);
-            
-            m_minStartDTSMsec = dtsUtils::min(m_minStartDTSMsec,in_stream);
-            
-            if(in_stream->codec->codec_id == AV_CODEC_ID_TIMED_ID3)
-                continue;
             
             bool bValidStream = true;
             switch(in_stream->codec->codec_type){
@@ -315,7 +305,24 @@ namespace converter{
                 av_log(nullptr,AV_LOG_WARNING,"%s (%d) skipping stream %lu\n",__FILE__,__LINE__,i);
                 continue;
             }
+      
+            MediaTrackInfo tsInfo = {
+                in_stream->start_time,
+                in_stream->first_dts,
+                MediaTrackInfo::value_type(1ULL << in_stream->pts_wrap_bits),
+                dts2msec(in_stream->duration,in_stream->time_base),
+                MediaTrackInfo::KEY_FRAME_DTS_VEC_T(),
+                in_stream->codec->codec_type
+            };
             
+            // check for streams with unrealistic delay
+            in_stream->start_time = clipUnrealisticPTS(in_stream,in_stream->first_dts,in_stream->start_time,true);
+            
+            m_minStartDTSMsec = dtsUtils::min(m_minStartDTSMsec,in_stream);
+            
+            if(in_stream->codec->codec_id == AV_CODEC_ID_TIMED_ID3)
+                continue;
+         
             
             // remember min dts offset. it will be subtracted by ffmpeg from dts/pts values before muxing
             output->output_ts_offset = std::max(output->output_ts_offset,av_rescale_q(-in_stream->first_dts, in_stream->time_base,AV_TIME_BASE_Q));
@@ -324,7 +331,7 @@ namespace converter{
             
             m_streamMapper[i] = output_stream++;
             
-            m_extraTrackInfo.push_back(ExtraTrackInfo(dts2msec(getStreamStartTime(in_stream),in_stream->time_base),errors));
+            m_extraTrackInfo.push_back(ExtraTrackInfo(tsInfo,dts2msec(getStreamStartTime(in_stream),in_stream->time_base)));
             
             _S(avcodec_copy_context(out_stream->codec, in_stream->codec));
             
@@ -415,6 +422,8 @@ namespace converter{
             pkt.stream_index = m_streamMapper[pkt.stream_index];
 
             if(pkt.stream_index >= 0) {
+                
+                pkt.pts = clipUnrealisticPTS(in_stream,pkt.dts,pkt.pts);
                 
                 AVStream *out_stream = output->streams[pkt.stream_index];
                 
@@ -616,13 +625,7 @@ namespace converter{
                             keyFrames,
                             stream->codec->codec_type
                         });
-                        mfi.before_conversion_tracks.push_back({ stream->start_time,
-                            stream->first_dts,
-                            MediaTrackInfo::value_type(1ULL << stream->pts_wrap_bits),
-                            dts2msec(stream->duration,stream->time_base),
-                            MediaTrackInfo::KEY_FRAME_DTS_VEC_T(),
-                            stream->codec->codec_type
-                        });
+                        mfi.before_conversion_tracks.push_back(extraInfo.tsInfo);
                     }
                         break;
                     default:
