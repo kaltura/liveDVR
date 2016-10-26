@@ -11,7 +11,6 @@
   "wowzaPollingInterval" : 5000,
   "defaultDvrWindowInSec" : 7200,
   "minimalDvrWindowInSec" : 900,
-  "dvrMaxChunkCount" : 1000,
   "defaultPlayWindowInSec" : 150,
   "minDurationForPlaybackInSec" : 30,
   "sessionDuration" : 180000,
@@ -41,7 +40,6 @@
       "count": 1,
       "entryId": "0_simstream%d",
       "playWindow": 240,
-      "maxChunkCount": 5,
       "useNginx":false,
       "wowzaUrl": "http://kalsegsec-a.akamaihd.net/dc-0/m/pa-live-publish2/kLive/smil:1_oorxcge2_all.smil/playlist.m3u8"
   },
