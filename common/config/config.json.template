@@ -24,6 +24,9 @@
   "logFileName" : "~/dvr/kLiveController.log",
   "logTimeZoneOffset" : 300,
   "monitorPort": 4390,
+  "persistenceCheckIntervalSec": 20,
+  "persistenceFileName": "~/dvr/%s_kLivePersistence.json",
+  "expirationTimeWindowSec": "30",
   "regressionAdapter": {
       "verbose": false,
       "enable": false,

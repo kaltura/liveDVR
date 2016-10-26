@@ -33,11 +33,12 @@ node_addons/FormatConverter/build
 # packager ignore directories
 common/config/config.json
 packager/build
+packager/bin/build_log
 
-# grunt results ignore directory
-#todo: remove or create dir in gruntfile
+# ignore regression (ci) reports
 reports
 
+# ignor local congif
 common/config/configMapping.json
 
-lib/Adapters/RegressionAdapter/notes/Jenkins_jobs
+
