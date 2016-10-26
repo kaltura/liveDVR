@@ -56,23 +56,34 @@ namespace converter{
         friend std::ostream& operator<<(std::ostream& os, const MediaMetadata& md);
     };
 
+    struct TSTrackInfo{
+
+        MediaTrackInfo::value_type m_dts;
+        MediaTrackInfo::value_type m_ptsDelay;
+        MediaTrackInfo::value_type m_duration;
+        AVMediaType  mtype;
+
+        friend std::ostream& operator<<(std::ostream& os, const TSTrackInfo& tti);
+     };
+
     struct MediaFileInfo{
-       
+
         MediaFileInfo()
         :startTimeUnixMs(0),
         bSerializeMetaData(false)
         {}
-     
+
         static const std::string fld_sig,
             fld_startTime,
             fld_video,
             fld_audio,
             fld_metaData;
-        
+
         std::string sig;
         int64_t startTimeUnixMs;
         std::vector<MediaTrackInfo> tracks;
         MediaMetadata metadata;
+        std::vector<TSTrackInfo> tsTracks;
 
         bool bSerializeMetaData;
 
