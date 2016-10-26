@@ -184,6 +184,47 @@ namespace converter{
     }
     
     
+    Converter::ExtraTrackInfo::ExtraTrackInfo(const AVStream *stream)
+    :m_lastDTS(AV_NOPTS_VALUE),
+    m_lastPTS(AV_NOPTS_VALUE),
+    m_maxDTS(0),
+    m_maxAllowedPtsDelay(0),
+    m_stream(*stream)
+    {
+        m_startDTS = dts2msec(getStreamStartTime());
+        
+        const AVRational &frame_rate = (m_stream.r_frame_rate.den > 0 && m_stream.r_frame_rate.num > 0) ? m_stream.r_frame_rate : stream->avg_frame_rate;
+        if(frame_rate.den && frame_rate.num){
+            m_maxAllowedPtsDelay = dtsUtils::to_dts(&m_stream,frame_rate.den * 10 * 1000 / frame_rate.num);
+        } else {
+            m_maxAllowedPtsDelay = dtsUtils::to_dts(&m_stream,5000);
+        }
+        
+        m_tsInfo = {
+            dts2msec(m_stream.first_dts),
+            dts2msec(m_stream.start_time-m_stream.first_dts),
+            dts2msec(m_stream.duration),
+            m_stream.codec->codec_type
+        };
+    }
+
+    
+    int64_t Converter::ExtraTrackInfo::clipPts(const int64_t &dts,const int64_t &pts, bool bReportError) const{
+        
+        if( dts != AV_NOPTS_VALUE && dts != pts ) {
+            
+            int64_t dts2 = dts + this->m_maxAllowedPtsDelay;
+            if( dts2 < pts ){
+                if(bReportError){
+                    av_log(nullptr,AV_LOG_WARNING,"pts to dts diff is too big (pts=%" PRId64 " - dts=%" PRId64 " > threshold=%" PRId64 ") for stream %d\n", pts, dts, dts2-dts, m_stream.index );
+                }
+                return dts2;
+            }
+        }
+        return pts;
+    }
+    
+    
     Converter::Converter()
     :m_creationTime(0),
     m_hash(nullptr),
