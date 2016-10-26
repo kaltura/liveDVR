@@ -64,6 +64,15 @@ namespace converter{
         return os;
     }
     
+    std::ostream& operator<<(std::ostream& os, const TSTrackInfo& tti){
+        os << "{";
+        field(os,"dts")  <<  std::fixed << tti.m_dts << ",";
+        field(os,"ptsDelay")  <<  std::fixed << tti.m_ptsDelay << ",";
+        field(os,"duration")  <<  std::fixed << tti.m_duration;
+        os << "}";
+        return os;
+    }
+    
     
     std::ostream& operator<<(std::ostream& os, const MediaFileInfo& mfi){
         
@@ -98,12 +107,12 @@ namespace converter{
         }
         
         //dump original ts info
-        if(mfi.before_conversion_tracks.size()){
+        if(mfi.tsTracks.size()){
             os << ",";
             field(os,"ts_info");
             os << "{";
-            for(std::vector<MediaTrackInfo>::const_iterator iter = mfi.before_conversion_tracks.begin();
-                iter != mfi.before_conversion_tracks.end(); iter++){
+            for(std::vector<TSTrackInfo>::const_iterator iter = mfi.tsTracks.begin();
+                iter != mfi.tsTracks.end(); iter++){
                 
                 switch(iter->mtype){
                     case AVMEDIA_TYPE_VIDEO:
@@ -114,7 +123,7 @@ namespace converter{
                         else
                             field(os,MediaFileInfo::fld_audio);
                         os << *iter;
-                        if(iter < mfi.before_conversion_tracks.end() - 1){
+                        if(iter < mfi.tsTracks.end() - 1){
                             os << ",";
                         }
                     }

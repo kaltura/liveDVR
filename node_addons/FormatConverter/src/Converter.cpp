@@ -205,30 +205,7 @@ namespace converter{
         return val /(double)timebase.den * TIMESTAMP_RESOLUTION * timebase.num;
     }
     
-    int64_t getStreamStartTime(const AVStream *stream){
-        switch(stream->codec->codec_type){
-            case AVMEDIA_TYPE_VIDEO:
-            case AVMEDIA_TYPE_AUDIO:
-                return stream->first_dts;
-            default:
-                return stream->start_time;
-        };
-    }
     
-    int64_t clipUnrealisticPTS(AVStream *stream,const int64_t &dts,const int64_t &pts, bool bReportError = false){
-        
-        if( dts != AV_NOPTS_VALUE && dts != pts ) {
-           
-            int64_t threashold = dtsUtils::to_dts(stream,10000);
-            if( dts + threashold < pts ){
-                if(bReportError){
-                    av_log(nullptr,AV_LOG_WARNING,"pts to dts diff is too big (pts=%" PRId64 " - dts=%" PRId64 " > threshold=%" PRId64 ") for stream %d\n", pts, dts, threashold, stream->index );
-                }
-                return dts;
-            }
-        }
-        return pts;
-    }
     
     int Converter::checkForStreams(){
         
@@ -306,17 +283,10 @@ namespace converter{
                 continue;
             }
       
-            MediaTrackInfo tsInfo = {
-                in_stream->start_time,
-                in_stream->first_dts,
-                MediaTrackInfo::value_type(1ULL << in_stream->pts_wrap_bits),
-                dts2msec(in_stream->duration,in_stream->time_base),
-                MediaTrackInfo::KEY_FRAME_DTS_VEC_T(),
-                in_stream->codec->codec_type
-            };
-            
+            ExtraTrackInfo trackInfo(in_stream);
+                      
             // check for streams with unrealistic delay
-            in_stream->start_time = clipUnrealisticPTS(in_stream,in_stream->first_dts,in_stream->start_time,true);
+            in_stream->start_time = trackInfo.clipPts(in_stream->first_dts,in_stream->start_time,true);
             
             m_minStartDTSMsec = dtsUtils::min(m_minStartDTSMsec,in_stream);
             
@@ -331,7 +301,7 @@ namespace converter{
             
             m_streamMapper[i] = output_stream++;
             
-            m_extraTrackInfo.push_back(ExtraTrackInfo(tsInfo,dts2msec(getStreamStartTime(in_stream),in_stream->time_base)));
+            m_extraTrackInfo.push_back(trackInfo);
             
             _S(avcodec_copy_context(out_stream->codec, in_stream->codec));
             
@@ -423,23 +393,23 @@ namespace converter{
 
             if(pkt.stream_index >= 0) {
                 
-                pkt.pts = clipUnrealisticPTS(in_stream,pkt.dts,pkt.pts);
+                ExtraTrackInfo &xtra = m_extraTrackInfo[pkt.stream_index];
+                
+                pkt.pts = xtra.clipPts(pkt.dts,pkt.pts);
                 
                 AVStream *out_stream = output->streams[pkt.stream_index];
-                
-                ExtraTrackInfo &xtra = m_extraTrackInfo[pkt.stream_index];
                 
                 /* copy packet */
                 
                 //log_packet(*input, &pkt, "before",AV_LOG_FATAL);
                 
-                updateLastTimestamp(xtra.lastPTS, pkt.pts,bStrictTimestamps,false);
+                updateLastTimestamp(xtra.m_lastPTS, pkt.pts,bStrictTimestamps,false);
                 
                 pkt.pts = av_rescale_q_rnd(pkt.pts, in_stream->time_base,out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
                 
-                updateLastTimestamp(xtra.lastDTS,pkt.dts,bStrictTimestamps,true);
+                updateLastTimestamp(xtra.m_lastDTS,pkt.dts,bStrictTimestamps,true);
                 
-                xtra.maxDTS = pkt.dts + pkt.duration;
+                xtra.m_maxDTS = pkt.dts + pkt.duration;
                 
                 pkt.dts = av_rescale_q_rnd(pkt.dts, in_stream->time_base,out_stream->time_base, (AVRounding)(AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX));
                 
@@ -612,20 +582,20 @@ namespace converter{
                         
                         MediaTrackInfo::value_type wrapDTS = ::ceil(dts2msec(1ULL << stream->pts_wrap_bits,stream->time_base));
                         ExtraTrackInfo &extraInfo = this->m_extraTrackInfo[this->m_streamMapper[i]];
-                        double duration = dts2msec(extraInfo.maxDTS - stream->first_dts,stream->time_base);
+                        double duration = dts2msec(extraInfo.m_maxDTS - stream->first_dts,stream->time_base);
                         if(keyFrames.size()) {
                             MediaTrackInfo::KEY_FRAME_DTS_VEC_T::iterator last = std::unique(keyFrames.begin(), keyFrames.end());
                             keyFrames.erase(last,keyFrames.end());
                             mfi.metadata.keyFrameDistance = (float)duration / keyFrames.size();
                         }
                         mfi.tracks.push_back({ (MediaTrackInfo::value_type)(this->m_creationTime + dtsUtils::diff(stream,stream->start_time,m_minStartDTSMsec)),
-                            extraInfo.startDTS,
+                            extraInfo.m_startDTS,
                             wrapDTS,
                             duration,
                             keyFrames,
                             stream->codec->codec_type
                         });
-                        mfi.before_conversion_tracks.push_back(extraInfo.tsInfo);
+                        mfi.tsTracks.push_back(extraInfo.m_tsInfo);
                     }
                         break;
                     default:
