@@ -118,7 +118,7 @@ class UploadTask(TaskBase):
                 self.logger.info("entry %s has replacementStatus %s, calling cancel_replace", self.recorded_id,
                                 recorded_obj.replacementStatus)
                 self.backend_client.cancel_replace(upload_session.partner_id, self.recorded_id)
-            self.backend_client.set_recorded_content(upload_session)
+            self.backend_client.set_recorded_content(upload_session, self.duration)
             os.rename(self.output_file_path, self.output_file_path + '.done')
         else:
             raise Exception("Failed to upload file, "+str(len(result))+" chunks from "+str(chunks_to_upload)+ " where failed:"

@@ -138,18 +138,17 @@ class BackendClient:
         self.handle_request(partner_id, 'media', 'updateContent', recorded_id, resource)
         self.logger.info("Set media content with update entryId [%s] and token [%s]", recorded_id, token_id)
 
-    def set_recorded_content(self, upload_session):
+    def set_recorded_content(self, upload_session, duration):
         token_id = upload_session.token_id
         recorded_id = upload_session.recorded_id
         entry_id = upload_session.entry_id
         self.logger.info("set_recorded_content entryId [%s] recorded_id [%s]", entry_id, recorded_id)
         partner_id = upload_session.partner_id
         resource = KalturaUploadedFileTokenResource(token_id)
-        self.logger.info("set_recorded_content partner_id [%s]", partner_id)
-        self.handle_request(partner_id, 'liveStream', 'setRecordedContent', entry_id, 0, resource, 30)
         self.logger.info("Set recorded content, entryId [%s] and token [%s] mediaServerIndex [%s] duration [%s]",
-                         entry_id, token_id, 1, 30)
-
+                         entry_id, token_id, 1, duration)
+        self.handle_request(partner_id, 'liveStream', 'setRecordedContent', entry_id, 0, resource, duration)
+        
     def append_recording(self, partner_id, recorded_id, output_file): # todo check it
         resource = KalturaServerFileResource()
         resource.localFilePath = output_file

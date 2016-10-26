@@ -66,14 +66,14 @@ class TaskRunner:
             directory_path = os.path.join(src_dir, directory_name)
             if os.path.isdir(directory_path) and pattern.match(directory_name) is not None:
                 try:
-                    if src_dir != self.working_directory:   # if its not the same directory
-                        shutil.move(directory_path, self.working_directory)
                     m = re.search(entry_regex, directory_name)
                     entry_id = m.group(1)
                     recorded_id = m.group(2)
-                    timestamp = m.group(3)
+                    duration = m.group(3)
                     param = {'entry_id': entry_id, 'directory': directory_name, 'recorded_id': recorded_id,
-                             'timestamp': timestamp}
+                             'duration': duration}
+                    if src_dir != self.working_directory:   # if its not the same directory
+                        shutil.move(directory_path, self.working_directory)
                     self.task_queue.put(param)
                     self.logger.info("[%s-%s] Add unhanded directory %s from %s to the task queue", entry_id,
                                      recorded_id, directory_name, src_dir)

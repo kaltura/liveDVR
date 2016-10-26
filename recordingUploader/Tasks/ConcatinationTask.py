@@ -22,7 +22,7 @@ class ConcatenationTask(TaskBase):
         self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
         self.url_base_entry = os.path.join(self.url_base, self.recorded_id)
         self.url_master = os.path.join(self.url_base_entry, 'master.m3u8')
-        self.url_source_manifest = os.path.join(self.url_base_entry, 'index-f1.m3u8') # todo how should I find the source
+        self.url_source_manifest = os.path.join(self.url_base_entry, 'index-f1.m3u8')  # todo how should I find the source
 
     def download_chunks_and_concat(self, chunks, output_full_path):
         with open(output_full_path, 'wb') as file_output: # todo should truncated the file

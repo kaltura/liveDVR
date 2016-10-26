@@ -11,19 +11,20 @@ class TaskBase(object):
     base_directory = os.path.join(get_config('recording_base_dir'), hostname)
 
     def check_stamp(self):
-        with open(self.stamp_full_path, "r") as stamp_file: # w+ since we truncated the file
+        with open(self.stamp_full_path, "r") as stamp_file:  # w+ since we truncated the file
             stamp = stamp_file.read()
-            if stamp == self.timestamp:
+            if stamp == self.duration:
                 self.logger.debug("Stamp  %s is not changed", stamp)
             else:
-                msg = "Stamps are not equal! process stamp:%s, found in file: %s, abort directory" % (self.timestamp, stamp)
+                msg = "Stamps are not equal! process stamp:%s, found in file: %s, abort directory" % (self.duration,
+                                                                                                      stamp)
                 retries_file_path = os.path.join(self.recording_path, 'retries')
                 with open(retries_file_path, "w+") as retries_file:
                     retries_file.write('0')
                 raise ValueError(msg)
 
     def __init__(self, param, logger_info):
-        self.timestamp = param['timestamp']
+        self.duration = param['duration']
         self.recorded_id = param['recorded_id']
         self.entry_directory = param['directory']
         self.entry_id = param['entry_id']
@@ -35,9 +36,9 @@ class TaskBase(object):
 
     def write_stamp(self):
 
-        self.logger.info("About to write stamp %s on %s", self.timestamp, self.recording_path)
+        self.logger.info("About to write stamp %s on %s", self.duration, self.recording_path)
         with open(self.stamp_full_path, "w+") as stamp_file:  # w+ since we truncated the file
-            stamp_file.write(self.timestamp)
+            stamp_file.write(self.duration)
 
     __metaclass__ = abc.ABCMeta
 
