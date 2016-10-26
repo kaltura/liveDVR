@@ -71,19 +71,35 @@ namespace converter{
         COutputCtx  output;
         
         struct ExtraTrackInfo{
-            ExtraTrackInfo(const double &dts,std::vector<std::string> wars)
-            :lastDTS(AV_NOPTS_VALUE),
-            lastPTS(AV_NOPTS_VALUE),
-            maxDTS(0),
-            startDTS(dts),
-            warnings(wars)
-            {}
             
-            MediaTrackInfo::value_type lastDTS,
-                    lastPTS,
-                    maxDTS,
-                    startDTS;
-            std::vector<std::string> warnings;
+            ExtraTrackInfo(const AVStream *stream);
+            
+            int64_t clipPts(const int64_t &dts,const int64_t &pts, bool bReportError = false) const;
+         
+            MediaTrackInfo::value_type m_lastDTS,
+                            m_lastPTS,
+                            m_maxDTS,
+                            m_startDTS;
+            TSTrackInfo     m_tsInfo;
+            int64_t         m_maxAllowedPtsDelay;
+            const AVStream &m_stream;
+            
+            
+            MediaTrackInfo::value_type dts2msec(const int64_t &dts) const{
+                return MediaTrackInfo::value_type(
+                        ::ceil(Converter::dts2msec(dts,m_stream.time_base)));
+            }
+            
+            int64_t getStreamStartTime() const{
+                switch(m_stream.codec->codec_type){
+                    case AVMEDIA_TYPE_VIDEO:
+                    case AVMEDIA_TYPE_AUDIO:
+                        return m_stream.first_dts;
+                    default:
+                        return m_stream.start_time;
+                };
+            }
+            
          };
         
         std::vector<ExtraTrackInfo> m_extraTrackInfo;

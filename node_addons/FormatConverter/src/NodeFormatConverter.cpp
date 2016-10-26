@@ -202,8 +202,11 @@ namespace converter {
         
         int result = onData(m_bEOS);
         if( result < 0){
+            std::string buffer;
+            buffer.resize(1024);
+            av_strerror(result,&buffer.at(0),buffer.length());
             std::ostringstream error;
-            error << " TS2MP4Convertor::Execute failed with error " << result;
+            error << " TS2MP4Convertor::Execute " << buffer << " (" << result << ")";
             throw std::runtime_error(error.str());
         }
     }
@@ -266,7 +269,8 @@ namespace converter {
         SUBS_iter iter = m_callSubscriptions.find("error");
       
         if(iter != m_callSubscriptions.end() && iter->second.m_cb){
-            iter->second.Call( v8::Exception::Error(Nan::New<String>(message.c_str()).ToLocalChecked()) );
+             Isolate * isolate = Isolate::GetCurrent();
+            iter->second.Call( v8::Exception::Error(v8::String::NewFromUtf8(isolate,message.c_str())) );
         } else {
             av_log(nullptr,AV_LOG_TRACE,"deliverError. no subscription for error event");
         }

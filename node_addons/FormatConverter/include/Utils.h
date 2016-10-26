@@ -259,12 +259,12 @@ return "";\
         
         static const int64_t INVALID_VALUE = std::numeric_limits<int64_t>::max();
         
-        static int64_t to_ms(AVStream *stream,const int64_t &dts){
+        static int64_t to_ms(const AVStream *stream,const int64_t &dts){
             return av_rescale(dts,TIMESTAMP_RESOLUTION * stream->time_base.num,
                               stream->time_base.den);
         }
         
-        static int64_t to_dts(AVStream *stream,const int64_t &ms){
+        static int64_t to_dts(const AVStream *stream,const int64_t &ms){
             return av_rescale(ms,stream->time_base.den,1000 * stream->time_base.num);
         }
         
