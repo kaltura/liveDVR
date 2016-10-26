@@ -53,10 +53,7 @@
   "preserveOriginalHLS": {
       "enable": false,
       "createFolderPerSession": true,
-      "runDurationInMinutes": 5,
-      "validate": true,
-      "fix": true,
-      "prepareForRegression": true
+      "runDurationInMinutes": 5
   },
   "diagnostics": {
       "minChunkDurationInSec": 1,
