@@ -1,7 +1,6 @@
 /**
  * Created by lilach.maliniak on 25/08/2016.
  */
-var configManinpulator = require('./../../lib/Adapters/RegressionAdapter/RegressionConfig.js').RegressionConfig.instance;
 var ControllerCtor = require('./../../lib/Controller');
 var util=require('util');
 var _ = require('underscore');
