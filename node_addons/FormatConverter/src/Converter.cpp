@@ -200,6 +200,8 @@ namespace converter{
             m_maxAllowedPtsDelay = dtsUtils::to_dts(&m_stream,5000);
         }
         
+        m_maxAllowedPtsDelay = std::max(m_maxAllowedPtsDelay,int64_t(1000));
+        
         m_tsInfo = {
             dts2msec(m_stream.first_dts),
             dts2msec(m_stream.start_time-m_stream.first_dts),
@@ -216,7 +218,7 @@ namespace converter{
             int64_t dts2 = dts + this->m_maxAllowedPtsDelay;
             if( dts2 < pts ){
                 if(bReportError){
-                    av_log(nullptr,AV_LOG_WARNING,"pts to dts diff is too big (pts=%" PRId64 " - dts=%" PRId64 " > threshold=%" PRId64 ") for stream %d\n", pts, dts, dts2-dts, m_stream.index );
+                    av_log(nullptr,AV_LOG_WARNING,"pts delay is too big (pts=%" PRId64 " - dts=%" PRId64 " > threshold=%" PRId64 ") for stream %d\n", dts2msec(pts), dts2msec(dts), dts2msec(dts2-dts), m_stream.index );
                 }
                 return dts2;
             }
@@ -652,7 +654,6 @@ namespace converter{
             if(output->metadata){
                 std::ostringstream ostr;
                 ostr << mfi;
-                av_log(NULL,AV_LOG_WARNING,"result: %s" , ostr.str().c_str() );
                 av_dict_set(&output->metadata, "comment", ostr.str().c_str(), 0);
             }
             output.Close();
