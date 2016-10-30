@@ -106,6 +106,12 @@ http {
             }
         }
 
+        vod_force_continuous_timestamps on;
+        location ~ ^/recording/hls/e/(?<entryId>[^/]+)/ {
+            vod_force_continuous_timestamps on;
+            alias @CONTENT_DIR@/$entryId/playlist.json;
+            vod hls;
+        }
 
         include nginx.conf.redirect.rules;
 
@@ -146,8 +152,11 @@ http {
 
         # fetch files from CONTENT_DIR
         location / {
-            alias @CONTENT_DIR@;
+            alias @CONTENT_DIR@/$entryId/playlist.json;
+            vod hls;
         }
 
     }
+
+
 }
