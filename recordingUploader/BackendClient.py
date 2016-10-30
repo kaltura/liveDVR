@@ -9,6 +9,9 @@ import time
 import json
 # todo add timer to renew ks insted of check each time
 # todo maybe add partner Id to init
+# todo Backend client is invoked for each upload sessaion- where the global variavbles (such that KS are defined outsite the init
+
+
 class BackendClient:
 
     admin_secret = get_config('admin_secret')
@@ -148,7 +151,7 @@ class BackendClient:
         self.logger.info("Set recorded content, entryId [%s] and token [%s] mediaServerIndex [%s] duration [%s]",
                          entry_id, token_id, 1, duration)
         self.handle_request(partner_id, 'liveStream', 'setRecordedContent', entry_id, 0, resource, duration)
-        
+
     def append_recording(self, partner_id, recorded_id, output_file): # todo check it
         resource = KalturaServerFileResource()
         resource.localFilePath = output_file
