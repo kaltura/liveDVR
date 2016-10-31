@@ -118,17 +118,16 @@ class UploadTask(TaskBase):
                 self.logger.info("entry %s has replacementStatus %s, calling cancel_replace", self.recorded_id,
                                 recorded_obj.replacementStatus)
                 self.backend_client.cancel_replace(upload_session.partner_id, self.recorded_id)
-            self.backend_client.set_recorded_content(upload_session, self.duration)
+            self.backend_client.set_recorded_content_remote(upload_session, str(float(self.duration)/1000))
             os.rename(self.output_file_path, self.output_file_path + '.done')
         else:
             raise Exception("Failed to upload file, "+str(len(result))+" chunks from "+str(chunks_to_upload)+ " where failed:"
                             + upload_session_json)
 
     def append_recording_handler(self):
-        try:
-            self.backend_client.append_recording(self.recorded_id, self.output_file_path) # todo check it full path
-        except Exception, e:
-            self.logger.error("Failed to append recording : %s\n %s", str(e), traceback.format_exc())
+        partner_id = self.backend_client.get_live_entry(self.entry_id).partnerId
+        self.backend_client.set_recorded_content_local(partner_id, self.entry_id, self.output_file_path,
+                                                       str(float(self.duration)/1000))  # todo check it full path
 
     def run(self):
         if get_config('mode') == 'remote':

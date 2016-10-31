@@ -1,16 +1,12 @@
-from multiprocessing import Process
+from multiprocessing import Process, Queue
 import logging.handlers
-from Logger.LoggerDecorator import logger_decorator
 import os
 from Config.config import get_config
-from multiprocessing import Queue
 from threading import Timer
 import shutil
 import re
-import abc
 import traceback
 from socket import gethostname
-from KalturaClient.Client import KalturaException
 import time
 #  Currently not support multiple machine pulling from one incoming dir.
 # If need, just add incoming dir in the constructor
@@ -108,6 +104,12 @@ class TaskRunner:
                         self.logger.fatal("[%s] Job %s on entry %s has no more retries or failed to get it, move entry to "
                                       "failed task directory ", logger_info, self.task_name, task_parameter['directory'])
                         shutil.move(src, self.error_directory)
+                except shutil.Error as e:
+                    new_direcotry_name = task_parameter['directory'] + str(time.time())
+                    full_path_to_mpve = os.path.join(self.error_directory, new_direcotry_name)
+                    self.logger.error("[%s] failed to move directory, (try to move into %s) %s \n %s", logger_info,
+                                      str(e), traceback.format_exc())
+                    shutil.move(src, full_path_to_mpve)
                 except Exception as e:
                     self.logger.fatal("[%s]  Failed to handle failure task %s \n %s", logger_info, str(e)
                                     , traceback.format_exc())
@@ -152,6 +154,7 @@ class TaskRunner:
             workers = [Process(target=self.work, args=(i,)) for i in xrange(1, self.number_of_processes+1)]
             for w in workers:
                 w.start()
+
             return workers
         except Exception as e:
             self.logger.fatal("Failed to start task runner: %s  \n %s ", str(e), traceback.format_exc())

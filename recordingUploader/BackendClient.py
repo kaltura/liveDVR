@@ -33,11 +33,12 @@ class BackendClient:
         self.logger = logger_decorator(self.__class__.__name__, session_id)
 
     def create_new_session(self):
-        result = self.client.session.start(self.admin_secret, None, self.type, self.partner_id, None, None)
-        BackendClient.ks = result[0]
+        ks= self.client.generateSessionV2(self.admin_secret, None, self.type, self.partner_id, int(self.session_duration))
+        #result = self.client.session.start(self.admin_secret, None, self.type, self.partner_id, None, None)
+        BackendClient.ks = ks
         BackendClient.expiration_time_ks = int(self.session_duration) + int(time.time()) - 3600  # confidence interval
         self.client.setKs(self.ks)
-        self.logger.info("Creating a new session, KS= %s \n Header: %s", self.ks, result[1])
+        self.logger.info("Creating a new session, KS= %s ", self.ks)
 
     def get_kaltura_session(self):
         self.mutex.acquire()
@@ -125,38 +126,28 @@ class BackendClient:
         }
         return json.dumps(result_dictionary, ensure_ascii=False)
 
-    def set_media_content_add(self, upload_session):
-        token_id = upload_session.token_id
-        recorded_id = upload_session.recorded_id
-        partner_id = upload_session.partner_id
-        resource = KalturaUploadedFileTokenResource(token_id)
-        self.handle_request(partner_id, 'media', 'addContent', recorded_id, resource)
-        self.logger.info("Set media content add with entryId [%s] and token [%s]", recorded_id, token_id)
+    def set_recorded_content(self, entry_id, resource, duration, partner_id):
 
-    def set_media_content_update(self, upload_session):
-        token_id = upload_session.token_id
-        recorded_id = upload_session.recorded_id
-        partner_id = upload_session.partner_id
-        resource = KalturaUploadedFileTokenResource(token_id)
-        self.handle_request(partner_id, 'media', 'updateContent', recorded_id, resource)
-        self.logger.info("Set media content with update entryId [%s] and token [%s]", recorded_id, token_id)
-
-    def set_recorded_content(self, upload_session, duration):
-        token_id = upload_session.token_id
-        recorded_id = upload_session.recorded_id
-        entry_id = upload_session.entry_id
-        self.logger.info("set_recorded_content entryId [%s] recorded_id [%s]", entry_id, recorded_id)
-        partner_id = upload_session.partner_id
-        resource = KalturaUploadedFileTokenResource(token_id)
-        self.logger.info("Set recorded content, entryId [%s] and token [%s] mediaServerIndex [%s] duration [%s]",
-                         entry_id, token_id, 1, duration)
+        self.logger.info("set_recorded_content entry_id  [%s], resource [%s] duration [%s]", entry_id,
+                         resource.__class__.__name__, duration)
         self.handle_request(partner_id, 'liveStream', 'setRecordedContent', entry_id, 0, resource, duration)
 
-    def append_recording(self, partner_id, recorded_id, output_file): # todo check it
+    def set_recorded_content_remote(self, upload_session, duration):
+        token_id = upload_session.token_id
+        entry_id = upload_session.entry_id
+        partner_id = upload_session.partner_id
+        resource = KalturaUploadedFileTokenResource(token_id)
+        self.logger.info("set_recorded_content_remote partner_id [%s] token [%s] duration [%s]", partner_id, token_id,
+                         duration)
+        self.set_recorded_content(entry_id, resource, duration, partner_id)
+
+    def set_recorded_content_local(self, partner_id, entry_id, output_file, duration):  # todo check it
+        self.logger.info("set_recorded_content_local partner_id [%s] output_file [%s] duration [%s]", partner_id,
+                         output_file, duration)
         resource = KalturaServerFileResource()
         resource.localFilePath = output_file
-        self.handle_request(partner_id, 'media', 'updateContent', resource)
-        self.logger.info("Append recording for content %s recorded entryId %s.", output_file, recorded_id)
+        self.set_recorded_content(entry_id, resource, duration, partner_id)
+
 
 
 

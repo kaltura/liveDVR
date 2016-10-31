@@ -9,7 +9,13 @@ import signal
 import psutil
 import socket
 #todo bug - if on start there are too many task, cannot add to queue and then not continiue!
-# task runner- try to add id , this is not clear [11885/MainThread][ERROR] [TaskRunner-UploadTask] [work():93] Failed to perform task :The access to service [media->cancelReplace] is forbidden (SERVICE_FORBIDDEN version is 2.7.11
+#todo bug - if file exist in error or in done directroy them mpove to it failed, should add timestramp!
+#todo list
+# 1. uploader sends [statusIn] => (0, 1, 2) when doing uploadToken list change to 0,1,2
+# 2.change generate ks to make without API call
+# 3. upload all chuck exceprt last one and then upload the last
+# 4. crone job
+# 5. should recording also the backup ?
 # install psutilg
 # How to recover from case that live-controller crash, when need to cread hard link/Wrote to json- maybe flavor download should send event to all his chunks on disk
 # the recording entry should created after session ended, and the

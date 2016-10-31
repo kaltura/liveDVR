@@ -3,17 +3,12 @@ from Config.config import get_config
 from TaskBase import TaskBase
 import urllib2
 import re
-
-
+from watchdog.observers import Observer
+from watchdog.events import FileSystemEventHandler
+from watchdog.events import LoggingEventHandler
 
 class ConcatenationTask(TaskBase):
-    url_base = 'http://localhost:8080/live/hls/p/0/e/'
-
-
-    @staticmethod
-    def sorted_ls(path):
-        mtime = lambda f: os.stat(os.path.join(path, f)).st_mtime
-        return list(sorted(os.listdir(path), key=mtime))
+    url_base = 'http://localhost:8080/recording/hls/e/' # todo use configuration
 
     def __init__(self, param, logger_info):
         TaskBase.__init__(self, param, logger_info)
@@ -25,6 +20,7 @@ class ConcatenationTask(TaskBase):
         self.url_source_manifest = os.path.join(self.url_base_entry, 'index-f1.m3u8')  # todo how should I find the source
 
     def download_chunks_and_concat(self, chunks, output_full_path):
+
         with open(output_full_path, 'wb') as file_output: # todo should truncated the file
             self.logger.info("About to concat %d files from manifest into %s", len(chunks), output_full_path)
             for chunk in chunks:
@@ -33,9 +29,8 @@ class ConcatenationTask(TaskBase):
                 self.logger.debug("Successfully downloaded from url %s, about to write it to %s", chunks_url, output_full_path)
                 file_output.write(chunk_bytes)
 
-
-    @staticmethod
-    def download_file(url):
+    def download_file(self, url):
+        self.logger.debug("About to request the url:%s ", url)
         return urllib2.urlopen(url).read()  # whats happen if faild to get, or getting timeout?
 
     @staticmethod
@@ -48,6 +43,10 @@ class ConcatenationTask(TaskBase):
 
         self.write_stamp()
         output_full_path = os.path.join(self.recording_path, self.output_filename)
+        if os.path.isfile(output_full_path):
+            self.logger.warn("file [%s] already exist", output_full_path)
+            return # todo checkit
+
         m3u8 = self.download_file(self.url_source_manifest)
         self.logger.debug("load recording manifest : %s ", m3u8)
         chunks = self.parse_m3u8(m3u8)
