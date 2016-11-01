@@ -92,7 +92,9 @@ class BackendClient:
 
         upload_token_filter = KalturaUploadTokenFilter()
         upload_token_filter.fileNameEqual = file_name
-        upload_token_filter.statusIn = KalturaUploadTokenStatus.PENDING, KalturaUploadTokenStatus.PARTIAL_UPLOAD, KalturaUploadTokenStatus.FULL_UPLOAD
+        upload_token_filter.statusIn = ''.join([str(KalturaUploadTokenStatus.PENDING), ',',
+                                                str(KalturaUploadTokenStatus.PARTIAL_UPLOAD), ',' ,
+                                                str(KalturaUploadTokenStatus.FULL_UPLOAD)])
         return self.handle_request(partner_id, 'uploadToken', 'list', upload_token_filter)
 
     def upload_token_upload(self, upload_chunk_obj):

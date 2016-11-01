@@ -35,7 +35,7 @@ class ThreadWorkers:  # singleton object,
     def generate_upload_thread(self):
         for i in range(1, self.num_of_thread+1):
             t = Thread(target=self.worker, args=(i,))
-            t.setName("UploadTasks-"+str(i)) # note this is not work for multiple uploader process
+            t.setName("UploadTasks-"+str(i))  # note this is not work for multiple uploader process
             t.daemon = True
             t.start()
 

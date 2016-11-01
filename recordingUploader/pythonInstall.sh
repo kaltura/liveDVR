@@ -20,6 +20,8 @@ exit
 fi
 pip install  poster
 pip install psutil
+easy_install pycrypto
+pip install watchdog
 mkdir -p $HOME_DIRECTORY
 mkdir -p "$HOME_DIRECTORY/recordings"
 mkdir -p "$HOME_DIRECTORY/error"

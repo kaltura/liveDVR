@@ -105,10 +105,10 @@ class TaskRunner:
                                       "failed task directory ", logger_info, self.task_name, task_parameter['directory'])
                         shutil.move(src, self.error_directory)
                 except shutil.Error as e:
-                    new_direcotry_name = task_parameter['directory'] + str(time.time())
+                    new_direcotry_name = task_parameter['directory'] + '_' + str(time.time())
                     full_path_to_mpve = os.path.join(self.error_directory, new_direcotry_name)
-                    self.logger.error("[%s] failed to move directory, (try to move into %s) %s \n %s", logger_info,
-                                      str(e), traceback.format_exc())
+                    self.logger.error("[%s] Failed to move directory, (try to move %s into %s) %s, move it to %s \n %s"
+                        , logger_info, src, self.error_directory, str(e), new_direcotry_name, traceback.format_exc())
                     shutil.move(src, full_path_to_mpve)
                 except Exception as e:
                     self.logger.fatal("[%s]  Failed to handle failure task %s \n %s", logger_info, str(e)

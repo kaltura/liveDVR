@@ -12,7 +12,7 @@ from KalturaClient.Plugins.Core import KalturaEntryStatus, KalturaEntryReplaceme
 #backend_client = BackendClient()
 
 
-class UploadChunkJob:
+class UploadChunkJob: # todo move it to other file
     #global backend_client
     mutex = Lock()  # mutex for prevent race when reading file
 
@@ -50,6 +50,7 @@ class UploadTask(TaskBase):
         self.output_file_path = os.path.join(self.recording_path, self.output_filename)
         session_id = self.entry_id + '-' + self.recorded_id
         self.backend_client = BackendClient(session_id)
+        self.threadWorkers = ThreadWorkers()
 
     class KalturaUploadSession:
 
@@ -68,7 +69,7 @@ class UploadTask(TaskBase):
                 self.token_id = backend_client.upload_token_add(self.partner_id, file_name, file_size)
                 self.uploaded_file_size = 0
                 return
-            if upload_token_list_response.totalCount == 1:  # if token is exist
+            if upload_token_list_response.totalCount == 1 or 2:  # if token is exist
                 self.token_id = upload_token_list_response.objects[0].id
                 self.uploaded_file_size = upload_token_list_response.objects[0].uploadedFileSize
                 if self.uploaded_file_size is None:  # API return None instead of 0.
@@ -93,20 +94,27 @@ class UploadTask(TaskBase):
             chunks_to_upload = int(file_size / self.upload_token_buffer_size) + 1
         upload_session = UploadTask.KalturaUploadSession(self.output_filename, file_size, chunks_to_upload,
                                                          self.entry_id, self.recorded_id, self.backend_client, self.logger)
-        for sequence_number in range(1, chunks_to_upload+1):
+        for sequence_number in range(1, chunks_to_upload):
             resume_at = self.upload_token_buffer_size * (sequence_number - 1)
             if resume_at < upload_session.uploaded_file_size:
                 self.logger.info('Chunk %s of %s has already upload skipped it (stating from %s bytes), ',
                                  sequence_number, chunks_to_upload, upload_session.uploaded_file_size)
                 continue
-            final_chunk = sequence_number == chunks_to_upload
+            final_chunk = False
             resume = sequence_number > 1
 
             chunk = UploadChunkJob(upload_session, infile, sequence_number, final_chunk, resume_at, resume, self.backend_client)
 
-            ThreadWorkers().add_job(chunk)
+            self.threadWorkers.add_job(chunk)
 
-        result = ThreadWorkers().wait_for_all_jobs_done()
+        result = self.threadWorkers.wait_for_all_jobs_done()
+        self.logger.info('Finish to upload [%s] chunks, about to upload last chunk', chunks_to_upload-1)
+        resume_at = self.upload_token_buffer_size * (chunks_to_upload-1)
+        chunk = UploadChunkJob(upload_session, infile, chunks_to_upload, True, resume_at, True,
+                               self.backend_client)
+
+        self.threadWorkers.add_job(chunk)
+        result = self.threadWorkers.wait_for_all_jobs_done()
         self.check_stamp()
         upload_session_json = str(vars(upload_session))
         if len(result) == 0:
