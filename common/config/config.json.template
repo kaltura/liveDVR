@@ -73,7 +73,8 @@
       "applicationName" : "kLive",
       "port" : 1935,
       "user" : "",
-      "password" : ""
+      "password" : "",
+      "disconnectTimeoutInSec" : 60
   },
   "backendClient" : {
     "adminSecret" :"admin secret",
