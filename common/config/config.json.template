@@ -47,7 +47,8 @@
       "applicationName" : "kLive",
       "port" : 1935,
       "user" : "",
-      "password" : ""
+      "password" : "",
+      "disconnectDurationMillisecToResetLiveEntries" : 60000
   },
   "backendClient" : {
     "adminSecret" :"admin secret",
