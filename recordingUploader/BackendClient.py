@@ -102,7 +102,7 @@ class BackendClient:
         token = upload_chunk_obj.upload_session.token_id
         file_name = upload_chunk_obj.upload_session.file_name
         chunks_to_upload = upload_chunk_obj.upload_session.chunks_to_upload
-        sequence_number = upload_chunk_obj.sequence_number
+        sequence_number = upload_chunk_obj.chunk_index
         resume = upload_chunk_obj.resume
         final_chunk = upload_chunk_obj.final_chunk
         resume_at = upload_chunk_obj.resume_at

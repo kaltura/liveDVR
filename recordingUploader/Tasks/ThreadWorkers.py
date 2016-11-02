@@ -46,7 +46,7 @@ class ThreadWorkers:  # singleton object,
             try:
                 upload_chunk_job.upload()
             except Exception as e:
-                self.logger.error("Failed to upload chunk %s from file %s : %s \n %s", upload_chunk_job.sequence_number,
+                self.logger.error("Failed to upload chunk %s from file %s : %s \n %s", upload_chunk_job.chunk_index,
                                   upload_chunk_job.upload_session.file_name,  str(e), traceback.format_exc())
                 self.job_failed.append(upload_chunk_job)
             finally:
@@ -55,7 +55,7 @@ class ThreadWorkers:  # singleton object,
     def add_job(self, job):
         self.q.put(job)
 
-    def wait_for_all_jobs_done(self):
+    def wait_jobs_done(self):
         self.q.join()  # wait for all task finish
         job_failed_to_return = self.job_failed
         self.job_failed = []    # initial array for the next job
