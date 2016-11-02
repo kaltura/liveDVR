@@ -106,14 +106,16 @@ http {
             }
         }
 
-
-        include nginx.conf.redirect.rules;
-
         location / {
             expires 1d;
             root   @WWW_DIR@;
         }
 
+        # vod status page
+        location = /vod_status {
+            vod_status;
+            access_log off;
+        }
     }
 
     proxy_cache_path @CONTENT_DIR@/../nginxCache  levels=1:2 keys_zone=one:20m inactive=5h max_size=11023M ;
