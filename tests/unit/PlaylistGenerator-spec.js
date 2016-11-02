@@ -937,8 +937,8 @@ describe('Playlist Generator spec', function() {
                 plGen.on('diagnosticsAlert',(alert) => {
                     const diagnosticAlerts = require('./../../lib/Diagnostics/DiagnosticsAlerts');
                     expect(alert).to.be.instanceof(diagnosticAlerts.OverlapPtsAlert);
-                    expect(alert.args.firstDTS).to.be.eql(fi.firstDTS);
-                    expect(alert.args.lastDTS).to.be.eql(overlap.firstDTS);
+                    expect(alert.args.ptsHigh).to.be.eql(Math.ceil(fi.video.firstDTS+fi.video.duration));
+                    expect(alert.args.ptsNew).to.be.eql(Math.ceil(overlap.video.firstDTS));
                 });
 
                 updatePlaylist(plGen, [fi, overlap]).then(function (result) {
