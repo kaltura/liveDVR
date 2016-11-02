@@ -105,8 +105,6 @@ http {
                 vod mss;
             }
         }
-
-        vod_force_continuous_timestamps on;
         location ~ ^/recording/hls/e/(?<entryId>[^/]+)/ {
             vod_force_continuous_timestamps on;
             alias @CONTENT_DIR@/$entryId/playlist.json;
@@ -157,8 +155,7 @@ http {
 
         # fetch files from CONTENT_DIR
         location / {
-            alias @CONTENT_DIR@/$entryId/playlist.json;
-            vod hls;
+            alias @CONTENT_DIR@;
         }
 
     }
