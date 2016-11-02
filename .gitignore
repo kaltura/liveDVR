@@ -30,5 +30,15 @@ node_modules
 # Build files created by node-gyp
 node_addons/FormatConverter/build
 
+# packager ignore directories
 common/config/config.json
 packager/build
+packager/bin/build_log
+
+# ignore regression (ci) reports
+reports
+
+# ignor local congif
+common/config/configMapping.json
+
+

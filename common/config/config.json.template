@@ -11,7 +11,6 @@
   "wowzaPollingInterval" : 5000,
   "defaultDvrWindowInSec" : 7200,
   "minimalDvrWindowInSec" : 900,
-  "dvrMaxChunkCount" : 1000,
   "defaultPlayWindowInSec" : 150,
   "minDurationForPlaybackInSec" : 30,
   "sessionDuration" : 180000,
@@ -24,8 +23,36 @@
   "logFileName" : "~/dvr/kLiveController.log",
   "logTimeZoneOffset" : 300,
   "monitorPort": 4390,
+  "persistenceCheckIntervalSec": 20,
+  "persistenceFileName": "~/dvr/%s_kLivePersistence.json",
+  "expirationTimeWindowSec": "30",
   "regressionAdapter": {
-      "enable":false
+      "verbose": false,
+      "enable": false,
+      "analysis": false,
+      "analyzerRootPath" : "~/live-monitor/",
+      "dataWarehouseRootFolderPath" : "instructions: put here root path to data warehouse (e.g. /var/tmp/regression/data_warehouse)",
+      "maxChunkCount": 10,
+      "entries" : [{
+            "entryId": "abc",
+            "flavorParamsIds": "1,2,3,4",
+            "start_chunklist_index": -1,
+            "last_chunklist_index": -1,
+            "serverType": 0,
+            "entryPath": "instructions: put here the relative path from data warehouse root to entry stream data (e.g. abc)",
+            "playWindow": 150,
+             "validator": {
+               "path": "instructions: put here the root path to save and read regression results (e.g. /var/tmp/regression/results)",
+               "override": false,
+               "history_count": 0,
+               "analyzerAlertsIgnoreList": "'INFTagDurationDoesntMatch','BitrateOutsideOfTargetAlert','InvalidKeyFrameIntervalAlert'"
+             }
+        }]
+  },
+  "preserveOriginalHLS": {
+      "enable": false,
+      "createFolderPerSession": true,
+      "runDurationInMinutes": 5
   },
   "diagnostics": {
       "minChunkDurationInSec": 1,
@@ -38,7 +65,6 @@
       "count": 1,
       "entryId": "0_simstream%d",
       "playWindow": 240,
-      "maxChunkCount": 5,
       "useNginx":false,
       "wowzaUrl": "http://kalsegsec-a.akamaihd.net/dc-0/m/pa-live-publish2/kLive/smil:1_oorxcge2_all.smil/playlist.m3u8"
   },
