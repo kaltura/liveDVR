@@ -48,7 +48,7 @@
       "port" : 1935,
       "user" : "",
       "password" : "",
-      "disconnectDurationMillisecToResetLiveEntries" : 60000
+      "disconnectTimeoutInSec" : 60
   },
   "backendClient" : {
     "adminSecret" :"admin secret",
