@@ -15,8 +15,8 @@ class TaskBase(object):
             stamp = stamp_file.read()
             if stamp == self.duration:
                 self.logger.debug("Stamp  %s is not changed", stamp)
-            else:
-                msg = "Stamps are not equal! process stamp:%s, found in file: %s, abort directory" % (self.duration,
+            else: # todo create recording error
+                msg = "Stamps are not equal! process stamp:[%s], found in file: [%s], abort directory" % (self.duration,
                                                                                                       stamp)
                 retries_file_path = os.path.join(self.recording_path, 'retries')
                 with open(retries_file_path, "w+") as retries_file:
