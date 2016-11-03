@@ -111,7 +111,6 @@ http {
             vod hls;
         }
 
-        include nginx.conf.redirect.rules;
 
         location / {
             expires 1d;
