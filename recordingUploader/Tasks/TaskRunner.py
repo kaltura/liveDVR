@@ -51,7 +51,6 @@ class TaskRunner:
             if not os.path.exists(self.output_directory):  # In case directory not exist
                 os.makedirs(self.output_directory)
 
-            self.move_and_add_to_queue(self.working_directory)
         except os.error as e:
             self.logger.fatal("Error %s \n %s", str(e), traceback.format_exc())
 
@@ -148,15 +147,16 @@ class TaskRunner:
 
     def start(self):
         try:
-            self.add_new_task_handler()
-            self.failed_task_handler()
             self.logger.info("Starting %d workers", self.number_of_processes)
             workers = [Process(target=self.work, args=(i,)) for i in xrange(1, self.number_of_processes+1)]
             for w in workers:
                 w.start()
+            self.move_and_add_to_queue(self.working_directory)
+            self.add_new_task_handler()
+            self.failed_task_handler()
 
-            return workers
         except Exception as e:
             self.logger.fatal("Failed to start task runner: %s  \n %s ", str(e), traceback.format_exc())
-
+        finally:
+            return workers
 
