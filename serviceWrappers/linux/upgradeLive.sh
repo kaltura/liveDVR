@@ -14,12 +14,14 @@ if [ ! -d "$1" ] ; then
         cd $1
         nvm install
         cp /opt/kaltura/liveController/latest/common/config/configMapping.json /opt/kaltura/liveController/$1/common/config/
+        cp /opt/kaltura/liveController/latest/recordingUploader/Config/configMapping.ini /opt/kaltura/liveController/$1/recordingUploader/Config/
         npm install
         cd ..
         unlink /opt/kaltura/liveController/latest
         ln -s /opt/kaltura/liveController/$1 /opt/kaltura/liveController/latest
         ln -s /opt/kaltura/liveController/latest/serviceWrappers/linux/kLiveController /etc/init.d/kLiveController
         /etc/init.d/kLiveController restart
+        /etc/init.d/recording_uploder.sh restart
         # also better to call dvr saas config
         echo "Warning: live-dvr-saas-config is not updated"
         rm -rf /opt/kaltura/liveController/v$1.tar.gz
