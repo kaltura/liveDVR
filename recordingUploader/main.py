@@ -9,11 +9,8 @@ import signal
 import psutil
 import socket
 #todo bug - if on start there are too many task, cannot add to queue and then not continiue!
-#todo bug - if file exist in error or in done directroy them mpove to it failed, should add timestramp!
 #todo list
-# 1. uploader sends [statusIn] => (0, 1, 2) when doing uploadToken list change to 0,1,2
-# 3. upload all chuck exceprt last one and then upload the last
-# 4. crone job
+
 # 5. should recording also the backup ?
 # install psutilg
 # How to recover from case that live-controller crash, when need to cread hard link/Wrote to json- maybe flavor download should send event to all his chunks on disk
@@ -37,7 +34,9 @@ def signal_term_handler(signal, frame):
         my_process.terminate()
     sys.exit(0)
 
-init_logger()
+
+log_full_path = get_config('log_file_name')
+init_logger(log_full_path)
 processes = []
 max_task_count = get_config("max_task_count", 'int')
 concat_processors_count = get_config('concat_processors_count', 'int')
@@ -50,9 +49,9 @@ incoming_upload_directory = path.join(base_directory, socket.gethostname(), Uplo
 signal.signal(signal.SIGTERM, signal_term_handler)
 signal.signal(signal.SIGINT, signal_term_handler)
 
+
 ConcatenationTaskRunner = TaskRunner(ConcatenationTask, concat_processors_count, incoming_upload_directory,
                                      max_task_count).start()
-
 
 UploadTaskRunner = TaskRunner(UploadTask, uploading_processors_count, tasks_done_directory, max_task_count).start()
 
