@@ -18,7 +18,7 @@ class TaskRunner:
         self.number_of_processes = number_of_processes
         self.task = task
         self.task_name = task.__name__
-        self.polling_interval = get_config('polling_interval', 'int')
+        self.polling_interval = get_config('polling_interval_sec', 'int')
         base_directory = get_config('recording_base_dir')
         hostname = gethostname()
         self.failed_tasks_handling_interval = get_config('failed_tasks_handling_interval', 'int')*60  # in minutes

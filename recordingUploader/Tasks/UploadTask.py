@@ -16,7 +16,7 @@ class UploadTask(TaskBase):
     # Global scope
     #global backend_client
 
-    upload_token_buffer_size = get_config('upload_token_buffer_size', 'int') * 1000000  # buffer is in MB
+    upload_token_buffer_size = get_config('upload_token_buffer_size_mb', 'int') * 1000000  # buffer is in MB
 
     def __init__(self, param, logger_info):
         TaskBase.__init__(self, param, logger_info)
@@ -58,7 +58,7 @@ class UploadTask(TaskBase):
             failed_jobs.extend(job_result)
             self.check_stamp()
             upload_session_json = str(vars(upload_session))
-            
+
             if len(failed_jobs) == 0:
                 self.logger.info("successfully upload all chunks, call append recording")
 

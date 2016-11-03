@@ -13,7 +13,7 @@ class KalturaUploadSession:
         self.entry_id = entry_id
         self.backend_client = backend_client
         self.chunk_index = 1
-        self.upload_token_buffer_size = get_config('upload_token_buffer_size', 'int') * 1000000  # buffer is in MB
+        self.upload_token_buffer_size = get_config('upload_token_buffer_size_mb', 'int') * 1000000  # buffer is in MB
         # self.token_id,self.start_from = ServerUploader.backend_client.get_token(self.partner_id,file_name)
         # if !self.token_id:
         upload_token_list_response = backend_client.upload_token_list(self.partner_id, file_name)
