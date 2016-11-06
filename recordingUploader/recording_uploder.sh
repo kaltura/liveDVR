@@ -36,7 +36,7 @@ start() {
         echo "${NAME} already running"
     else
         echo "Starting ${NAME}"
-        python $APPLICATION_PATH >> $LOGFILE  2>&1 &
+        python2.7 $APPLICATION_PATH >> $LOGFILE  2>&1 &
         echo "started ${NAME} with pid $!"
         echo $! > $PIDFILE
 	    RETVAL=$(( $RETVAL + $? ))
