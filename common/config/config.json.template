@@ -52,6 +52,7 @@
   "preserveOriginalHLS": {
       "enable": false,
       "createFolderPerSession": true
+
   },
   "diagnostics": {
       "minChunkDurationInSec": 1,
@@ -72,7 +73,8 @@
       "applicationName" : "kLive",
       "port" : 1935,
       "user" : "",
-      "password" : ""
+      "password" : "",
+      "disconnectTimeoutInSec" : 60
   },
   "backendClient" : {
     "adminSecret" :"admin secret",
@@ -89,5 +91,13 @@
     "preserveMP4Chunks": false,
     "segmentDuration" : 10000,
     "enablePlaylistHistory": false
-  }
+  },
+  "recording" : {
+       "enable" : false,
+       "recordingFolderPath" : "~/kLive_content/recording/recordings",
+       "completedRecordingFolderPath" : "~/kLive_content/recording/incoming",
+       "recordingTimeIntervalInSec" : "60",
+       "recordingMaxDurationInHours" : "24",
+       "recordingSessionDurationInSec" : "180"
+     }
 }
