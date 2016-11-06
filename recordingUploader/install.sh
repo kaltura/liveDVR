@@ -14,14 +14,16 @@ if [ ! -d $HOME_DIRECTORY ]; then
 echo "ERROR: can't find recording path"
 exit
 fi
-if ! [[ $(python --version 2>&1) == *2\.7\.1[012] ]]; then
+if ! [[ $(python2.7 --version 2>&1) == *2\.7\.* ]]; then
 echo "Requrie python version 2.7.x";
 exit
 fi
-pip install  poster
-pip install psutil
+pip2.7 install  poster
+pip2.7 install psutil
+pip2.7 install m3u8
+pip2.7 install schedule
+pip2.7 install watchdog
 easy_install pycrypto
-pip install watchdog
 mkdir -p $HOME_DIRECTORY
 mkdir -p "$HOME_DIRECTORY/recordings"
 mkdir -p "$HOME_DIRECTORY/error"
@@ -37,3 +39,5 @@ mkdir -p $UPLOAD_TASK_DIRECTORY
 mkdir -p "$UPLOAD_TASK_DIRECTORY/failed"
 mkdir -p "$UPLOAD_TASK_DIRECTORY/incoming"
 mkdir -p "$UPLOAD_TASK_DIRECTORY/processing"
+cp $SOURCE_DIRECTORY/recordingUploader/recording_uploder.sh /etc/init.d
+
