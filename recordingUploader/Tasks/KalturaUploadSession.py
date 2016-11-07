@@ -43,6 +43,9 @@ class KalturaUploadSession:
                                  self.chunk_index, self.chunks_to_upload, self.uploaded_file_size)
                 self.chunk_index += 1
                 resume_at = self.upload_token_buffer_size * (self.chunk_index - 1)
+            if self.chunk_index > self.chunks_to_upload:
+                self.logger.debug("No chunks to upload founded, return None")
+                return None
             final_chunk = self.chunk_index == self.chunks_to_upload
             resume = self.chunk_index > 1
             self.chunk_index += 1
