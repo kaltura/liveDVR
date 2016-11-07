@@ -61,7 +61,7 @@ class ConcatenationTask(TaskBase):
             return
         url_source_manifest = self.find_source()
         playlist = self.download_file(url_source_manifest)
-        self.logger.debug("load recording manifest : %s ", playlist)
+        self.logger.debug("load recording manifest : \n %s ", playlist)
         chunks = self.parse_m3u8(playlist)
         self.download_chunks_and_concat(chunks, output_full_path)
         self.logger.info("Successfully concat %d files into %s", len(chunks), output_full_path)

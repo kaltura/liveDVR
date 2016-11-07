@@ -42,8 +42,8 @@ class UploadTask(TaskBase):
 
             upload_session = KalturaUploadSession(self.output_filename, file_size, chunks_to_upload, self.entry_id,
                                                   self.recorded_id, self.backend_client, self.logger, infile)
-
-            while upload_session.chunk_index < chunks_to_upload-1:
+            # todo checkuse case of
+            while upload_session.chunk_index <= chunks_to_upload-1:
                 chunk = upload_session.get_next_chunk()
                 if chunk is None:
                     break
@@ -53,7 +53,7 @@ class UploadTask(TaskBase):
             self.logger.info('Finish to upload [%s chunks], about to upload last chunk', chunks_to_upload-1)
 
             # last chunk
-            chunk = upload_session.get_next_chunk()
+            chunk = upload_session.get_next_chunk(last_chunk = True)
             if chunk is not None:
                 threadWorkers.add_job(chunk)
                 job_result = threadWorkers.wait_jobs_done()
