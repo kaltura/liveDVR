@@ -32,7 +32,7 @@ mkdir -p $HOSTNAME_DIRECTORY
 UPLOAD_TASK_DIRECTORY="$HOSTNAME_DIRECTORY/UploadTask"
 CONCATINATION_TASK_DIRECTORY="$HOSTNAME_DIRECTORY/ConcatenationTask"
 mkdir  -p $CONCATINATION_TASK_DIRECTORY
-ln -s  $CONCATINATION_TASK_DIRECTORY "$HOME_DIRECTORY/incoming"
+ln -s "$HOME_DIRECTORY/incoming" $CONCATINATION_TASK_DIRECTORY/"incoming"
 mkdir -p "$CONCATINATION_TASK_DIRECTORY/failed"
 mkdir -p "$CONCATINATION_TASK_DIRECTORY/processing"
 mkdir -p $UPLOAD_TASK_DIRECTORY
@@ -40,4 +40,5 @@ mkdir -p "$UPLOAD_TASK_DIRECTORY/failed"
 mkdir -p "$UPLOAD_TASK_DIRECTORY/incoming"
 mkdir -p "$UPLOAD_TASK_DIRECTORY/processing"
 cp $SOURCE_DIRECTORY/recordingUploader/recording_uploder.sh /etc/init.d
+/etc/init.d/recording_uploder.sh restart
 
