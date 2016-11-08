@@ -13,7 +13,7 @@ const tsChunktMatch =  new RegExp(/media-([^_]+).*?([\d]+)\.ts.*/);
 module.exports = persistenceFormat = {
 
     getEntryBasePath: function (entryId) {
-        return path.join(config.get('rootFolderPath'), entryId);
+        return path.join(config.get('rootFolderPath'), entryId.charAt(entryId.length - 1), entryId);
     },
 
     getBasePathFromFull: function (directory) {
@@ -25,7 +25,7 @@ module.exports = persistenceFormat = {
     },
 
     getFlavorFullPath: function (entryId, flavorName) {
-        return path.join(config.get('rootFolderPath'), entryId, flavorName.toString());
+        return path.join(this.getEntryBasePath(entryId), flavorName.toString());
     },
 
     getMasterManifestName: function () {
