@@ -1,5 +1,7 @@
 var config = require('../../../common/Configuration');
-config.set('preserveOriginalChunk',false);
+const preserveOriginalHLS = config.get('preserveOriginalHLS');
+preserveOriginalHLS.enable = false;
+config.set('preserveOriginalHLS',preserveOriginalHLS);
 var MP4WRITER = require('../../../lib/MP4WriteStream');
 var fs = require('fs');
 var http = require('http');

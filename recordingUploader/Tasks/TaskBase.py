@@ -3,6 +3,7 @@ import abc
 from Logger.LoggerDecorator import logger_decorator
 from socket import gethostname
 from Config.config import get_config
+from RecordingException import UnequallStampException
 
 
 class TaskBase(object):
@@ -15,13 +16,10 @@ class TaskBase(object):
             stamp = stamp_file.read()
             if stamp == self.duration:
                 self.logger.debug("Stamp  %s is not changed", stamp)
-            else: # todo create recording error
+            else:  # todo create recording error
                 msg = "Stamps are not equal! process stamp:[%s], found in file: [%s], abort directory" % (self.duration,
-                                                                                                      stamp)
-                retries_file_path = os.path.join(self.recording_path, 'retries')
-                with open(retries_file_path, "w+") as retries_file:
-                    retries_file.write('0')
-                raise ValueError(msg)
+                                                                                                            stamp)
+                raise UnequallStampException(msg)
 
     def __init__(self, param, logger_info):
         self.duration = param['duration']
@@ -33,12 +31,6 @@ class TaskBase(object):
         self.recording_path = os.path.join(self.base_directory, self.__class__.__name__, 'processing',
                                            self.entry_directory)
         self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
-
-    def write_stamp(self):
-
-        self.logger.info("About to write stamp %s on %s", self.duration, self.recording_path)
-        with open(self.stamp_full_path, "w+") as stamp_file:  # w+ since we truncated the file
-            stamp_file.write(self.duration)
 
     __metaclass__ = abc.ABCMeta
 

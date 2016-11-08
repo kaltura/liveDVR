@@ -35,7 +35,7 @@ class KalturaUploadSession:
             raise Exception('file ' + file_name + ' has ' + upload_token_list_response.totalCount
                             + '(more then one) KalturaUploadToken')
 
-    def get_next_chunk(self):
+    def get_next_chunk(self, last_chunk = False):
 
             resume_at = self.upload_token_buffer_size * (self.chunk_index - 1)
             while resume_at < self.uploaded_file_size:
@@ -43,9 +43,17 @@ class KalturaUploadSession:
                                  self.chunk_index, self.chunks_to_upload, self.uploaded_file_size)
                 self.chunk_index += 1
                 resume_at = self.upload_token_buffer_size * (self.chunk_index - 1)
+            if self.chunk_index > self.chunks_to_upload:
+                self.logger.debug("No chunks to upload founded, return None")
+                return None
             final_chunk = self.chunk_index == self.chunks_to_upload
+            if final_chunk is True and last_chunk is False:
+                self.logger.warn("Founded that is the last chunk, but function is not called from the right place, "
+                    "return None. self.chunk_index %s, resume_at: %s, uploaded_file_size: %s",
+                                 self.chunk_index , resume_at, self.uploaded_file_size)
+                return None
             resume = self.chunk_index > 1
-            self.chunk_index += 1
-
             chunk = UploadChunkJob(self, final_chunk, resume_at, resume, self.chunk_index)
+            self.chunk_index += 1
+            self.logger.debug("UploadChunkJob: %s", str(vars(chunk)))
             return chunk

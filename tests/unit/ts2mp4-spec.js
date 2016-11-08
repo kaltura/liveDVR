@@ -6,7 +6,9 @@ var expect = chai.expect;
 
 describe('TS2MP4 convertor spec', function() {
     var config = require('./../../common/Configuration');
-    config.set('preserveOriginalChunk',false);
+    const preserveOriginalHLS = config.get('preserveOriginalHLS');
+    preserveOriginalHLS.enable = false;
+    config.set('preserveOriginalHLS',preserveOriginalHLS);
     var mp4utils = require('./../../lib/utils/mp4-utils');
     var path = require('path');
     var conv = require('./../../lib/MP4WriteStream');
