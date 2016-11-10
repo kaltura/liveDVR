@@ -8,7 +8,6 @@ import sys
 import signal
 import psutil
 import socket
-#todo bug - if on start there are too many task, cannot add to queue and then not continiue!
 #todo list
 
 # 5. should recording also the backup ?
