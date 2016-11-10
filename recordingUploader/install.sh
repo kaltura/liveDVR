@@ -43,4 +43,3 @@ mkdir -p "$UPLOAD_TASK_DIRECTORY/incoming"
 mkdir -p "$UPLOAD_TASK_DIRECTORY/processing"
 cp $SOURCE_DIRECTORY/recordingUploader/recording_uploder.sh /etc/init.d
 /etc/init.d/recording_uploder.sh restart
-
