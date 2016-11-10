@@ -9,11 +9,12 @@ var _ = require('underscore');
 var Q = require('q');
 
 const tsChunktMatch =  new RegExp(/media-([^_]+).*?([\d]+)\.ts.*/);
+const rootFolder = config.get('rootFolderPath');
 
 module.exports = persistenceFormat = {
 
     getEntryBasePath: function (entryId) {
-        return path.join(config.get('rootFolderPath'), entryId);
+        return path.join(rootFolder, entryId.charAt(entryId.length - 1), entryId);
     },
 
     getBasePathFromFull: function (directory) {
@@ -25,7 +26,7 @@ module.exports = persistenceFormat = {
     },
 
     getFlavorFullPath: function (entryId, flavorName) {
-        return path.join(config.get('rootFolderPath'), entryId, flavorName.toString());
+        return path.join(this.getEntryBasePath(entryId), flavorName.toString());
     },
 
     getMasterManifestName: function () {
