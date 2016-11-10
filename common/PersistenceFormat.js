@@ -9,6 +9,7 @@ var _ = require('underscore');
 var Q = require('q');
 
 const tsChunktMatch =  new RegExp(/media-([^_]+).*?([\d]+)\.ts.*/);
+var preserveOriginalHLS = config.get('preserveOriginalHLS').enable;
 
 module.exports = persistenceFormat = {
 
@@ -42,9 +43,14 @@ module.exports = persistenceFormat = {
     },
 
     createHierarchyPath: function(destPath, lastFileHash) {
-        let hash = new Date().getHours().toString();
-        let fileFullPath = path.join(destPath, (hash) < 10 ? ("0" + hash) : hash);
 
+        let fileFullPath = destPath;
+        let hash = lastFileHash;
+
+        if(!preserveOriginalHLS) {
+            hash = new Date().getHours().toString();
+            fileFullPath = path.join(destPath, (hash) < 10 ? ("0" + hash) : hash);
+        }
         let retVal = {fileFullPath, hash};
         if (lastFileHash === hash)
             return Q.resolve(retVal);
@@ -55,7 +61,9 @@ module.exports = persistenceFormat = {
             });
     },
 
-    compressChunkName: function(tsChunkName){
+    compressChunkName: preserveOriginalHLS ? function(tsChunkName){
+            return tsChunkName.replace('.ts','.mp4')
+        } : function(tsChunkName) {
         var matched = tsChunktMatch.exec( tsChunkName );
         if(matched){
             return matched[1] + '-' + matched[2] + '.mp4';
