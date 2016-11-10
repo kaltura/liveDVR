@@ -96,8 +96,8 @@
        "enable" : false,
        "recordingFolderPath" : "~/kLive_content/recording/recordings",
        "completedRecordingFolderPath" : "~/kLive_content/recording/incoming",
-       "recordingTimeIntervalInSec" : "60",
+       "recordingTimeIntervalInSec" : "15",
        "recordingMaxDurationInHours" : "24",
-       "recordingSessionDurationInSec" : "180"
+       "recordingSessionDurationInSec" : "30"
      }
 }
