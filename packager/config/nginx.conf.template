@@ -106,9 +106,9 @@ http {
             }
         }
 
-        location ~ ^/recording/hls/e/(?<entryId>[^/]+)/ {
+        location ~ ^/recording/hls/e/(?<entryId>[^/]+(?<hashIndex>\w))/ {
             vod_force_continuous_timestamps on;
-            alias @CONTENT_DIR@/$entryId/playlist.json;
+            alias @CONTENT_DIR@/$hashIndex/$entryId/playlist.json;
             vod hls;
         }
 
