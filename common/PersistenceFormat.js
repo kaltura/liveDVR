@@ -56,7 +56,7 @@ module.exports = persistenceFormat = {
         let retVal = {};
         switch (entity) {
             case "entry":
-                fullPath = path.join(destPath, this.getFlavorHash(param));
+                fullPath = path.join(destPath, this.getEntryHash(param));
                 retVal = { fullPath };
                 break;
 
