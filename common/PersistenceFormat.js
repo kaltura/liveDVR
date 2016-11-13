@@ -52,24 +52,24 @@ module.exports = persistenceFormat = {
     },
 
     createHierarchyPath: function (destPath, entity, param) {
-        let hashedPath;
+        let fullPath;
         let retVal = {};
         switch (entity) {
             case "entry":
-                hashedPath = path.join(destPath, this.getFlavorHash(param));
-                retVal = { hashedPath };
+                fullPath = path.join(destPath, this.getFlavorHash(param));
+                retVal = { fullPath };
                 break;
 
             case "flavor":
-                let hash = this.getFlavorHas();
-                hashedPath = path.join(destPath, hash);
-                retVal = { hashedPath, hash };
+                let hash = this.getFlavorHash();
+                fullPath = path.join(destPath, hash);
+                retVal = { fullPath, hash };
                 if (param === hash)
                     return Q.resolve(retVal);
                 break;
         }
 
-        return qio.makeTree(hashedPath)
+        return qio.makeTree(fullPath)
             .then(() => {
                 return retVal;
             });
