@@ -17,7 +17,7 @@ module.exports = persistenceFormat = {
         return entryId.charAt(entryId.length - 1);
     },
 
-    getFlavorHas: function () {
+    getFlavorHash: function () {
         let hours = new Date().getHours().toString();
         return hours < 10 ? ("0" + hours) : hours;
     },
@@ -56,7 +56,7 @@ module.exports = persistenceFormat = {
         let retVal = {};
         switch (entity) {
             case "entry":
-                hashedPath = path.join(destPath, this.getEntryHash(param));
+                hashedPath = path.join(destPath, this.getFlavorHash(param));
                 retVal = { hashedPath };
                 break;
 
