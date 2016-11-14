@@ -23,6 +23,8 @@ describe('Playlist Generator spec', function() {
     var Playlist = require('./../../lib/PlaylistGenerator/Playlist');
     var _ = require('underscore');
     var t = require('tmp');
+    const err_utils = require('./../../lib/utils/error-utils');
+    const maxClipsPerFlavor=config.get('maxClipsPerFlavor');
 
     var fileInfos = [
         { startTime: 1459270805911,
@@ -811,6 +813,59 @@ describe('Playlist Generator spec', function() {
                 });
             });
         });
+
+        var createClipArray = function(template, gapSize, batchSize)
+        {
+            let fi = offsetFileInfo(template, gapSize);
+            return batchAppend(fi, batchSize);
+        };
+
+        it('should limit clips to maximum allowed per flavor', function (done) {
+
+            createPlaylistGenerator(7200000)
+                .then((plGen) => {
+                    let fi = {
+                        startTime: 1473003986826,
+                        sig: "8E33A02D818CFFFD306A6EA5B877FFA9",
+                        video: {
+                            duration: 10000.666666666668,
+                            firstDTS: 1473003986826,
+                            firstEncoderDTS: 21999,
+                            wrapEncoderDTS: 95443718,
+                            keyFrameDTS: [0, 2000, 4000, 6000, 8000]
+                        },
+                        audio: {
+                            duration: 9961.344444444445,
+                            firstDTS: 1473003986839.5222,
+                            firstEncoderDTS: 22012.522222222222,
+                            wrapEncoderDTS: 95443718,
+                            keyFrameDTS: []
+                        },
+                        path: '/Users/igors/kLive_content/live/0_0tqdn8vw/33/16/media-utwd28xfu_3.ts.mp4',
+                        flavor: "33",
+                        chunkName: "media-utwd28xfu_3.ts",
+                        targetDuration: 12000,
+                        windowSize: 216000
+                    };
+                    var clips = [fi];
+                    return _.reduce(new Array(200), (promise) => {
+                        return promise.then(() => {
+                            clips = createClipArray(clips.last, 30000, 10);
+                            return updatePlaylist(plGen, clips);
+                        });
+                    }, Q.resolve());
+                })
+                .then((playlist) => {
+                    console.log(`number of clips: ${playlist.sequences[0].clips.length}, max allowed: ${Number(maxClipsPerFlavor) + 1}`);
+                    expect(playlist.sequences[0].clips.length < (1 + maxClipsPerFlavor));
+                    done();
+                })
+                .catch(function (err) {
+                    console.log(`failed with error: ${err.message}, stack: ${err.stack}`);
+                    done(err);
+                });
+        });
+
     });
 
     describe('rolling window', function() {
