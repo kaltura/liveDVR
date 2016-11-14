@@ -24,7 +24,7 @@ class Singleton(type):
 
 class ThreadWorkers:  # singleton object,
     __metaclass__ = Singleton
-    num_of_thread = get_config('num_of_thread', 'int')
+    num_of_thread = get_config('num_of_upload_thread', 'int')
     logger = logging.getLogger(__name__)
 
     def __init__(self):

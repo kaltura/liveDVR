@@ -72,7 +72,7 @@ http {
             return 200 "Kaltura";
         }
 
-        location ~ ^(?<tokenKey>/.*?/\d+/e/(?<entryId>[^/]+)(/playlist/(?<playlist>[^/]+))?)(/t/(?<token>[^/]+))?/ {
+        location ~ ^(?<tokenKey>/.*?/\d+/e/(?<entryId>[^/]+(?<hashIndex>\w)))(/t/(?<token>[^/]+))?/ {
 
             secure_link $token;
             secure_link_md5 "test $scheme://$http_host$tokenKey/";
@@ -105,12 +105,12 @@ http {
                 vod mss;
             }
         }
-        location ~ ^/recording/hls/e/(?<entryId>[^/]+)/ {
+
+        location ~ ^/recording/hls/e/(?<entryId>[^/]+(?<hashIndex>\w))/ {
             vod_force_continuous_timestamps on;
-            alias @CONTENT_DIR@/$entryId/playlist.json;
+            alias @CONTENT_DIR@/$hashIndex/$entryId/playlist.json;
             vod hls;
         }
-
 
         location / {
             expires 1d;

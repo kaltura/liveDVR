@@ -1,12 +1,9 @@
 import os
-from Config.config import get_config
 from TaskBase import TaskBase
 import urllib2
 import re
 import m3u8
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
-from watchdog.events import LoggingEventHandler
+# todo add timeout, and use m3u8 insted of regex
 
 class ConcatenationTask(TaskBase):
     url_base = 'http://localhost:8080/recording/hls/e/' # todo use configuration
@@ -19,16 +16,15 @@ class ConcatenationTask(TaskBase):
         self.url_base_entry = os.path.join(self.url_base, self.recorded_id)
         self.url_master = os.path.join(self.url_base_entry, 'master.m3u8')
 
-
     def find_source(self):
         m3u8_obj = m3u8.load(self.url_master)
         flavor_list = {}
         maxbandwidth = -1
-        for elememt in m3u8_obj.playlists:
-            flavor_list[elememt.stream_info.bandwidth] = elememt.absolute_uri
-            if elememt.stream_info.bandwidth > maxbandwidth:
-                maxbandwidth = elememt.stream_info.bandwidth
-                maxbandwidth_url = elememt.absolute_uri
+        for element in m3u8_obj.playlists:
+            flavor_list[element.stream_info.bandwidth] = element.absolute_uri
+            if element.stream_info.bandwidth > maxbandwidth:
+                maxbandwidth = element.stream_info.bandwidth
+                maxbandwidth_url = element.absolute_uri
         if maxbandwidth is -1:
             msg = "Failed to find source from flavor list %s" % (str(flavor_list))
             raise ValueError(msg)
@@ -36,7 +32,6 @@ class ConcatenationTask(TaskBase):
         self.logger.info("Got Bandwidths url pairs %s, find the source with the bandwidth [%s] url: [%s]",
                              str(flavor_list), maxbandwidth, maxbandwidth_url)
         return maxbandwidth_url
-
 
     def download_chunks_and_concat(self, chunks, output_full_path):
 
@@ -60,15 +55,13 @@ class ConcatenationTask(TaskBase):
 
     def run(self):
 
-        self.write_stamp()
         output_full_path = os.path.join(self.recording_path, self.output_filename)
         if os.path.isfile(output_full_path):
             self.logger.warn("file [%s] already exist", output_full_path)
             return
         url_source_manifest = self.find_source()
         playlist = self.download_file(url_source_manifest)
-        self.logger.debug("load recording manifest : %s ", playlist)
+        self.logger.debug("load recording manifest : \n %s ", playlist)
         chunks = self.parse_m3u8(playlist)
         self.download_chunks_and_concat(chunks, output_full_path)
         self.logger.info("Successfully concat %d files into %s", len(chunks), output_full_path)
-        self.check_stamp()

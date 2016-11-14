@@ -10,18 +10,17 @@ DEFAULT_LOGGING = {
 }
 
 
-def init_logger():
+def init_logger(log_file_name):
 
-    log_full_path = get_config('log_file_name')
     dictConfig(DEFAULT_LOGGING)
 
     logging.basicConfig(
-        filename=log_full_path,
+        filename=log_file_name,
         level=logging.DEBUG,
         format='[%(asctime)s.%(msecs)d][%(process)d/%(threadName)s] [%(levelname)s] [%(name)s]: [%(funcName)s():%(lineno)s] %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
-    file_handler = logging.handlers.TimedRotatingFileHandler(log_full_path, when="d", interval=1)
+    file_handler = logging.handlers.TimedRotatingFileHandler(log_file_name, when="d", interval=1)
     file_handler.setLevel(get_config('log_level'))
 
     if get_config('log_to_console', bool) is True:
