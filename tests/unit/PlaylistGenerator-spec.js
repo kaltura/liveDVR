@@ -16,7 +16,6 @@ describe('Playlist Generator spec', function() {
     config.set('logToConsole',false);
     const pc = config.get('playlistConfig');
     pc.debug = false;
-    pc.mockFS = true
     config.set('playlistConfig',pc);
     var fs = require('fs');
     var path = require('path');
@@ -26,6 +25,10 @@ describe('Playlist Generator spec', function() {
     var t = require('tmp');
     const err_utils = require('./../../lib/utils/error-utils');
     const maxClipsPerFlavor=config.get('maxClipsPerFlavor');
+
+    sinon.stub(require('./../../lib/utils/fs-utils'), "writeFileAtomically", () => Q.resolve())
+    sinon.stub(require('q-io/fs'), "read", () => Q.resolve())
+    sinon.stub(require('q-io/fs'), "remove", () => Q.resolve())
 
     var fileInfos = [
         { startTime: 1459270805911,
