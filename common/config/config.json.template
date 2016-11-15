@@ -98,6 +98,7 @@
        "completedRecordingFolderPath" : "~/kLive_content/recording/incoming",
        "recordingTimeIntervalInSec" : "60",
        "recordingMaxDurationInHours" : "24",
-       "recordingSessionDurationInSec" : "180"
+       "recordingSessionDurationInSec" : "180",
+       "recordingUpdateEntryTimeIntervalInMin" : "15"
      }
 }
