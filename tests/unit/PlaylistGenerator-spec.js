@@ -14,7 +14,7 @@ describe('Playlist Generator spec', function() {
 
     var config = require('./../../common/Configuration');
     config.set('logToConsole',false);
-    var pc = config.get('playlistConfig');
+    const pc = config.get('playlistConfig');
     pc.debug = false;
     config.set('playlistConfig',pc);
     var fs = require('fs');
@@ -25,6 +25,10 @@ describe('Playlist Generator spec', function() {
     var t = require('tmp');
     const err_utils = require('./../../lib/utils/error-utils');
     const maxClipsPerFlavor=config.get('maxClipsPerFlavor');
+
+    sinon.stub(require('./../../lib/utils/fs-utils'), "writeFileAtomically", () => Q.resolve())
+    sinon.stub(require('q-io/fs'), "read", () => Q.resolve())
+    sinon.stub(require('q-io/fs'), "remove", () => Q.resolve())
 
     var fileInfos = [
         { startTime: 1459270805911,
@@ -108,10 +112,6 @@ describe('Playlist Generator spec', function() {
 
         var plGen = new PlaylistGenerator(entry);
 
-        fs.mkdirSync(path.dirname(plGen.playlistPath));
-        if(playlist){
-            fs.writeFileSync(plGen.playlistPath,playlist);
-        }
         return plGen.initializeStart()
             .then(() => {
                 return plGen;
