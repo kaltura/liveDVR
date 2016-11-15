@@ -75,7 +75,7 @@
       "user" : "",
       "password" : "",
       "disconnectTimeoutInSec" : 60,
-      "flavorMismatchRetryAttempts": 4
+      "flavorMismatchRetryAttempts": 6
   },
   "backendClient" : {
     "adminSecret" :"admin secret",
