@@ -3,16 +3,18 @@ from TaskBase import TaskBase
 import urllib2
 import re
 import m3u8
+from Config.config import get_config
 # todo add timeout, and use m3u8 insted of regex
 
+
 class ConcatenationTask(TaskBase):
-    url_base = 'http://localhost:8080/recording/hls/e/' # todo use configuration
 
     def __init__(self, param, logger_info):
         TaskBase.__init__(self, param, logger_info)
         concat_task_processing_dir = os.path.join(self.base_directory, self.__class__.__name__, 'processing')
         self.recording_path = os.path.join(concat_task_processing_dir, self.entry_directory)
         self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
+        self.url_base = get_config('nginx_url')
         self.url_base_entry = os.path.join(self.url_base, self.recorded_id)
         self.url_master = os.path.join(self.url_base_entry, 'master.m3u8')
 
@@ -62,6 +64,6 @@ class ConcatenationTask(TaskBase):
         url_source_manifest = self.find_source()
         playlist = self.download_file(url_source_manifest)
         self.logger.debug("load recording manifest : \n %s ", playlist)
-        chunks = self.parse_m3u8(playlist)
+        chunks = m3u8.loads(playlist).files
         self.download_chunks_and_concat(chunks, output_full_path)
         self.logger.info("Successfully concat %d files into %s", len(chunks), output_full_path)
