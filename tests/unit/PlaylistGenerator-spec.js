@@ -24,6 +24,10 @@ describe('Playlist Generator spec', function() {
     var _ = require('underscore');
     var t = require('tmp');
 
+    sinon.stub(require('./../../lib/utils/fs-utils'), "writeFileAtomically", () => Q.resolve())
+    sinon.stub(require('q-io/fs'), "read", () => Q.resolve())
+    sinon.stub(require('q-io/fs'), "remove", () => Q.resolve())
+
     var fileInfos = [
         { startTime: 1459270805911,
             sig: 'C53429E60F33B192FD124A2CC22C8717',
@@ -106,10 +110,6 @@ describe('Playlist Generator spec', function() {
 
         var plGen = new PlaylistGenerator(entry);
 
-        fs.mkdirSync(path.dirname(plGen.playlistPath));
-        if(playlist){
-            fs.writeFileSync(plGen.playlistPath,playlist);
-        }
         return plGen.initializeStart()
             .then(() => {
                 return plGen;

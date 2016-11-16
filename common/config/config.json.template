@@ -74,7 +74,8 @@
       "port" : 1935,
       "user" : "",
       "password" : "",
-      "disconnectTimeoutInSec" : 60
+      "disconnectTimeoutInSec" : 60,
+      "flavorMismatchRetryAttempts": 6
   },
   "backendClient" : {
     "adminSecret" :"admin secret",
