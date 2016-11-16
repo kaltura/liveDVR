@@ -12,9 +12,18 @@ const tsChunktMatch =  new RegExp(/media-([^_]+).*?([\d]+)\.ts.*/);
 const rootFolder = config.get('rootFolderPath');
 
 module.exports = persistenceFormat = {
+    
+    getEntryHash: function (entryId) {
+        return entryId.charAt(entryId.length - 1);
+    },
 
+    getFlavorHash: function () {
+        let hours = new Date().getHours().toString();
+        return hours < 10 ? ("0" + hours) : hours;
+    },
+    
     getEntryBasePath: function (entryId) {
-        return path.join(rootFolder, entryId.charAt(entryId.length - 1), entryId);
+        return path.join(rootFolder, this.getEntryHash(entryId), entryId);
     },
 
     getBasePathFromFull: function (directory) {
@@ -42,16 +51,26 @@ module.exports = persistenceFormat = {
         return mp4FileName.replace('.mp4','.ts');
     },
 
-    createHierarchyPath: function(destPath, lastFileHash) {
-        let hash = new Date().getHours().toString();
-        let fileFullPath = path.join(destPath, (hash) < 10 ? ("0" + hash) : hash);
+    createHierarchyPath: function (destPath, entity, param) {
+        let fullPath;
+        let retVal = {};
+        switch (entity) {
+            case "entry":
+                fullPath = path.join(destPath, this.getEntryHash(param));
+                retVal = { fullPath };
+                break;
 
-        let retVal = {fileFullPath, hash};
-        if (lastFileHash === hash)
-            return Q.resolve(retVal);
+            case "flavor":
+                let hash = this.getFlavorHash();
+                fullPath = path.join(destPath, hash);
+                retVal = { fullPath, hash };
+                if (param === hash)
+                    return Q.resolve(retVal);
+                break;
+        }
 
-        return qio.makeTree(fileFullPath)
-            .then(function() {
+        return qio.makeTree(fullPath)
+            .then(() => {
                 return retVal;
             });
     },
