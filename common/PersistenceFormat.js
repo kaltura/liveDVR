@@ -7,6 +7,10 @@ var path = require('path');
 var qio = require('q-io/fs');
 var _ = require('underscore');
 var Q = require('q');
+const fs = require('fs');
+var util=require('util');
+const ErrorUtils = require('./../lib/utils/error-utils');
+var logger =  require('./logger').getLogger("PersistenceFormatter");
 
 const tsChunktMatch = new RegExp(/media-([^_]+).*?([\d]+)\.ts.*/);
 const preserveOriginalHLS = config.get('preserveOriginalHLS').enable;
@@ -33,16 +37,57 @@ class PersistenceFormatBase {
         return entryId.charAt(entryId.length - 1);
     }
 
+    getFlavorHash() {
+        let hours = new Date().getHours().toString();
+        return hours < 10 ? ("0" + hours) : hours;
+    }
+
+    createHierarchyPath(destPath, entity, param) {
+        let fullPath;
+        let retVal = {};
+        switch (entity) {
+            case "entry":
+                fullPath = path.join(destPath, this.getEntryHash(param));
+                retVal = {fullPath};
+                break;
+
+            case "flavor":
+                let hash = this.getFlavorHash();
+                fullPath = path.join(destPath, hash);
+                retVal = {fullPath, hash};
+                if (param === hash)
+                    return Q.resolve(retVal);
+                break;
+        }
+
+        return qio.makeTree(fullPath)
+            .then(() => {
+                return retVal;
+            });
+    }
 }
 
-function createHierarchyPathHelper(fileFullPath, hash, lastFileHash) {
-    let retVal = {fileFullPath, hash};
-    if (lastFileHash === hash)
-        return Q.resolve(retVal);
+function createHierarchyPathHelper(fullPath, hash, lastFileHash) {
 
-    return qio.makeTree(fileFullPath)
-        .then(function () {
+    let retVal = {};
+    switch (hash) {
+        case "entry":
+            retVal = {fullPath};
+            break;
+
+        case "flavor":
+            retVal = {fullPath, hash};
+            if (hash === lastFileHash)
+                return Q.resolve(retVal);
+            break;
+    }
+
+    return qio.makeTree(fullPath)
+        .then( () => {
             return retVal;
+        })
+        .catch( err => {
+            logger.error(`failed to create hierarchy path. Error: ${ErrorUtils.error2string(err)}`);
         });
 }
 
@@ -52,35 +97,6 @@ if (!preserveOriginalHLS) {
             // cut away both flavor and time components
             let lastSepIdx = _.lastIndexOf(fullPath, path.sep) - 1;
             return fullPath.substring(0, _.lastIndexOf(fullPath, path.sep, lastSepIdx) + 1)
-        }
-
-        getFlavorHash() {
-            let hours = new Date().getHours().toString();
-            return hours < 10 ? ("0" + hours) : hours;
-        }
-
-        createHierarchyPath(destPath, entity, param) {
-            let fullPath;
-            let retVal = {};
-            switch (entity) {
-                case "entry":
-                    fullPath = path.join(destPath, this.getEntryHash(param));
-                    retVal = {fullPath};
-                    break;
-
-                case "flavor":
-                    let hash = this.getFlavorHash();
-                    fullPath = path.join(destPath, hash);
-                    retVal = {fullPath, hash};
-                    if (param === hash)
-                        return Q.resolve(retVal);
-                    break;
-            }
-
-            return qio.makeTree(fullPath)
-                .then(() => {
-                    return retVal;
-                });
         }
 
         compressChunkName(tsChunkName) {
@@ -102,7 +118,44 @@ if (!preserveOriginalHLS) {
     }
     module.exports = new DefaultPersistenceFormat();
 } else {
+
+    preserveStreamPath = function () {
+        let entryPath = config.get('preserveOriginalHLS').path ? config.get('preserveOriginalHLS').path.trim() : config.get('simulateStreams').entryId;
+        let createFolderPerSession = config.get('preserveOriginalHLS').createFolderPerSession;
+        let index = 1;
+        let basePath = `${rootFolder}/${entryPath}`;
+        let checkPath = `${basePath}-${index}`;
+        let entryFullPath = '';
+
+        try {
+            if (createFolderPerSession) {
+                let stat = fs.lstatSync(checkPath);
+
+                while (stat.isDirectory()) {
+                    index++;
+                    checkPath = `${basePath}-${index}`;
+                    stat = fs.lstatSync(checkPath);
+                }
+            }
+        } catch (err) {
+            if (err.code != 'ENOENT') {
+                logger.error(`failed to get flavor path. Error: ${ErrorUtils.error2string(err)}`);
+            }
+        } finally {
+            entryFullPath = `${basePath}-${index}`;
+            logger.info(`STREAM PRESERVE PATH: ${entryFullPath}`);
+        }
+
+        return entryFullPath;
+    }
+
     class PreserveOriginalHLSFormat extends PersistenceFormatBase {
+
+        constructor() {
+            super();
+            this.entryFullPath = preserveStreamPath(this.entry);
+        }
+
         getBasePathFromFull(fullPath) {
             return fullPath.substring(0, _.lastIndexOf(fullPath, path.sep) + 1);
         }
@@ -120,7 +173,7 @@ if (!preserveOriginalHLS) {
         }
 
         getFlavorFullPath(entryId, flavorName) {
-            return path.join(config.get('rootFolderPath'), entryId, flavorName.toString());
+            return `${this.entryFullPath}/${flavorName}`;
         }
 
     }
