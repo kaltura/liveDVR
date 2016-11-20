@@ -54,6 +54,7 @@ class PersistenceFormatBase {
                 retVal = this.getFlavorPath(destPath,param)
                 if ( _.isEqual(param ,retVal.hash) )
                     return Q.resolve(retVal);
+                fullPath = retVal.fullPath;
                 break;
         }
 
