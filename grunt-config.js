@@ -23,7 +23,7 @@ module.exports = {
 
     reports_dir : 'reports',
 
-    unit_tests : 'tests/unit/PlaylistGenerator-spec.js',
+    unit_tests : 'tests/unit/*.js',
     component_tests : 'tests/component/*.js',
     regression_tests : 'tests/regression/*.js',
     recording : 'tests/recording/*.js'
