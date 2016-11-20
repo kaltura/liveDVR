@@ -44,13 +44,26 @@ class PersistenceFormatBase {
 
 }
 
-function createHierarchyPathHelper (fileFullPath, hash,lastFileHash) {
-    let retVal = {fileFullPath, hash};
-    if (lastFileHash === hash)
-        return Q.resolve(retVal);
+function createHierarchyPathHelper (destPath, entity, param) {
+    let fullPath;
+    let retVal = {};
+    switch (entity) {
+        case "entry":
+            fullPath = path.join(destPath, this.getEntryHash(param));
+            retVal = { fullPath };
+            break;
 
-    return qio.makeTree(fileFullPath)
-        .then(function() {
+        case "flavor":
+            let hash = this.getFlavorHash();
+            fullPath = path.join(destPath, hash);
+            retVal = { fullPath, hash };
+            if (param === hash)
+                return Q.resolve(retVal);
+            break;
+    }
+
+    return qio.makeTree(fullPath)
+        .then(() => {
             return retVal;
         });
 }
@@ -87,8 +100,8 @@ if(!preserveOriginalHLS) {
             return fullPath.substring(0,_.lastIndexOf(fullPath,path.sep)+1);
         }
 
-        createHierarchyPath(destPath, lastFileHash) {
-            return createHierarchyPathHelper(destPath, lastFileHash, lastFileHash);
+        createHierarchyPath(destPath, entity, param) {
+            return createHierarchyPathHelper(destPath, entity, param, param);
         }
 
         compressChunkName(tsChunkName) {

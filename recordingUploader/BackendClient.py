@@ -19,7 +19,7 @@ class BackendClient:
     url = get_config('api_service_url')
     session_duration = get_config('session_duration')
     mode = get_config('mode')
-    format = get_config('api_format')
+    format = 2
     request_timeout = 120
     expiration_time_ks = -1
     mutex = Lock()

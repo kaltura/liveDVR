@@ -16,7 +16,7 @@ class UploadTask(TaskBase):
     # Global scope
     #global backend_client
 
-    upload_token_buffer_size = get_config('upload_token_buffer_size', 'int') * 1000000  # buffer is in MB
+    upload_token_buffer_size = get_config('upload_token_buffer_size_mb', 'int') * 1000000  # buffer is in MB
 
     def __init__(self, param, logger_info):
         TaskBase.__init__(self, param, logger_info)
@@ -35,30 +35,32 @@ class UploadTask(TaskBase):
 
     def upload_file(self, file_name):
 
-
         threadWorkers = ThreadWorkers()
         file_size = os.path.getsize(file_name)
         chunks_to_upload = self.get_chunks_to_upload(file_size)
         with io.open(file_name, 'rb') as infile:
 
-            upload_session = KalturaUploadSession(self.output_filename, file_size, chunks_to_upload,
-                                                    self.entry_id, self.recorded_id, self.backend_client, self.logger, infile)
-
-            while upload_session.chunk_index < chunks_to_upload-1:
+            upload_session = KalturaUploadSession(self.output_filename, file_size, chunks_to_upload, self.entry_id,
+                                                  self.recorded_id, self.backend_client, self.logger, infile)
+            # todo checkuse case of
+            while upload_session.chunk_index <= chunks_to_upload-1:
                 chunk = upload_session.get_next_chunk()
+                if chunk is None:
+                    break
                 threadWorkers.add_job(chunk)
 
             failed_jobs = threadWorkers.wait_jobs_done()
             self.logger.info('Finish to upload [%s chunks], about to upload last chunk', chunks_to_upload-1)
 
             # last chunk
-            chunk = upload_session.get_next_chunk()
-            threadWorkers.add_job(chunk)
-            job_result = threadWorkers.wait_jobs_done()
-            failed_jobs.extend(job_result)
+            chunk = upload_session.get_next_chunk(last_chunk = True)
+            if chunk is not None:
+                threadWorkers.add_job(chunk)
+                job_result = threadWorkers.wait_jobs_done()
+                failed_jobs.extend(job_result)
             self.check_stamp()
             upload_session_json = str(vars(upload_session))
-            
+
             if len(failed_jobs) == 0:
                 self.logger.info("successfully upload all chunks, call append recording")
 
@@ -80,7 +82,6 @@ class UploadTask(TaskBase):
                                                        str(float(self.duration)/1000))  # todo check it full path
 
     def run(self):
-        self.check_stamp()
         if get_config('mode') == 'remote':
             self.upload_file(self.output_file_path)
         else:
