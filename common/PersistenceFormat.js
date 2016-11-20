@@ -32,7 +32,6 @@ class PersistenceFormatBase {
         return chunkPath.replace('.ts','.mp4');
     }
 
-
     getTSChunknameFromMP4FileName(mp4FileName){
         return mp4FileName.replace('.mp4','.ts');
     }
@@ -41,47 +40,50 @@ class PersistenceFormatBase {
         return path.join(config.get('rootFolderPath'), entryId);
     }
 
+    createHierarchyPath (destPath, entity, param) {
+        let fullPath;
+        let retVal = {};
+        switch (entity) {
+            case "entry":
+                let dir = this.getEntryHash(param);
+                fullPath = dir ? path.join(destPath, dir) : destPath;
+                retVal = { fullPath };
+                break;
 
-}
+            case "flavor":
+                retVal = this.getFlavorPath(destPath,param)
+                if ( _.isEqual(param ,retVal.hash) )
+                    return Q.resolve(retVal);
+                break;
+        }
 
-function createHierarchyPathHelper (destPath, entity, param) {
-    let fullPath;
-    let retVal = {};
-    switch (entity) {
-        case "entry":
-            fullPath = path.join(destPath, this.getEntryHash(param));
-            retVal = { fullPath };
-            break;
-
-        case "flavor":
-            let hash = this.getFlavorHash();
-            fullPath = path.join(destPath, hash);
-            retVal = { fullPath, hash };
-            if (param === hash)
-                return Q.resolve(retVal);
-            break;
+        return qio.makeTree(fullPath)
+            .then(() => {
+                return retVal;
+            });
     }
-
-    return qio.makeTree(fullPath)
-        .then(() => {
-            return retVal;
-        });
 }
+
+
 
 if(!preserveOriginalHLS) {
     class DefaultPersistenceFormat extends PersistenceFormatBase {
+
         getBasePathFromFull(fullPath) {
             // cut away both flavor and time components
             let lastSepIdx = _.lastIndexOf(fullPath,path.sep) - 1;
             return fullPath.substring(0,_.lastIndexOf(fullPath,path.sep,lastSepIdx)+1)
         }
 
-        createHierarchyPath(destPath, lastFileHash) {
+        getEntryHash (entryId) {
+              return entryId.charAt(entryId.length - 1);
+        }
 
-            let hash = new Date().getHours().toString();
-            let fileFullPath = path.join(destPath, (hash) < 10 ? ("0" + hash) : hash);
-
-            return createHierarchyPathHelper(fileFullPath, hash, lastFileHash);
+        getFlavorPath (destPath,param) {
+           let hours = new Date().getHours().toString();
+            let hash = hours < 10 ? ("0" + hours) : hours;
+            let fullPath = path.join(destPath, hash);
+            return { fullPath, hash };
         }
 
         compressChunkName(tsChunkName) {
@@ -100,8 +102,8 @@ if(!preserveOriginalHLS) {
             return fullPath.substring(0,_.lastIndexOf(fullPath,path.sep)+1);
         }
 
-        createHierarchyPath(destPath, entity, param) {
-            return createHierarchyPathHelper(destPath, entity, param, param);
+        getFlavorPath (destPath,param) {
+            return { fullPath:destPath, hash:param };
         }
 
         compressChunkName(tsChunkName) {

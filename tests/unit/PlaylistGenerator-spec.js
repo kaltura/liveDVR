@@ -30,10 +30,6 @@ describe('Playlist Generator spec', function() {
     sinon.stub(require('q-io/fs'), "read", () => Q.resolve())
     sinon.stub(require('q-io/fs'), "remove", () => Q.resolve())
 
-    sinon.stub(require('./../../lib/utils/fs-utils'), "writeFileAtomically", () => Q.resolve())
-    sinon.stub(require('q-io/fs'), "read", () => Q.resolve())
-    sinon.stub(require('q-io/fs'), "remove", () => Q.resolve())
-
     var fileInfos = [
         { startTime: 1459270805911,
             sig: 'C53429E60F33B192FD124A2CC22C8717',
