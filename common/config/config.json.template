@@ -26,6 +26,7 @@
   "persistenceCheckIntervalSec": 20,
   "persistenceFileName": "~/dvr/%s_kLivePersistence.json",
   "expirationTimeWindowSec": "30",
+  "maxClipsPerFlavor": 125,
   "regressionAdapter": {
       "verbose": false,
       "enable": false,
@@ -97,8 +98,9 @@
        "enable" : false,
        "recordingFolderPath" : "~/kLive_content/recording/recordings",
        "completedRecordingFolderPath" : "~/kLive_content/recording/incoming",
-       "recordingTimeIntervalInSec" : "60",
-       "recordingMaxDurationInHours" : "24",
-       "recordingSessionDurationInSec" : "180"
+       "recordingTimeIntervalInSec" : 60,
+       "recordingMaxDurationInHours" : 24,
+       "recordingSessionDurationInSec" : 180,
+       "recordingUpdateEntryTimeIntervalInMin" : 15
      }
 }
