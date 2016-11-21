@@ -10,10 +10,11 @@ var Q = require('q');
 
 const tsChunktMatch =  new RegExp(/media-([^_]+).*?([\d]+)\.ts.*/);
 var preserveOriginalHLS = config.get('preserveOriginalHLS').enable;
+const rootFolder = config.get('rootFolderPath');
 
 class PersistenceFormatBase {
     getEntryBasePath (entryId) {
-        return path.join(config.get('rootFolderPath'), entryId);
+        return path.join(rootFolder, this.getEntryHash(entryId), entryId);
     }
 
     getRelativePathFromFull (fullPath) {
@@ -21,7 +22,7 @@ class PersistenceFormatBase {
     }
 
     getFlavorFullPath (entryId, flavorName) {
-        return path.join(config.get('rootFolderPath'), entryId, flavorName.toString());
+        return path.join(this.getEntryBasePath(entryId), flavorName.toString());
     }
 
     getMasterManifestName() {
@@ -34,10 +35,6 @@ class PersistenceFormatBase {
 
     getTSChunknameFromMP4FileName(mp4FileName){
         return mp4FileName.replace('.mp4','.ts');
-    }
-
-    getEntryBasePath (entryId) {
-        return path.join(config.get('rootFolderPath'), entryId);
     }
 
     createHierarchyPath (destPath, entity, param) {
@@ -63,6 +60,10 @@ class PersistenceFormatBase {
                 return retVal;
             });
     }
+
+    getEntryHash (entryId) {
+        return entryId.charAt(entryId.length - 1);
+    }
 }
 
 
@@ -74,10 +75,6 @@ if(!preserveOriginalHLS) {
             // cut away both flavor and time components
             let lastSepIdx = _.lastIndexOf(fullPath,path.sep) - 1;
             return fullPath.substring(0,_.lastIndexOf(fullPath,path.sep,lastSepIdx)+1)
-        }
-
-        getEntryHash (entryId) {
-              return entryId.charAt(entryId.length - 1);
         }
 
         getFlavorPath (destPath,param) {
