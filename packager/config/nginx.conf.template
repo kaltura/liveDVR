@@ -72,7 +72,7 @@ http {
             return 200 "Kaltura";
         }
 
-        location ~ ^(?<tokenKey>/.*?/\d+/e/(?<entryId>[^/]+(?<hashIndex>\w)))(/t/(?<token>[^/]+))?/ {
+        location ~ ^(?<tokenKey>/.*?/\d+/e/(?<entryId>[^/]+(?<hashIndex>\w)))(/playlist/(?<playlist>[^/]+)?)(/t/(?<token>[^/]+))?/ {
 
             secure_link $token;
             secure_link_md5 "test $scheme://$http_host$tokenKey/";
