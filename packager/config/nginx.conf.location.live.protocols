@@ -1,0 +1,27 @@
+location ~ /hls/ {
+    include nginx.conf.live.bootstrap;
+    vod hls;
+}
+
+location ~ /ehls/ {
+    include nginx.conf.live.bootstrap;
+    vod hls;
+    vod_secret_key "jKsf!hAuaJak $vod_suburi";
+    vod_hls_encryption_method aes-128;
+}
+
+
+location ~ /hds/ {
+    include nginx.conf.live.bootstrap;
+    vod hds;
+}
+
+location ~ /dash/ {
+    include nginx.conf.live.bootstrap;
+    vod dash;
+}
+
+location ~ /mss/ {
+    include nginx.conf.live.bootstrap;
+    vod mss;
+}

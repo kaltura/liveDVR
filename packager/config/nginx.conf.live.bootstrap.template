@@ -4,11 +4,14 @@ add_header 'Access-Control-Allow-Methods' 'GET, HEAD, OPTIONS';
 add_header 'Access-Control-Allow-Origin' '*';
 
 
+if ($playlist = '') {
+    set $playlist "playlist.json";
+}
 
-alias @CONTENT_DIR@/$hashIndex/$entryId/playlist.json;
+alias @CONTENT_DIR@/$hashIndex/$entryId/$playlist;
 
 
-add_header X-DEBUG-HEADER "entryId=$entryId; token=$token; key=$scheme://$http_host$tokenKey/; host=$host; secure_link=$secure_link";
+add_header X-DEBUG-HEADER "entryId=$entryId; token=$token; key=$scheme://$http_host$tokenKey/; host=$host; secure_link=$secure_link; live_type=$live_type";
 
 #if ($secure_link = "") {
 #    return 403 "Incorrect Url provided";
