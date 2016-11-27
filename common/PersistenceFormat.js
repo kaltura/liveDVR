@@ -16,6 +16,7 @@ const tsChunktMatch = new RegExp(/media-([^_]+).*?([\d]+)\.ts.*/);
 const preserveOriginalHLS = config.get('preserveOriginalHLS');
 const simulateStreams = config.get('simulateStreams');
 const rootFolder = config.get('rootFolderPath');
+const dirHierarchy = preserveOriginalHLS.dirHierarchy;
 
 class PersistenceFormatBase {
     
@@ -104,30 +105,28 @@ class PersistenceFormatBase {
         }
         return tsChunkName;
     }
-
-
 }
 
 
-if (!preserveOriginalHLS.enable) {
+if (!preserveOriginalHLS.enable || dirHierarchy) {
     module.exports = new PersistenceFormatBase();
 } else {
 
     function getEntryPathHelper(entryPath) {
 
-        let basePath = `${rootFolder}/${entryPath}-`;
+        let basePath = path.join(rootFolder, entryPath) + '-';
         let index = 1;
         let entryBasePath = null;
 
         try {
             if (simulateStreams.enable) {
-                let checkPath = `${basePath}${index}`;
+                let checkPath = path.join(basePath, index);
 
                 if (this.createFolderPerSession) {
                     let stat = fs.lstatSync(checkPath);
 
                     while (stat.isDirectory()) {
-                        checkPath = `${basePath}${index}`;
+                        checkPath = path.join(basePath, index);
                         stat = fs.lstatSync(checkPath);
                         index++;
                     }
@@ -138,7 +137,7 @@ if (!preserveOriginalHLS.enable) {
                 logger.error(`Error while initializing stream preserve path. Error: ${ErrorUtils.error2string(err)}`);
             }
         } finally {
-            entryBasePath = `${basePath}${index}`;
+            entryBasePath = path.join(basePath, index);
             logger.info(`STREAM PRESERVE PATH: ${entryBasePath}`);
         }
 
@@ -177,8 +176,7 @@ if (!preserveOriginalHLS.enable) {
         constructor() {
             super();
             this.createFolderPerSession = preserveOriginalHLS.createFolderPerSession;
-            this.dirHierarchy = preserveOriginalHLS.dirHierarchy;
-            if (simulateStreams.enable && !this.dirHierarchy) {
+            if (simulateStreams.enable) {
                 this.entryPath = preserveOriginalHLS.path ? preserveOriginalHLS.path : simulateStreams.entryId;
             } else {
                 this.entryPath = null;
@@ -187,28 +185,15 @@ if (!preserveOriginalHLS.enable) {
         }
 
         getEntryBasePath(entryId) {
-            // if dirHierarchy is true ignore path even if defined
-            if (this.dirHierarchy) {
-                return super.getEntryBasePath(entryId);
-            } else {
-                return this.entryBasePath || getEntryPathHelper(entryId);
-            }
+           return this.entryBasePath || getEntryPathHelper(entryId);
         }
 
         createHierarchyPath(destPath, entity, param) {
-            if (this.dirHierarchy) {
-                return super.createHierarchyPath(destPath, entity, param);
-            } else {
-                return createHierarchyPathHelper(destPath, entity, param);
-            }
+            return createHierarchyPathHelper(destPath, entity, param);
         }
 
         getBasePathFromFull(fullPath) {
-            if (this.dirHierarchy) {
-                return super.getBasePathFromFull(fullPath);
-            } else {
-                return fullPath;
-            }
+            return fullPath;
         }
 
     }
