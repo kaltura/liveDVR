@@ -82,7 +82,8 @@
     "adminSecret" :"admin secret",
     "partnerId" : 12345,
     "serviceUrl" : "http://serviceURL",
-    "ksSessionRefreshIntervalMinutes" : 720
+    "ksSessionRefreshIntervalMinutes" : 720,
+    "ksPrivileges": "all:*,disableentitlement"
   },
   "playlistConfig" : {
     "waitTimeBeforeRemoval" : 100000,
