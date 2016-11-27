@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-#TODO: fix sort suspected issue that causes false alarm on missing tss in high edge of flavor '3' when runnin following:
+#TODO: fix sort suspected issue that causes false alarm on missing tss in high edge of flavor '3' when running following:
 #./validate_hls_data_warehouse.sh -p "/Users/lilach.maliniak/Documents/tmp/DVR/1_oorxcge2_101016-2" -r "sort -n -t_ -k3" -i "s/.*_\([0-9]*\).ts/\1/"
 
 debug=true

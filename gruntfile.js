@@ -13,6 +13,11 @@ module.exports = function (grunt) {
     grunt.file.expand('./node_modules/grunt-*/tasks').forEach(grunt.loadTasks);
     grunt.initConfig(userConfig);
     
+    if (process.env.UNIT_TEST_PATH) {
+        console.log(`UNIT_TEST_PATH=${process.env.UNIT_TEST_PATH}`);
+        userConfig.unit_tests = process.env.UNIT_TEST_PATH;
+    }
+    
     grunt.loadTasks('./lib/grunt/tasks');
     grunt.loadTasks('./lib/grunt/config');
 
