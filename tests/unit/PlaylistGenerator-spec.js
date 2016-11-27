@@ -243,10 +243,11 @@ describe('Playlist Generator spec', function() {
             });
         });
 
-        it('playlist generator should be successfully created , started and stopped', function () {
-            return expect(createPlaylistGenerator().then(function(plGen) {
+        it('playlist generator should be successfully created , started and stopped', function (done) {
+            createPlaylistGenerator().then(function(plGen) {
                 return plGen.stop();
-            })).to.eventually.be.fullfilled;
+            })
+            .then(done,(err)=>done(err))
         });
 
         //this.timeout(0);
@@ -268,13 +269,13 @@ describe('Playlist Generator spec', function() {
             },1);
             fis[1].video.keyFrameDTS = [0];
 
-            expect(createPlaylistGenerator().then(function(plGen) {
+            createPlaylistGenerator().then(function(plGen) {
                 return updatePlaylist(plGen,fis).then(function(playlist){
                     var playlist2 = new Playlist('test2',playlist);
                     checkKeyFrames(playlist2);
                     validatePlaylistGen(plGen,done);
-                });
-            })).to.eventually.be.fullfilled;
+                })
+            }).catch((err)=>done(err))
         });
 
         it('playlist generator should keep key frames duration in sync with chunk duration', function (done) {
@@ -299,12 +300,12 @@ describe('Playlist Generator spec', function() {
             fis[2].video.firstDTS        -= 111;
             fis[2].video.firstEncoderDTS -= 111;
 
-            expect(createPlaylistGenerator().then(function(plGen) {
+            createPlaylistGenerator().then(function(plGen) {
                 return updatePlaylist(plGen,fis).then(function(playlist){
                     checkKeyFrames(plGen.playlistImp);
                     validatePlaylistGen(plGen,done);
-                });
-            })).to.eventually.be.fullfilled;
+                })
+            }).catch((err)=>done(err))
         });
 
 
@@ -316,16 +317,16 @@ describe('Playlist Generator spec', function() {
             expectedPlaylist = JSON.parse(expectedPlaylist);
 
             // toJSON will do all the job of transforming Playlist object to json string
-            playlist = JSON.parse(JSON.stringify(playlist));
+            let serializedPlaylist = JSON.parse(JSON.stringify(playlist));
 
             //compare  all fields but history
-            expect(_.isEqual(_.omit(playlist,['history']),_.omit(expectedPlaylist,['history']))).to.eql(true);
+            expect(_.isEqual(_.omit(serializedPlaylist,['history']),_.omit(expectedPlaylist,['history']))).to.eql(true);
             done();
         });
 
-        it('playlist generator reset', function () {
+        it('playlist generator reset', function (done) {
             var expectedPlaylist = fs.readFileSync(path.join(__dirname, '/../resources/playlist.json'), 'utf8');
-            return expect(createPlaylistGenerator(3600,expectedPlaylist).then(function(plGen) {
+            createPlaylistGenerator(3600,expectedPlaylist).then(function(plGen) {
                 expect(_.every(jsonize(plGen).sequences,function(s){
                     return s.clips.length !== 0;
                 })).to.be.eql(true);
@@ -333,8 +334,8 @@ describe('Playlist Generator spec', function() {
                     expect(_.every(jsonize(plGen).sequences,function(s){
                        return s.clips.length === 0;
                     })).to.be.eql(true);
-                });
-            })).to.eventually.be.fullfilled;
+                })
+            }) .then(done,(err)=>done(err))
         });
 
         it('should update duration when add an item', function (done) {
