@@ -114,19 +114,19 @@ if (!preserveOriginalHLS.enable || dirHierarchy) {
 
     function getEntryPathHelper(entryPath) {
 
-        let basePath = path.join(rootFolder, entryPath) + '-';
+        let basePath = path.join(rootFolder, entryPath).concat('-');
         let index = 1;
         let entryBasePath = null;
 
         try {
             if (simulateStreams.enable) {
-                let checkPath = path.join(basePath, index);
+                let checkPath = `${basePath}${index}`;
 
                 if (this.createFolderPerSession) {
                     let stat = fs.lstatSync(checkPath);
 
                     while (stat.isDirectory()) {
-                        checkPath = path.join(basePath, index);
+                        checkPath = `${basePath}${index}`;
                         stat = fs.lstatSync(checkPath);
                         index++;
                     }
@@ -137,7 +137,7 @@ if (!preserveOriginalHLS.enable || dirHierarchy) {
                 logger.error(`Error while initializing stream preserve path. Error: ${ErrorUtils.error2string(err)}`);
             }
         } finally {
-            entryBasePath = path.join(basePath, index);
+            entryBasePath = `${basePath}${index}`;
             logger.info(`STREAM PRESERVE PATH: ${entryBasePath}`);
         }
 
@@ -171,7 +171,7 @@ if (!preserveOriginalHLS.enable || dirHierarchy) {
             });
     }
 
-    class SimplfiedPersistenceFormat extends PersistenceFormatBase {
+    class SimplifiedPersistenceFormat extends PersistenceFormatBase {
 
         constructor() {
             super();
@@ -197,6 +197,6 @@ if (!preserveOriginalHLS.enable || dirHierarchy) {
         }
 
     }
-    module.exports = new SimplfiedPersistenceFormat();
+    module.exports = new SimplifiedPersistenceFormat();
 }
 
