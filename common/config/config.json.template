@@ -26,6 +26,7 @@
   "persistenceCheckIntervalSec": 20,
   "persistenceFileName": "~/dvr/%s_kLivePersistence.json",
   "expirationTimeWindowSec": "30",
+  "maxClipsPerFlavor": 125,
   "regressionAdapter": {
       "verbose": false,
       "enable": false,
@@ -73,13 +74,16 @@
       "applicationName" : "kLive",
       "port" : 1935,
       "user" : "",
-      "password" : ""
+      "password" : "",
+      "disconnectTimeoutInSec" : 60,
+      "flavorMismatchRetryAttempts": 6
   },
   "backendClient" : {
     "adminSecret" :"admin secret",
     "partnerId" : 12345,
     "serviceUrl" : "http://serviceURL",
-    "ksSessionRefreshIntervalMinutes" : 720
+    "ksSessionRefreshIntervalMinutes" : 720,
+    "ksPrivileges": "all:*,disableentitlement"
   },
   "playlistConfig" : {
     "waitTimeBeforeRemoval" : 100000,
@@ -90,5 +94,14 @@
     "preserveMP4Chunks": false,
     "segmentDuration" : 10000,
     "enablePlaylistHistory": false
-  }
+  },
+  "recording" : {
+       "enable" : false,
+       "recordingFolderPath" : "~/kLive_content/recording/recordings",
+       "completedRecordingFolderPath" : "~/kLive_content/recording/incoming",
+       "recordingTimeIntervalInSec" : 60,
+       "recordingMaxDurationInHours" : 24,
+       "recordingSessionDurationInSec" : 180,
+       "recordingUpdateEntryTimeIntervalInMin" : 15
+     }
 }

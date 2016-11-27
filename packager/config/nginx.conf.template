@@ -72,48 +72,36 @@ http {
             return 200 "Kaltura";
         }
 
-        location ~ ^(?<tokenKey>/.*?/\d+/e/(?<entryId>[^/]+)(/playlist/(?<playlist>[^/]+))?)(/t/(?<token>[^/]+))?/ {
+        location ~ ^(?<tokenKey>/.*?(?<live_type>live|recording)/[^/]+/p/\d+/e/(?<entryId>[^/]+(?<hashIndex>\w)))(/playlist/(?<playlist>[^/]+))?(/t/(?<token>[^/]+))?/ {
 
             secure_link $token;
             secure_link_md5 "test $scheme://$http_host$tokenKey/";
-
-            location ~ /live/hls/ {
-                include nginx.conf.live.bootstrap;
-                vod hls;
+            location ~ /live/ {
+			    include nginx.conf.location.live.protocols;
             }
 
-            location ~ /live/ehls/ {
-                include nginx.conf.live.bootstrap;
-                vod hls;
-                vod_secret_key "jKsf!hAuaJak $vod_suburi";
-                vod_hls_encryption_method aes-128;
+            location ~ /recording/ {
+                include nginx.conf.location.live.protocols;
+                vod_force_continuous_timestamps on;
             }
 
-
-            location ~ /live/hds/ {
-                include nginx.conf.live.bootstrap;
-                vod hds;
-            }
-
-            location ~ /live/dash/ {
-                include nginx.conf.live.bootstrap;
-                vod dash;
-            }
-
-            location ~ /live/mss/ {
-                include nginx.conf.live.bootstrap;
-                vod mss;
-            }
         }
 
-
-        include nginx.conf.redirect.rules;
+        location ~ ^/recording/hls/e/(?<entryId>[^/]+(?<hashIndex>\w))/ {
+            alias @CONTENT_DIR@/$hashIndex/$entryId/playlist.json;
+            vod hls;
+        }
 
         location / {
             expires 1d;
             root   @WWW_DIR@;
         }
 
+        # vod status page
+        location = /vod_status {
+            vod_status;
+            access_log off;
+        }
     }
 
     proxy_cache_path @CONTENT_DIR@/../nginxCache  levels=1:2 keys_zone=one:20m inactive=5h max_size=11023M ;
@@ -150,4 +138,6 @@ http {
         }
 
     }
+
+
 }

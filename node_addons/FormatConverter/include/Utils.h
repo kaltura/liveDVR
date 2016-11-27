@@ -160,94 +160,28 @@ return "";\
         using namespace std;
         
         string s = parseId3Tag((const char *)data,len);
-        
-#if 0
-        smatch m;
-        
-        av_log(NULL, AV_LOG_DEBUG,"extractUnixTimeMsecFromId3Tag. input string <%s> ", s.c_str());
-        
-        try {
-            std::regex e ("\"timestamp\":(.*?)(?:,|}).*");
-            
-            av_log(NULL, AV_LOG_DEBUG,"extractUnixTimeMsecFromId3Tag. before regex_search ");
-            
-            if(std::regex_search (s,m,e)){
-                std::string val(m[1].first,m[1].second);
-                return std::stod(val);
-            } else {
-                throw s.c_str();
-            }
-        } catch (std::regex_error &ex) {
-            const char *reason;
-            switch( ex.code() )
-            {
-                case regex_constants::error_collate:
-                    reason = "The expression contained an invalid collating element name.";
-                    break;
-                case regex_constants::error_ctype:
-                    reason = "The expression contained an invalid character class name.";
-                    break;
-                case regex_constants::error_escape:
-                    reason = "The expression contained an invalid escaped character, or a trailing escape.";
-                    break;
-                case regex_constants::error_backref:
-                    reason = "The expression contained an invalid back reference.";
-                    break;
-                case regex_constants::error_brack:
-                    reason = "The expression contained mismatched brackets ([ and ]).";
-                    break;
-                case regex_constants::error_paren:
-                    reason = "The expression contained mismatched parentheses (( and )).";
-                    break;
-                case regex_constants::error_brace:
-                    reason = "The expression contained mismatched braces ({ and }).";
-                    break;
-                case regex_constants::error_badbrace:
-                    reason = "The expression contained an invalid range between braces ({ and }).";
-                    break;
-                case regex_constants::error_range:
-                    reason = "The expression contained an invalid character range.";
-                    break;
-                case regex_constants::error_space:
-                    reason = "There was insufficient memory to convert the expression into a finite state machine.";
-                    break;
-                case regex_constants::error_badrepeat:
-                    reason = "The expression contained a repeat specifier (one of *?+{) that was not preceded by a valid regular expression.";
-                    break;
-                case regex_constants::error_complexity:
-                    reason = "The complexity of an attempted match against a regular expression exceeded a pre-set level.";
-                    break;
-                case regex_constants::error_stack:
-                    reason = "There was insufficient memory to determine whether the regular expression could match the specified character sequence.";
-                    break;
-                default:
-                    reason = "Undefined.";
-                    break;
-                    
-            };
-            
-            av_log(NULL, AV_LOG_DEBUG,"extractUnixTimeMsecFromId3Tag. error %s code: %d => %s", ex.what(), ex.code(), reason);
-            throw;
-            
-        }
-#else
-        string pattern ("\"timestamp\":");
-        size_t n = s.find(pattern);
+        // only sync points of type KalturaSyncPoint are accepted...
+        string type("\"objectType\":\"KalturaSyncPoint\"");
+        size_t n = s.find(type);
         if(string::npos != n){
-            string delims = ",}";
-            n += pattern.length();
-            size_t closest = numeric_limits<size_t>::max();
-            for(string::iterator it = delims.begin(); it != delims.end(); it++){
-                size_t k =  s.find(*it,n);
-                if(k != string::npos){
-                    closest = min(closest,k);
+            string pattern ("\"timestamp\":");
+            n = s.find(pattern);
+            if(string::npos != n){
+                string delims = ",}";
+                n += pattern.length();
+                size_t closest = numeric_limits<size_t>::max();
+                for(string::iterator it = delims.begin(); it != delims.end(); it++){
+                    size_t k =  s.find(*it,n);
+                    if(k != string::npos){
+                        closest = min(closest,k);
+                    }
+                }
+                if( closest != numeric_limits<size_t>::max()){
+                    return stod(s.substr(n,closest));
                 }
             }
-            if( closest != numeric_limits<size_t>::max()){
-                return stod(s.substr(n,closest));
-            }
         }
-#endif
+
         return 0;
     }
     
