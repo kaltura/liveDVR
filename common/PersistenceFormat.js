@@ -112,7 +112,7 @@ if (!preserveOriginalHLS.enable || dirHierarchy) {
     module.exports = new PersistenceFormatBase();
 } else {
 
-    function getEntryPathHelper(entryPath) {
+    function getEntryPathHelper(entryPath, createFolderPerSession) {
 
         let basePath = path.join(rootFolder, entryPath).concat('-');
         let index = 1;
@@ -122,7 +122,7 @@ if (!preserveOriginalHLS.enable || dirHierarchy) {
             if (simulateStreams.enable) {
                 let checkPath = `${basePath}${index}`;
 
-                if (this.createFolderPerSession) {
+                if (createFolderPerSession) {
                     let stat = fs.lstatSync(checkPath);
 
                     while (stat.isDirectory()) {
@@ -175,17 +175,17 @@ if (!preserveOriginalHLS.enable || dirHierarchy) {
 
         constructor() {
             super();
-            this.createFolderPerSession = preserveOriginalHLS.createFolderPerSession;
+            this.createFolderPerSession = simulateStreams.enable ? preserveOriginalHLS.createFolderPerSession : false;
             if (simulateStreams.enable) {
                 this.entryPath = preserveOriginalHLS.path ? preserveOriginalHLS.path : simulateStreams.entryId;
             } else {
                 this.entryPath = null;
             }
-            this.entryBasePath = this.entryPath ? getEntryPathHelper(this.entryPath) : null;
+            this.entryBasePath = this.entryPath ? getEntryPathHelper(this.entryPath, this.createFolderPerSession) : null;
         }
 
         getEntryBasePath(entryId) {
-           return this.entryBasePath || getEntryPathHelper(entryId);
+           return this.entryBasePath || getEntryPathHelper(entryId, this.createFolderPerSession);
         }
 
         createHierarchyPath(destPath, entity, param) {
