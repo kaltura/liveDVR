@@ -171,7 +171,7 @@ if (!preserveOriginalHLS.enable || dirHierarchy) {
             });
     }
 
-    class PreserveOriginalHLSFormat extends PersistenceFormatBase {
+    class SimplfiedPersistenceFormat extends PersistenceFormatBase {
 
         constructor() {
             super();
@@ -197,6 +197,6 @@ if (!preserveOriginalHLS.enable || dirHierarchy) {
         }
 
     }
-    module.exports = new PreserveOriginalHLSFormat();
+    module.exports = new SimplfiedPersistenceFormat();
 }
 
