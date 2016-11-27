@@ -13,12 +13,13 @@ const ErrorUtils = require('./../lib/utils/error-utils');
 var logger = require('./logger').getLogger("PersistenceFormatter");
 
 const tsChunktMatch = new RegExp(/media-([^_]+).*?([\d]+)\.ts.*/);
-const preserveOriginalHLS = config.get('preserveOriginalHLS').enable;
-const simulateStreams = config.get('simulateStreams').enable;
+const preserveOriginalHLS = config.get('preserveOriginalHLS');
+const simulateStreams = config.get('simulateStreams');
 const rootFolder = config.get('rootFolderPath');
 
 class PersistenceFormatBase {
-    getEntryBasePath (entryId) {
+    
+    getEntryBasePath(entryId) {
         return path.join(rootFolder, this.getEntryHash(entryId), entryId);
     }
 
@@ -26,7 +27,7 @@ class PersistenceFormatBase {
         return fullPath.substr(this.getBasePathFromFull(fullPath).length);
     }
 
-    getFlavorFullPath (entryId, flavorName) {
+    getFlavorFullPath(entryId, flavorName) {
         return path.join(this.getEntryBasePath(entryId), flavorName.toString());
     }
 
@@ -49,12 +50,12 @@ class PersistenceFormatBase {
             case "entry":
                 let dir = this.getEntryHash(param);
                 fullPath = dir ? path.join(destPath, dir) : destPath;
-                retVal = { fullPath };
+                retVal = {fullPath};
                 break;
 
             case "flavor":
-                retVal = this.getFlavorPath(destPath,param)
-                if ( _.isEqual(param ,retVal.hash) )
+                retVal = this.getFlavorPath(destPath, param)
+                if (_.isEqual(param, retVal.hash))
                     return Q.resolve(retVal);
                 fullPath = retVal.fullPath;
                 break;
@@ -77,15 +78,15 @@ class PersistenceFormatBase {
 
     getBasePathFromFull(fullPath) {
         // cut away both flavor and time components
-        let lastSepIdx = _.lastIndexOf(fullPath,path.sep) - 1;
-        return fullPath.substring(0,_.lastIndexOf(fullPath,path.sep,lastSepIdx)+1)
+        let lastSepIdx = _.lastIndexOf(fullPath, path.sep) - 1;
+        return fullPath.substring(0, _.lastIndexOf(fullPath, path.sep, lastSepIdx) + 1)
     }
 
-    getFlavorPath (destPath,param) {
+    getFlavorPath(destPath, param) {
         let hours = new Date().getHours().toString();
         let hash = hours < 10 ? ("0" + hours) : hours;
         let fullPath = path.join(destPath, hash);
-        return { fullPath, hash };
+        return {fullPath, hash};
     }
 
     compressChunkName(tsChunkName) {
@@ -96,34 +97,61 @@ class PersistenceFormatBase {
         return tsChunkName;
     }
 
-    getFlavorPreserveHlsFullPath(entryId, flavor) {
-        logger.error(`A bug found: should not call getFlavorPreserveHlsPath if preserveOriginalHLS.enable=false`);
-        return this.getFlavorFullPath(entryId, flavor);
-    }
-
-    getChunkPreserveFullPath( flavorPath, chunkName ) {
-        return null;
-    }
 
 }
 
 
-if (!preserveOriginalHLS) {
+if (!preserveOriginalHLS.enable) {
     module.exports = new PersistenceFormatBase();
 } else {
 
-    function createHierarchyPathHelper(fullPath, hash, lastFileHash) {
+    function getEntryPathHelper(entryPath) {
+
+        let basePath = `${rootFolder}/${entryPath}-`;
+        let index = 1;
+        let entryBasePath = null;
+
+        try {
+            if (simulateStreams.enable) {
+                let checkPath = `${basePath}${index}`;
+
+                if (this.createFolderPerSession) {
+                    let stat = fs.lstatSync(checkPath);
+
+                    while (stat.isDirectory()) {
+                        checkPath = `${basePath}${index}`;
+                        stat = fs.lstatSync(checkPath);
+                        index++;
+                    }
+                }
+            }
+        } catch (err) {
+            if (err.code != 'ENOENT') {
+                logger.error(`Error while initializing stream preserve path. Error: ${ErrorUtils.error2string(err)}`);
+            }
+        } finally {
+            entryBasePath = `${basePath}${index}`;
+            logger.info(`STREAM PRESERVE PATH: ${entryBasePath}`);
+        }
+
+        return entryBasePath;
+    }
+
+    function createHierarchyPathHelper(fullPath, entity, lastFileHash) {
 
         let retVal = {};
-        switch (hash) {
+        switch (entity) {
             case "entry":
                 retVal = {fullPath};
                 break;
 
             case "flavor":
-                retVal = {fullPath, hash};
-                if (hash === lastFileHash)
-                    return Q.resolve(retVal);
+                if (lastFileHash === entity) {
+                    return Q.resolve({fullPath, lastFileHash});
+                } else {
+                    let hash = entity;
+                    retVal = {fullPath, hash};
+                }
                 break;
         }
 
@@ -136,107 +164,46 @@ if (!preserveOriginalHLS) {
             });
     }
 
-    function preserveStreamPath() {
-        let entryPath = null;
-        let createFolderPerSession = config.get('preserveOriginalHLS').createFolderPerSession;
-
-        try {
-            if (simulateStreams) {
-                entryPath = config.get('preserveOriginalHLS').path ? config.get('preserveOriginalHLS').path.trim() : config.get('simulateStreams').entryId;
-                let index = 1;
-                let basePath = `${rootFolder}/${entryPath}-`;
-                let checkPath = `${basePath}${index}`;
-
-                if (createFolderPerSession) {
-                    let stat = fs.lstatSync(checkPath);
-
-                    while (stat.isDirectory()) {
-                        index++;
-                        checkPath = `${basePath}-${index}`;
-                        stat = fs.lstatSync(checkPath);
-                    }
-
-                } else {
-                    entryPath = `${rootFolder}/${entryPath}-1`;
-                }
-            }
-        } catch (err) {
-            if (err.code != 'ENOENT') {
-                logger.error(`Error while initializing stream preserve path. Error: ${ErrorUtils.error2string(err)}`);
-            }
-        } finally {
-            logger.info(`STREAM PRESERVE PATH: ${entryPath}`);
-        }
-
-        return entryPath;
-    }
-
     class PreserveOriginalHLSFormat extends PersistenceFormatBase {
 
         constructor() {
             super();
-            // (\/Users\/lilach.maliniak\/Documents\/tmp\/DVR\/)(.\/)(.*?)(\/[\d]+\/.+\.)mp4
-            // (\/Users\/lilach.maliniak\/Documents\/tmp\/DVR\/)(.\/)(.*?)(\/[\d]+\/.+\.)mp4
-            let pattern = `(${rootFolder.replace('\\', '\/')}\/)(.\/)(.*?)(\/[\\d]+\/.+\\.)mp4`;
-            this.mp4PathMatch = new RegExp(pattern, "g");
-            this.entryFullPath = preserveStreamPath.call(this);
+            this.createFolderPerSession = preserveOriginalHLS.createFolderPerSession;
+            this.dirHierarchy = preserveOriginalHLS.dirHierarchy;
+            if (simulateStreams.enable && !this.dirHierarchy) {
+                this.entryPath = preserveOriginalHLS.path ? preserveOriginalHLS.path : simulateStreams.entryId;
+            } else {
+                this.entryPath = null;
+            }
+            this.entryBasePath = this.entryPath ? getEntryPathHelper(this.entryPath) : null;
+        }
+
+        getEntryBasePath(entryId) {
+            // if dirHierarchy is true ignore path even if defined
+            if (this.dirHierarchy) {
+                return super.getEntryBasePath(entryId);
+            } else {
+                return this.entryBasePath || getEntryPathHelper(entryId);
+            }
+        }
+
+        createHierarchyPath(destPath, entity, param) {
+            if (this.dirHierarchy) {
+                return super.createHierarchyPath(destPath, entity, param);
+            } else {
+                return createHierarchyPathHelper(destPath, entity, param);
+            }
         }
 
         getBasePathFromFull(fullPath) {
-            return fullPath.substring(0,_.lastIndexOf(fullPath,path.sep)+1);
-        }
-
-        getFlavorPath (destPath,param) {
-            return { fullPath:destPath, hash:param };
-        }
-
-        createHierarchyPath(destPath, lastFileHash) {
-            return createHierarchyPathHelper.call(this, destPath, lastFileHash, lastFileHash);
-         }
-
-        getFlavorPreserveHlsFullPath(entryId, flavor) {
-            return this.entryFullPath ? path.join(this.entryFullPath, flavor.toString()) : super.getFlavorFullPath(`${entryId}-1`, flavor.toString());
-        }
-
-        getMP4FileNamefromInfo(chunkPath) {
-            return chunkPath.replace('.ts', '.mp4');
-        }
-
-     /*   getTSChunknameFromMP4FileName(chunkPath) {
-
-            let resArray = chunkPath.exec(this.mp4PathMatch);
-            let tsPath = null;
-
-            try {
-                if (resArray && resArray.length) {
-                    let entryId = resArray[3];
-                    let filename = resArray[4];
-
-                    if (this.entryPath) {
-                        tsPath = path.join(this.entryPath, filename);
-                    } else {
-                        tsPath = path.join(this.entryPath, '1', `${entryId}-1`, filename);
-                    }
-                }
-            } catch (err) {
-                logger.error(`getTSChunknameFromMP4FileName failed parsing ${chunkPath}. Error: ${ErrorUtils.error2string(err)}`);
+            if (this.dirHierarchy) {
+                return super.getBasePathFromFull(fullPath);
+            } else {
+                return fullPath;
             }
-            if (!tsPath) {
-                logger.error(`getTSChunknameFromMP4FileName failed parsing ${chunkPath}. Unknown error. Is it a bug?`);
-            }
-            return tsPath;
-        }
-*/
-        
-        // ???? required ???
-        compressChunkName(tsChunkName) {
-            return super.getMP4FileNamefromInfo(tsChunkName);
-        }
-
-        getChunkPreserveFullPath( flavorFullPath, chunkName ) {
-            return path.join(flavorFullPath, this.getTSChunknameFromMP4FileName(chunkName));
         }
 
     }
     module.exports = new PreserveOriginalHLSFormat();
 }
+
