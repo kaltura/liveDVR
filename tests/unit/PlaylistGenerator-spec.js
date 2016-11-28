@@ -250,6 +250,57 @@ describe('Playlist Generator spec', function() {
             .then(done,(err)=>done(err))
         });
 
+        it('should iterate over all items', function (done) {
+
+            var fis = batchAppend({
+                startTime: 1459270805911,
+                sig: 'C53429E60F33B192FD124A2CC22C8717',
+                video:
+                {
+                    duration: 16000,
+                    firstDTS: 1459270805994,
+                    firstEncoderDTS: 83,
+                    wrapEncoderDTS: 95443718,
+                    keyFrameDTS:[0,8000]
+                },
+                audio:
+                {
+                    duration: 16000,
+                    firstDTS: 1459270805994,
+                    firstEncoderDTS: 83,
+                    wrapEncoderDTS: 95443718,
+                    keyFrameDTS:[]
+                },
+                path: '/var/tmp/1_abc123/2/16/media-u774d8hoj_w20128143_1.mp4',
+                flavor: "32"
+            },100);
+
+            let g = offsetFileInfo(fis.last,100000)
+            fis = fis.concat(batchAppend(g,200))
+
+            createPlaylistGenerator(2*(fis.last.video.firstDTS+fis.last.video.duration-fis.first.video.firstDTS))
+                .then(function(plGen) {
+                    return updatePlaylist(plGen,fis).then(function(playlist){
+                        _.each(plGen.playlistImp.sequences,(s) => {
+                            let i = 0
+                            let videoOnly = true
+                            for(let e of s.createIterator(videoOnly)){
+                                i++
+                                expect(e.keyFrames.length).to.be.above(0)
+                            }
+                            expect(i).to.be.eql(fis.length)
+                            for(let e of s.createIterator('a1')){
+                                i--
+                                expect(e.keyFrames).to.be.undefined
+                            }
+                            expect(i).to.be.eql(0)
+                        })
+                        validatePlaylistGen(plGen,done);
+                    })
+                })
+                .catch((err)=>done(err))
+        });
+
         //this.timeout(0);
         it('playlist generator should preserve key frame state when serialized back and forth', function (done) {
 
