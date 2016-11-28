@@ -4,7 +4,7 @@
 
 var proxyquire = require('proxyquire');
 var sinon = require('sinon');
-var Q = require('Q');
+var Q = require('q');
 var chai = require('chai');
 var expect = chai.expect;
 PlaylistItem = require('m3u8/m3u/PlaylistItem');
