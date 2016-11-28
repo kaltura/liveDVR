@@ -19,8 +19,8 @@ describe('Playlist Generator spec', function() {
     config.set('playlistConfig',pc);
     var fs = require('fs');
     var path = require('path');
-    var PlaylistGenerator = require('./../../lib/PlaylistGenerator/PlaylistGenerator');
-    var Playlist = require('./../../lib/PlaylistGenerator/Playlist');
+    var PlaylistGenerator = require('./../../lib/playlistGenerator/PlaylistGenerator');
+    var Playlist = require('./../../lib/playlistGenerator/Playlist');
     var _ = require('underscore');
     var t = require('tmp');
     const err_utils = require('./../../lib/utils/error-utils');
