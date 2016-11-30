@@ -22,7 +22,6 @@ pip2.7 install  poster
 pip2.7 install psutil
 pip2.7 install m3u8
 pip2.7 install schedule
-pip2.7 install watchdog
 easy_install pycrypto
 mkdir -p $HOME_DIRECTORY
 mkdir -p "$HOME_DIRECTORY/recordings"
