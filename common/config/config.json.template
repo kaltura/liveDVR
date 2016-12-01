@@ -52,7 +52,6 @@
   },
   "preserveOriginalHLS": {
       "enable": false,
-      "dirHierarchy": true,
       "createFolderPerSession": true
 
   },
