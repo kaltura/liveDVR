@@ -25,7 +25,7 @@
   "monitorPort": 4390,
   "persistenceCheckIntervalSec": 20,
   "persistenceFileName": "~/dvr/%s_kLivePersistence.json",
-  "expirationTimeWindowSec": 30,
+  "expirationTimeWindowSec": "30",
   "maxClipsPerFlavor": 125,
   "regressionAdapter": {
       "verbose": false,
