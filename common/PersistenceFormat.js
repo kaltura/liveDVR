@@ -92,6 +92,14 @@ if(!preserveOriginalHLS) {
             return tsChunkName;
         }
 
+        compressTsChunkName(tsChunkName) {
+            var matched = tsChunktMatch.exec(tsChunkName);
+            if (matched) {
+                return matched[1] + '-' + matched[2] + '.ts';
+            }
+            return tsChunkName;
+        }
+
     }
     module.exports = new DefaultPersistenceFormat();
 } else {
