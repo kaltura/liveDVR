@@ -3,70 +3,57 @@
 # the process monitor. For more configuration options associated with Forever,
 # see: https://github.com/nodejitsu/forever
 #
-# Live:              This shell script takes care of starting and stopping the Kaltura kLive Recorder service
+# Live:              This shell script takes care of starting and stopping the Kaltura kLive Controller service
 #
 # chkconfig: 2345 85 15
-# description: Kaltura Live Recorder
+# description: Kaltura Live Controller
 
 ### BEGIN INIT INFO
-# Provides:          liveRecorder
+# Provides:          kLiveController
 # Required-Start:    $local_fs $remote_fs $network
 # Required-Stop:     $local_fs $remote_fs $network
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
 # X-Interactive:     true
-# Short-Description: Start/stop Kaltura Live Recorder
+# Short-Description: Start/stop Kaltura Live Controller
 ### END INIT INFO
 
-APP_NAME=liveRecorder
-SCRIPT_DIR=$(dirname $(readlink -f $0))
-APPDIR=${SCRIPT_DIR%/serviceWrappers/linux}
-NAME=${APP_NAME}
-APPLICATION_PATH=${APPDIR}/main.py
-LOG_DIR="/var/log/${APP_NAME}"
+NAME="recordingUploader"
+KLIVE_CONTROLLER_PREFIX="/opt/kaltura/liveController/latest"
+NODE_PATH="$KLIVE_CONTROLLER_PREFIX/node_modules"
+FOREVER="$NODE_PATH/forever/bin/forever"
+APPLICATION_PATH="$KLIVE_CONTROLLER_PREFIX/recordingUploader/main.py"
+LOG_DIR="/var/log/liveController"
 PID_DIR="/var/run"
-PIDFILE="$PID_DIR/${NAME}.pid"
-LOGFILE="$LOG_DIR/${NAME}.log"
 
-RETVAL=0
-
-createFolders() {
-	[ -d ${LOG_DIR} ] || mkdir -p ${LOG_DIR}
-	SHARED_APP_DIR=$(grep recording_base_dir ${APPDIR}/Config/configMapping.ini | tr -d "\s" | cut -d '=' -f2)
-	echo "Creating folders in ${SHARED_APP_DIR} for $HOSTNAME"
-	if [ -d  ${SHARED_APP_DIR} ] ; then 
-		mkdir -p ${SHARED_APP_DIR}/${HOSTNAME}/{UploadTask/{incoming,failed,processing},ConcatenationTask/{failed,processing}}
-		[ -L ${SHARED_APP_DIR}/${HOSTNAME}/ConcatenationTask/incoming ] || ln -s ${SHARED_APP_DIR}/incoming ${SHARED_APP_DIR}/${HOSTNAME}/ConcatenationTask/incoming
-	else
-		echo "can't find ${SHARED_APP_DIR}, cannot start, check mounts"
-		exit 1
-	fi
-	exit 0
-}
 
 start() {
-	createFolders || exit 1
+    [ -d ${LOG_DIR} ] || mkdir -p ${LOG_DIR}
+    RETVAL=0
+    PIDFILE="$PID_DIR/${NAME}.pid"
+    LOGFILE="$LOG_DIR/${NAME}-forever.log"
     if [ -f $PIDFILE ]; then
         echo "${NAME} already running"
     else
         echo "Starting ${NAME}"
         python2.7 $APPLICATION_PATH >> $LOGFILE  2>&1 &
-	    RETVAL=$?
+        echo "started ${NAME} with pid $!"
         echo $! > $PIDFILE
-        if [ $RETVAL -eq 0 ] ; then 
-			echo "started ${NAME} with pid $(cat $PIDFILE)"
-		else
-			echo "starting ${NAME} failed. please see $LOGFILE "
-		fi
-	fi
+	    RETVAL=$(( $RETVAL + $? ))
+        fi
 }
 
 stop() {
+    RETVAL=0
+    LOGFILE="$LOG_DIR/${NAME}-forever.log"
+    PIDFILE="$PID_DIR/${NAME}.pid"
     if [ -f $PIDFILE ]; then
         echo "Shutting down ${NAME}"
+        # Tell Forever to stop the process.
         kill $( cat $PIDFILE ) >> $LOGFILE
         rm -f $PIDFILE
-	    RETVAL=$?
+	    RETVAL=$(( $RETVAL + $? ))
+            # Get rid of the pidfile, since Forever won't do that.
     else
         echo "${NAME} is not running."
     fi
@@ -78,24 +65,27 @@ restart() {
 }
 
 status() {
+    RETVAL=0
+    PIDFILE="$PID_DIR/${NAME}.pid"
     if [ -f $PIDFILE ] ; then
-	   if cat ${PIDFILE} | xargs ps -p > /dev/null ; then
+	VAL=$( ( cat ${PIDFILE} | xargs ps -p ) | wc -l )
+	   if [ $VAL -gt 1 ] ; then
             echo "${NAME} is running with PID $( cat $PIDFILE )"
         else
             echo "${NAME} is not running but there is stale pidFile: $PIDFILE"
-            RETVAL=1
+            RETVAL=$(( $RETVAL + 1 ))
  	    fi
     else
             echo "${NAME} is not running."
-	        RETVAL=1
+	        RETVAL=$(( $RETVAL + 1 ))
     fi
 }
 
 killApp() {
     echo "Aggressively kill all Live processes"
     pkill -f $APPLICATION_PATH 
-    echo "Removing PID file"
-    rm -f ${PIDFILE}
+    echo "Remove all PID files"
+    rm -f ${PID_DIR}/${NAME}*.pid
 }
 
 case "$1" in
