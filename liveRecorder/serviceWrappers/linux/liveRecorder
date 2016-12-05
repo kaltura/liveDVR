@@ -34,10 +34,18 @@ createFolders() {
 	[ -d ${LOG_DIR} ] || mkdir -p ${LOG_DIR}
 	SHARED_APP_DIR=$(grep recording_base_dir ${APPDIR}/Config/configMapping.ini | tr -d "\s" | cut -d '=' -f2)
 	echo "Creating folders in ${SHARED_APP_DIR} for $HOSTNAME"
+	if [ -d  ${SHARED_APP_DIR} ] ; then 
+		mkdir -p ${SHARED_APP_DIR}/${HOSTNAME}/{UploadTask/{incoming,failed,processing},ConcatenationTask/{failed,processing}}
+		[ -L ${SHARED_APP_DIR}/${HOSTNAME}/ConcatenationTask/incoming ] || ln -s ${SHARED_APP_DIR}/incoming ${SHARED_APP_DIR}/${HOSTNAME}/ConcatenationTask/incoming
+	else
+		echo "can't find ${SHARED_APP_DIR}, cannot start, check mounts"
+		exit 1
+	fi
+	exit 0
 }
 
 start() {
-	createFolders
+	createFolders || exit 1
     if [ -f $PIDFILE ]; then
         echo "${NAME} already running"
     else
