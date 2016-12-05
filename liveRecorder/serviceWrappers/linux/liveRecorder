@@ -65,8 +65,7 @@ restart() {
 
 status() {
     if [ -f $PIDFILE ] ; then
-	VAL=$( ( cat ${PIDFILE} | xargs ps -p ) | wc -l )
-	   if [ $VAL -gt 1 ] ; then
+	   if cat ${PIDFILE} | xargs ps -p > /dev/null ; then
             echo "${NAME} is running with PID $( cat $PIDFILE )"
         else
             echo "${NAME} is not running but there is stale pidFile: $PIDFILE"
