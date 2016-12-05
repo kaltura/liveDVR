@@ -6,7 +6,7 @@ var proxyquire = require('proxyquire');
 var chai = require('chai');
 var expect = chai.expect;
 var sinon = require('sinon');
-var Q = require('Q');
+var Q = require('q');
 
 describe('Entry downloader spec', function() {
 

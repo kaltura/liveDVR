@@ -1,4 +1,3 @@
-import sched
 import time
 import logging.handlers
 import os
@@ -15,13 +14,12 @@ recording_incoming_dir = os.path.join(recording_base_dir, 'incoming')
 entry_regex = '^[01]_\w{8}'
 pattern = re.compile(entry_regex)
 threshold_time_sec = 60  # 1 hour
-s = sched.scheduler(time.time, time.sleep)
 log_full_path = get_config('cron_job_log_file_name')
 init_logger(log_full_path)
 polling_interval_sec = get_config('cron_job_polling_interval_hours', 'int') * 60 * 60
 
 
-def job(sc):
+def job():
     logger.info("Start scanning directory in %s", recordings_dir)
     now = int(time.time())
     recording_list = glob.glob(recordings_dir + '/*/*/*/*')
@@ -53,7 +51,6 @@ def job(sc):
                     os.utime(done_file, None)
         except Exception as e:
             logger.error("[%s] Failed to catch Zombies entries %s : %s", str(e), entry_id, traceback.format_exc())
-    s.enter(polling_interval_sec, 1, job, (sc,))
 
-s.enter(polling_interval_sec, 1, job, (s,))
-s.run()
+
+job()

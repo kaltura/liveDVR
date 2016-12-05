@@ -59,7 +59,6 @@ http {
         vod_hls_absolute_master_urls off;
         vod_hls_absolute_index_urls off;
         vod_hls_output_id3_timestamps on;
-        vod_dash_manifest_format segmenttemplate;
         vod_dash_profiles urn:mpeg:dash:profile:isoff-live:2011;
 
         gzip  on;

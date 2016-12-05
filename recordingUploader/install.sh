@@ -22,7 +22,6 @@ pip2.7 install  poster
 pip2.7 install psutil
 pip2.7 install m3u8
 pip2.7 install schedule
-pip2.7 install watchdog
 easy_install pycrypto
 mkdir -p $HOME_DIRECTORY
 mkdir -p "$HOME_DIRECTORY/recordings"
@@ -41,5 +40,5 @@ mkdir -p $UPLOAD_TASK_DIRECTORY
 mkdir -p "$UPLOAD_TASK_DIRECTORY/failed"
 mkdir -p "$UPLOAD_TASK_DIRECTORY/incoming"
 mkdir -p "$UPLOAD_TASK_DIRECTORY/processing"
-cp $SOURCE_DIRECTORY/recordingUploader/recording_uploder.sh /etc/init.d
+cp $SOURCE_DIRECTORY/recordingUploader/recording_uploader.sh /etc/init.d/recording_uploader
 /etc/init.d/recording_uploder.sh restart
