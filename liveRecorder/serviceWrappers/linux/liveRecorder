@@ -39,7 +39,7 @@ start() {
         python2.7 $APPLICATION_PATH >> $LOGFILE  2>&1 &
 	    RETVAL=$?
         echo $! > $PIDFILE
-        if [ $RETVAL -eq 0] ; then 
+        if [ $RETVAL -eq 0 ] ; then 
 			echo "started ${NAME} with pid $(cat $PIDFILE)"
 		else
 			echo "starting ${NAME} failed. please see $LOGFILE "
