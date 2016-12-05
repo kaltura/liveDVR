@@ -31,12 +31,13 @@ LOGFILE="$LOG_DIR/${NAME}.log"
 RETVAL=0
 
 createFolders() {
+	[ -d ${LOG_DIR} ] || mkdir -p ${LOG_DIR}
 	SHARED_APP_DIR=$(grep recording_base_dir ${APPDIR}/Config/configMapping.ini | tr -d "\s" | cut -d '=' -f2)
 	echo "Creating folders in ${SHARED_APP_DIR} for $HOSTNAME"
 }
 
 start() {
-    [ -d ${LOG_DIR} ] || mkdir -p ${LOG_DIR}
+	createFolders
     if [ -f $PIDFILE ]; then
         echo "${NAME} already running"
     else
