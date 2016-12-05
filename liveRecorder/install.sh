@@ -6,7 +6,7 @@
 #  Created by Ron Yadgar on 25/09/2016.
 #
 SOURCE_DIRECTORY="/opt/kaltura/liveController/latest"
-HOME_DIRECTORY=`grep recording_base_dir $SOURCE_DIRECTORY/recordingUploader/Config/config.ini | awk '{ print $3 }'`
+HOME_DIRECTORY=`grep recording_base_dir $SOURCE_DIRECTORY/liveRecorder/Config/config.ini | awk '{ print $3 }'`
 HOSTNAME=$(hostname)
 HOSTNAME_DIRECTORY="$HOME_DIRECTORY/$HOSTNAME"
 echo "home directory $HOME_DIRECTORY"
@@ -40,5 +40,5 @@ mkdir -p $UPLOAD_TASK_DIRECTORY
 mkdir -p "$UPLOAD_TASK_DIRECTORY/failed"
 mkdir -p "$UPLOAD_TASK_DIRECTORY/incoming"
 mkdir -p "$UPLOAD_TASK_DIRECTORY/processing"
-cp $SOURCE_DIRECTORY/recordingUploader/recording_uploader.sh /etc/init.d/recording_uploader
-/etc/init.d/recording_uploder.sh restart
+cp $SOURCE_DIRECTORY/recordingUploader/liveRecorder.sh /etc/init.d/liveRecorder
+/etc/init.d/liveRecorder.sh restart

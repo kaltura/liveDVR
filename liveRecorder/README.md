@@ -6,7 +6,7 @@
 
 ## Clone repository
 ```
-git clone https://github.com/kaltura/liveDVR.git ; cd recordingUploader/
+git clone https://github.com/kaltura/liveDVR.git ; cd liveRecorder/
 ```
 
 ## fill configMapping.ini in Config 
@@ -25,29 +25,29 @@ session_duration = *** (in seconds)
 
 ## Setup service script 
 ```
- cp recording_uploder.sh /etc/init.d/recording_uploder
+ cp liveRecorder.sh /etc/init.d/liveRecorder
 ```
 
 
 ```
-service recording_uploder start
+service liveRecorder start
 ```
 
 To stop the server
 
 ```
-service recording_uploder stop
+service liveRecorder stop
 ```
 
 To restart the server
 
 ```
-service recording_uploder restart
+service liveRecorder restart
 ```
 
 
 To check the server status
 
 ```
-service recording_uploder status
+service liveRecorder status
 ```
