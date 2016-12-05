@@ -41,7 +41,6 @@ createFolders() {
 		echo "can't find ${SHARED_APP_DIR}, cannot start, check mounts"
 		exit 1
 	fi
-	exit 0
 }
 
 start() {
