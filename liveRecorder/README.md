@@ -1,7 +1,9 @@
-# Recording uploader
+# liveRecorder
 
 ## Preqrequisites
 * python 2.7
+* pip 
+* shared nfs storage 
 
 
 ## Clone repository
