@@ -11,7 +11,7 @@ var Q = require('q');
 const tsChunktMatch =  new RegExp(/media-([^_]+).*?([\d]+)\.ts.*/);
 const rootFolder = config.get('rootFolderPath');
 
-class PersistenceFormatBase {
+class PersistenceFormat {
     getEntryBasePath (entryId) {
         return path.join(rootFolder, this.getEntryHash(entryId), entryId);
     }
@@ -95,4 +95,4 @@ class PersistenceFormatBase {
 
 }
 
-module.exports = new PersistenceFormatBase();
+module.exports = new PersistenceFormat();
