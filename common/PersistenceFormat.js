@@ -9,7 +9,6 @@ var _ = require('underscore');
 var Q = require('q');
 
 const tsChunktMatch =  new RegExp(/media-([^_]+).*?([\d]+)\.ts.*/);
-var preserveOriginalHLS = config.get('preserveOriginalHLS').enable;
 const rootFolder = config.get('rootFolderPath');
 
 class PersistenceFormatBase {
@@ -64,12 +63,6 @@ class PersistenceFormatBase {
     getEntryHash (entryId) {
         return entryId.charAt(entryId.length - 1);
     }
-}
-
-
-
-if(!preserveOriginalHLS) {
-    class DefaultPersistenceFormat extends PersistenceFormatBase {
 
         getBasePathFromFull(fullPath) {
             // cut away both flavor and time components
@@ -92,21 +85,14 @@ if(!preserveOriginalHLS) {
             return tsChunkName;
         }
 
+    compressTsChunkName(tsChunkName) {
+        var matched = tsChunktMatch.exec(tsChunkName);
+        if (matched) {
+            return matched[1] + '-' + matched[2] + '.ts';
+        }
+        return tsChunkName;
     }
-    module.exports = new DefaultPersistenceFormat();
-} else {
-    class PreserveOriginalHLSFormat extends PersistenceFormatBase {
-        getBasePathFromFull(fullPath) {
-            return fullPath.substring(0,_.lastIndexOf(fullPath,path.sep)+1);
-        }
 
-        getFlavorPath (destPath,param) {
-            return { fullPath:destPath, hash:param };
-        }
-
-        compressChunkName(tsChunkName) {
-            return super.getMP4FileNamefromInfo(tsChunkName);
-        }
-    }
-    module.exports = new PreserveOriginalHLSFormat();
 }
+
+module.exports = new PersistenceFormatBase();
