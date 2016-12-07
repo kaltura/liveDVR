@@ -48,7 +48,7 @@ http {
         vod_last_modified_types *;
         vod_align_segments_to_key_frames on;
 	    vod_response_cache response_cache 128m 30;
-	    vod_max_mapping_response_size 1m;
+	    vod_max_mapping_response_size 10m;
         vod_live_mapping_cache live_mapping_cache 128m 2;
         vod_live_response_cache live_response_cache 128m 2;
         vod_mode mapped;
