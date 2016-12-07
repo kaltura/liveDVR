@@ -21,6 +21,7 @@ class ConcatenationTask(TaskBase):
         self.url_master = os.path.join(self.url_base_entry, 'master.m3u8')
 
     def find_source(self):
+        self.logger.debug("About to load master manifest from %s" ,self.url_master)
         m3u8_obj = m3u8.load(self.url_master)
         flavor_list = {}
         maxbandwidth = -1
