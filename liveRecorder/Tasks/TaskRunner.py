@@ -61,25 +61,31 @@ class TaskRunner:
         pattern = re.compile(entry_regex)
         for directory_name in os.listdir(src_dir):
             directory_path = os.path.join(src_dir, directory_name)
-            if os.path.isdir(directory_path) and pattern.match(directory_name) is not None:
+            if pattern.match(directory_name) is not None:
                 try:
-                    m = re.search(entry_regex, directory_name)
-                    entry_id = m.group(1)
-                    recorded_id = m.group(2)
-                    duration = m.group(3)
-                    param = {'entry_id': entry_id, 'directory': directory_name, 'recorded_id': recorded_id,
-                             'duration': duration}
-                    if src_dir != self.working_directory:   # if its not the same directory
-                        shutil.move(directory_path, self.working_directory)
-                    self.task_queue.put(param, block=False)
-                    self.logger.info("[%s-%s] Add unhanded directory %s from %s to the task queue", entry_id,
-                                     recorded_id, directory_name, src_dir)
+                    if os.path.isdir(directory_path):
+                        m = re.search(entry_regex, directory_name)
+                        entry_id = m.group(1)
+                        recorded_id = m.group(2)
+                        duration = m.group(3)
+                        param = {'entry_id': entry_id, 'directory': directory_name, 'recorded_id': recorded_id,
+                                 'duration': duration}
+                        if src_dir != self.working_directory:   # if its not the same directory
+                            shutil.move(directory_path, self.working_directory)
+                        self.task_queue.put(param, block=False)
+                        self.logger.info("[%s-%s] Add unhanded directory %s from %s to the task queue", entry_id,
+                                         recorded_id, directory_name, src_dir)
+                    else:
+                        self.logger.warn("Can't find the content of %s, move it to %s", directory_path,
+                                         self.error_directory)
+                        self.safe_move(directory_path, self.error_directory)
+
                 except Q.Full:
-                    self.logger.warn("Failed to add new task, queue is full!")
+                        self.logger.warn("Failed to add new task, queue is full!")
 
                 except Exception as e:
-                    self.logger.error("[%s-%s] Error while try to add task:%s \n %s", entry_id, recorded_id,
-                                      str(e), traceback.format_exc())
+                        self.logger.error("[%s-%s] Error while try to add task:%s \n %s", entry_id, recorded_id,
+                                          str(e), traceback.format_exc())
 
     def work(self, index):
         self.logger.info("Worker %s start working", index)
@@ -99,7 +105,7 @@ class TaskRunner:
                                  self.output_directory)
             except UnequallStampException as e:
                     self.logger.error("[%s] %s \n %s", logger_info, str(e), traceback.format_exc())
-                    shutil.move(src, self.error_directory)
+                    self.safe_move(src, self.error_directory)
             except Exception as e:
                 self.logger.error("[%s] Failed to perform task :%s \n %s", logger_info, str(e), traceback.format_exc())
                 retries = self.get_retry_count(src)
@@ -107,17 +113,11 @@ class TaskRunner:
                     if retries > 0:
                         self.logger.info("[%s] Job %s on entry %s has %s retries, move it to failed task directory ",
                                          logger_info, self.task_name, task_parameter['directory'], retries)
-                        shutil.move(src, self.failed_tasks_directory)
+                        self.safe_move(src, self.failed_tasks_directory)
                     else:
                         self.logger.fatal("[%s] Job %s on entry %s has no more retries or failed to get it, move entry to "
                                       "failed task directory ", logger_info, self.task_name, task_parameter['directory'])
-                        shutil.move(src, self.error_directory)
-                except shutil.Error as e: # todo should fix it so try exceot will wrapped all work function
-                    new_directory_name = task_parameter['directory'] + '_' + str(time.time())
-                    full_path_to_mpve = os.path.join(self.error_directory, new_directory_name)
-                    self.logger.error("[%s] Failed to move directory, (try to move %s into %s) %s, move it to %s \n %s"
-                        , logger_info, src, self.error_directory, str(e), new_directory_name, traceback.format_exc())
-                    shutil.move(src, full_path_to_mpve)
+                        self.safe_move(src, self.error_directory)
                 except Exception as e:
                     self.logger.fatal("[%s]  Failed to handle failure task %s \n %s", logger_info, str(e)
                                     , traceback.format_exc())
@@ -169,3 +169,16 @@ class TaskRunner:
         finally:
             return workers
 
+    def safe_move(self, src, dst):
+        try:
+            try:
+                shutil.move(src, dst)
+            except shutil.Error as e:
+                file_name = os.path.basename(src)
+                new_file_name = ''.join([file_name, '_', str(time.time())])
+                new_dest = os.path.join(dst, new_file_name)
+                self.logger.error("Failed to move %s into %s, try to move it as %s", src, dst, new_dest)
+                shutil.move(src, new_dest)
+
+        except Exception as e:
+            self.logger.error("Failed to move %s to %s : %s \n %s", src, dst, str(e), traceback.format_exc())
