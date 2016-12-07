@@ -26,7 +26,7 @@ APPLICATION_PATH=${APPDIR}/main.py
 LOG_DIR="/var/log/${APP_NAME}"
 PID_DIR="/var/run"
 PIDFILE="$PID_DIR/${NAME}.pid"
-LOGFILE="$LOG_DIR/${NAME}.log"
+LOGFILE="$LOG_DIR/${NAME}-service.log"
 
 RETVAL=0
 
