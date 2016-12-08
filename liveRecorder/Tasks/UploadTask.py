@@ -79,7 +79,7 @@ class UploadTask(TaskBase):
     def append_recording_handler(self):
         partner_id = self.backend_client.get_live_entry(self.entry_id).partnerId
         self.backend_client.set_recorded_content_local(partner_id, self.entry_id, self.output_file_path,
-                                                       str(float(self.duration)/1000))  # todo check it full path
+                                                       str(float(self.duration)/1000), self.recorded_id)
 
     def run(self):
         if get_config('mode') == 'remote':
