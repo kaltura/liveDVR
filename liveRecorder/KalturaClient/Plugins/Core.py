@@ -56202,7 +56202,7 @@ class KalturaLiveStreamService(KalturaServiceBase):
             return self.client.getMultiRequestResult()
         resultNode = self.client.doQueue()
 
-    def setRecordedContent(self, entryId, mediaServerIndex, resource, duration = 0):
+    def setRecordedContent(self, entryId, mediaServerIndex, resource, duration = 0, recorded_id = None):
         """Sey recorded video to live entry"""
 
         kparams = KalturaParams()
@@ -56210,6 +56210,7 @@ class KalturaLiveStreamService(KalturaServiceBase):
         kparams.addStringIfDefined("mediaServerIndex", mediaServerIndex)
         kparams.addObjectIfDefined("resource", resource)
         kparams.addFloatIfDefined("duration", duration)
+        kparams.addStringIfDefined("recordedEntryId", recorded_id)
         self.client.queueServiceActionCall("livestream", "setRecordedContent", KalturaLiveEntry, kparams)
         if self.client.isMultiRequest():
             return self.client.getMultiRequestResult()

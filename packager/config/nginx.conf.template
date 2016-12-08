@@ -86,10 +86,6 @@ http {
 
         }
 
-        location ~ ^/recording/hls/e/(?<entryId>[^/]+(?<hashIndex>\w))/ {
-            alias @CONTENT_DIR@/$hashIndex/$entryId/playlist.json;
-            vod hls;
-        }
 
         location / {
             expires 1d;
