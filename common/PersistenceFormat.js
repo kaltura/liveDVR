@@ -12,6 +12,16 @@ const tsChunktMatch = new RegExp(/media-([^_]+).*?([\d]+)\.ts.*/);
 const rootFolder = config.get('rootFolderPath');
 
 class PersistenceFormat {
+    getFlavorFromLivePath(filePath){
+        let arrayPath = filePath.split(path.sep);
+        return  arrayPath[arrayPath.length -3];
+    }
+
+    getFlavorFromRecordingPath(filePath){
+        let arrayPath = filePath.split(path.sep);
+        return arrayPath[arrayPath.length -2];
+    }
+
     getEntryBasePath(entryId) {
         return path.join(rootFolder, this.getEntryHash(entryId), entryId);
     }

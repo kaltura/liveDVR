@@ -9,16 +9,19 @@ from Config.config import get_config
 
 class ConcatenationTask(TaskBase):
 
+    nginx_port = get_config('nginx_port')
+    nginx_host = get_config('nginx_host')
+    nginx_url = "http://" + nginx_host+ ":" + nginx_port +"/dc-0/recording/hls/p/0/e/{0}/t/0"
     def __init__(self, param, logger_info):
         TaskBase.__init__(self, param, logger_info)
         concat_task_processing_dir = os.path.join(self.base_directory, self.__class__.__name__, 'processing')
         self.recording_path = os.path.join(concat_task_processing_dir, self.entry_directory)
         self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
-        self.url_base = get_config('nginx_url')
-        self.url_base_entry = os.path.join(self.url_base, self.recorded_id)
+        self.url_base_entry = self.nginx_url.format(self.recorded_id)
         self.url_master = os.path.join(self.url_base_entry, 'master.m3u8')
 
     def find_source(self):
+        self.logger.debug("About to load master manifest from %s" ,self.url_master)
         m3u8_obj = m3u8.load(self.url_master)
         flavor_list = {}
         maxbandwidth = -1
