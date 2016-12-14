@@ -82,7 +82,8 @@ class UploadTask(TaskBase):
                                                        str(float(self.duration)/1000), self.recorded_id)
 
     def run(self):
-        if get_config('mode') == 'remote':
+        mode = get_config('mode')
+        if mode == 'remote':
             self.upload_file(self.output_file_path)
-        else:
+        if mode == 'local':
             self.append_recording_handler()
