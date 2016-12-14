@@ -250,6 +250,62 @@ describe('Playlist Generator spec', function() {
             .then(done,(err)=>done(err))
         });
 
+        it('playlist generator should not generate playlist until all flavors are ready', function (done) {
+
+            var fv1 = {
+                startTime: 1459270805911,
+                sig: 'C53429E60F33B192FD124A2CC22C8717',
+                video:
+                {
+                    duration: 16000,
+                    firstDTS: 1459270805994,
+                    firstEncoderDTS: 83,
+                    wrapEncoderDTS: 95443718,
+                    keyFrameDTS:[0,8000]
+                },
+                path: '/var/tmp/1_abc123/2/16/media-u774d8hoj_w20128143_1.mp4',
+                flavor: "32"
+            }, fv2 = {
+                startTime: 1459270805911,
+                sig: 'C53429E60F33B192FD124A2CC22C8717',
+                video:
+                {
+                    duration: 16000,
+                    firstDTS: 1459270805994 - 1000,
+                    firstEncoderDTS: 83,
+                    wrapEncoderDTS: 95443718 - 1000,
+                    keyFrameDTS:[0,8000]
+                },
+                path: '/var/tmp/1_abc123/2/16/media-u774d8hoj_w20128143_1.mp4',
+                flavor: "33"
+            };
+
+            let plGen;
+            createPlaylistGenerator()
+                .then(function(plgen) {
+                    plGen = plgen
+                     // force playlist to generate flavors
+                   plGen.playlistImp.getSequenceForFlavor(fv1.flavor)
+                   plGen.playlistImp.getSequenceForFlavor(fv2.flavor)
+
+                   return updatePlaylist(plGen,[fv1])
+                 })
+                .then(function(playlist){
+                    expect(_.size(playlist.durations)).to.be.eql(0)
+
+                    return updatePlaylist(plGen,[fv2])
+                })
+                .then( (playlist) => {
+                    expect(_.size(playlist.durations)).to.be.eql(1)
+                    expect(playlist.durations[0]).to.be.above(0)
+                    expect(playlist.firstClipStartOffset).to.be.least(0)
+                    validatePlaylistGen(plGen,done);
+                })
+                .catch(err => {
+                    done(err)
+                })
+        });
+
         //this.timeout(0);
         it('playlist generator should preserve key frame state when serialized back and forth', function (done) {
 
