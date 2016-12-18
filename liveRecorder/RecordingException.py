@@ -1,0 +1,2 @@
+class UnequallStampException(Exception):
+    pass

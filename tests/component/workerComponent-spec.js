@@ -5,7 +5,7 @@
 var config = require('../../common/Configuration');
 var chai = require('chai');
 var expect = chai.expect;
-var Q = require('Q');
+var Q = require('q');
 var tmp = require('tmp');
 var path = require('path');
 var _ = require('underscore');
@@ -62,7 +62,7 @@ describe('Worker component spec', function() {
 
             networkClientMock = require('../../lib/NetworkClientFactory').getNetworkClient();
             wowzaMock = require('../mocks/wowzaMock')(networkClientMock);
-            workerCtor = require('../../lib/Worker');
+            workerCtor = require('../../lib/Controller');
             worker = new workerCtor();
             worker.start();
             done();
@@ -176,7 +176,7 @@ describe('Worker component spec', function() {
                 // Validation failure is expected - carry on
             });
         }).then(function () {
-            workerCtor = require('../../lib/Worker');
+            workerCtor = require('../../lib/Controller');
             newWorker = new workerCtor();
             return newWorker.start();
         }).then(function () {

@@ -17,9 +17,11 @@ mkdirp.sync(path.dirname(logFullPath));
 
 var appenders = [
     {
-        "type": "file",
+        "type": "dateFile",
         "filename": logFullPath,
-        "timezoneOffset" : 300 // NYC timezone offset relative to UTC (5 * 60)
+        "pattern": ".yyyy-MM-dd",
+        "alwaysIncludePattern": false,
+        "timezoneOffset" : config.get('logTimeZoneOffset') // NYC timezone offset relative to UTC (5 * 60)
     }
 ];
 
@@ -30,7 +32,7 @@ if (config.get('logToConsole'))
         "layout": {
             "type": "pattern",
             pattern: "%d{ABSOLUTE} %[%-5p%] %c %m"
-        },
+        }
     });
 }
 
@@ -90,9 +92,9 @@ function getLogger(module, id) {
     var logger=log4js.getLogger("["+loggerName+"]");
 
     return decorate(logger,id);
-};
+}
 
 module.exports = {
     decorate:   decorate,
     getLogger: getLogger
-}
+};

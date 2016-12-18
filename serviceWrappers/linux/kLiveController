@@ -1,0 +1,143 @@
+#!/bin/bash
+# An init.d script for running a Node.js process as a service using Forever as
+# the process monitor. For more configuration options associated with Forever,
+# see: https://github.com/nodejitsu/forever
+#
+# Live:              This shell script takes care of starting and stopping the Kaltura kLive Controller service
+#
+# chkconfig: 2345 85 15
+# description: Kaltura Live Controller
+
+### BEGIN INIT INFO
+# Provides:          kLiveController
+# Required-Start:    $local_fs $remote_fs $network
+# Required-Stop:     $local_fs $remote_fs $network
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# X-Interactive:     true
+# Short-Description: Start/stop Kaltura Live Controller
+### END INIT INFO
+
+NAME="kLiveController"
+KLIVE_CONTROLLER_PREFIX="/opt/kaltura/liveController/latest"
+NODE_PATH="$KLIVE_CONTROLLER_PREFIX/node_modules"
+FOREVER="$NODE_PATH/forever/bin/forever"
+APPLICATION_PATH="$KLIVE_CONTROLLER_PREFIX/lib/App.js"
+LOG_DIR="/var/log/liveController"
+PID_DIR="/var/run"
+MIN_UPTIME="5000"
+SPIN_SLEEP_TIME="2000"
+export PATH=$PATH:$NODE_PATH/forever/bin:/usr/local/bin
+HOME=${HOME:-~}
+
+loadNvm() {
+    # This loads nvm
+    cd $KLIVE_CONTROLLER_PREFIX
+    [ -z "$NVM_DIR" ] && NVM_DIR="$HOME/.nvm"
+    if [ -s "$NVM_DIR/nvm.sh" ] ; then
+        source "$NVM_DIR/nvm.sh"
+        if [ -s .nvmrc ] ; then
+            nvm use || nvm install
+        else
+            echo "no .nvmrc in $PWD , Exiting"
+            exit 1
+        fi
+    else
+        echo "nvm not found in $NVM_DIR, this is a must, Exiting!"
+        exit 1
+    fi
+}
+
+start() {
+    [ -d ${LOG_DIR} ] || mkdir -p ${LOG_DIR}
+    loadNvm
+    RETVAL=0
+    for prefix in 0 1 ; do
+        PIDFILE="$PID_DIR/${NAME}_${prefix}.pid"
+        LOGFILE="$LOG_DIR/${NAME}_${prefix}-forever.log"
+        if [ -f $PIDFILE ]; then
+            echo "${NAME}_${prefix} already running"
+        else
+            echo "Starting ${NAME}_${prefix}"
+            $FOREVER \
+              --pidFile $PIDFILE \
+              -a \
+              -l $LOGFILE \
+              --minUptime $MIN_UPTIME \
+              --spinSleepTime $SPIN_SLEEP_TIME \
+              start $APPLICATION_PATH prefix:${prefix}
+	        RETVAL=$(( $RETVAL + $? ))
+        fi
+    done
+}
+
+stop() {
+    loadNvm
+    RETVAL=0
+    for prefix in 0 1 ; do
+        PIDFILE="$PID_DIR/${NAME}_${prefix}.pid"
+        if [ -f $PIDFILE ]; then
+            echo "Shutting down ${NAME}_${prefix}"
+            # Tell Forever to stop the process.
+            $FOREVER stop $( cat $PIDFILE )
+	        RETVAL=$(( $RETVAL + $? ))
+            # Get rid of the pidfile, since Forever won't do that.
+        else
+            echo "${NAME}_${prefix} is not running."
+        fi
+    done
+}
+
+restart() {
+    stop
+    start
+}
+
+status() {
+    RETVAL=0
+    for prefix in 0 1 ; do
+        PIDFILE="$PID_DIR/${NAME}_${prefix}.pid"
+        if [ -f $PIDFILE ] ; then
+	    VAL=$( ( cat ${PIDFILE} | xargs ps -p ) | wc -l )
+	    if [ $VAL -gt 1 ] ; then
+            echo "${NAME}_${prefix} is running with PID $( cat $PIDFILE )"
+            else
+            echo "${NAME}_${prefix} is not running but there is stale pidFile: $PIDFILE"
+            RETVAL=$(( $RETVAL + 1 ))
+ 	    fi
+        else
+            echo "${NAME}_${prefix} is not running."
+	        RETVAL=$(( $RETVAL + 1 ))
+        fi
+    done
+}
+
+killApp() {
+    echo "Aggressively kill all Live processes"
+    pkill -f $APPLICATION_PATH 
+    echo "Remove all PID files"
+    rm -f ${PID_DIR}/${NAME}*.pid
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        status
+        ;;
+    restart)
+        restart
+        ;;
+    kill)
+        killApp
+        ;;
+    *)
+        echo "Usage: {start|stop|status|restart|kill}"
+        exit 1
+        ;;
+esac
+exit $RETVAL

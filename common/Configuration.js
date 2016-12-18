@@ -13,7 +13,6 @@ module.exports = (function(){
 
     var configTemplateContent = fs.readFileSync(path.join(__dirname, './config/config.json.template'), 'utf8');
     var updatedConfigContent = configTemplateContent.replace('@HOSTNAME@', machineName);
-    updatedConfigContent= updatedConfigContent.replace(/~/g,hostname.homedir());
 
     var configObj = JSON.parse(updatedConfigContent);
 
@@ -21,17 +20,21 @@ module.exports = (function(){
     if (fs.existsSync(mappingFilePath))
     {
         var mappingContent = fs.readFileSync(mappingFilePath, 'utf8');
-        var mappingData = JSON.parse(mappingContent)[machineName];
-        if (mappingData)
-        {
-            assignValues(mappingData, configObj);
-        }
+        var mappingObj=JSON.parse(mappingContent);
+        _.each(mappingObj, function(value, key) {
+            console.log("Matching configurations arguments. Key: [%s] => Match: [%s]", key, machineName.match(key));
+            if (machineName.match(key)) {
+                assignValues(value, configObj);
+            }
+        });
     }
 
     function assignValues(configPropertiesObj, configOutputObj) {
         for (var p in configPropertiesObj) {
             if (configPropertiesObj.hasOwnProperty(p)) {
-                if (configPropertiesObj[p] instanceof Object) {
+                if (!_.isArray(configPropertiesObj[p]) &&
+                    _.isObject(configPropertiesObj[p]) &&
+                    _.has(configOutputObj,p)) {
                     assignValues(configPropertiesObj[p], configOutputObj[p]);
                 }
                 else {
@@ -41,7 +44,7 @@ module.exports = (function(){
         }
     }
 
-    fs.writeFileSync(path.join(__dirname, './config/config.json'), JSON.stringify(configObj, null, 2));
+    fs.writeFileSync(path.join(__dirname, './config/config.json'), JSON.stringify(configObj, null, 2).replace(/~/g,hostname.homedir()));
 
     var nconf = require('nconf');
 

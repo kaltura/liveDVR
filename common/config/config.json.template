@@ -2,59 +2,106 @@
   "mockNetwork" : false,
   "mockBackend" : false,
   "readMockBackendResponseFromFile" : false,
-  "rootFolderPath" : "~/dvr/dvrContentRootPath",
-  "oldContentFolderPath" : "~/dvr/dvrOldContentRootPath",
+  "rootFolderPath" : "~/kLive_content/live",
+  "oldContentFolderPath" : "~/kLive_content/archive",
   "requestTimeout" : 20000,
   "flavorSuccessPollingInterval" : 2000,
   "flavorFailPollingInterval" : 10000,
   "backendPollingInterval" : 5000,
   "wowzaPollingInterval" : 5000,
-  "defaultDvrWindow" : 7200,
-  "minimalDvrWindow" : 900,
-  "dvrMaxChunkCount" : 1000,
-  "liveMaxChunkCount" : 15,
-  "minChunksForPlayback" : 3,
+  "defaultDvrWindowInSec" : 7200,
+  "minimalDvrWindowInSec" : 900,
+  "defaultPlayWindowInSec" : 150,
+  "minDurationForPlaybackInSec" : 30,
   "sessionDuration" : 180000,
   "apiUpdateInterval" : 60000,
+  "streamInfoUpdateInterval" : 300000,
   "flavorDownloaderTeardownInterval" : 15000,
-  "numOfIterationsForPlaylistUpdate" : 5,
-  "endlistAppenderTimeInMS" : 60000,
+  "numOfManifestRetries" : 5,
   "logLevel" : "DEBUG",
   "logToConsole" : false,
-  "logFileName" : "~/dvr/kDvrWorker.log",
+  "logFileName" : "~/dvr/kLiveController.log",
+  "logTimeZoneOffset" : 300,
+  "monitorPort": 4390,
+  "persistenceCheckIntervalSec": 20,
+  "persistenceFileName": "~/dvr/%s_kLivePersistence.json",
+  "expirationTimeWindowSec": "30",
+  "maxClipsPerFlavor": 125,
+  "regressionAdapter": {
+      "verbose": false,
+      "enable": false,
+      "analysis": false,
+      "analyzerRootPath" : "~/live-monitor/",
+      "dataWarehouseRootFolderPath" : "instructions: put here root path to data warehouse (e.g. /var/tmp/regression/data_warehouse)",
+      "maxChunkCount": 10,
+      "entries" : [{
+            "entryId": "abc",
+            "flavorParamsIds": "1,2,3,4",
+            "start_chunklist_index": -1,
+            "last_chunklist_index": -1,
+            "serverType": 0,
+            "entryPath": "instructions: put here the relative path from data warehouse root to entry stream data (e.g. abc)",
+            "playWindow": 150,
+             "validator": {
+               "path": "instructions: put here the root path to save and read regression results (e.g. /var/tmp/regression/results)",
+               "override": false,
+               "history_count": 0,
+               "analyzerAlertsIgnoreList": "'INFTagDurationDoesntMatch','BitrateOutsideOfTargetAlert','InvalidKeyFrameIntervalAlert'"
+             }
+        }]
+  },
+  "preserveOriginalHLS": {
+      "enable": false,
+      "createFolderPerSession": true
+
+  },
+  "diagnostics": {
+      "minChunkDurationInSec": 1,
+      "maxChunkDurationInSec": 60,
+      "errorsWindowSizeInMin" : 5,
+      "ptsMaxMisalignmentAllowedInMSec" : 5000
+  },
   "simulateStreams": {
       "enable":false,
       "count": 1,
-      "maxChunkCount": 5,
+      "entryId": "0_simstream%d",
+      "playWindow": 240,
       "useNginx":false,
-      "wowzaUrl": "http://127.0.0.1:1935/live/_definst_/1_abc123_1/playlist.m3u8"
+      "wowzaUrl": "http://kalsegsec-a.akamaihd.net/dc-0/m/pa-live-publish2/kLive/smil:1_oorxcge2_all.smil/playlist.m3u8"
   },
   "mediaServer" : {
-    "hostname" : "@HOSTNAME@",
-    "applicationName" : "kLive",
-    "port" : 1935,
-    "user" : "",
-    "password" : ""
-
-  },
-  "webServerParams" : {
-    "applicationName" : "kLive",
-    "port" : 8080,
-    "logLevel" : "DEBUG",
-    "logFileName" : "~/dvr/kDvrWebServer.log",
-    "logToConsole" : false,
-    "chunklistExpireAge" : 300000
+      "hostname" : "@HOSTNAME@",
+      "applicationName" : "kLive",
+      "port" : 1935,
+      "user" : "",
+      "password" : "",
+      "disconnectTimeoutInSec" : 60,
+      "flavorMismatchRetryAttempts": 6
   },
   "backendClient" : {
     "adminSecret" :"admin secret",
     "partnerId" : 12345,
     "serviceUrl" : "http://serviceURL",
-    "ksSessionRefreshIntervalMinutes" : 720
+    "ksSessionRefreshIntervalMinutes" : 720,
+    "ksPrivileges": "all:*,disableentitlement"
   },
-  "heapDumpParams" : {
-    "timeInterval" : 900000,
-    "windowSize" : 3,
-    "enabled" : false
+  "playlistConfig" : {
+    "waitTimeBeforeRemoval" : 100000,
+    "maxChunkGapSize" : 10000,
+    "maxAllowedPTSDrift": 1000,
+    "timestampToleranceMs": 2,
+    "humanReadable" : false,
+    "preserveMP4Chunks": false,
+    "segmentDuration" : 10000,
+    "enablePlaylistHistory": false
   },
-  "universalTimestampPartnersList" : []
+  "recording" : {
+       "enable" : false,
+       "recordingFolderPath" : "~/kLive_content/recording/recordings",
+       "completedRecordingFolderPath" : "~/kLive_content/recording/incoming",
+       "recordingTimeIntervalInSec" : 60,
+       "recordingMaxDurationInHours" : 24,
+       "recordingSessionDurationInSec" : 180,
+       "recordingUpdateEntryTimeIntervalInMin" : 15
+     }
 }
