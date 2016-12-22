@@ -55,11 +55,12 @@ http {
         vod_expires 1d;
         vod_expires_live 30;
         vod_expires_live_time_dependent 3;
-        vod_live_window_duration 0;
+        vod_live_window_duration -40000;
         vod_hls_absolute_master_urls off;
         vod_hls_absolute_index_urls off;
         vod_hls_output_id3_timestamps on;
         vod_dash_profiles urn:mpeg:dash:profile:isoff-live:2011;
+        vod_segment_duration 4000;
 
         gzip  on;
         gzip_types application/vnd.apple.mpegurl video/f4m application/dash+xml text/xml;
