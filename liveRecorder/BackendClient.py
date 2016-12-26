@@ -7,9 +7,6 @@ from Logger.LoggerDecorator import logger_decorator
 from threading import Lock
 import time
 import json
-# todo add timer to renew ks insted of check each time
-# todo maybe add partner Id to init
-# todo Backend client is invoked for each upload sessaion- where the global variavbles (such that KS are defined outsite the init
 
 
 class BackendClient:

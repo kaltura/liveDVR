@@ -10,7 +10,6 @@ from socket import gethostname
 import time
 import Queue as Q
 from RecordingException import UnequallStampException
-from KalturaClient.Base import KalturaException
 #  Currently not support multiple machine pulling from one incoming dir.
 # If need, just add incoming dir in the constructor
 
@@ -99,14 +98,7 @@ class TaskRunner:
 
                 job = self.task(task_parameter, logger_info)  # operate the function task_job, with argument task_parameters
                 job.check_stamp()  # raise error if stamp is not valid
-                try:
-                    job.run()
-                except KalturaException as e:
-                    if e.code == 'KALTURA_RECORDING_DISABLED':tail 
-                        self.logger.warn("[%s] %s, move it to done directory", logger_info, e.message)
-                    else:
-                        raise e
-
+                job.run()
                 job.check_stamp()
                 shutil.move(src, self.output_directory)
                 self.logger.info("[%s] Task %s completed, Move %s to %s", logger_info, self.task_name, src,
