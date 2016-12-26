@@ -3,13 +3,11 @@ import io
 from BackendClient import *
 from Config.config import get_config
 from TaskBase import TaskBase
-import traceback
-from UploadChunkJob import UploadChunkJob
 from ThreadWorkers import ThreadWorkers
 from KalturaUploadSession import KalturaUploadSession
-from KalturaClient.Plugins.Core import KalturaEntryStatus, KalturaEntryReplacementStatus
+from KalturaClient.Plugins.Core import  KalturaEntryReplacementStatus
+from KalturaClient.Base import KalturaException
 
-#backend_client = BackendClient()
 
 
 class UploadTask(TaskBase):
@@ -86,8 +84,14 @@ class UploadTask(TaskBase):
                                                        str(float(self.duration)/1000), self.recorded_id)
 
     def run(self):
-        mode = get_config('mode')
-        if mode == 'remote':
-            self.upload_file(self.output_file_path)
-        if mode == 'local':
-            self.append_recording_handler()
+        try:
+            mode = get_config('mode')
+            if mode == 'remote':
+                self.upload_file(self.output_file_path)
+            if mode == 'local':
+                self.append_recording_handler()
+        except KalturaException as e:
+            if e.code == 'KALTURA_RECORDING_DISABLED':
+                self.logger.warn("%s, move it to done directory", e.message)
+            else:
+                raise e
