@@ -1,6 +1,6 @@
 from KalturaClient import *
 from KalturaClient.Plugins.Core import KalturaSessionType, KalturaUploadToken, KalturaUploadedFileTokenResource, \
-    KalturaUploadTokenFilter, KalturaServerFileResource, KalturaUploadTokenStatus
+    KalturaUploadTokenFilter, KalturaServerFileResource, KalturaUploadTokenStatus, KalturaMediaEntry, KalturaMediaType
 from Config.config import get_config
 import logging.handlers
 from Logger.LoggerDecorator import logger_decorator
@@ -70,6 +70,13 @@ class BackendClient:
 
     def get_recorded_entry(self, partner_id, entry_id):
         return self.handle_request(partner_id, 'media', 'get', entry_id)
+
+    def add_recorded_entry(self, partner_id):
+        kalturaMediaEntry = KalturaMediaEntry()
+        kalturaMediaEntry.name = "recorded entry"
+        kalturaMediaEntry.description = "recording made by script"
+        kalturaMediaEntry.mediaType = KalturaMediaType.VIDEO
+        return self.handle_request(partner_id, 'media', 'add', kalturaMediaEntry)
 
     def get_live_entry(self, entry_id):
         self.get_kaltura_session()  # generate KS in case that not existed or expired

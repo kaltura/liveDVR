@@ -56267,8 +56267,8 @@ class KalturaMediaService(KalturaServiceBase):
         self.client.queueServiceActionCall("media", "add", KalturaMediaEntry, kparams)
         if self.client.isMultiRequest():
             return self.client.getMultiRequestResult()
-        resultNode = self.client.doQueue()
-        return KalturaObjectFactory.create(resultNode, KalturaMediaEntry)
+        resultNode, header = self.client.doQueue()
+        return KalturaObjectFactory.create(resultNode, KalturaMediaEntry), header
 
     def addContent(self, entryId, resource = NotImplemented):
         """Add content to media entry which is not yet associated with content (therefore is in status NO_CONTENT).
