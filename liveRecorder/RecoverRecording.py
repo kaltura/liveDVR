@@ -12,6 +12,9 @@ import logging.handlers
 class UploadTaskCustom(UploadTask):
 
     def __init__(self, base_directory, param):
+        if args.newEntry is True:
+            get_new_recorded_entry()
+
         super(UploadTaskCustom, self).__init__(param, "UploadTaskCustom")
         self.output_file_path = os.path.join(base_directory, self.output_filename)
 
@@ -21,7 +24,6 @@ class UploadTaskCustom(UploadTask):
 
 class ConcatenationTaskCustom(ConcatenationTask):
     def __init__(self, base_directory, param):
-        param['recorded_id'] = recording_dir
         super(ConcatenationTaskCustom, self).__init__(param, "ConcatenationTaskCustom")
         self.recording_path = base_directory
 
@@ -35,34 +37,34 @@ def parser_argument_configure():
     parser.add_argument('-n', '--newEntry', action='store_true', help='Create new recorded entry')
 
 
+def get_new_recorded_entry():
+    session_id = param['entry_id']
+    backendClient = BackendClient(session_id)
+    partner_id = backendClient.get_live_entry(param['entry_id']).partnerId
+    result = backendClient.add_recorded_entry(partner_id)
+
+    param['recorded_id'] = result.id
+    param['directory'] = directory_name
+    logger.info("get_new_recorded_entry, new recorded entry: %s", result.id)
+
 def get_arg_params():
-    global recording_dir
     if args.entyId is not None:
         param['entry_id'] = args.entyId.lstrip()
 
     if args.recordedId is not None:
         param['recorded_id'] = args.recordedId.lstrip()
 
-    recording_dir = param['recorded_id']
-    if args.newEntry is True:
-        session_id =  param['entry_id']
-        backendClient = BackendClient(session_id)
-        partner_id = backendClient.get_live_entry(param['entry_id']).partnerId
-        result = backendClient.add_recorded_entry(partner_id)
-        recording_dir = param['recorded_id']
-        param['recorded_id'] = result.id
-        param['directory'] = directory_name
-
     if args.recordingDuration is not None:
         param['duration'] = args.recordingDuration.lstrip()
+    logger.info("Parameters: %s", str(param))
 
-recording_dir = None
 set_config("log_to_console", "True")
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser_argument_configure()
-args = parser.parse_args(['-p  /web/content/kLive/liveRecorder/error/0_2zghhfp8_0_ci0d33yw_270476', '-d 100',  "--newEntry"])
+args = parser.parse_args(['-p /web/content/kLive/liveRecorder/incoming/0_12w937ax_0_6gige9qh_4930253'])
 recover_log_file_name = get_config('recover_log_file_name')
 init_logger(recover_log_file_name)
+logger = logging.getLogger(__name__)
 path = args.path.lstrip()
 path_split = path.rsplit('/', 1)  #TODO CHECK INPUT
 base_directory = path
@@ -71,7 +73,7 @@ has_all_custom_param = args.entyId is not None and args.recordedId is not None  
 param ={}
 if TaskRunner.match(directory_name) is None:
     if has_all_custom_param is False:
-        print "error"
+        logger.error("Can't find all parameters, entyId [%s], recordedId [%s] recordingDuration [%s]", args.entyId, args.recordedId, args.recordingDuration)
         exit(1)
     else:
         get_arg_params()
