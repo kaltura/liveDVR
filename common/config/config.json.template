@@ -95,13 +95,16 @@
     "segmentDuration" : 10000,
     "enablePlaylistHistory": false
   },
-  "recording" : {
-       "enable" : false,
-       "recordingFolderPath" : "~/kLive_content/recording/recordings",
-       "completedRecordingFolderPath" : "~/kLive_content/recording/incoming",
-       "recordingTimeIntervalInSec" : 60,
-       "recordingMaxDurationInHours" : 24,
-       "recordingSessionDurationInSec" : 180,
-       "recordingUpdateEntryTimeIntervalInMin" : 15
-     }
+  "plugins" :
+    [{
+         "enable" : true,
+         "name" : "recording",
+         "fileName" : "RecordingManager",
+         "recordingFolderPath" : "~/kLive_content/recording/recordings",
+         "completedRecordingFolderPath" : "~/kLive_content/recording/incoming",
+         "recordingTimeIntervalInSec" : 60,
+         "recordingMaxDurationInHours" : 24,
+         "recordingSessionDurationInSec" : 180,
+         "recordingUpdateEntryTimeIntervalInMin" : 15
+       }]
 }
