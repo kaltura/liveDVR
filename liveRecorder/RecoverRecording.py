@@ -12,9 +12,6 @@ import logging.handlers
 class UploadTaskCustom(UploadTask):
 
     def __init__(self, base_directory, param):
-        if args.newEntry is True:
-            get_new_recorded_entry()
-
         super(UploadTaskCustom, self).__init__(param, "UploadTaskCustom")
         self.output_file_path = os.path.join(base_directory, self.output_filename)
 
@@ -34,18 +31,7 @@ def parser_argument_configure():
     parser.add_argument('-r', '--recordedId', help='Specified a custom recording entryId (assume exist)')
     parser.add_argument('-d', '--recordingDuration', help='Specified a custom recording duration (assume exist)')
     parser.add_argument('-p', '--path', help='Path to recorded entry (mandatory)', required=False)
-    parser.add_argument('-n', '--newEntry', action='store_true', help='Create new recorded entry')
 
-
-def get_new_recorded_entry():
-    session_id = param['entry_id']
-    backendClient = BackendClient(session_id)
-    partner_id = backendClient.get_live_entry(param['entry_id']).partnerId
-    result = backendClient.add_recorded_entry(partner_id)
-
-    param['recorded_id'] = result.id
-    param['directory'] = directory_name
-    logger.info("get_new_recorded_entry, new recorded entry: %s", result.id)
 
 def get_arg_params():
     if args.entyId is not None:
@@ -59,14 +45,14 @@ def get_arg_params():
     logger.info("Parameters: %s", str(param))
 
 set_config("log_to_console", "True")
-parser = argparse.ArgumentParser(description='Process some integers.')
+parser = argparse.ArgumentParser()
 parser_argument_configure()
-args = parser.parse_args(['-p /web/content/kLive/liveRecorder/incoming/0_12w937ax_0_6gige9qh_4930253'])
+args = parser.parse_args()
 recover_log_file_name = get_config('recover_log_file_name')
 init_logger(recover_log_file_name)
 logger = logging.getLogger(__name__)
 path = args.path.lstrip()
-path_split = path.rsplit('/', 1)  #TODO CHECK INPUT
+path_split = path.rsplit('/', 1)
 base_directory = path
 directory_name = path_split[1]
 has_all_custom_param = args.entyId is not None and args.recordedId is not None  and args.recordingDuration is not None
