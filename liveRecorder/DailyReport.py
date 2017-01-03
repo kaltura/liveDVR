@@ -102,7 +102,7 @@ num_files = len([f for f in os.listdir(done_path)
 mail_list = ["ron.yadgar@kaltura.com"]
 write_liveRecorede_stat("pa")
 write_liveRecorede_stat("ny")
-#scan_logs('ERROR')
-#scan_logs('WARN')
+scan_logs('ERROR')
+scan_logs('WARN')
 
 send_mail("pa-reportsk@jkaltura.com", mail_list, "DailyReport", "DailyReport", output_full_path)
