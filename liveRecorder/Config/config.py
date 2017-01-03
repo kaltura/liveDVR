@@ -39,6 +39,9 @@ def config_section_default():
     section = "default_config"
     fill(section)
 
+def set_config(key, value):
+    config_json[key] = value
+
 
 def get_config(key, type = 'str'):
     if key in config_json:
