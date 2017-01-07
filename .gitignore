@@ -43,3 +43,14 @@ reports
 common/config/configMapping.json
 
 liveRecorder/Config/configMapping.ini
+
+node_addons
+
+tests/streaming_client/streaming_client.xcodeproj/xcuserdata
+
+tests/streaming_client/streaming_client.xcodeproj/project.xcworkspace/xcuserdata
+
+tests/streaming_client/mux/tests.playground
+
+bin/linux/FormatConverter.node
+
