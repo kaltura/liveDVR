@@ -1,4 +1,6 @@
 from logging.config import dictConfig
+from logging.handlers import TimedRotatingFileHandler
+import multiprocessing, threading, logging, sys, traceback
 import logging
 import sys
 from Config.config import get_config
@@ -10,7 +12,7 @@ def init_logger(log_file_name):
     log_level = get_config('log_level')
     log_to_console = get_config('log_to_console', bool)
 
-    file_handler = logging.handlers.TimedRotatingFileHandler(log_file_name, when="d", interval=log_rotate_interval_days, backupCount=log_rotate_windows_files)
+    file_handler = MultiProcessingLog(log_file_name, when="d", interval=log_rotate_interval_days, backupCount=log_rotate_windows_files)
     file_handler.setLevel(get_config('log_level'))
     file_formatter = logging.Formatter('[%(asctime)s.%(msecs)d][%(process)d/%(threadName)s] [%(levelname)s] [%(name)s]: [%(funcName)s():%(lineno)s] %(message)s', datefmt='%Y-%m-%d %H:%M:%S')
 
@@ -27,4 +29,59 @@ def init_logger(log_file_name):
     logging.root.addHandler(file_handler)
     return
 
+# Credit to http://stackoverflow.com/a/894284/4787964
+class MultiProcessingLog(logging.Handler):
+    def __init__(self, filename, when='h', interval=1, backupCount=0, encoding=None, delay=False, utc=False):
+        logging.Handler.__init__(self)
+
+        self._handler = TimedRotatingFileHandler(filename, when='h', interval=1, backupCount=0, encoding=None, delay=False, utc=False)
+        self.queue = multiprocessing.Queue(-1)
+
+        t = threading.Thread(target=self.receive)
+        t.daemon = True
+        t.start()
+
+    def setFormatter(self, fmt):
+        logging.Handler.setFormatter(self, fmt)
+        self._handler.setFormatter(fmt)
+
+    def receive(self):
+        while True:
+            try:
+                record = self.queue.get()
+                self._handler.emit(record)
+            except (KeyboardInterrupt, SystemExit):
+                raise
+            except EOFError:
+                break
+            except:
+                traceback.print_exc(file=sys.stderr)
+
+    def send(self, s):
+        self.queue.put_nowait(s)
+
+    def _format_record(self, record):
+        # ensure that exc_info and args have been stringified.
+        # Removes any chance of unpickleable things inside and possibly reduces message size sent over the pipe
+        if record.args:
+            record.msg = record.msg % record.args
+            record.args = None
+        if record.exc_info:
+            dummy = self.format(record)
+            record.exc_info = None
+
+        return record
+
+    def emit(self, record):
+        try:
+            s = self._format_record(record)
+            self.send(s)
+        except (KeyboardInterrupt, SystemExit):
+            raise
+        except:
+            self.handleError(record)
+
+    def close(self):
+        self._handler.close()
+        logging.Handler.close(self)
 
