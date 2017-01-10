@@ -28,6 +28,7 @@
   "persistenceFileName": "~/dvr/%s_kLivePersistence.json",
   "expirationTimeWindowSec": "30",
   "maxClipsPerFlavor": 125,
+  "bitrateDiffPercentageAllowed" : 10,
   "regressionAdapter": {
       "verbose": false,
       "enable": false,
