@@ -3,13 +3,11 @@ import io
 from BackendClient import *
 from Config.config import get_config
 from TaskBase import TaskBase
-import traceback
-from UploadChunkJob import UploadChunkJob
 from ThreadWorkers import ThreadWorkers
 from KalturaUploadSession import KalturaUploadSession
-from KalturaClient.Plugins.Core import KalturaEntryStatus, KalturaEntryReplacementStatus
+from KalturaClient.Plugins.Core import  KalturaEntryReplacementStatus
+from KalturaClient.Base import KalturaException
 
-#backend_client = BackendClient()
 
 
 class UploadTask(TaskBase):
@@ -63,27 +61,37 @@ class UploadTask(TaskBase):
 
             if len(failed_jobs) == 0:
                 self.logger.info("successfully upload all chunks, call append recording")
-
-                #Check if need to call cancel_replace
-                recorded_obj = self.backend_client.get_recorded_entry(upload_session.partner_id, self.recorded_id)
-                if recorded_obj.replacementStatus.value != KalturaEntryReplacementStatus.NONE:
-                    self.logger.info("entry %s has replacementStatus %s, calling cancel_replace", self.recorded_id,
-                                    recorded_obj.replacementStatus)
-                    self.backend_client.cancel_replace(upload_session.partner_id, self.recorded_id)
+                self.check_replacment_status(upload_session.partner_id)
                 self.backend_client.set_recorded_content_remote(upload_session, str(float(self.duration)/1000))
                 os.rename(self.output_file_path, self.output_file_path + '.done')
             else:
                 raise Exception("Failed to upload file, "+str(len(failed_jobs))+" chunks from "+str(chunks_to_upload)+ " where failed:"
                                 + upload_session_json)
 
+    def check_replacment_status(self, partner_id):
+        self.logger.debug("About to check replacement status for [%s]", self.recorded_id)
+        recorded_obj = self.backend_client.get_recorded_entry(partner_id, self.recorded_id)
+        self.logger.debug("Got replacement Status: %s", recorded_obj.replacementStatus.value)
+        if recorded_obj.replacementStatus.value != KalturaEntryReplacementStatus.NONE:
+            self.logger.info("entry %s has replacementStatus %s, calling cancel_replace", self.recorded_id,
+                             recorded_obj.replacementStatus)
+            self.backend_client.cancel_replace(partner_id, self.recorded_id)
+
     def append_recording_handler(self):
         partner_id = self.backend_client.get_live_entry(self.entry_id).partnerId
+        self.check_replacment_status(partner_id)
         self.backend_client.set_recorded_content_local(partner_id, self.entry_id, self.output_file_path,
                                                        str(float(self.duration)/1000), self.recorded_id)
 
     def run(self):
-        mode = get_config('mode')
-        if mode == 'remote':
-            self.upload_file(self.output_file_path)
-        if mode == 'local':
-            self.append_recording_handler()
+        try:
+            mode = get_config('mode')
+            if mode == 'remote':
+                self.upload_file(self.output_file_path)
+            if mode == 'local':
+                self.append_recording_handler()
+        except KalturaException as e:
+            if e.code == 'KALTURA_RECORDING_DISABLED':
+                self.logger.warn("%s, move it to done directory", e.message)
+            else:
+                raise e

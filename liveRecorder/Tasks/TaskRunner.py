@@ -16,6 +16,24 @@ from RecordingException import UnequallStampException
 
 class TaskRunner:
 
+    entry_regex = '^([01]_\w{8})_([01]_\w{8})_(\d+)'
+    pattern = re.compile(entry_regex)
+
+    @staticmethod
+    def match(directory_name):
+        return TaskRunner.pattern.match(directory_name)
+
+    @staticmethod
+    def get_param(directory_name):
+        m = re.search(TaskRunner.entry_regex, directory_name)
+        entry_id = m.group(1)
+        recorded_id = m.group(2)
+        duration = m.group(3)
+        param = {'entry_id': entry_id, 'directory': directory_name, 'recorded_id': recorded_id,
+                 'duration': duration}
+
+        return param
+
     def __init__(self, task, number_of_processes, output_directory, max_task_count):
         self.number_of_processes = number_of_processes
         self.task = task
@@ -56,25 +74,19 @@ class TaskRunner:
         except os.error as e:
             self.logger.fatal("Error %s \n %s", str(e), traceback.format_exc())
 
-    def move_and_add_to_queue(self, src_dir): # todo check if use whachers...
-        entry_regex = '^([01]_\w{8})_([01]_\w{8})_(\d+)'
-        pattern = re.compile(entry_regex)
+    def move_and_add_to_queue(self, src_dir):
+
         for directory_name in os.listdir(src_dir):
             directory_path = os.path.join(src_dir, directory_name)
-            if pattern.match(directory_name) is not None:
+            if self.match(directory_name) is not None:
                 try:
                     if os.path.isdir(directory_path):
-                        m = re.search(entry_regex, directory_name)
-                        entry_id = m.group(1)
-                        recorded_id = m.group(2)
-                        duration = m.group(3)
-                        param = {'entry_id': entry_id, 'directory': directory_name, 'recorded_id': recorded_id,
-                                 'duration': duration}
+                        param = self.get_param(directory_name)
                         if src_dir != self.working_directory:   # if its not the same directory
                             shutil.move(directory_path, self.working_directory)
                         self.task_queue.put(param, block=False)
-                        self.logger.info("[%s-%s] Add unhanded directory %s from %s to the task queue", entry_id,
-                                         recorded_id, directory_name, src_dir)
+                        self.logger.info("[%s-%s] Add unhanded directory %s from %s to the task queue", param['entry_id'],
+                                         param['recorded_id'], directory_name, src_dir)
                     else:
                         self.logger.warn("Can't find the content of %s, move it to %s", directory_path,
                                          self.error_directory)
@@ -84,7 +96,7 @@ class TaskRunner:
                         self.logger.warn("Failed to add new task, queue is full!")
 
                 except Exception as e:
-                        self.logger.error("[%s-%s] Error while try to add task:%s \n %s", entry_id, recorded_id,
+                        self.logger.error("[%s-%s] Error while try to add task:%s \n %s", param['entry_id'], param['recorded_id'],
                                           str(e), traceback.format_exc())
 
     def work(self, index):
