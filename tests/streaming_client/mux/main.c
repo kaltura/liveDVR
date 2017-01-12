@@ -150,9 +150,9 @@ int main(int argc, char **argv)
         goto end;
     }
     
-    int64_t t1 = av_gettime();
-
-    int64_t ptsOffset=0;
+    int64_t refTime[10]={0};
+    int64_t refPts[10]={0};
+    int64_t ptsOffset[10]={0};
     while (1) {
         AVStream *in_stream, *out_stream;
                 ret = av_read_frame(ifmt_ctx, &pkt);
@@ -168,12 +168,14 @@ int main(int argc, char **argv)
             int ch=getchar();
             if(ch=='s')
             {
-                AVRational time_base = {1,1000};
-                printf("moving backward 10 seconds\n");
+                AVRational time_base = {1,1};
+                int seconds = 100000;
+                printf("moving forward %d seconds\n",seconds);
                 
-                int seconds = 10;
-                //ptsOffset -= av_rescale_q(seconds, time_base, in_stream->time_base);
-                ptsOffset += 90*1<<24;
+                for (int i=0;i<ifmt_ctx->nb_streams;i++) {
+                    ptsOffset[i] = av_rescale_q(seconds, time_base, ifmt_ctx->streams[i]->time_base);
+                    refPts[i]=0;
+                }
                 
             }
             if(ch==27)
@@ -188,9 +190,9 @@ int main(int argc, char **argv)
         log_packet(ifmt_ctx, &pkt, "in");
         
         
-        printf("correcting pts %s to %s (%ld)\n",av_ts2str(pkt.pts),av_ts2str(pkt.pts+ptsOffset),ptsOffset);
-        pkt.pts+=ptsOffset;
-        pkt.dts+=ptsOffset;
+        printf("correcting pts %s to %s (%ld)\n",av_ts2str(pkt.pts),av_ts2str(pkt.pts+ptsOffset[pkt.stream_index]),ptsOffset[pkt.stream_index]);
+        pkt.pts+=ptsOffset[pkt.stream_index];
+        pkt.dts+=ptsOffset[pkt.stream_index];
         
         /* copy packet */
         pkt.pts = av_rescale_q_rnd(pkt.pts, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
@@ -200,12 +202,16 @@ int main(int argc, char **argv)
         log_packet(ofmt_ctx, &pkt, "out");
         
         int64_t now = av_gettime();
-        int64_t timeToSleep = pkt.pts - (now - t1)/1000;
+        if (refPts[pkt.stream_index]==0) {
+            refPts[pkt.stream_index]=pkt.pts;
+            refTime[pkt.stream_index]=now;
+        }
+        int64_t timeToSleep = (pkt.pts-refPts[pkt.stream_index]) - (now - refTime[pkt.stream_index])/1000;
         if (timeToSleep>0) {
             if (timeToSleep>1000) {
                 timeToSleep=1000;
             }
-            av_usleep(timeToSleep);
+            av_usleep(timeToSleep*1000);
         }
 
         ret = av_interleaved_write_frame(ofmt_ctx, &pkt);
