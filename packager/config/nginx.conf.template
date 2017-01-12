@@ -77,7 +77,7 @@ http {
             secure_link_md5 "test $scheme://$http_host$tokenKey/";
 
             location ~ ^/live/legacy/p/\d+/e/[^/]+/t/[^/]+/(?<path>.*) {
-                include nginx.conf.live.bootstrap;
+                #include nginx.conf.live.bootstrap;
                 proxy_pass http://127.0.0.1:1935/kLive/ngrp:${entryId}_1_all/$path$is_args$args;
             }
 
@@ -93,7 +93,7 @@ http {
         }
 
         location ~ ^/(live/hls/)?kLive/smil:(?<entryId>[01]_[^_]+)_[^\.]+.smil/(?<path>.*) {
-            include nginx.conf.live.bootstrap;
+            #include nginx.conf.live.bootstrap;
             proxy_pass http://127.0.0.1:1935/kLive/ngrp:${entryId}_1_all/$path$is_args$args;
         }
 
