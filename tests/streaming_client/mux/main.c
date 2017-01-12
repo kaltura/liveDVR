@@ -173,7 +173,7 @@ int main(int argc, char **argv)
                 printf("moving forward %d seconds\n",seconds);
                 
                 for (int i=0;i<ifmt_ctx->nb_streams;i++) {
-                    ptsOffset[i] = av_rescale_q(seconds, time_base, ifmt_ctx->streams[i]->time_base);
+                    ptsOffset[i] += av_rescale_q(seconds, time_base, ifmt_ctx->streams[i]->time_base);
                     refPts[i]=0;
                 }
                 
