@@ -28,7 +28,6 @@
   "persistenceFileName": "~/dvr/%s_kLivePersistence.json",
   "expirationTimeWindowSec": "30",
   "maxClipsPerFlavor": 125,
-  "bitrateDiffPercentageAllowed" : 10,
   "regressionAdapter": {
       "verbose": false,
       "enable": false,
@@ -61,7 +60,8 @@
       "minChunkDurationInSec": 1,
       "maxChunkDurationInSec": 60,
       "errorsWindowSizeInMin" : 5,
-      "ptsMaxMisalignmentAllowedInMSec" : 5000
+      "ptsMaxMisalignmentAllowedInMSec" : 5000,
+      "bitrateDiffPercentageAllowed" : 10
   },
   "simulateStreams": {
       "enable":false,
