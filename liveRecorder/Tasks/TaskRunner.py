@@ -7,7 +7,7 @@ import shutil
 import re
 import traceback
 from socket import gethostname
-import time
+import time, threading
 import Queue as Q
 from RecordingException import UnequallStampException
 #  Currently not support multiple machine pulling from one incoming dir.
@@ -71,8 +71,14 @@ class TaskRunner:
             if not os.path.exists(self.output_directory):  # In case directory not exist
                 os.makedirs(self.output_directory)
 
+            self.keep_alive_message()
+
         except os.error as e:
             self.logger.fatal("Error %s \n %s", str(e), traceback.format_exc())
+
+    def keep_alive_message(self,):
+        self.logger.debug("Keep Alive")
+        threading.Timer(60 * 60 * 24, self.keep_alive_message).start()
 
     def move_and_add_to_queue(self, src_dir):
 
