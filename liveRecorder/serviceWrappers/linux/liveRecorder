@@ -17,7 +17,7 @@
 # X-Interactive:     true
 # Short-Description: Start/stop Kaltura Live Recorder
 ### END INIT INFO
-export SHARED_APP_DIR=`python getRecordingBaseDir.py`
+
 APP_NAME=liveRecorder
 SCRIPT_DIR=$(dirname $(readlink -f $0))
 APPDIR=${SCRIPT_DIR%/serviceWrappers/linux}
@@ -32,6 +32,7 @@ RETVAL=0
 
 createFolders() {
 	[ -d ${LOG_DIR} ] || mkdir -p ${LOG_DIR}
+	SHARED_APP_DIR=$(python ${SCRIPT_DIR}/getRecordingBaseDir.py)
 	echo "Creating folders in ${SHARED_APP_DIR} for $HOSTNAME"
 	if [ -d  ${SHARED_APP_DIR} ] ; then 
 		mkdir -p ${SHARED_APP_DIR}/${HOSTNAME}/{UploadTask/{incoming,failed,processing},ConcatenationTask/{failed,processing}}
