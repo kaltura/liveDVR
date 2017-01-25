@@ -17,6 +17,7 @@
 # X-Interactive:     true
 # Short-Description: Start/stop Kaltura Live Recorder
 ### END INIT INFO
+
 APP_NAME=liveRecorder
 SCRIPT_DIR=$(dirname $(readlink -f $0))
 APPDIR=${SCRIPT_DIR%/serviceWrappers/linux}
