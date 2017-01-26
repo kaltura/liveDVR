@@ -78,7 +78,9 @@ class TaskRunner:
 
     def keep_alive_message(self,):
         self.logger.debug("Keep Alive")
-        threading.Timer(60 * 60 * 24, self.keep_alive_message).start()
+        thread = threading.Timer(60 * 60, self.keep_alive_message)
+        thread.daemon = True
+        thread.start()
 
     def move_and_add_to_queue(self, src_dir):
 
