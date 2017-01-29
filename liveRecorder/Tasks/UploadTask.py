@@ -29,8 +29,6 @@ class UploadTask(TaskBase):
 
         return int(file_size / self.upload_token_buffer_size) + 1
 
-
-
     def upload_file(self, file_name):
 
         threadWorkers = ThreadWorkers()
@@ -40,7 +38,13 @@ class UploadTask(TaskBase):
 
             upload_session = KalturaUploadSession(self.output_filename, file_size, chunks_to_upload, self.entry_id,
                                                   self.recorded_id, self.backend_client, self.logger, infile)
-            # todo checkuse case of
+            if chunks_to_upload > 2:
+                chunk = upload_session.get_next_chunk()
+                threadWorkers.add_job(chunk)
+                failed_jobs = threadWorkers.wait_jobs_done()
+                if len(failed_jobs) != 0:
+                    raise Exception("Failed to upload first chunk")
+                self.logger.debug("Finish to upload first chunks")
             while upload_session.chunk_index <= chunks_to_upload-1:
                 chunk = upload_session.get_next_chunk()
                 if chunk is None:
@@ -61,14 +65,14 @@ class UploadTask(TaskBase):
 
             if len(failed_jobs) == 0:
                 self.logger.info("successfully upload all chunks, call append recording")
-                self.check_replacment_status(upload_session.partner_id)
+                self.check_replacement_status(upload_session.partner_id)
                 self.backend_client.set_recorded_content_remote(upload_session, str(float(self.duration)/1000))
                 os.rename(self.output_file_path, self.output_file_path + '.done')
             else:
                 raise Exception("Failed to upload file, "+str(len(failed_jobs))+" chunks from "+str(chunks_to_upload)+ " where failed:"
                                 + upload_session_json)
 
-    def check_replacment_status(self, partner_id):
+    def check_replacement_status(self, partner_id):
         self.logger.debug("About to check replacement status for [%s]", self.recorded_id)
         recorded_obj = self.backend_client.get_recorded_entry(partner_id, self.recorded_id)
         self.logger.debug("Got replacement Status: %s", recorded_obj.replacementStatus.value)
@@ -79,7 +83,7 @@ class UploadTask(TaskBase):
 
     def append_recording_handler(self):
         partner_id = self.backend_client.get_live_entry(self.entry_id).partnerId
-        self.check_replacment_status(partner_id)
+        self.check_replacement_status(partner_id)
         self.backend_client.set_recorded_content_local(partner_id, self.entry_id, self.output_file_path,
                                                        str(float(self.duration)/1000), self.recorded_id)
 
