@@ -71,7 +71,7 @@ http {
             return 200 "Kaltura";
         }
 
-        location ~ ^(?<tokenKey>/.*?(?<live_type>live|recording)/[^/]+/p/\d+/e/(?<entryId>[^/]+(?<hashIndex>\w)))(/playlist/(?<playlist>[^/]+))?(/t/(?<token>[^/]+))?/ {
+        location ~ ^(?<tokenKey>/.*?(?<live_type>live|recording)/[^/]+/p/\d+/e/(?<entryId>[^/]+(?<hashIndex>\w)))(/sd/(?<segmentDuration>\d+))?(/playlist/(?<playlist>[^/]+))?(/t/(?<token>[^/]+))?/ {
 
             secure_link $token;
             secure_link_md5 "test $scheme://$http_host$tokenKey/";
@@ -82,7 +82,27 @@ http {
             }
 
             location ~ /live/ {
-			    include nginx.conf.location.live.protocols;
+
+                location ~ /sd/2000/ {
+                    vod_expires_live_time_dependent 1;
+                    vod_live_mapping_cache live_mapping_cache_low_latency 64m 1;
+                    vod_live_response_cache live_response_cache_low_latency 64m 1;
+                    vod_segment_duration 2000;
+			        include nginx.conf.location.live.protocols;
+			    }
+                location ~ /sd/4000/ {
+                    vod_expires_live_time_dependent 1;
+                    vod_segment_duration 4000;
+			        include nginx.conf.location.live.protocols;
+			    }
+                location ~ /sd/6000/ {
+                    vod_expires_live_time_dependent 2;
+                    vod_segment_duration 6000;
+			        include nginx.conf.location.live.protocols;
+			    }
+                location ~ ^/  {
+			        include nginx.conf.location.live.protocols;
+                }
             }
 
             location ~ /recording/ {

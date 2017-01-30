@@ -20,7 +20,6 @@ def write_liveRecorede_stat(dataCenter, output_full_path, done_path, error_path,
     with open(output_full_path, 'a') as file_output:
         new_file_done, num_file_done = get_files(command + done_path, month, day)
         new_file_error, num_file_error = get_files(command + error_path, month, day)
-        print "About to write ron [" + dataCenter + "]"
         file_output.write("[" + dataCenter + "] Total files on done " + str(num_file_done) + "\n")
         file_output.write("[" + dataCenter + "] New files on done " + str(new_file_done) + "\n")
         file_output.write("[" + dataCenter + "] Total files on error " + str(num_file_error) + "\n")

@@ -14,7 +14,7 @@ if [ ! -d "$1" ] ; then
         cd $1
         nvm install
         cp /opt/kaltura/liveController/latest/common/config/configMapping.json /opt/kaltura/liveController/$1/common/config/
-        cp /opt/kaltura/liveController/latest/recordingUploader/Config/configMapping.ini /opt/kaltura/liveController/$1/recordingUploader/Config/
+        cp /opt/kaltura/liveController/latest/liveRecorder/Config/configMapping.ini /opt/kaltura/liveController/$1/liveRecorder/Config/
         npm install
         cd ..
         unlink /opt/kaltura/liveController/latest
