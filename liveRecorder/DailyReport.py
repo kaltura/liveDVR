@@ -135,7 +135,7 @@ def get_report(mailAdress = None, relative_date = 1):
 
     write_liveRecorede_stat("pa", output_full_path, done_path, error_path, month, day)
     write_liveRecorede_stat("ny", output_full_path, done_path, error_path, month, day)
-    #scan_logs(output_full_path, now)
+    scan_logs(output_full_path, now)
 
     send_mail("pa-reports@kaltura.com", mail_list, "DailyReport", "DailyReport", output_full_path, output_file)
     print("Send mail to " + str(mail_list) + " date:" + date)
