@@ -105,8 +105,10 @@ http {
                 }
             }
 
-            location ~ /recording/ {
+             location ~ /recording/ {
                 include nginx.conf.location.live.protocols;
+                vod_expires_live 1m;
+                vod_expires_live_time_dependent 1m;
                 vod_force_continuous_timestamps on;
             }
 
