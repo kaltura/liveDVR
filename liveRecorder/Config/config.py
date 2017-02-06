@@ -1,6 +1,6 @@
 import ConfigParser
 import socket
-import logging.handlers
+import logging
 import os
 import re
 Config = ConfigParser.ConfigParser()

@@ -2,7 +2,7 @@ from BackendClient import *
 from Config.config import get_config
 import Queue
 from threading import Thread, Lock
-import logging.handlers
+import logging
 import traceback
 
 '''
