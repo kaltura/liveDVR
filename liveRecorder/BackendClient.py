@@ -2,7 +2,6 @@ from KalturaClient import *
 from KalturaClient.Plugins.Core import KalturaSessionType, KalturaUploadToken, KalturaUploadedFileTokenResource, \
     KalturaUploadTokenFilter, KalturaServerFileResource, KalturaUploadTokenStatus
 from Config.config import get_config
-import logging.handlers
 from Logger.LoggerDecorator import logger_decorator
 from threading import Lock
 import time
@@ -16,6 +15,10 @@ class BackendClient:
     url = get_config('api_service_url')
     session_duration = get_config('session_duration')
     mode = get_config('mode')
+    ks_privileges = get_config('ksPrivileges')
+    if ks_privileges is None:
+        ks_privileges = ''
+
     format = 2
     request_timeout = 120
     expiration_time_ks = -1
@@ -28,11 +31,11 @@ class BackendClient:
 
     def __init__(self, session_id):
         self.logger = logger_decorator(self.__class__.__name__, session_id)
-        self.logger.info("Init BackendClient: admin_secret %s, partner_id %s, session_duration %s, url %s",
-                         self.admin_secret, self.partner_id, self.session_duration, self.url)
+        self.logger.info("Init BackendClient: admin_secret XXX, partner_id %s, session_duration %s, url %s",
+                         self.partner_id, self.session_duration, self.url)
 
     def create_new_session(self):
-        ks= self.client.generateSessionV2(self.admin_secret, None, self.type, self.partner_id, int(self.session_duration))
+        ks= self.client.generateSessionV2(self.admin_secret, None, self.type, self.partner_id, int(self.session_duration), self.ks_privileges)
         #result = self.client.session.start(self.admin_secret, None, self.type, self.partner_id, None, None)
         BackendClient.ks = ks
         BackendClient.expiration_time_ks = int(self.session_duration) + int(time.time()) - 3600  # confidence interval
