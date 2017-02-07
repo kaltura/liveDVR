@@ -76,7 +76,7 @@ http {
             secure_link $token;
             secure_link_md5 "test $scheme://$http_host$tokenKey/";
 
-            location ~ ^/live/legacy/p/\d+/e/[^/]+/t/[^/]+/(?<path>.*) {
+            location ~ ^/live/legacy/p/\d+/e/[^/]+(/sd/\d+)?/t/[^/]+/(?<path>.*) {
                 #include nginx.conf.live.bootstrap;
                 proxy_pass http://127.0.0.1:1935/kLive/ngrp:${entryId}_1_all/$path$is_args$args;
             }
