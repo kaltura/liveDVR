@@ -15,7 +15,7 @@ class BackendClient:
     url = get_config('api_service_url')
     session_duration = get_config('session_duration')
     mode = get_config('mode')
-    ks_privileges = get_config('ksPrivileges')
+    ks_privileges = get_config('ks_privileges')
     if ks_privileges is None:
         ks_privileges = ''
 
