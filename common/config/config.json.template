@@ -62,7 +62,7 @@
       "errorsWindowSizeInMin" : 5,
       "ptsMaxMisalignmentAllowedInMSec" : 5000,
       "ptsRollingWindowSizeInMSec" : 300000,
-      "ptsDiffPercentageAllowed" : 5,
+      "ptsDiffPercentageAllowed" : 1,
       "bitrateDiffPercentageAllowed" : 10
   },
   "simulateStreams": {
