@@ -74,14 +74,10 @@ class PersistenceFormat {
         return entryId.charAt(entryId.length - 1);
     }
 
-    getBasePathFromFull(fullPath, type = 'live') {
+    getBasePathFromFull(fullPath) {
         // cut away both flavor and time components
-        let fullPathBase = path.dirname(fullPath)
-        if (type == 'live'){
-            //if live, decapsulated one more layer path
-            fullPathBase =  path.dirname(fullPathBase)
-        }
-        return fullPathBase + '/'
+        let lastSepIdx = _.lastIndexOf(fullPath, path.sep) - 1;
+        return fullPath.substring(0, _.lastIndexOf(fullPath, path.sep, lastSepIdx) + 1)
     }
 
     getFlavorPath(destPath, param) {
