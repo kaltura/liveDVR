@@ -1,0 +1,20 @@
+{
+	".*": {
+		"rootFolderPath" : "@LIVE_CONTENT_PATH@",
+		"oldContentFolderPath" : "@LIVE_ARCHIVE_CONTENT_PATH@",
+		"logFileName" : "@LOG_FILE_NAME",
+		"backendClient" : {
+			"adminSecret" :"@SERVICE_URL@",
+			"partnerId" : @MINUS_FIVE_ADMIN_SECRET@
+		},
+		"mediaServer" : {
+			"user" : "WOWZA_USER_NAME",
+			"password" : "WOWZA_USER_PASSWORD"
+		},
+		"recording" : {
+			"enable" : true,
+			"recordingFolderPath" : "@RECORDING_FOLDER@/recordings",
+			"completedRecordingFolderPath" : "@RECORDING_FOLDER@/incoming"
+		}
+	}
+}
