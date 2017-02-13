@@ -4,12 +4,13 @@
 		"oldContentFolderPath" : "@LIVE_ARCHIVE_CONTENT_PATH@",
 		"logFileName" : "@LOG_FILE_NAME",
 		"backendClient" : {
-			"adminSecret" :"@SERVICE_URL@",
-			"partnerId" : @MINUS_FIVE_ADMIN_SECRET@
+			"serviceUrl" :"@KALTURA_SERVICE_URL@",
+			"adminSecret" :"@KALTURA_PARTNER_ADMIN_SECRET@",
+			"partnerId" : @KALTURA_PARTNER_ID@
 		},
 		"mediaServer" : {
-			"user" : "WOWZA_USER_NAME",
-			"password" : "WOWZA_USER_PASSWORD"
+			"user" : "@WOWZA_ADMIN_USER@",
+			"password" : "@WOWZA_ADMIN_PASSWORD@"
 		},
 		"recording" : {
 			"enable" : true,
