@@ -10,6 +10,8 @@ from socket import gethostname
 import time, threading
 import Queue as Q
 from RecordingException import UnequallStampException
+import schedule
+
 #  Currently not support multiple machine pulling from one incoming dir.
 # If need, just add incoming dir in the constructor
 
@@ -54,6 +56,7 @@ class TaskRunner:
         self.on_startup()
 
     def on_startup(self):
+
         self.logger.info("onStartUp: %s", self.task_name)
         try:
             if not os.path.exists(self.task_directory):  # In case directory not exist
@@ -71,16 +74,22 @@ class TaskRunner:
             if not os.path.exists(self.output_directory):  # In case directory not exist
                 os.makedirs(self.output_directory)
 
-            self.keep_alive_message()
+            t = threading.Thread(target=self.schedule_job)
+            t.daemon = True
+            t.start()
 
         except os.error as e:
             self.logger.fatal("Error %s \n %s", str(e), traceback.format_exc())
 
-    def keep_alive_message(self,):
-        self.logger.debug("Keep Alive")
-        thread = threading.Timer(60 * 60, self.keep_alive_message)
-        thread.daemon = True
-        thread.start()
+    def keep_alive_message(self):
+        self.logger.info("Keep alive")
+
+    def schedule_job(self):
+        schedule.every().day.at("00:01").do(self.keep_alive_message)
+
+        while 1:
+            schedule.run_pending()
+            time.sleep(1)
 
     def move_and_add_to_queue(self, src_dir):
 
@@ -199,6 +208,11 @@ class TaskRunner:
                 new_dest = os.path.join(dst, new_file_name)
                 self.logger.error("Failed to move %s into %s, try to move it as %s", src, dst, new_dest)
                 shutil.move(src, new_dest)
+            except IOError as e:
+                if e.errno == 2:  # no such file or directory
+                    self.logger.warn("No such file or directory: maybe job was taken by other machine")
+                else:
+                    raise e
 
         except Exception as e:
             self.logger.error("Failed to move %s to %s : %s \n %s", src, dst, str(e), traceback.format_exc())

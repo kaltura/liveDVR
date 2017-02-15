@@ -39,18 +39,23 @@ class ConcatenationTask(TaskBase):
         return maxbandwidth_url
 
     def download_chunks_and_concat(self, chunks, output_full_path):
+        try:
+            with open(output_full_path, 'wb') as file_output:
+                self.logger.info("About to concat %d files from manifest into %s", len(chunks), output_full_path)
+                for chunk in chunks:
+                    chunks_url = os.path.join(self.url_base_entry, chunk)
+                    chunk_bytes = self.download_file(chunks_url)
+                    self.logger.debug("Successfully downloaded from url %s, about to write it to %s", chunks_url, output_full_path)
+                    file_output.write(chunk_bytes)
 
-        with open(output_full_path, 'wb') as file_output: # todo should truncated the file
-            self.logger.info("About to concat %d files from manifest into %s", len(chunks), output_full_path)
-            for chunk in chunks:
-                chunks_url = os.path.join(self.url_base_entry, chunk)
-                chunk_bytes = self.download_file(chunks_url)
-                self.logger.debug("Successfully downloaded from url %s, about to write it to %s", chunks_url, output_full_path)
-                file_output.write(chunk_bytes)
+        except urllib2.HTTPError as e:
+            self.logger.error("Error to concat file, removing file", output_full_path)
+            os.remove(output_full_path)
+            raise e
 
     def download_file(self, url):
         self.logger.debug("About to request the url:%s ", url)
-        return urllib2.urlopen(url).read()  # whats happen if faild to get, or getting timeout?
+        return urllib2.urlopen(url).read()
 
     @staticmethod
     def parse_m3u8(m3u8):

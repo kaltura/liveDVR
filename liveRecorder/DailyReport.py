@@ -135,8 +135,8 @@ def get_report(mailAdress = None, relative_date = 1):
     write_liveRecorede_stat("pa", output_full_path, done_path, error_path, month, day)
     write_liveRecorede_stat("ny", output_full_path, done_path, error_path, month, day)
     scan_logs(output_full_path, now)
-
-    send_mail("pa-reports@kaltura.com", mail_list, "DailyReport", "DailyReport", output_full_path, output_file)
+    send_from = os.path.basename(__file__) + "@kaltura.com"
+    send_mail(send_from, mail_list, "DailyReport", "DailyReport", output_full_path, output_file)
     print("Send mail to " + str(mail_list) + " date:" + date)
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
