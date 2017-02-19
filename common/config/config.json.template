@@ -61,6 +61,8 @@
       "maxChunkDurationInSec": 60,
       "errorsWindowSizeInMin" : 5,
       "ptsMaxMisalignmentAllowedInMSec" : 5000,
+      "ptsRollingWindowSizeInSec" : 300,
+      "ptsDiffPercentageAllowed" : 1,
       "bitrateDiffPercentageAllowed" : 10
   },
   "simulateStreams": {
