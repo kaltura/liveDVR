@@ -61,7 +61,19 @@ describe('TS2MP4 convertor spec', function() {
         it('should convert ts chunk', function (done) {
 
             convert(path.join(__dirname, '/../resources/ufhwdejgz-1.ts'),
-                { startTime: 1476098931854, sig: '72C704A5AF7582B8F81540AD0D019BC1', 
+                { startTime: 1476098931854, sig: '72C704A5AF7582B8F81540AD0D019BC1',
+                    "ts_info": {
+                        "audio": {
+                            "dts": 0,
+                            "duration": 12005,
+                            "ptsDelay": 0,
+                        },
+                        "video": {
+                            "dts": 0,
+                            "duration": 12066,
+                            "ptsDelay": 0
+                        }
+                    },
                     video: { duration: 11999.666667,    firstDTS: 1476098931854,    firstEncoderDTS: 0,    wrapEncoderDTS: 95443718,
                         keyFrameDTS: [ 0, 2999, 5999, 8999 ] },
                     audio:   { duration: 12051.144444,    firstDTS: 1476098931854,    firstEncoderDTS: 0,    wrapEncoderDTS: 95443718 },
@@ -83,6 +95,11 @@ describe('TS2MP4 convertor spec', function() {
         it('should not crash when exposed to bad input', function (done) {
             convert(path.join(__dirname, '/../resources/crash.ts'),null,done)
         });
+
+        it('should not crash when exposed to bad input2', function (done) {
+            convert(path.join(__dirname, '/../resources/crash2.ts'),null,done)
+        });
+
 
         it('should succeed on decreasing pts data', function (done) {
             convert(path.join(__dirname, '/../resources/decreasing_pts.ts'),
