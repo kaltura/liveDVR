@@ -1,0 +1,21 @@
+{
+	".*": {
+		"rootFolderPath" : "@LIVE_CONTENT_PATH@",
+		"oldContentFolderPath" : "@LIVE_ARCHIVE_CONTENT_PATH@",
+		"logFileName" : "@LOG_FILE_NAME",
+		"backendClient" : {
+			"serviceUrl" :"@KALTURA_SERVICE_URL@",
+			"adminSecret" :"@KALTURA_PARTNER_ADMIN_SECRET@",
+			"partnerId" : @KALTURA_PARTNER_ID@
+		},
+		"mediaServer" : {
+			"user" : "@WOWZA_ADMIN_USER@",
+			"password" : "@WOWZA_ADMIN_PASSWORD@"
+		},
+		"recording" : {
+			"enable" : true,
+			"recordingFolderPath" : "@RECORDING_FOLDER@/recordings",
+			"completedRecordingFolderPath" : "@RECORDING_FOLDER@/incoming"
+		}
+	}
+}
