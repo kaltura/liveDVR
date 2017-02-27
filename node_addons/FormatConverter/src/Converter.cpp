@@ -264,7 +264,6 @@ namespace converter{
         
         // surpress av warning on id3 tag stream: start time for stream %d is not set in estimate_timings_from_pts
         std::bitset<32> markedStreamsSet;
-        
         for( size_t i = 0 ; i < input->nb_streams; i++){
             AVStream *in_stream =input->streams[i];
             if(in_stream->codec->codec_type == AVMEDIA_TYPE_DATA && in_stream->start_time == AV_NOPTS_VALUE){
@@ -272,9 +271,9 @@ namespace converter{
                 markedStreamsSet.set(i,true);
             }
         }
-        
   
         input->max_analyze_duration =  std::numeric_limits<int64_t>::max();
+
         int status =  avformat_find_stream_info(*input,NULL);
         
         if( status < 0 && (ConverterAppInst::instance().m_bStrict || input->nb_streams == 0)){
@@ -310,16 +309,13 @@ namespace converter{
             
             AVStream *in_stream =input->streams[i];
             
-            bool bValidStream = false;
+            bool bValidStream = true;
             switch(in_stream->codec->codec_type){
                 case AVMEDIA_TYPE_VIDEO:
                     bValidStream = in_stream->codec->width > 0;
                     break;
                 case AVMEDIA_TYPE_AUDIO:
                     bValidStream = in_stream->codec->channels > 0;
-                    break;
-                case AVMEDIA_TYPE_DATA:
-                    bValidStream = true;
                     break;
                 default:
                     break;
