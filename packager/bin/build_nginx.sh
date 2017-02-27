@@ -66,4 +66,4 @@ make
 #make install
 
 
-cp $nginxDir/objs/nginx $currentDir/../../bin/${os_name,,}/
+cp $nginxDir/objs/nginx $currentDir/../../bin/${os_name}/
