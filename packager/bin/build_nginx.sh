@@ -17,7 +17,6 @@ os_name=`uname`
 export LIB_AV_CODEC="$ffmpegLibsDir/libavcodec/libavcodec__.a"
 export LIB_AV_FILTER="$ffmpegLibsDir/libavfilter/libavfilter.a"
 export LIB_AV_UTIL=$ffmpegLibsDir/libavutil/libavutil.a
-
 case  $os_name in
 "Darwin")
     ;;
@@ -65,5 +64,15 @@ cd $nginxDir
 make
 #make install
 
+case  $os_name in
+"Darwin")
+    echo "Copying $nginxDir/objs/nginx to $currentDir/../../bin/${os_name}/"
+    cp $nginxDir/objs/nginx $currentDir/../../bin/${os_name}/
+    ;;
+"Linux")
+    echo "Copying $nginxDir/objs/nginx to $currentDir/../../bin/${os_name,,}/"
+    cp $nginxDir/objs/nginx $currentDir/../../bin/${os_name,,}/
+   ;;
+esac
 
-cp $nginxDir/objs/nginx $currentDir/../../bin/${os_name}
+
