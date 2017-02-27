@@ -112,7 +112,7 @@ case $os_name in
     cp `pwd`/build/$build_conf/FormatConverter.so "`pwd`/../../bin/linux/FormatConverter.node$debugExt"
     ;;
 'Darwin')
-    cp `pwd`/build/$build_conf/FormatConverter.dylib "`pwd`/../../bin/darwin/FormatConverter.node$debugExt"
+    cp `pwd`/build/$build_conf/FormatConverter.dylib "`pwd`/../../bin/linux/FormatConverter.node$debugExt"
     ;;
 *) ;;
 esac
