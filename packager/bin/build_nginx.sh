@@ -60,7 +60,7 @@ fi
 echo "$nginxDir"
 cd $nginxDir
 
-./configure --with-http_secure_link_module --add-module=$packagerDir --with-debug --with-cc-opt="-O0"
+./configure --with-http_secure_link_module --add-module=$packagerDir --with-debug --with-cc-opt="-O0 -DDISABLE_PTS_DELAY_COMPENSATION"
 make
 #make install
 
