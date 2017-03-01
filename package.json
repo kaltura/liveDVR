@@ -27,6 +27,8 @@
     "tmp": "0.0.27"
   },
   "dependencies": {
+    "chunked-stream": "0.0.2",
+    "command-line-args": "^4.0.1",
     "curry": "1.2.0",
     "forever": "0.15.2",
     "glob": "7.0.5",
@@ -38,7 +40,6 @@
     "request": "^2.61.0",
     "shelljs": "0.7.0",
     "touch": "1.0.0",
-    "chunked-stream": "0.0.2",
     "underscore": "1.8.3",
     "v8-profiler": "5.6.5"
   },
