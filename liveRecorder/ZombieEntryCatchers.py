@@ -14,7 +14,7 @@ recordings_dir = os.path.join(recording_base_dir, 'recordings')
 recording_incoming_dir = os.path.join(recording_base_dir, 'incoming')
 entry_regex = '^[01]_\w{8}'
 pattern = re.compile(entry_regex)
-threshold_time_sec = 60  # 1 hour
+threshold_time_sec = 3600  # 1 hour
 log_full_path = get_config('cron_job_log_file_name')
 init_logger(log_full_path)
 polling_interval_sec = get_config('cron_job_polling_interval_hours', 'int') * 60 * 60
