@@ -41,12 +41,25 @@ class ConcatenationTask(TaskBase):
     def download_chunks_and_concat(self, chunks, output_full_path):
         try:
             with open(output_full_path, 'wb') as file_output:
-                self.logger.info("About to concat %d files from manifest into %s", len(chunks), output_full_path)
+                failed_chunks = 0
+                self.logger.info("About to concat [%d] files from manifest into [%s]", len(chunks), output_full_path)
                 for chunk in chunks:
                     chunks_url = os.path.join(self.url_base_entry, chunk)
-                    chunk_bytes = self.download_file(chunks_url)
-                    self.logger.debug("Successfully downloaded from url %s, about to write it to %s", chunks_url, output_full_path)
-                    file_output.write(chunk_bytes)
+                    try:
+                        chunk_bytes = self.download_file(chunks_url)
+                        self.logger.debug("Successfully downloaded from url [%s], about to write it to [%s]", chunks_url, output_full_path)
+                        file_output.write(chunk_bytes)
+                    except urllib2.HTTPError as e:
+                        if e.code == 404:
+                            failed_chunks += 1
+                            self.logger.error("Failed to download chunk [%s], got response 404", chunk)
+                        else:
+                            raise e
+                if failed_chunks > 0:
+                    self.logger.warn("Failed to download  [%s] chunks from [%s]", failed_chunks, len(chunks))
+                    if failed_chunks == len(chunks):
+                        raise urllib2.HTTPError(self.url_base_entry, 404, "Failed to download all chunks from manifest"
+                                                , None, None)
 
         except urllib2.HTTPError as e:
             self.logger.error("Error to concat file, removing file", output_full_path)
@@ -54,7 +67,7 @@ class ConcatenationTask(TaskBase):
             raise e
 
     def download_file(self, url):
-        self.logger.debug("About to request the url:%s ", url)
+        self.logger.debug("About to request the url: [%s] ", url)
         return urllib2.urlopen(url).read()
 
     @staticmethod
