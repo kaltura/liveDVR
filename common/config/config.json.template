@@ -51,8 +51,8 @@
   },
   "preserveOriginalHLS": {
       "enable": false,
-      "createFolderPerSession": true,
-      "runDurationInMinutes": 5
+      "createFolderPerSession": true
+
   },
   "diagnostics": {
       "minChunkDurationInSec": 1,
