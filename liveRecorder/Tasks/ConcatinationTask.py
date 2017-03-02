@@ -4,6 +4,7 @@ import urllib2
 import re
 import m3u8
 from Config.config import get_config
+import hashlib, base64
 # todo add timeout, and use m3u8 insted of regex
 
 
@@ -11,14 +12,28 @@ class ConcatenationTask(TaskBase):
 
     nginx_port = get_config('nginx_port')
     nginx_host = get_config('nginx_host')
-    nginx_url = "http://" + nginx_host+ ":" + nginx_port +"/dc-0/recording/hls/p/0/e/{0}/t/0"
+    secret = get_config('token_key')
+    token_url_template = nginx_host + ":" + nginx_port +"/dc-0/recording/hls/p/0/e/{0}/"
+
     def __init__(self, param, logger_info):
         TaskBase.__init__(self, param, logger_info)
         concat_task_processing_dir = os.path.join(self.base_directory, self.__class__.__name__, 'processing')
         self.recording_path = os.path.join(concat_task_processing_dir, self.entry_directory)
         self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
-        self.url_base_entry = self.nginx_url.format(self.recorded_id)
-        self.url_master = os.path.join(self.url_base_entry, 'master.m3u8')
+        self.token_url = self.token_url_template.format(self.recorded_id)
+        self.nginx_url = "http://" + self.token_url + "t/{0}"
+
+
+    def tokenize_url(self, url):
+
+        if self.secret is None:
+            return 0
+        dir_name = os.path.dirname(url)
+        dir_name = re.sub(r'https?://', '', dir_name)
+        token = "{0} {1}/".format(self.secret, dir_name)
+        hash = hashlib.md5(token).digest()
+        encoded_hash = base64.urlsafe_b64encode(hash).rstrip('=')
+        return encoded_hash
 
     def find_source(self):
         self.logger.debug("About to load master manifest from %s" ,self.url_master)
@@ -69,6 +84,9 @@ class ConcatenationTask(TaskBase):
         if os.path.isfile(output_full_path):
             self.logger.warn("file [%s] already exist", output_full_path)
             return
+        token = self.tokenize_url(self.token_url)
+        self.url_base_entry = self.nginx_url.format(token)
+        self.url_master = os.path.join(self.url_base_entry, 'master.m3u8')
         url_source_manifest = self.find_source()
         playlist = self.download_file(url_source_manifest)
         self.logger.debug("load recording manifest : \n %s ", playlist)
