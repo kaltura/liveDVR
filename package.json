@@ -27,6 +27,7 @@
     "tmp": "0.0.27"
   },
   "dependencies": {
+    "chunked-stream": "0.0.2",
     "commander": "^2.9.0",
     "curry": "1.2.0",
     "forever": "0.15.2",
