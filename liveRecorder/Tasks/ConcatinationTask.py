@@ -77,7 +77,7 @@ class ConcatenationTask(TaskBase):
                                                 , None, None)
 
         except urllib2.HTTPError as e:
-            self.logger.error("Error to concat file, removing file", output_full_path)
+            self.logger.error("Error to concat file %s, removing file", output_full_path)
             os.remove(output_full_path)
             raise e
 
