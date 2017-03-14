@@ -1,0 +1,25 @@
+@startuml
+
+class LiveEntry {
+
+}
+
+class RecordingManager {
+    recordingList
+    startRecording(entryObj, flavorsObjArray)
+    stopLive(entryObject)
+}
+
+class RecordingEntrySession {
+
+}
+
+class FlavorDownloader {
+
+}
+
+LiveEntry ..> RecordingManager
+RecordingManager *--> RecordingEntrySession
+FlavorDownloader ..> RecordingManager
+
+@enduml
