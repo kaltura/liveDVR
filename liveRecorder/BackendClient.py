@@ -151,6 +151,7 @@ class BackendClient:
                          output_file, duration)
         resource = KalturaServerFileResource()
         resource.localFilePath = output_file
+        resource.keepOriginalFile = False
         self.set_recorded_content(entry_id, resource, duration, partner_id, recorded_id)
 
 
