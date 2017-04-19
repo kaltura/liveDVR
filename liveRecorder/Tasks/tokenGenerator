@@ -1,0 +1,25 @@
+import hashlib
+import os
+import re
+import base64
+
+# check if token is correct by running following from command line:
+# echo -n 'b8c2e3df828ca3a330ba823cb405c933 192.168.11.29:80/dc-0/recording/hls/p/2251332/e/0_ay6anxrs/' | openssl md5 -binary | openssl base64 | tr +/ -_ | tr -d =
+# echo -n 'b8c2e3df828ca3a330ba823cb405c933 192.168.11.40/dc-0/recording/hls/p/2022371/e/1_hbk8s9p7/' | openssl md5 -binary | openssl base64 | tr +/ -_ | tr -d =
+
+def tokenizeUrl(url, secret):
+    dir_name = os.path.dirname(url)
+    dir_name = re.sub(r'https?://', '', dir_name)
+    token = "{0} {1}/".format(secret, dir_name)
+    hash = hashlib.md5(token).digest()
+    encoded_hash = base64.urlsafe_b64encode(hash).rstrip('=')
+    return encoded_hash
+
+
+# example:
+# print tokenizeUrl('192.168.11.29/dc-0/recording/hls/p/2251332/e/0_ay6anxrs/', 'b8c2e3df828ca3a330ba823cb405c933')
+
+#print tokenizeUrl('192.168.11.40/dc-0/recording/hls/p/2022371/e/1_hbk8s9p7/', 'b8c2e3df828ca3a330ba823cb405c933')
+print tokenizeUrl('127.0.0.1/live/hls/p/102/e/0_icaqt658/', 'b8c2e3df828ca3a330ba823cb405c933')
+
+# http://localhost:8080/live/hls/p/102/e/0_icaqt658/t/XOKT1W6KvnUOVZwwEi3q1g/index-s32.m3u8

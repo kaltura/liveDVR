@@ -33,3 +33,19 @@ a link is created in incoming path to concat mp4 ???
        "recordingSessionDurationInSec" : 180,
        "recordingUpdateEntryTimeIntervalInMin" : 15
      }
+
+Recording recovery:
+-------------------
+1) either use the recording stream content directory or copy the content tree to existing recording entry.
+2) rename/ remove playlist.json only if you want it to be recreated.
+3) remove done and stamp files
+4) run:
+node [script path]/RestoreRecordingScript.js -p [source path] -f [flavors list] -u [boolean]
+5) run LiveRecorer to concat and upload
+6) if upload need done in production and restore done locally that copy concat ts result to production and manually generate soft link in incoming dir.
+
+-p the path to stream content root - this parameter is mandatory
+-f comma separated list of the flavors to use, in quotes. - this parameter is optional. If omitted all flavors are taken.
+-u boolean flag. use -u true to overwrite playlist.json. Use -u false to keep the playlist.json and only add missing chunk files. This is also optional. If not used then playlist.json is kept.
+example:
+ode lib/recording/RestoreRecordingScript.js -p '/Users/lilach.maliniak/kLive_content/liveRecorder/recordings/append/m/0_3yg8hx0m/0_dzawdis9' -f '32,33,34' -u false
