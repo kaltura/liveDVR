@@ -15,6 +15,7 @@ class ConcatenationTask(TaskBase):
     nginx_host = get_config('nginx_host')
     secret = get_config('token_key')
     token_url_template = nginx_host + ":" + nginx_port +"/dc-0/recording/hls/p/0/e/{0}/"
+    ts_2_mp4_converter_path = os.path.join(get_config('ts_2_mp4_convertor_path'), 'ts_to_mp4_convertor')
 
     def __init__(self, param, logger_info):
         TaskBase.__init__(self, param, logger_info)
@@ -37,22 +38,13 @@ class ConcatenationTask(TaskBase):
         encoded_hash = base64.urlsafe_b64encode(hash).rstrip('=')
         return encoded_hash
 
-    def find_source(self):
+    def extract_flavor_list(self):
         self.logger.debug("About to load master manifest from %s" ,self.url_master)
         m3u8_obj = m3u8.load(self.url_master)
         flavor_list = {}
-        maxbandwidth = -1
         for element in m3u8_obj.playlists:
             flavor_list[element.stream_info.bandwidth] = element.absolute_uri
-            if element.stream_info.bandwidth > maxbandwidth:
-                maxbandwidth = element.stream_info.bandwidth
-                maxbandwidth_url = element.absolute_uri
-        if maxbandwidth is -1:
-            msg = "Failed to find source from flavor list %s" % (str(flavor_list))
-            raise ValueError(msg)
 
-        self.logger.info("Got Bandwidths url pairs %s, find the source with the bandwidth [%s] url: [%s]",
-                             str(flavor_list), maxbandwidth, maxbandwidth_url)
         return flavor_list
 
     def download_chunks_and_concat(self, chunks, output_full_path):
@@ -95,16 +87,16 @@ class ConcatenationTask(TaskBase):
 
     def run(self):
 
-        command = self.ts_2_mp4_converter_path + ' '
+        command = self.ts_2_mp4_convertor_path + ' '
         token = self.tokenize_url(self.token_url)
         self.url_base_entry = self.nginx_url.format(token)
         self.url_master = os.path.join(self.url_base_entry, 'master.m3u8')
-        flavors_manifest_list = self.find_source()
-        prog = re.compile(self.flavor_pattern)
+        flavors_manifest_list = self.extract_flavor_list()
 
 
         for url_source_manifest in flavors_manifest_list.values():
-            result = prog.match(url_source_manifest)
+            url_postfix = url_source_manifest.rsplit('/', 1)[1]
+            result = re.search(self.flavor_pattern, url_postfix)
             # check for errors
             if not result:
                 # log error
@@ -112,17 +104,17 @@ class ConcatenationTask(TaskBase):
                 self.logger.error(error)
                 raise ValueError(error)
             ts_output_filename = self.get_output_filename(result.group('flavor'))
-            output_full_path = os.path.join(self.recording_path, ts_output_filename[0])
-            mp4_output_filename = ts_output_filename.split('.') + '.mp4'
+            output_full_path = os.path.join(self.recording_path, ts_output_filename)
+            mp4_full_path = output_full_path.replace('.ts', '.mp4')
+            command = command + ' ' + output_full_path + ' ' + mp4_full_path
             if os.path.isfile(output_full_path):
                 self.logger.warn("file [%s] already exist", output_full_path)
-                return
+                continue
             playlist = self.download_file(url_source_manifest)
             self.logger.debug("load recording manifest : \n %s ", playlist)
             chunks = m3u8.loads(playlist).files
             self.download_chunks_and_concat(chunks, output_full_path)
             self.logger.info("Successfully concat %d files into %s", len(chunks), output_full_path)
-            command = command + ' ' + output_full_path + ' ' + mp4_output_filename
 
         # convert the ts's to single mp4
         self.logger.debug('About to run TS -> MP4 conversion. Command: %s', command)
@@ -134,4 +126,9 @@ class ConcatenationTask(TaskBase):
             error = 'Failed to convert TS -> MP4. Error %d', process.returncode
             self.logger.error(error)
             raise RuntimeError(error)
+
+
+    def get_output_filename(self, flavor):
+        return self.output_filename + '_f' + flavor + '_out.ts'
+
 

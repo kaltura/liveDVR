@@ -36,8 +36,6 @@ class TaskBase(object):
                                            self.entry_directory)
         self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
 
-    def get_output_filename(self, flavor):
-        return self.output_filename + '_' + flavor + '_out.ts'
 
     __metaclass__ = abc.ABCMeta
 

@@ -7,7 +7,7 @@ from ThreadWorkers import ThreadWorkers
 from KalturaUploadSession import KalturaUploadSession
 from KalturaClient.Plugins.Core import  KalturaEntryReplacementStatus
 from KalturaClient.Base import KalturaException
-
+import glob
 
 
 class UploadTask(TaskBase):
@@ -22,6 +22,8 @@ class UploadTask(TaskBase):
         session_id = self.entry_id + '-' + self.recorded_id
         self.backend_client = BackendClient(session_id)
         self.chunk_index = 0
+        #self.mp4_files_list = glob.glob1(self.recording_path, '[0,1]_.+_[0,1]_.+_\d+_f\d+_out[.]mp4')
+        self.mp4_files_list = glob.glob1(self.recording_path, '[0-1]_[0-9a-zA-Z]*_f[0-9]_out.mp4')
 
     def get_chunks_to_upload(self, file_size):
         if file_size % self.upload_token_buffer_size == 0:
@@ -67,7 +69,7 @@ class UploadTask(TaskBase):
                 self.logger.info("successfully upload all chunks, call append recording")
                 self.check_replacement_status(upload_session.partner_id)
                 self.backend_client.set_recorded_content_remote(upload_session, str(float(self.duration)/1000))
-                os.rename(self.output_file_path, self.output_file_path + '.done')
+                os.rename(file_name, file_name + '.done')
             else:
                 raise Exception("Failed to upload file, "+str(len(failed_jobs))+" chunks from "+str(chunks_to_upload)+ " where failed:"
                                 + upload_session_json)
@@ -90,12 +92,16 @@ class UploadTask(TaskBase):
     def run(self):
         try:
             mode = get_config('mode')
-            if mode == 'remote':
-                self.upload_file(self.output_file_path)
-            if mode == 'local':
-                self.append_recording_handler()
+            for filename in self.mp4_files_list:
+                file_full_path = os.path.join(self.recording_path, filename)
+                if mode == 'remote':
+                    self.upload_file(file_full_path)
+                if mode == 'local':
+                    self.append_recording_handler()
         except KalturaException as e:
             if e.code == 'KALTURA_RECORDING_DISABLED':
                 self.logger.warn("%s, move it to done directory", e.message)
             else:
                 raise e
+
+
