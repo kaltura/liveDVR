@@ -8,6 +8,7 @@ from KalturaUploadSession import KalturaUploadSession
 from KalturaClient.Plugins.Core import  KalturaEntryReplacementStatus
 from KalturaClient.Base import KalturaException
 import glob
+import re
 
 
 class UploadTask(TaskBase):
@@ -22,8 +23,9 @@ class UploadTask(TaskBase):
         session_id = self.entry_id + '-' + self.recorded_id
         self.backend_client = BackendClient(session_id)
         self.chunk_index = 0
-        #self.mp4_files_list = glob.glob1(self.recording_path, '[0,1]_.+_[0,1]_.+_\d+_f\d+_out[.]mp4')
+        self.mp4_filename_pattern = '[0,1]_.+_[0,1]_.+_\d+_f(?P<flavor_id>\d+)_out[.]mp4'
         self.mp4_files_list = glob.glob1(self.recording_path, '[0-1]_[0-9a-zA-Z]*_f[0-9]_out.mp4')
+
 
     def get_chunks_to_upload(self, file_size):
         if file_size % self.upload_token_buffer_size == 0:
@@ -31,15 +33,15 @@ class UploadTask(TaskBase):
 
         return int(file_size / self.upload_token_buffer_size) + 1
 
-    def upload_file(self, file_name):
+    def upload_file(self, file_name, flavor_id):
 
         threadWorkers = ThreadWorkers()
         file_size = os.path.getsize(file_name)
         chunks_to_upload = self.get_chunks_to_upload(file_size)
         with io.open(file_name, 'rb') as infile:
 
-            upload_session = KalturaUploadSession(self.output_filename, file_size, chunks_to_upload, self.entry_id,
-                                                  self.recorded_id, self.backend_client, self.logger, infile)
+            upload_session = KalturaUploadSession(file_name, file_size, chunks_to_upload, self.entry_id,
+                                                  self.recorded_id, self.backend_client, self.logger, infile, flavor_id)
             if chunks_to_upload > 2:
                 chunk = upload_session.get_next_chunk()
                 threadWorkers.add_job(chunk)
@@ -83,21 +85,27 @@ class UploadTask(TaskBase):
                              recorded_obj.replacementStatus)
             self.backend_client.cancel_replace(partner_id, self.recorded_id)
 
-    def append_recording_handler(self):
+    def append_recording_handler(self, file_full_path, flavor_id):
         partner_id = self.backend_client.get_live_entry(self.entry_id).partnerId
         self.check_replacement_status(partner_id)
-        self.backend_client.set_recorded_content_local(partner_id, self.entry_id, self.output_file_path,
-                                                       str(float(self.duration)/1000), self.recorded_id)
+        self.backend_client.set_recorded_content_local(partner_id, self.entry_id, file_full_path,
+                                                       str(float(self.duration)/1000), self.recorded_id, flavor_id)
 
     def run(self):
         try:
             mode = get_config('mode')
-            for filename in self.mp4_files_list:
-                file_full_path = os.path.join(self.recording_path, filename)
+            for mp4 in self.mp4_files_list:
+                result = re.search(self.mp4_filename_pattern, )
+                if not result:
+                    error = "Error running upload task, failed to parse flavor id from filename: [%s]", mp4
+                    self.logger.error(error)
+                    raise ValueError(error)
+                flavor_id = re.match().group(1)
+                file_full_path = os.path.join(self.recording_path, mp4)
                 if mode == 'remote':
-                    self.upload_file(file_full_path)
+                    self.upload_file(file_full_path, flavor_id)
                 if mode == 'local':
-                    self.append_recording_handler()
+                    self.append_recording_handler(file_full_path, flavor_id)
         except KalturaException as e:
             if e.code == 'KALTURA_RECORDING_DISABLED':
                 self.logger.warn("%s, move it to done directory", e.message)
