@@ -19,12 +19,13 @@ class UploadTask(TaskBase):
 
     def __init__(self, param, logger_info):
         TaskBase.__init__(self, param, logger_info)
-        self.output_file_path = os.path.join(self.recording_path, self.output_filename)
+        #self.output_file_path = os.path.join(self.recording_path, self.output_filename)
         session_id = self.entry_id + '-' + self.recorded_id
         self.backend_client = BackendClient(session_id)
-        self.chunk_index = 0
-        self.mp4_filename_pattern = '[0,1]_.+_[0,1]_.+_\d+_f(?P<flavor_id>\d+)_out[.]mp4'
-        self.mp4_files_list = glob.glob1(self.recording_path, '[0-1]_[0-9a-zA-Z]*_f[0-9]_out.mp4')
+        #self.chunk_index = 0
+        #self.mp4_files_list = glob.glob1(self.recording_path, '[0,1]_[0-9a-zA-Z]+_[0,1]_[0-9a-zA-Z]+_\d+_f\d+_out[.]mp4')
+        self.mp4_files_list = glob.glob1(self.recording_path, '*.mp4')
+        self.mp4_filename_pattern = "[0,1]_.+_[0,1]_.+_\d+_f(?P<flavor_id>\d+)_out[.]mp4"
 
 
     def get_chunks_to_upload(self, file_size):
@@ -41,7 +42,7 @@ class UploadTask(TaskBase):
         with io.open(file_name, 'rb') as infile:
 
             upload_session = KalturaUploadSession(file_name, file_size, chunks_to_upload, self.entry_id,
-                                                  self.recorded_id, self.backend_client, self.logger, infile, flavor_id)
+                                                  self.recorded_id, self.backend_client, self.logger, infile)
             if chunks_to_upload > 2:
                 chunk = upload_session.get_next_chunk()
                 threadWorkers.add_job(chunk)
@@ -70,7 +71,7 @@ class UploadTask(TaskBase):
             if len(failed_jobs) == 0:
                 self.logger.info("successfully upload all chunks, call append recording")
                 self.check_replacement_status(upload_session.partner_id)
-                self.backend_client.set_recorded_content_remote(upload_session, str(float(self.duration)/1000))
+                self.backend_client.set_recorded_content_remote(upload_session, str(float(self.duration)/1000), flavor_id)
                 os.rename(file_name, file_name + '.done')
             else:
                 raise Exception("Failed to upload file, "+str(len(failed_jobs))+" chunks from "+str(chunks_to_upload)+ " where failed:"
@@ -95,12 +96,12 @@ class UploadTask(TaskBase):
         try:
             mode = get_config('mode')
             for mp4 in self.mp4_files_list:
-                result = re.search(self.mp4_filename_pattern, )
+                result = re.search(self.mp4_filename_pattern, mp4)
                 if not result:
                     error = "Error running upload task, failed to parse flavor id from filename: [%s]", mp4
                     self.logger.error(error)
                     raise ValueError(error)
-                flavor_id = re.match().group(1)
+                flavor_id = result.group(1)
                 file_full_path = os.path.join(self.recording_path, mp4)
                 if mode == 'remote':
                     self.upload_file(file_full_path, flavor_id)

@@ -7,6 +7,6 @@ def logger_decorator(class_name, decorate):
 
 
 def log_subprocess_output(logger, pipe, pid, title):
-    header = "[" + title + "] [pid=" + pid + "]"
+    header = "[{}] [pid={}]".format(title, pid)
     for line in iter(pipe.readline, b''):  # b'\n'-separated lines
         logger.info(header + ' %r', line)

@@ -2,10 +2,9 @@ from UploadChunkJob import UploadChunkJob
 from Config.config import get_config
 
 class KalturaUploadSession:
-    def __init__(self, file_name, file_size, chunks_to_upload, entry_id, recorded_id, backend_client, logger, infile, flavor_id):
+    def __init__(self, file_name, file_size, chunks_to_upload, entry_id, recorded_id, backend_client, logger, infile):
         self.infile = infile
         self.file_name = file_name
-        self.flavor_id = flavor_id
         self.logger = logger
         self.file_size = file_size
         self.chunks_to_upload = chunks_to_upload

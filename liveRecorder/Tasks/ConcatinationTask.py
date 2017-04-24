@@ -121,7 +121,7 @@ class ConcatenationTask(TaskBase):
         self.logger.debug('About to run TS -> MP4 conversion. Command: %s', command)
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         exitcode = process.wait()
-        log_subprocess_output(self.logger, process.stdout, process.pid, "ffmpeg convesion process")
+        log_subprocess_output(self.logger, process.stdout, process.pid, "ffmpeg: ts->mp4")
 
         if exitcode is 0:
             self.logger.info('Successfully finished TS -> MP4 conversion')
