@@ -40,6 +40,7 @@ extern "C"
 #include <string>
 #include <queue>
 #include <vector>
+#include <tuple>
 
 #include <stdio.h>
 #include <sys/ioctl.h> // For FIONREAD
@@ -220,7 +221,8 @@ public:
     
     struct Stats
     {
-        int64_t currentPts;
+        int64_t currentPts,running_clock;
+        float rate;
     } m_currentStat;
     
 private:
@@ -257,7 +259,12 @@ private:
         int64_t ptsOffset[10]={0};
         
         m_currentStat.currentPts=0;
+        m_currentStat.rate=0;
         bool isPaused=false;
+        
+        std::queue<std::tuple<int64_t,int64_t>> timeQueue;
+        bool waitforKeyFrame[10]={true};
+
         while (!should_terminate) {
             
             auto msg=getMessage();
@@ -282,9 +289,6 @@ private:
             in_stream  = ifmt_ctx->streams[pkt.stream_index];
             out_stream = ofmt_ctx->streams[pkt.stream_index];
             
-            
-            
-            
             //log_packet(input,ifmt_ctx[input], &pkt, "in");
             
             
@@ -306,8 +310,11 @@ private:
                 refTime[pkt.stream_index]=now;
             }
             int64_t running_pts = (pkt.pts-refPts[pkt.stream_index]);
+            int64_t running_clock = (now - refTime[pkt.stream_index])/1000;
             
-            int64_t timeToSleep =  running_pts - (now - refTime[pkt.stream_index])/1000;
+            timeQueue.push(std::make_tuple(pkt.pts,now/1000));
+            
+            int64_t timeToSleep =  running_pts - running_clock ;
             if (timeToSleep>0) {
                 if (timeToSleep>1000) {
                     timeToSleep=1000;
@@ -317,11 +324,35 @@ private:
             
             if (running_pts<start_offset || isPaused) {
                 m_currentStat.currentPts= AV_NOPTS_VALUE;
+                for (int i=0;i<10;i++)
+                    waitforKeyFrame[i]=true;
+                
                 continue;
+            }
+            
+            if (waitforKeyFrame[pkt.stream_index]) {
+                if ((pkt.flags & AV_PKT_FLAG_KEY)==AV_PKT_FLAG_KEY) {
+                    waitforKeyFrame[pkt.stream_index]=false;
+                } else {
+                    continue;
+                }
             }
             //log_packet(id.c_str(),ofmt_ctx, &pkt, "out");
             
-            m_currentStat.currentPts =pkt.pts;
+            m_currentStat.currentPts = pkt.pts;
+            m_currentStat.running_clock = running_clock;
+            auto& f=timeQueue.front();
+            auto& b=timeQueue.back();
+            
+            auto pts_diff= std::get<0>(b)-std::get<0>(f);
+            auto clock_diff=std::get<1>(b)-std::get<1>(f);
+            if (clock_diff!=0) {
+                m_currentStat.rate=(float)(pts_diff)/(float)clock_diff;
+            }
+
+            if (timeQueue.size()>=100) {
+                timeQueue.pop();
+            }
             
             ret = av_interleaved_write_frame(ofmt_ctx, &pkt);
             if (ret < 0) {
@@ -376,7 +407,7 @@ int main(int argc, char **argv)
     printf("============================================================\n");
     for (int i=0;i<inputs.size();i++)
     {
-        printf("| Input # %2d PTS ",i);
+        printf("|  Input # %2d PTS  ",i+1);
 
     }
     printf("\n============================================================\n");
@@ -420,7 +451,7 @@ int main(int argc, char **argv)
         for (int i=0;i<inputs.size();i++)
         {
             auto stat=inputs[i]->m_currentStat;
-            printf("| %14s ",av_ts2str(stat.currentPts));
+            printf("| %8s (x%.3f) ",av_ts2str(stat.currentPts),stat.rate);
         }
         printf("|");
         av_usleep(1000);
