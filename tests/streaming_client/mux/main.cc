@@ -78,7 +78,6 @@ int kbhit(void) {
     ioctl(STDIN, FIONREAD, &nbbytes);  // 0 is STDIN
     return nbbytes;
 }
-#define MAX_STREAMS 100
 
 
 
@@ -88,8 +87,8 @@ bool should_terminate = false;
 class Input
 {
     AVFormatContext *ifmt_ctx, *ofmt_ctx;
+    std::queue<std::string> mq;
     pthread_mutex_t mu_queue;
-    pthread_cond_t cond;
     pthread_t thread;
     int64_t start_offset;
     std::string id;
@@ -104,8 +103,16 @@ public:
         Clean();
     }
     
-    bool Init(const char* in_filename, const char* out_filename)
+    void sendMessage(std::string str)
     {
+        pthread_mutex_lock(&mu_queue);
+        mq.push(str);
+        pthread_mutex_unlock(&mu_queue);
+
+    }
+    bool Init(const char* in_filename, const char* out_filename, int64_t _start_offset)
+    {
+        start_offset=_start_offset;
         int ret=0;
         if ((ret = avformat_open_input(&ifmt_ctx, in_filename, 0, 0)) < 0) {
             fprintf(stderr, "Could not open input file '%s'", in_filename);
@@ -151,8 +158,7 @@ public:
             out_stream->codec->codec_tag = 0;
             if (ofmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
                 out_stream->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
-            
-            out_stream->time_base           = in_stream->time_base;
+            out_stream->time_base =  {1,1000};
             out_stream->sample_aspect_ratio = in_stream->sample_aspect_ratio;
             out_stream->codec->codec_tag = 0;
             ofmt_ctx->oformat->flags |= AVFMT_TS_NONSTRICT;
@@ -212,7 +218,27 @@ public:
         
     }
     
+    struct Stats
+    {
+        int64_t currentPts;
+    } m_currentStat;
+    
 private:
+    std::string getMessage()
+    {
+        std::string retVal;
+        pthread_mutex_lock(&mu_queue);
+        if (!mq.empty())
+        {
+            retVal = mq.front();
+            mq.pop();
+        }
+        pthread_mutex_unlock(&mu_queue);
+        return retVal;
+        
+    }
+
+    
     static void* Thread(void *context)
     {
         Input* pThis = (Input*)context;
@@ -229,7 +255,24 @@ private:
         int64_t refTime[10]={0};
         int64_t refPts[10]={0};
         int64_t ptsOffset[10]={0};
+        
+        m_currentStat.currentPts=0;
+        bool isPaused=false;
         while (!should_terminate) {
+            
+            auto msg=getMessage();
+            if (msg.size()>0)
+            {
+                if (msg.compare("pause")==0)
+                {
+                    isPaused=true;
+                }
+                if (msg.compare("resume")==0)
+                {
+                    isPaused=false;
+                }
+
+            }
             AVStream *in_stream, *out_stream;
             
             int ret = av_read_frame(ifmt_ctx, &pkt);
@@ -272,16 +315,20 @@ private:
                 av_usleep(timeToSleep*1000);
             }
             
-            if (running_pts<start_offset) {
+            if (running_pts<start_offset || isPaused) {
+                m_currentStat.currentPts= AV_NOPTS_VALUE;
                 continue;
             }
-            log_packet(id.c_str(),ofmt_ctx, &pkt, "out");
+            //log_packet(id.c_str(),ofmt_ctx, &pkt, "out");
+            
+            m_currentStat.currentPts =pkt.pts;
             
             ret = av_interleaved_write_frame(ofmt_ctx, &pkt);
             if (ret < 0) {
                 fprintf(stderr, "Error muxing packet\n");
                 break;
             }
+            
             av_packet_unref(&pkt);
         }
         
@@ -294,7 +341,6 @@ private:
 int main(int argc, char **argv)
 {
 
-    int ret, i;
     
     if (argc < 3) {
         printf("usage: %s input output\n"
@@ -318,7 +364,7 @@ int main(int argc, char **argv)
         int64_t start_offset= atoi(argv[i*3+3]);
      
         auto pInput=new Input(std::to_string(i));
-        pInput->Init(in_filename,out_filename);
+        pInput->Init(in_filename,out_filename,start_offset);
         inputs.push_back(pInput);
     }
     for (int i=0;i<inputs.size();i++)
@@ -326,6 +372,18 @@ int main(int argc, char **argv)
         
         inputs[i]->Start();
     }
+    
+    printf("============================================================\n");
+    for (int i=0;i<inputs.size();i++)
+    {
+        printf("| Input # %2d PTS ",i);
+
+    }
+    printf("\n============================================================\n");
+
+    
+    std::string pauseIndex="123456789";
+    std::string  resumeIndex="!@#$%^&*(";
     while(1)
     {
         if(kbhit())
@@ -335,7 +393,7 @@ int main(int argc, char **argv)
             {
                 AVRational time_base = {1,1};
                 int seconds = 100000;
-                printf("moving forward %d seconds\n",seconds);
+                //printf("moving forward %d seconds\n",seconds);
                 
                // for (int i=0;i<ifmt_ctx[input]->nb_streams;i++) {
               //      ptsOffset[i] += av_rescale_q(seconds, time_base, ifmt_ctx[input]->streams[i]->time_base);
@@ -343,15 +401,34 @@ int main(int argc, char **argv)
                 //}
                 
             }
+            std::string::size_type loc = pauseIndex.find( ch, 0 );
+            if( loc != std::string::npos ) {
+                inputs[loc]->sendMessage("pause");
+            } else {
+                loc = resumeIndex.find( ch, 0 );
+                if( loc != std::string::npos ) {
+                    inputs[loc]->sendMessage("resume");
+                }
+            }
             if(ch==27)
             {
                 break;
             }
             
         }
+        printf("\r");
+        for (int i=0;i<inputs.size();i++)
+        {
+            auto stat=inputs[i]->m_currentStat;
+            printf("| %14s ",av_ts2str(stat.currentPts));
+        }
+        printf("|");
+        av_usleep(1000);
         
 
     }
+    printf("\n============================================================\n");
+
     should_terminate = true;
     
     for (int i=0;i<inputs.size();i++)
@@ -359,7 +436,6 @@ int main(int argc, char **argv)
         inputs[i]->Stop();
     }
     
-end:
     for (int i=0;i<inputs.size();i++)
     {
         inputs[i]->Clean();
