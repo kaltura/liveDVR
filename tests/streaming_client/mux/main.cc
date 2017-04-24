@@ -1,32 +1,3 @@
-/*
-* Copyright (c) 2013 Stefano Sabatini
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-* THE SOFTWARE.
-*/
-
-/**
- * @file
- * libavformat/libavcodec demuxing and muxing API example.
- *
- * Remux streams from one container format to another.
- * @example remuxing.c
- */
 #define __STDC_CONSTANT_MACROS
 extern "C"
 {
@@ -34,6 +5,7 @@ extern "C"
     #include <libavutil/mathematics.h>
     #include <libavformat/avformat.h>
     #include <libavutil/time.h>
+
 }
 #include <time.h>
 #include <stdio.h>
@@ -202,21 +174,22 @@ public:
     
     void Clean()
     {
-        av_write_trailer(ofmt_ctx);
         
-        
-        avformat_close_input(&ifmt_ctx);
-        
-        if (!ofmt_ctx) {
-            return;
+        if (ifmt_ctx) {
+            avformat_close_input(&ifmt_ctx);
+            ifmt_ctx=NULL;
         }
-        AVOutputFormat *ofmt = ofmt_ctx->oformat;
         
-        /* close output */
-        if (!(ofmt->flags & AVFMT_NOFILE))
-            avio_closep(&ofmt_ctx->pb);
-        avformat_free_context(ofmt_ctx);
+        if (ofmt_ctx) {
+            
+            AVOutputFormat *ofmt = ofmt_ctx->oformat;
         
+            /* close output */
+            if (!(ofmt->flags & AVFMT_NOFILE))
+                avio_closep(&ofmt_ctx->pb);
+            avformat_free_context(ofmt_ctx);
+            ofmt_ctx=NULL;
+        }
     }
     
     struct Stats
@@ -362,8 +335,9 @@ private:
             
             av_packet_unref(&pkt);
         }
+
         
-        
+        av_write_trailer(ofmt_ctx);
         
     }
 };
@@ -373,10 +347,9 @@ int main(int argc, char **argv)
 {
 
     
-    if (argc < 3) {
-        printf("usage: %s input output\n"
-               "API example program to remux a media file with libavformat and libavcodec.\n"
-               "The output format is guessed according to the file extension.\n"
+    if (argc  < 4 || (argc-1) % 3!=0) {
+        printf("usage: %s input1 output1 startoffsetn ... inputn outputn startoffsetnn"
+               "Stream input1 to output1 starting at startoffset (in ms) \n"
                "\n", argv[0]);
         return 1;
     }
@@ -403,11 +376,12 @@ int main(int argc, char **argv)
         
         inputs[i]->Start();
     }
-    
+    printf("\n\nPress Esc to stop, 1 to pause steam 1, ! to resume stream 1, 2 to pause stream 2, @ to resume stream 2 and so on\n\n");
+
     printf("============================================================\n");
     for (int i=0;i<inputs.size();i++)
     {
-        printf("|  Input # %2d PTS  ",i+1);
+        printf("|  Input # %2d PTS   ",i+1);
 
     }
     printf("\n============================================================\n");
@@ -453,7 +427,7 @@ int main(int argc, char **argv)
             auto stat=inputs[i]->m_currentStat;
             printf("| %8s (x%.3f) ",av_ts2str(stat.currentPts),stat.rate);
         }
-        printf("|");
+        printf("|                                    ");
         av_usleep(1000);
         
 
@@ -465,10 +439,6 @@ int main(int argc, char **argv)
     for (int i=0;i<inputs.size();i++)
     {
         inputs[i]->Stop();
-    }
-    
-    for (int i=0;i<inputs.size();i++)
-    {
         inputs[i]->Clean();
         delete inputs[i];
     }
