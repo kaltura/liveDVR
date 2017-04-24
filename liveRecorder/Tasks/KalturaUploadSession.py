@@ -48,7 +48,7 @@ class KalturaUploadSession:
                 return None
             final_chunk = self.chunk_index == self.chunks_to_upload
             if final_chunk is True and last_chunk is False:
-                self.logger.warn("Founded that is the last chunk, but function is not called from the right place, "
+                self.logger.warn("Found last chunk, but function is not called from the right place, "
                     "return None. self.chunk_index %s, resume_at: %s, uploaded_file_size: %s",
                                  self.chunk_index , resume_at, self.uploaded_file_size)
                 return None

@@ -136,12 +136,11 @@ class BackendClient:
                          resource.__class__.__name__, duration, recorded_id, flavor_id)
         self.handle_request(partner_id, 'liveStream', 'setRecordedContent', entry_id, 0, resource, duration, recorded_id, flavor_id)
 
-    def set_recorded_content_remote(self, upload_session, duration):
+    def set_recorded_content_remote(self, upload_session, duration, flavor_id):
         token_id = upload_session.token_id
         recorded_id = upload_session.recorded_id
         entry_id = upload_session.entry_id
         partner_id = upload_session.partner_id
-        flavor_id = upload_session.entry_id
         resource = KalturaUploadedFileTokenResource(token_id)
         self.logger.info("set_recorded_content_remote partner_id [%s] token [%s] duration [%s]", partner_id, token_id,
                          duration)

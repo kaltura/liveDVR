@@ -45,11 +45,12 @@ class UploadTask(TaskBase):
                                                   self.recorded_id, self.backend_client, self.logger, infile)
             if chunks_to_upload > 2:
                 chunk = upload_session.get_next_chunk()
-                threadWorkers.add_job(chunk)
-                failed_jobs = threadWorkers.wait_jobs_done()
-                if len(failed_jobs) != 0:
-                    raise Exception("Failed to upload first chunk")
-                self.logger.debug("Finish to upload first chunks")
+                if chunk is not None:
+                    threadWorkers.add_job(chunk)
+                    failed_jobs = threadWorkers.wait_jobs_done()
+                    if len(failed_jobs) != 0:
+                        raise Exception("Failed to upload first chunk")
+                    self.logger.debug("Finish to upload first chunks")
             while upload_session.chunk_index <= chunks_to_upload-1:
                 chunk = upload_session.get_next_chunk()
                 if chunk is None:
