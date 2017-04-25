@@ -8,7 +8,7 @@ echo root dir: [$devRootDir]
 FormatConverterDir=${FormatConverterDir:-$devRootDir/node_addons/FormatConverter}
 echo FormatConverter dir: [$FormatConverterDir]
 echo running setenv.sh to set ffmpeg env
-#sudo su $FormatConverterDir/setenv.sh
+#sudo $FormatConverterDir/setenv.sh
 ffmpegLibsDir=${ffmpegLibsDir:-$devRootDir/node_addons/FormatConverter/build/FFmpeg}
 echo ffmpeg lib dir: [$ffmpegLibsDir]
 ts2mp4ConverterDir="$devRootDir/liveRecorder/ts_to_mp4_convertor"
