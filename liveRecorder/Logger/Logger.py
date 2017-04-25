@@ -63,7 +63,12 @@ class MultiProcessingLog(logging.Handler):
         # ensure that exc_info and args have been stringified.
         # Removes any chance of unpickleable things inside and possibly reduces message size sent over the pipe
         if record.args:
-            record.msg = record.msg % record.args
+            try:
+                record.msg = record.msg % record.args
+            except TypeError as e:
+                print(str(e))
+                print(traceback.format_exc())
+                record.msg = record.msg + ", args: %s" % str(record.args)
             record.args = None
         if record.exc_info:
             dummy = self.format(record)

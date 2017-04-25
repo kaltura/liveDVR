@@ -47253,16 +47253,22 @@ class KalturaServerFileResource(KalturaDataCenterContentResource):
     """Used to ingest media file that is already accessible on the shared disc."""
 
     def __init__(self,
-            localFilePath=NotImplemented):
+            localFilePath=NotImplemented,
+            keepOriginalFile=NotImplemented):
         KalturaDataCenterContentResource.__init__(self)
 
         # Full path to the local file
         # @var string
         self.localFilePath = localFilePath
 
+        # Should keep original file (false = mv, true = cp)
+        # @var bool
+        self.keepOriginalFile = keepOriginalFile
+
 
     PROPERTY_LOADERS = {
-        'localFilePath': getXmlNodeText, 
+        'localFilePath': getXmlNodeText,
+        'keepOriginalFile': getXmlNodeBool,
     }
 
     def fromXml(self, node):
@@ -47273,6 +47279,7 @@ class KalturaServerFileResource(KalturaDataCenterContentResource):
         kparams = KalturaDataCenterContentResource.toParams(self)
         kparams.put("objectType", "KalturaServerFileResource")
         kparams.addStringIfDefined("localFilePath", self.localFilePath)
+        kparams.addBoolIfDefined("keepOriginalFile", self.keepOriginalFile)
         return kparams
 
     def getLocalFilePath(self):
@@ -47280,6 +47287,12 @@ class KalturaServerFileResource(KalturaDataCenterContentResource):
 
     def setLocalFilePath(self, newLocalFilePath):
         self.localFilePath = newLocalFilePath
+
+    def getKeepOriginalFile(self):
+        return self.keepOriginalFile
+
+    def setKeepOriginalFile(self, newKeepOriginalFile):
+        self.keepOriginalFile = newKeepOriginalFile
 
 
 # @package Kaltura

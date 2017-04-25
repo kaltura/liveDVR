@@ -75,9 +75,6 @@ class PersistenceFormat {
     }
 
     getBasePathFromFull(fullPath, type = 'live') {
-        if (type !== 'live'){
-            console.log("type is not live")
-        }
         let fullPathBase = path.dirname(fullPath)
         if (type == 'live'){
           //if live, decapsulated one more layer path
