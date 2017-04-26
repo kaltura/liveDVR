@@ -42,4 +42,9 @@ reports
 # ignor local congif
 common/config/configMapping.json
 
+# ignore local liveRecorder config
 liveRecorder/Config/configMapping.ini
+
+#ignore ts_to_mp4_convertor obj dir
+liveRecorder/ts_to_mp4_convertor/obj
+
