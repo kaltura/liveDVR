@@ -74,7 +74,7 @@ int main(int argc, char **argv)
 {
     AVFormatContext *ifmt_ctx[MAX_STREAMS]= { NULL}, *ofmt_ctx[MAX_STREAMS] ={ NULL};
     AVPacket pkt;
-    int ret, i;
+    int ret;
     
     if (argc < 3) {
         printf("usage: %s input1 ouput1 ... inputn outputn\n"
