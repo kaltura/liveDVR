@@ -14,6 +14,7 @@ echo ffmpeg lib dir: [$ffmpegLibsDir]
 ts2mp4ConverterDir="$devRootDir/liveRecorder/ts_to_mp4_convertor"
 echo ts_to_mp4_convertor dir: [$ts2mp4ConverterDir]
 cd $ts2mp4ConverterDir
+mkdir $ts2mp4ConverterDir/obj
 
 os_name=`uname`
 echo os is $os_name
