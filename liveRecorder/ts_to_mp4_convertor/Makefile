@@ -10,7 +10,7 @@ FFMPEG_LIB_DIR = ../../node_addons/FormatConverter/build/FFmpeg
 IDIRS = -I. -I$(FFMPEG_LIB_DIR)
 LDIR = -L$(FFMPEG_LIB_DIR)/libavutil -L$(FFMPEG_LIB_DIR)/libavformat -L$(FFMPEG_LIB_DIR)/libavcodec -L/usr/local/lib
 FFMPEG_LIBS = -lavutil -lavformat -lavcodec
-LIBS = -liconv -lz -lpng -lm
+LIBS = -liconv -lz -lm
 CFLAGS = -Wall -g $(IDIRS)
 LDFLAGS =  $(LDIR) $(FFMPEG_LIBS) $(LIBS)
 
