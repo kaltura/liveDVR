@@ -7,6 +7,8 @@ from Config.config import get_config
 import hashlib, base64
 import subprocess
 from Logger.LoggerDecorator import log_subprocess_output
+import platform
+import os
 # todo add timeout, and use m3u8 insted of regex
 
 
@@ -16,7 +18,9 @@ class ConcatenationTask(TaskBase):
     nginx_host = get_config('nginx_host')
     secret = get_config('token_key')
     token_url_template = nginx_host + ":" + nginx_port +"/dc-0/recording/hls/p/0/e/{0}/"
-    ts_to_mp4_convertor = os.path.join(get_config('ts_to_mp4_convertor_path'), 'ts_to_mp4_convertor')
+    os_name = platform.system().lower()
+    cwd = os.getcwd()
+    ts_to_mp4_convertor = os.path.join(cwd, '../bin/{}/ts_to_mp4_convertor'.format(os_name))
 
     def __init__(self, param, logger_info):
         TaskBase.__init__(self, param, logger_info)

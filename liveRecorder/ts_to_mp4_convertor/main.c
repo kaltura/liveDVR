@@ -74,7 +74,7 @@ int main(int argc, char **argv)
 {
     AVFormatContext *ifmt_ctx[MAX_STREAMS]= { NULL}, *ofmt_ctx[MAX_STREAMS] ={ NULL};
     AVPacket pkt;
-    int ret, i;
+    int ret, i, j;
     
     if (argc < 3) {
         printf("usage: %s input1 ouput1 ... inputn outputn\n"
@@ -91,7 +91,7 @@ int main(int argc, char **argv)
 
     
     int total_strams= (argc-1)/2;
-    for (int i=0;i<total_strams;i++)
+    for (i=0;i<total_strams;i++)
     {
     
         char* in_filename  = argv[i*2+1];
@@ -119,7 +119,7 @@ int main(int argc, char **argv)
     
         AVOutputFormat *ofmt = ofmt_ctx[i]->oformat;
         
-        for (int j = 0; j < ifmt_ctx[i]->nb_streams; j++) {
+        for (j = 0; j < ifmt_ctx[i]->nb_streams; j++) {
             AVStream *in_stream = ifmt_ctx[i]->streams[j];
         
         
@@ -178,7 +178,7 @@ int main(int argc, char **argv)
         }
     }
     
-    for (int i=0;i<total_strams;i++)
+    for (i=0;i<total_strams;i++)
     {
         while (1) {
             AVStream *in_stream, *out_stream;
@@ -228,7 +228,7 @@ int main(int argc, char **argv)
     
 end:
     
-    for (int i=0;i<total_strams;i++)
+    for (i=0;i<total_strams;i++)
     {
 
         avformat_close_input(&ifmt_ctx[i]);
