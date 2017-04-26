@@ -2,6 +2,10 @@
 
 currentDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
+echo **********************
+echo  Starting new build
+echo **********************
+
 echo current dir: [$currentDir]
 devRootDir=${devRootDir:-"$currentDir/../.."}
 echo root dir: [$devRootDir]
@@ -17,9 +21,14 @@ cd $ts2mp4ConverterDir
 mkdir $ts2mp4ConverterDir/obj
 
 os_name=`uname`
-echo os is $os_name
+export OS="$os_name"
+echo os=[$OS]
 
 make
+
+echo *******************
+echo    Build Ended
+echo *******************
 
 case  $os_name in
 "Darwin")
