@@ -15,10 +15,9 @@ ts2mp4ConverterDir="$devRootDir/liveRecorder/ts_to_mp4_convertor"
 echo ts_to_mp4_convertor dir: [$ts2mp4ConverterDir]
 cd $ts2mp4ConverterDir
 mkdir $ts2mp4ConverterDir/obj
-
+echo [$ts2mp4ConverterDir/obj]
 os_name=`uname`
-
-echo os=[$OS]
+echo [$os_name]
 
 case  $os_name in
 "Darwin")
@@ -28,6 +27,9 @@ case  $os_name in
 	export OS="linux"
    ;;
 esac
+
+echo os=[$OS]
+
 
 echo "********************"
 echo  Starting new build
