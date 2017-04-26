@@ -15,7 +15,7 @@ CFLAGS = -Wall -g $(IDIRS)
 LDFLAGS =  $(LDIR) $(FFMPEG_LIBS) $(LIBS)
 
 ifeq ($(OS),linux)
-    LIBS += -ltr
+    LIBS += -lrt
 else
 	LIBS += -liconv
 endif
