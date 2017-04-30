@@ -34,9 +34,10 @@ class UploadTask(TaskBase):
 
         return int(file_size / self.upload_token_buffer_size) + 1
 
-    def upload_file(self, file_name, flavor_id):
+    def upload_file(self, file_name, flavor_id, is_first_flavor):
 
         threadWorkers = ThreadWorkers()
+        cancel_upload = False
         file_size = os.path.getsize(file_name)
         chunks_to_upload = self.get_chunks_to_upload(file_size)
         with io.open(file_name, 'rb') as infile:
@@ -71,14 +72,18 @@ class UploadTask(TaskBase):
 
             if len(failed_jobs) == 0:
                 self.logger.info("successfully upload all chunks, call append recording")
-                self.check_replacement_status(upload_session.partner_id)
-                self.backend_client.set_recorded_content_remote(upload_session, str(float(self.duration)/1000), flavor_id)
+                if is_first_flavor:
+                    cancel_upload = self.check_replacement_status(upload_session.partner_id)
+                if not cancel_upload:
+                    self.backend_client.set_recorded_content_remote(upload_session, str(float(self.duration)/1000), flavor_id)
                 os.rename(file_name, file_name + '.done')
             else:
                 raise Exception("Failed to upload file, "+str(len(failed_jobs))+" chunks from "+str(chunks_to_upload)+ " where failed:"
                                 + upload_session_json)
+            return cancel_upload
 
     def check_replacement_status(self, partner_id):
+        cancel_upload = False
         self.logger.debug("About to check replacement status for [%s]", self.recorded_id)
         recorded_obj = self.backend_client.get_recorded_entry(partner_id, self.recorded_id)
         self.logger.debug("Got replacement Status: %s", recorded_obj.replacementStatus.value)
@@ -86,16 +91,24 @@ class UploadTask(TaskBase):
             self.logger.info("entry %s has replacementStatus %s, calling cancel_replace", self.recorded_id,
                              recorded_obj.replacementStatus)
             self.backend_client.cancel_replace(partner_id, self.recorded_id)
+            cancel_upload = True
 
-    def append_recording_handler(self, file_full_path, flavor_id):
+        return cancel_upload
+
+    def append_recording_handler(self, file_full_path, flavor_id, is_first_flavor):
         partner_id = self.backend_client.get_live_entry(self.entry_id).partnerId
-        self.check_replacement_status(partner_id)
-        self.backend_client.set_recorded_content_local(partner_id, self.entry_id, file_full_path,
+        cancel_upload = False
+        if is_first_flavor:
+            cancel_upload = self.check_replacement_status(partner_id)
+        if not cancel_upload:
+            self.backend_client.set_recorded_content_local(partner_id, self.entry_id, file_full_path,
                                                        str(float(self.duration)/1000), self.recorded_id, flavor_id)
+        return cancel_upload
 
     def run(self):
         try:
             mode = get_config('mode')
+            is_first_flavor = True
             for mp4 in self.mp4_files_list:
                 result = re.search(self.mp4_filename_pattern, mp4)
                 if not result:
@@ -105,9 +118,12 @@ class UploadTask(TaskBase):
                 flavor_id = result.group(1)
                 file_full_path = os.path.join(self.recording_path, mp4)
                 if mode == 'remote':
-                    self.upload_file(file_full_path, flavor_id)
+                    if not self.upload_file(file_full_path, flavor_id, is_first_flavor):
+                        break
                 if mode == 'local':
-                    self.append_recording_handler(file_full_path, flavor_id)
+                    if not self.append_recording_handler(file_full_path, flavor_id, is_first_flavor):
+                        break
+                is_first_flavor = False
         except KalturaException as e:
             if e.code == 'KALTURA_RECORDING_DISABLED':
                 self.logger.warn("%s, move it to done directory", e.message)
