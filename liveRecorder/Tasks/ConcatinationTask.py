@@ -49,6 +49,8 @@ class ConcatenationTask(TaskBase):
         flavor_list = []
         for element in m3u8_obj.playlists:
             flavor_list.append(element.absolute_uri)
+        for element in m3u8_obj.media:
+            flavor_list.append(element.absolute_uri)
 
         return flavor_list
 
