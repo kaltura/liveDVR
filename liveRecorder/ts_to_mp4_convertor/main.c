@@ -1,37 +1,11 @@
-/*
-* Copyright (c) 2013 Stefano Sabatini
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-* THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-* THE SOFTWARE.
-*/
-
-/**
- * @file
- * libavformat/libavcodec demuxing and muxing API example.
- *
- * Remux streams from one container format to another.
- * @example remuxing.c
- */
-
 #include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
-#include<time.h>
+#include <time.h>
 #include <stdio.h>
+#include <stdio.h>
+#include <sys/ioctl.h> // For FIONREAD
+#include <termios.h>
+#include <stdbool.h>
 
 static void log_packet(const AVFormatContext *fmt_ctx, const AVPacket *pkt, const char *tag)
 {
@@ -44,10 +18,6 @@ static void log_packet(const AVFormatContext *fmt_ctx, const AVPacket *pkt, cons
            av_ts2str(pkt->duration), av_ts2timestr(pkt->duration, time_base),
            pkt->stream_index);
 }
-#include <stdio.h>
-#include <sys/ioctl.h> // For FIONREAD
-#include <termios.h>
-#include <stdbool.h>
 
 int kbhit(void) {
     static bool initflag = false;
@@ -128,7 +98,7 @@ int main(int argc, char **argv)
 {
     
     AVPacket pkt;
-    int ret;
+    int ret=0, i=0, j=0;
     
     if (argc < 3) {
         printf("usage: %s input1 ouput1 ... inputn outputn\n"
@@ -145,7 +115,7 @@ int main(int argc, char **argv)
 
     
     int total_strams= (argc-1)/2;
-    for (int i=0;i<total_strams;i++)
+    for (i=0;i<total_strams;i++)
     {
     
         initStream(&stream[i]);
@@ -174,7 +144,7 @@ int main(int argc, char **argv)
     
         AVOutputFormat *ofmt = stream[i].ofmt_ctx->oformat;
         
-        for (int j = 0; j < stream[i].ifmt_ctx->nb_streams; j++) {
+        for ( j = 0; j < stream[i].ifmt_ctx->nb_streams; j++) {
             AVStream *in_stream = stream[i].ifmt_ctx->streams[j];
         
         
@@ -231,7 +201,7 @@ int main(int argc, char **argv)
     
     start_time=calculateFirstPts(total_strams);
     
-    for (int i=0;i<total_strams;i++)
+    for ( i=0;i<total_strams;i++)
     {
         
         struct Stream* currentStream = &stream[i];
@@ -305,7 +275,7 @@ int main(int argc, char **argv)
     
 end:
     
-    for (int i=0;i<total_strams;i++)
+    for (i=0;i<total_strams;i++)
     {
 
         avformat_close_input(&stream[i].ifmt_ctx);

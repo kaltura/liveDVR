@@ -47253,16 +47253,22 @@ class KalturaServerFileResource(KalturaDataCenterContentResource):
     """Used to ingest media file that is already accessible on the shared disc."""
 
     def __init__(self,
-            localFilePath=NotImplemented):
+            localFilePath=NotImplemented,
+            keepOriginalFile=NotImplemented):
         KalturaDataCenterContentResource.__init__(self)
 
         # Full path to the local file
         # @var string
         self.localFilePath = localFilePath
 
+        # Should keep original file (false = mv, true = cp)
+        # @var bool
+        self.keepOriginalFile = keepOriginalFile
+
 
     PROPERTY_LOADERS = {
-        'localFilePath': getXmlNodeText, 
+        'localFilePath': getXmlNodeText,
+        'keepOriginalFile': getXmlNodeBool,
     }
 
     def fromXml(self, node):
@@ -47273,6 +47279,7 @@ class KalturaServerFileResource(KalturaDataCenterContentResource):
         kparams = KalturaDataCenterContentResource.toParams(self)
         kparams.put("objectType", "KalturaServerFileResource")
         kparams.addStringIfDefined("localFilePath", self.localFilePath)
+        kparams.addBoolIfDefined("keepOriginalFile", self.keepOriginalFile)
         return kparams
 
     def getLocalFilePath(self):
@@ -47280,6 +47287,12 @@ class KalturaServerFileResource(KalturaDataCenterContentResource):
 
     def setLocalFilePath(self, newLocalFilePath):
         self.localFilePath = newLocalFilePath
+
+    def getKeepOriginalFile(self):
+        return self.keepOriginalFile
+
+    def setKeepOriginalFile(self, newKeepOriginalFile):
+        self.keepOriginalFile = newKeepOriginalFile
 
 
 # @package Kaltura
@@ -55917,7 +55930,7 @@ class KalturaLiveChannelService(KalturaServiceBase):
             return self.client.getMultiRequestResult()
         resultNode = self.client.doQueue()
 
-    def setRecordedContent(self, entryId, mediaServerIndex, resource, duration = 0):
+    def setRecordedContent(self, entryId, mediaServerIndex, resource, duration, recordedEntryId = None, flavorParamsId = None):
         """Sey recorded video to live entry"""
 
         kparams = KalturaParams()
@@ -55925,6 +55938,8 @@ class KalturaLiveChannelService(KalturaServiceBase):
         kparams.addStringIfDefined("mediaServerIndex", mediaServerIndex)
         kparams.addObjectIfDefined("resource", resource)
         kparams.addFloatIfDefined("duration", duration)
+        kparams.addStringIfDefined("recordedEntryId", recordedEntryId)
+        kparams.addIntIfDefined("flavorParamsId", flavorParamsId)
         self.client.queueServiceActionCall("livestream", "setRecordedContent", KalturaLiveEntry, kparams)
         if self.client.isMultiRequest():
             return self.client.getMultiRequestResult()
@@ -56202,7 +56217,7 @@ class KalturaLiveStreamService(KalturaServiceBase):
             return self.client.getMultiRequestResult()
         resultNode = self.client.doQueue()
 
-    def setRecordedContent(self, entryId, mediaServerIndex, resource, duration = 0, recorded_id = None):
+    def setRecordedContent(self, entryId, mediaServerIndex, resource, duration, recordedEntryId = None, flavorParamsId = None):
         """Sey recorded video to live entry"""
 
         kparams = KalturaParams()
@@ -56210,7 +56225,8 @@ class KalturaLiveStreamService(KalturaServiceBase):
         kparams.addStringIfDefined("mediaServerIndex", mediaServerIndex)
         kparams.addObjectIfDefined("resource", resource)
         kparams.addFloatIfDefined("duration", duration)
-        kparams.addStringIfDefined("recordedEntryId", recorded_id)
+        kparams.addStringIfDefined("recordedEntryId", recordedEntryId)
+        kparams.addIntIfDefined("flavorParamsId", flavorParamsId)
         self.client.queueServiceActionCall("livestream", "setRecordedContent", KalturaLiveEntry, kparams)
         if self.client.isMultiRequest():
             return self.client.getMultiRequestResult()

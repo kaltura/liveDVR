@@ -97,7 +97,8 @@
     "humanReadable" : false,
     "preserveMP4Chunks": false,
     "segmentDuration" : 10000,
-    "enablePlaylistHistory": false
+    "enablePlaylistHistory": false,
+    "maxDVRWindowInHours" : 24
   },
   "recording" : {
        "enable" : false,

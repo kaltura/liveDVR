@@ -7,6 +7,8 @@ from Config.config import get_config
 import hashlib, base64
 import subprocess
 from Logger.LoggerDecorator import log_subprocess_output
+import platform
+import os
 # todo add timeout, and use m3u8 insted of regex
 
 
@@ -16,7 +18,9 @@ class ConcatenationTask(TaskBase):
     nginx_host = get_config('nginx_host')
     secret = get_config('token_key')
     token_url_template = nginx_host + ":" + nginx_port +"/dc-0/recording/hls/p/0/e/{0}/"
-    ts_to_mp4_convertor = os.path.join(get_config('ts_to_mp4_convertor_path'), 'ts_to_mp4_convertor')
+    os_name = platform.system().lower()
+    cwd = os.path.dirname(os.path.abspath(__file__))
+    ts_to_mp4_convertor = os.path.join(cwd, '../../bin/{}/ts_to_mp4_convertor'.format(os_name))
 
     def __init__(self, param, logger_info):
         TaskBase.__init__(self, param, logger_info)
@@ -45,6 +49,8 @@ class ConcatenationTask(TaskBase):
         flavor_list = []
         for element in m3u8_obj.playlists:
             flavor_list.append(element.absolute_uri)
+        for element in m3u8_obj.media:
+            flavor_list.append(element.absolute_uri)
 
         return flavor_list
 
@@ -72,7 +78,7 @@ class ConcatenationTask(TaskBase):
                                                 , None, None)
 
         except urllib2.HTTPError as e:
-            self.logger.error("Error to concat file, removing file", output_full_path)
+            self.logger.error("Error to concat file %s, removing file", output_full_path)
             os.remove(output_full_path)
             raise e
 
