@@ -70,11 +70,65 @@ int kbhit(void) {
 
 #define MAX_STREAMS 100
 
+struct TrackInfo
+{
+    bool waitForKeyFrame;
+    int64_t lastPts,firstPts;
+    
+};
+struct Stream
+{
+    struct TrackInfo trackInfo[10]; //per track
+    AVFormatContext *ifmt_ctx;
+    AVFormatContext *ofmt_ctx;
+} stream[MAX_STREAMS];
+
+void initStream(struct Stream* stream) {
+    for (int j=0;j<10;j++) {
+        stream->trackInfo[j].waitForKeyFrame=true;
+        stream->trackInfo[j].lastPts=-1;
+        stream->trackInfo[j].firstPts=-1;
+
+    }
+    stream->ifmt_ctx=NULL;
+    stream->ofmt_ctx=NULL;
+
+}
+
+uint64_t calculateFirstPts(int total_strams) {
+    
+    AVPacket pkt;
+    int64_t start_time=0;
+    for (int i=0;i<total_strams;i++)
+    {
+        struct Stream* currentStream = &stream[i];
+        bool shouldStop=false;
+        while (!shouldStop) {
+            
+            int ret = av_read_frame(currentStream->ifmt_ctx, &pkt);
+            if (ret < 0)
+                break;
+            
+            struct TrackInfo* trackInfo = &currentStream->trackInfo[pkt.stream_index];
+            
+            if (pkt.stream_index==0 && trackInfo->firstPts==-1) { ///if video stream & it's the first packet
+                trackInfo->firstPts=pkt.pts;
+                if (start_time < pkt.pts) {
+                    start_time=pkt.pts;
+                }
+                shouldStop=true;
+            }
+            
+        }
+    }
+    return start_time;
+    
+}
 int main(int argc, char **argv)
 {
-    AVFormatContext *ifmt_ctx[MAX_STREAMS]= { NULL}, *ofmt_ctx[MAX_STREAMS] ={ NULL};
+    
     AVPacket pkt;
-    int ret, i;
+    int ret;
     
     if (argc < 3) {
         printf("usage: %s input1 ouput1 ... inputn outputn\n"
@@ -94,40 +148,41 @@ int main(int argc, char **argv)
     for (int i=0;i<total_strams;i++)
     {
     
+        initStream(&stream[i]);
         char* in_filename  = argv[i*2+1];
         char* out_filename = argv[i*2+2];
     
     
     
-        if ((ret = avformat_open_input(&ifmt_ctx[i], in_filename, 0, 0)) < 0) {
+        if ((ret = avformat_open_input(&stream[i].ifmt_ctx, in_filename, 0, 0)) < 0) {
             fprintf(stderr, "Could not open input file '%s'", in_filename);
             goto end;
         }
     
-        if ((ret = avformat_find_stream_info(ifmt_ctx[i], 0)) < 0) {
-            fprintf(stderr, "Failed to retrieve input stream information");
+        if ((ret = avformat_find_stream_info(stream[i].ifmt_ctx, 0)) < 0) {
+            fprintf(stderr, "Failed to retrievestreaminput stream information");
             goto end;
         }
     
-        av_dump_format(ifmt_ctx[i], 0, in_filename, 0);
-        avformat_alloc_output_context2(&ofmt_ctx[i], NULL, NULL, out_filename);
-        if (!ofmt_ctx[i]) {
+        av_dump_format(stream[i].ifmt_ctx, 0, in_filename, 0);
+        avformat_alloc_output_context2(&stream[i].ofmt_ctx, NULL, NULL, out_filename);
+        if (!stream[i].ofmt_ctx) {
             fprintf(stderr, "Could not create output context\n");
             ret = AVERROR_UNKNOWN;
             goto end;
         }
     
-        AVOutputFormat *ofmt = ofmt_ctx[i]->oformat;
+        AVOutputFormat *ofmt = stream[i].ofmt_ctx->oformat;
         
-        for (int j = 0; j < ifmt_ctx[i]->nb_streams; j++) {
-            AVStream *in_stream = ifmt_ctx[i]->streams[j];
+        for (int j = 0; j < stream[i].ifmt_ctx->nb_streams; j++) {
+            AVStream *in_stream = stream[i].ifmt_ctx->streams[j];
         
         
             if (in_stream->codec->codec_id==AV_CODEC_ID_TIMED_ID3) {
                 in_stream->codec->codec_id=AV_CODEC_ID_MOV_TEXT;
             }
         
-            AVStream *out_stream = avformat_new_stream(ofmt_ctx[i], in_stream->codec->codec);
+            AVStream *out_stream = avformat_new_stream(stream[i].ofmt_ctx, in_stream->codec->codec);
             if (!out_stream) {
                 fprintf(stderr, "Failed allocating output stream\n");
                 ret = AVERROR_UNKNOWN;
@@ -140,17 +195,13 @@ int main(int argc, char **argv)
                 goto end;
             }
             out_stream->codec->codec_tag = 0;
-            if (ofmt_ctx[i]->oformat->flags & AVFMT_GLOBALHEADER)
+            if (stream[i].ofmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
                 out_stream->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
         
             out_stream->time_base           = in_stream->time_base;
             out_stream->sample_aspect_ratio = in_stream->sample_aspect_ratio;
-            if (start_time < in_stream->start_time) {
-                start_time=in_stream->start_time;
-            }
-        
             out_stream->codec->codec_tag = 0;
-            ofmt_ctx[i]->oformat->flags |= AVFMT_TS_NONSTRICT;
+            stream[i].ofmt_ctx->oformat->flags |= AVFMT_TS_NONSTRICT;
         
         
             if(in_stream->codec->codec_id == AV_CODEC_ID_AAC) {
@@ -159,36 +210,45 @@ int main(int argc, char **argv)
             }
         
         }
-        av_dump_format(ofmt_ctx[i], 0, out_filename, 1);
+        av_dump_format(stream[i].ofmt_ctx, 0, out_filename, 1);
     
     
         if (!(ofmt->flags & AVFMT_NOFILE)) {
         
-            ret = avio_open(&ofmt_ctx[i]->pb, out_filename, AVIO_FLAG_WRITE);
+            ret = avio_open(&stream[i].ofmt_ctx->pb, out_filename, AVIO_FLAG_WRITE);
             if (ret < 0) {
                 fprintf(stderr, "Could not open output file '%s'", out_filename);
                 goto end;
             }
         }
     
-        ret = avformat_write_header(ofmt_ctx[i], NULL);
+        ret = avformat_write_header(stream[i].ofmt_ctx, NULL);
         if (ret < 0) {
             fprintf(stderr, "Error occurred when opening output file\n");
             goto end;
         }
     }
     
+    start_time=calculateFirstPts(total_strams);
+    
     for (int i=0;i<total_strams;i++)
     {
+        
+        struct Stream* currentStream = &stream[i];
+        
+        av_seek_frame(currentStream->ifmt_ctx, -1,0, AVSEEK_FLAG_BYTE);
+
+        uint64_t offset = start_time;
         while (1) {
+            
             AVStream *in_stream, *out_stream;
-            ret = av_read_frame(ifmt_ctx[i], &pkt);
+            ret = av_read_frame(currentStream->ifmt_ctx, &pkt);
             if (ret < 0)
                 break;
         
-            in_stream  = ifmt_ctx[i]->streams[pkt.stream_index];
-            out_stream = ofmt_ctx[i]->streams[pkt.stream_index];
-        
+            in_stream  = currentStream->ifmt_ctx->streams[pkt.stream_index];
+            out_stream = currentStream->ofmt_ctx->streams[pkt.stream_index];
+            struct TrackInfo* trackInfo = &currentStream->trackInfo[pkt.stream_index];
         
             if(kbhit())
             {
@@ -202,28 +262,45 @@ int main(int argc, char **argv)
         
         
             // log_packet(ifmt_ctx, &pkt, "in");
-        
+            //if (trackInfo->lastPts!=-1) {
+            //    if (pkt.pts<trackInfo->lastPts) {
+            //        offset+=(pkt.pts-trackInfo->lastPts);
+            //    }
+            //}
+            
+            //pkt.pts+=2^33-100000;
+            
+            trackInfo->lastPts=pkt.pts;
             /* copy packet */
-            pkt.pts = av_rescale_q_rnd(pkt.pts-start_time, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
-            pkt.dts = av_rescale_q_rnd(pkt.dts-start_time, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
+            pkt.pts = av_rescale_q_rnd(pkt.pts-offset, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
+            pkt.dts = av_rescale_q_rnd(pkt.dts-offset, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
             pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
             pkt.pos = -1;
             
             if (pkt.pts<0) {
-                //trim packets outside of GOP
+                //trim packets outside of start time
                 continue;
+            } else {
+                if ( trackInfo->waitForKeyFrame) {
+                    if ((pkt.flags & AV_PKT_FLAG_KEY)==AV_PKT_FLAG_KEY) {
+                       // printf("Recieving key frame on track %d at time pts %s vs %s\n",pkt.stream_index, av_ts2str(trackInfo->lastPts),av_ts2str(offset));
+                        trackInfo->waitForKeyFrame=false;
+                    } else {
+                        continue;
+                    }
+                }
             }
-        
+            
             //log_packet(ofmt_ctx, &pkt, "out");
         
-            ret = av_interleaved_write_frame(ofmt_ctx[i], &pkt);
+            ret = av_interleaved_write_frame(currentStream->ofmt_ctx, &pkt);
             if (ret < 0) {
                 fprintf(stderr, "Error muxing packet\n");
                 break;
             }
             av_packet_unref(&pkt);
         }
-        av_write_trailer(ofmt_ctx[i]);
+        av_write_trailer(currentStream->ofmt_ctx);
     }
     
 end:
@@ -231,15 +308,15 @@ end:
     for (int i=0;i<total_strams;i++)
     {
 
-        avformat_close_input(&ifmt_ctx[i]);
+        avformat_close_input(&stream[i].ifmt_ctx);
         
-        AVOutputFormat *ofmt = ofmt_ctx[i]->oformat;
+        AVOutputFormat *ofmt = stream[i].ofmt_ctx->oformat;
 
         /* close output */
-        if (ofmt_ctx[i] && !(ofmt->flags & AVFMT_NOFILE))
-            avio_closep(&ofmt_ctx[i]->pb);
+        if (stream[i].ofmt_ctx && !(ofmt->flags & AVFMT_NOFILE))
+            avio_closep(&stream[i].ofmt_ctx->pb);
     
-        avformat_free_context(ofmt_ctx[i]);
+        avformat_free_context(stream[i].ofmt_ctx);
     
         if (ret < 0 && ret != AVERROR_EOF) {
             fprintf(stderr, "Error occurred: %s\n", av_err2str(ret));
