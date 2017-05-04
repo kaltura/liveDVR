@@ -63,7 +63,8 @@ uint64_t calculateFirstPts(int total_strams)
 {
     AVPacket pkt;
     int64_t start_time=0;
-    for (int i=0;i<total_strams;i++)
+    int i=0;
+    for (i=0;i<total_strams;i++)
     {
         struct FileConversion* currentStream = &conversion[i];
         bool shouldStop=false;
@@ -93,7 +94,7 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
 {
     int ret=0,j=0;
     
-    for (int j=0;j<MAX_TRACKS;j++) {
+    for (j=0;j<MAX_TRACKS;j++) {
         conversion->trackInfo[j].waitForKeyFrame=true;
         conversion->trackInfo[j].lastPts=-1;
         conversion->trackInfo[j].firstPts=-1;
@@ -123,7 +124,7 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
     
     AVOutputFormat *ofmt = conversion->ofmt_ctx->oformat;
     
-    for ( j = 0; j < conversion->ifmt_ctx->nb_streams; j++) {
+    for (j = 0; j < conversion->ifmt_ctx->nb_streams; j++) {
         AVStream *in_stream = conversion->ifmt_ctx->streams[j];
         
         
