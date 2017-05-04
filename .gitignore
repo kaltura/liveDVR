@@ -48,3 +48,8 @@ liveRecorder/Config/configMapping.ini
 #ignore ts_to_mp4_convertor obj dir
 liveRecorder/ts_to_mp4_convertor/obj
 
+# ignore ts_to_mp4_convertor’s xcode project dir
+liveRecorder/ts_to_mp4_convertor/ts_to_mp4_convertor.xcodeproj/
+
+# ignore streaming_client’s Xcode project dir
+tests/streaming_client/streaming_client.xcodeproj/
