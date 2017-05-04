@@ -7,6 +7,11 @@
 #include <termios.h>
 #include <stdbool.h>
 
+
+#define MAX_CONVERSIONS 20
+#define MAX_TRACKS 10
+
+
 static void log_packet(const AVFormatContext *fmt_ctx, const AVPacket *pkt, const char *tag)
 {
     AVRational *time_base = &fmt_ctx->streams[pkt->stream_index]->time_base;
@@ -38,183 +43,287 @@ int kbhit(void) {
     return nbbytes;
 }
 
-#define MAX_STREAMS 100
+
+struct TrackInfo
+{
+    bool waitForKeyFrame;
+    int64_t lastPts,firstPts;
+    
+};
+struct FileConversion
+{
+    struct TrackInfo trackInfo[MAX_TRACKS]; //per track
+    AVFormatContext *ifmt_ctx;
+    AVFormatContext *ofmt_ctx;
+};
+
+struct FileConversion conversion[MAX_CONVERSIONS];
+
+uint64_t calculateFirstPts(int total_strams)
+{
+    AVPacket pkt;
+    int64_t start_time=0;
+    for (int i=0;i<total_strams;i++)
+    {
+        struct FileConversion* currentStream = &conversion[i];
+        bool shouldStop=false;
+        while (!shouldStop) {
+            
+            int ret = av_read_frame(currentStream->ifmt_ctx, &pkt);
+            if (ret < 0)
+                break;
+            
+            struct TrackInfo* trackInfo = &currentStream->trackInfo[pkt.stream_index];
+            
+            if (pkt.stream_index==0 && trackInfo->firstPts==-1) { ///if video stream & it's the first packet
+                trackInfo->firstPts=pkt.pts;
+                if (start_time < pkt.pts) {
+                    start_time=pkt.pts;
+                }
+                shouldStop=true;
+            }
+            
+        }
+    }
+    return start_time;
+}
+
+
+bool initConversion(struct FileConversion* conversion,char* in_filename ,char* out_filename)
+{
+    int ret=0,j=0;
+    
+    for (int j=0;j<MAX_TRACKS;j++) {
+        conversion->trackInfo[j].waitForKeyFrame=true;
+        conversion->trackInfo[j].lastPts=-1;
+        conversion->trackInfo[j].firstPts=-1;
+        
+    }
+    conversion->ifmt_ctx=NULL;
+    conversion->ofmt_ctx=NULL;
+    
+    
+    if ((ret = avformat_open_input(&conversion->ifmt_ctx, in_filename, 0, 0)) < 0) {
+        fprintf(stderr, "Could not open input file '%s'", in_filename);
+        return false;
+    }
+    
+    if ((ret = avformat_find_stream_info(conversion->ifmt_ctx, 0)) < 0) {
+        fprintf(stderr, "Failed to retrieve stream input stream information");
+        return false;
+    }
+    
+    av_dump_format(conversion->ifmt_ctx, 0, in_filename, 0);
+    avformat_alloc_output_context2(&conversion->ofmt_ctx, NULL, NULL, out_filename);
+    if (!conversion->ofmt_ctx) {
+        fprintf(stderr, "Could not create output context\n");
+        ret = AVERROR_UNKNOWN;
+        return false;
+    }
+    
+    AVOutputFormat *ofmt = conversion->ofmt_ctx->oformat;
+    
+    for ( j = 0; j < conversion->ifmt_ctx->nb_streams; j++) {
+        AVStream *in_stream = conversion->ifmt_ctx->streams[j];
+        
+        
+        if (in_stream->codec->codec_id==AV_CODEC_ID_TIMED_ID3) {
+            in_stream->codec->codec_id=AV_CODEC_ID_MOV_TEXT;
+        }
+        
+        AVStream *out_stream = avformat_new_stream(conversion->ofmt_ctx, in_stream->codec->codec);
+        if (!out_stream) {
+            fprintf(stderr, "Failed allocating output stream\n");
+            ret = AVERROR_UNKNOWN;
+            return false;
+        }
+        
+        ret = avcodec_copy_context(out_stream->codec, in_stream->codec);
+        if (ret < 0) {
+            fprintf(stderr, "Failed to copy context from input to output stream codec context\n");
+            return false;
+        }
+        out_stream->codec->codec_tag = 0;
+        if (conversion->ofmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
+            out_stream->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
+        
+        out_stream->time_base           = in_stream->time_base;
+        out_stream->sample_aspect_ratio = in_stream->sample_aspect_ratio;
+        out_stream->codec->codec_tag = 0;
+        conversion->ofmt_ctx->oformat->flags |= AVFMT_TS_NONSTRICT;
+        
+        if(in_stream->codec->codec_id == AV_CODEC_ID_AAC) {
+            ff_stream_add_bitstream_filter(out_stream, "aac_adtstoasc", NULL);
+            
+        }
+        
+        //av_dict_set(&out_stream->metadata, "language", "fra", 0);
+
+        
+    }
+    av_dump_format(conversion->ofmt_ctx, 0, out_filename, 1);
+    
+    
+    if (!(ofmt->flags & AVFMT_NOFILE)) {
+        
+        ret = avio_open(&conversion->ofmt_ctx->pb, out_filename, AVIO_FLAG_WRITE);
+        if (ret < 0) {
+            fprintf(stderr, "Could not open output file '%s'", out_filename);
+            return false;
+        }
+    }
+    
+    ret = avformat_write_header(conversion->ofmt_ctx, NULL);
+    if (ret < 0) {
+        fprintf(stderr, "Error occurred when opening output file\n");
+        return false;
+    }
+
+    return true;
+}
+
+bool dispose(struct FileConversion* conversion)
+{
+    int ret=0;
+    
+    avformat_close_input(&conversion->ifmt_ctx);
+    
+    AVOutputFormat *ofmt = conversion->ofmt_ctx->oformat;
+    
+    /* close output */
+    if (conversion->ofmt_ctx && !(ofmt->flags & AVFMT_NOFILE))
+        avio_closep(&conversion->ofmt_ctx->pb);
+    
+    avformat_free_context(conversion->ofmt_ctx);
+    
+    if (ret < 0 && ret != AVERROR_EOF) {
+        fprintf(stderr, "Error occurred: %s\n", av_err2str(ret));
+        return  false;
+    }
+
+    return true;
+    
+}
+
+void convert(struct FileConversion* conversion,uint64_t offset)
+{
+    AVPacket pkt;
+    av_seek_frame(conversion->ifmt_ctx, -1,0, AVSEEK_FLAG_BYTE);
+    
+    while (1) {
+        
+        AVStream *in_stream, *out_stream;
+        int ret = av_read_frame(conversion->ifmt_ctx, &pkt);
+        if (ret < 0)
+            break;
+        
+        in_stream  = conversion->ifmt_ctx->streams[pkt.stream_index];
+        out_stream = conversion->ofmt_ctx->streams[pkt.stream_index];
+        struct TrackInfo* trackInfo = &conversion->trackInfo[pkt.stream_index];
+        
+        if(kbhit())
+        {
+            int ch=getchar();
+            if(ch==27)
+            {
+                break;
+            }
+            
+        }
+        
+        
+        // log_packet(ifmt_ctx, &pkt, "in");
+        //if (trackInfo->lastPts!=-1) {
+        //    if (pkt.pts<trackInfo->lastPts) {
+        //        offset+=(pkt.pts-trackInfo->lastPts);
+        //    }
+        //}
+        
+        //pkt.pts+=2^33-100000;
+        
+        trackInfo->lastPts=pkt.pts;
+        /* copy packet */
+        pkt.pts = av_rescale_q_rnd(pkt.pts-offset, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
+        pkt.dts = av_rescale_q_rnd(pkt.dts-offset, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
+        pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
+        pkt.pos = -1;
+        
+        if (pkt.pts<0) {
+            //trim packets outside of start time
+            continue;
+        } else {
+            if ( trackInfo->waitForKeyFrame) {
+                if ((pkt.flags & AV_PKT_FLAG_KEY)==AV_PKT_FLAG_KEY) {
+                    // printf("Recieving key frame on track %d at time pts %s vs %s\n",pkt.stream_index, av_ts2str(trackInfo->lastPts),av_ts2str(offset));
+                    trackInfo->waitForKeyFrame=false;
+                } else {
+                    continue;
+                }
+            }
+        }
+        
+        //log_packet(ofmt_ctx, &pkt, "out");
+        
+        ret = av_interleaved_write_frame(conversion->ofmt_ctx, &pkt);
+        if (ret < 0) {
+            fprintf(stderr, "Error muxing packet\n");
+            break;
+        }
+        av_packet_unref(&pkt);
+    }
+    av_write_trailer(conversion->ofmt_ctx);
+    
+}
 
 int main(int argc, char **argv)
 {
-    AVFormatContext *ifmt_ctx[MAX_STREAMS]= { NULL}, *ofmt_ctx[MAX_STREAMS] ={ NULL};
-    AVPacket pkt;
-    int ret=0, i, j;
     
-    if (argc < 3) {
+    int i=0;
+    
+    if (argc < 3 || (argc-1) % 2!=0) {
         printf("usage: %s input1 ouput1 ... inputn outputn\n"
-               "API example program to remux a media file with libavformat and libavcodec.\n"
-               "The output format is guessed according to the file extension.\n"
                "\n", argv[0]);
-        return 1;
+        return -1;
     }
     
     av_register_all();
     avformat_network_init();
     
-    uint64_t start_time=0;
-
     
-    int total_strams= (argc-1)/2;
-    for (i=0;i<total_strams;i++)
+    int total_conversions= (argc-1)/2;
+    
+    //initialize the streams
+    for (i=0;i<total_conversions;i++)
     {
-    
+       
         char* in_filename  = argv[i*2+1];
         char* out_filename = argv[i*2+2];
     
-    
-    
-        if ((ret = avformat_open_input(&ifmt_ctx[i], in_filename, 0, 0)) < 0) {
-            fprintf(stderr, "Could not open input file '%s'", in_filename);
-            goto end;
-        }
-    
-        if ((ret = avformat_find_stream_info(ifmt_ctx[i], 0)) < 0) {
-            fprintf(stderr, "Failed to retrieve input stream information");
-            goto end;
-        }
-    
-        av_dump_format(ifmt_ctx[i], 0, in_filename, 0);
-        avformat_alloc_output_context2(&ofmt_ctx[i], NULL, NULL, out_filename);
-        if (!ofmt_ctx[i]) {
-            fprintf(stderr, "Could not create output context\n");
-            ret = AVERROR_UNKNOWN;
-            goto end;
-        }
-    
-        AVOutputFormat *ofmt = ofmt_ctx[i]->oformat;
-        
-        for (j = 0; j < ifmt_ctx[i]->nb_streams; j++) {
-            AVStream *in_stream = ifmt_ctx[i]->streams[j];
-        
-        
-            if (in_stream->codec->codec_id==AV_CODEC_ID_TIMED_ID3) {
-                in_stream->codec->codec_id=AV_CODEC_ID_MOV_TEXT;
-            }
-        
-            AVStream *out_stream = avformat_new_stream(ofmt_ctx[i], in_stream->codec->codec);
-            if (!out_stream) {
-                fprintf(stderr, "Failed allocating output stream\n");
-                ret = AVERROR_UNKNOWN;
-                goto end;
-            }
-        
-            ret = avcodec_copy_context(out_stream->codec, in_stream->codec);
-            if (ret < 0) {
-                fprintf(stderr, "Failed to copy context from input to output stream codec context\n");
-                goto end;
-            }
-            out_stream->codec->codec_tag = 0;
-            if (ofmt_ctx[i]->oformat->flags & AVFMT_GLOBALHEADER)
-                out_stream->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
-        
-            out_stream->time_base           = in_stream->time_base;
-            out_stream->sample_aspect_ratio = in_stream->sample_aspect_ratio;
-            if (start_time < in_stream->start_time) {
-                start_time=in_stream->start_time;
-            }
-        
-            out_stream->codec->codec_tag = 0;
-            ofmt_ctx[i]->oformat->flags |= AVFMT_TS_NONSTRICT;
-        
-        
-            if(in_stream->codec->codec_id == AV_CODEC_ID_AAC) {
-                ff_stream_add_bitstream_filter(out_stream, "aac_adtstoasc", NULL);
 
-            }
-        
-        }
-        av_dump_format(ofmt_ctx[i], 0, out_filename, 1);
-    
-    
-        if (!(ofmt->flags & AVFMT_NOFILE)) {
-        
-            ret = avio_open(&ofmt_ctx[i]->pb, out_filename, AVIO_FLAG_WRITE);
-            if (ret < 0) {
-                fprintf(stderr, "Could not open output file '%s'", out_filename);
-                goto end;
-            }
-        }
-    
-        ret = avformat_write_header(ofmt_ctx[i], NULL);
-        if (ret < 0) {
-            fprintf(stderr, "Error occurred when opening output file\n");
-            goto end;
+        if (!initConversion(&conversion[i],in_filename,out_filename))
+        {
+            printf("Conversion initialization failed\n");
+            return -1;
         }
     }
     
-    for (i=0;i<total_strams;i++)
+    uint64_t start_time=calculateFirstPts(total_conversions);
+    
+    //convert all streams
+    for ( i=0;i<total_conversions;i++)
     {
-        while (1) {
-            AVStream *in_stream, *out_stream;
-            ret = av_read_frame(ifmt_ctx[i], &pkt);
-            if (ret < 0)
-                break;
-        
-            in_stream  = ifmt_ctx[i]->streams[pkt.stream_index];
-            out_stream = ofmt_ctx[i]->streams[pkt.stream_index];
-        
-        
-            if(kbhit())
-            {
-                int ch=getchar();
-                if(ch==27)
-                {
-                    break;
-                }
-            
-            }
-        
-        
-            // log_packet(ifmt_ctx, &pkt, "in");
-        
-            /* copy packet */
-            pkt.pts = av_rescale_q_rnd(pkt.pts-start_time, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
-            pkt.dts = av_rescale_q_rnd(pkt.dts-start_time, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
-            pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
-            pkt.pos = -1;
-            
-            if (pkt.pts<0) {
-                //trim packets outside of GOP
-                continue;
-            }
-        
-            //log_packet(ofmt_ctx, &pkt, "out");
-        
-            ret = av_interleaved_write_frame(ofmt_ctx[i], &pkt);
-            if (ret < 0) {
-                fprintf(stderr, "Error muxing packet\n");
-                break;
-            }
-            av_packet_unref(&pkt);
-        }
-        av_write_trailer(ofmt_ctx[i]);
+        convert(&conversion[i], start_time);
     }
     
-end:
+    printf("Conversion was successfull\n");
     
-    for (i=0;i<total_strams;i++)
+    //cleanup
+    for (i=0;i<total_conversions;i++)
     {
-
-        avformat_close_input(&ifmt_ctx[i]);
-        
-        AVOutputFormat *ofmt = ofmt_ctx[i]->oformat;
-
-        /* close output */
-        if (ofmt_ctx[i] && !(ofmt->flags & AVFMT_NOFILE))
-            avio_closep(&ofmt_ctx[i]->pb);
-    
-        avformat_free_context(ofmt_ctx[i]);
-    
-        if (ret < 0 && ret != AVERROR_EOF) {
-            fprintf(stderr, "Error occurred: %s\n", av_err2str(ret));
-            return 1;
-        }
+        dispose(&conversion[i]);
     }
+    
+    printf("Cleanup done successfully\n");
+    
     return 0;
 }
