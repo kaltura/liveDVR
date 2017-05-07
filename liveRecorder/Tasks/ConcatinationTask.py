@@ -1,15 +1,19 @@
-import os
-from TaskBase import TaskBase
-import urllib2
-import re
-import m3u8
-from Config.config import get_config
-import hashlib, base64
-import subprocess
-from Logger.LoggerDecorator import log_subprocess_output
-import platform
-import os
+import base64
 import collections
+import hashlib
+import os
+import platform
+import re
+import subprocess
+import urllib2
+
+import m3u8
+import pycountry
+
+from Config.config import get_config
+from Logger.LoggerDecorator import log_subprocess_output
+from TaskBase import TaskBase
+
 # todo add timeout, and use m3u8 insted of regex
 
 Flavor = collections.namedtuple('Flavor',  'url language')
@@ -56,9 +60,13 @@ class ConcatenationTask(TaskBase):
                 language='und'
             ))
         for element in m3u8_obj.media:
+            language = element.language
+            # convert alpha_2 (iso639_1 format) to alpha_3 (iso639-3) check https://pypi.python.org/pypi/pycountry
+            if len(element.language) == 2:
+                language = pycountry.languages.get(alpha_2=language).alpha_3.encode("utf8")
             flavors_list.append(Flavor(
                 url=element.absolute_uri,
-                language=element.language
+                language=language
             ))
 
         return flavors_list

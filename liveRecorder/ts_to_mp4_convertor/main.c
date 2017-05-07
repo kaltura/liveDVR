@@ -124,21 +124,7 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
 
     AVOutputFormat *ofmt = conversion->ofmt_ctx->oformat;
     
-    //av_dict_set(&conversion->ofmt_ctx->metadata, "language", NULL, AV_DICT_MATCH_CASE);
     AVDictionaryEntry *entry = NULL;
-    entry = av_dict_get(conversion->ifmt_ctx->metadata, "language", NULL, AV_DICT_IGNORE_SUFFIX);
-    if (entry != NULL) {
-        printf("successfully got langauge entry: value=\'%s\' expected %s \n", entry->value, language);
-    } else {
-        printf("failed to get langauge entry\n");
-        if (av_dict_set(&conversion->ifmt_ctx->metadata, "language", language, AV_DICT_DONT_STRDUP_KEY | AV_DICT_DONT_STRDUP_VAL) >= 0) {
-            printf("successfully set language \'%s\' to conversion metadata\n", language);
-        } else {
-            printf("faile to set language \'%s\' to conversion metadata\n", language);
-        }
-
-    }
-
     
     for (j = 0; j < conversion->ifmt_ctx->nb_streams; j++) {
         AVStream *in_stream = conversion->ifmt_ctx->streams[j];
@@ -174,9 +160,8 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
             
         }
         
-        //av_dict_set(&out_stream->metadata, "language", "fra", 0);
+        av_dict_set(&out_stream->metadata, "language", language, 0);
 
-        
     }
     av_dump_format(conversion->ofmt_ctx, 0, out_filename, 1);
     
@@ -195,19 +180,7 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
         fprintf(stderr, "Error occurred when opening output file\n");
         return false;
     }
-    // remove entry to avoid duplicate entry
-    //av_dict_set(&conversion->ifmt_ctx->metadata, "language", NULL, AV_DICT_MATCH_CASE);
-    if (av_dict_set(&conversion->ofmt_ctx->metadata, "language", language, AV_DICT_DONT_STRDUP_KEY | AV_DICT_DONT_STRDUP_VAL) >= 0) {
-        printf("successfully set language \'%s\' to conversion metadata\n", language);
-    } else {
-        printf("faile to set language \'%s\' to conversion metadata\n", language);
-    }
     
-    //av_dict_set(&conversion->ofmt_ctx->metadata, "language", NULL, AV_DICT_MATCH_CASE);
-    AVDictionaryEntry *out_entry = NULL;
-    out_entry = av_dict_get(conversion->ofmt_ctx->metadata, "language", NULL, AV_DICT_IGNORE_SUFFIX);
-    printf("language entry value is\'%s\'\n", out_entry->value);
-   
     return true;
 }
 
@@ -223,7 +196,7 @@ bool dispose(struct FileConversion* conversion)
     if (conversion->ofmt_ctx && !(ofmt->flags & AVFMT_NOFILE))
         avio_closep(&conversion->ofmt_ctx->pb);
     
-    //avformat_free_context(conversion->ofmt_ctx);
+    avformat_free_context(conversion->ofmt_ctx);
     
     if (ret < 0 && ret != AVERROR_EOF) {
         fprintf(stderr, "Error occurred: %s\n", av_err2str(ret));
@@ -310,7 +283,7 @@ int main(int argc, char **argv)
     int i=0;
     
     if (argc < 4 || (argc-1) % 3!=0) {
-        printf("usage: %s input1 ouput1 language1... inputn outputn languagen\n"
+        printf("usage: %s input1 ouput1 language1... inputn outputn language\n"
                "\n", argv[0]);
         for (i=0; i<argc; i++) {
             printf("(%d) arg_%d=%s", i,i,argv[i]);
@@ -331,7 +304,6 @@ int main(int argc, char **argv)
         char* in_filename  = argv[i*3+1];
         char* out_filename = argv[i*3+2];
         char* language = argv[i*3+3];
-    
 
         if (!initConversion(&conversion[i],in_filename,out_filename, language))
         {
