@@ -90,7 +90,7 @@ uint64_t calculateFirstPts(int total_strams)
 }
 
 
-bool initConversion(struct FileConversion* conversion,char* in_filename ,char* out_filename)
+bool initConversion(struct FileConversion* conversion,char* in_filename ,char* out_filename, char* language)
 {
     int ret=0,j=0;
     
@@ -121,8 +121,10 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
         ret = AVERROR_UNKNOWN;
         return false;
     }
-    
+
     AVOutputFormat *ofmt = conversion->ofmt_ctx->oformat;
+    
+    AVDictionaryEntry *entry = NULL;
     
     for (j = 0; j < conversion->ifmt_ctx->nb_streams; j++) {
         AVStream *in_stream = conversion->ifmt_ctx->streams[j];
@@ -158,9 +160,8 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
             
         }
         
-        //av_dict_set(&out_stream->metadata, "language", "fra", 0);
+        av_dict_set(&out_stream->metadata, "language", language, 0);
 
-        
     }
     av_dump_format(conversion->ofmt_ctx, 0, out_filename, 1);
     
@@ -169,7 +170,7 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
         
         ret = avio_open(&conversion->ofmt_ctx->pb, out_filename, AVIO_FLAG_WRITE);
         if (ret < 0) {
-            fprintf(stderr, "Could not open output file '%s'", out_filename);
+            fprintf(stderr, "Could not open output file '%s'\n", out_filename);
             return false;
         }
     }
@@ -179,7 +180,7 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
         fprintf(stderr, "Error occurred when opening output file\n");
         return false;
     }
-
+    
     return true;
 }
 
@@ -281,9 +282,12 @@ int main(int argc, char **argv)
     
     int i=0;
     
-    if (argc < 3 || (argc-1) % 2!=0) {
-        printf("usage: %s input1 ouput1 ... inputn outputn\n"
+    if (argc < 4 || (argc-1) % 3!=0) {
+        printf("usage: %s input1 ouput1 language1... inputn outputn language\n"
                "\n", argv[0]);
+        for (i=0; i<argc; i++) {
+            printf("(%d) arg_%d=%s", i,i,argv[i]);
+        }
         return -1;
     }
     
@@ -291,17 +295,17 @@ int main(int argc, char **argv)
     avformat_network_init();
     
     
-    int total_conversions= (argc-1)/2;
+    int total_conversions= (argc-1)/3;
     
     //initialize the streams
     for (i=0;i<total_conversions;i++)
     {
        
-        char* in_filename  = argv[i*2+1];
-        char* out_filename = argv[i*2+2];
-    
+        char* in_filename  = argv[i*3+1];
+        char* out_filename = argv[i*3+2];
+        char* language = argv[i*3+3];
 
-        if (!initConversion(&conversion[i],in_filename,out_filename))
+        if (!initConversion(&conversion[i],in_filename,out_filename, language))
         {
             printf("Conversion initialization failed\n");
             return -1;

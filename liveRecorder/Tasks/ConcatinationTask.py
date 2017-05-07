@@ -1,15 +1,22 @@
+import base64
+import collections
+import hashlib
 import os
-from TaskBase import TaskBase
-import urllib2
-import re
-import m3u8
-from Config.config import get_config
-import hashlib, base64
-import subprocess
-from Logger.LoggerDecorator import log_subprocess_output
 import platform
-import os
+import re
+import subprocess
+import urllib2
+
+import m3u8
+import pycountry
+
+from Config.config import get_config
+from Logger.LoggerDecorator import log_subprocess_output
+from TaskBase import TaskBase
+
 # todo add timeout, and use m3u8 insted of regex
+
+Flavor = collections.namedtuple('Flavor',  'url language')
 
 
 class ConcatenationTask(TaskBase):
@@ -43,16 +50,26 @@ class ConcatenationTask(TaskBase):
         encoded_hash = base64.urlsafe_b64encode(hash).rstrip('=')
         return encoded_hash
 
-    def extract_flavor_list(self):
+    def extract_flavor_dict(self):
         self.logger.debug("About to load master manifest from %s" ,self.url_master)
         m3u8_obj = m3u8.load(self.url_master)
-        flavor_list = []
+        flavors_list = []
         for element in m3u8_obj.playlists:
-            flavor_list.append(element.absolute_uri)
+            flavors_list.append(Flavor(
+                url=element.absolute_uri,
+                language='und'
+            ))
         for element in m3u8_obj.media:
-            flavor_list.append(element.absolute_uri)
+            language = element.language
+            # convert alpha_2 (iso639_1 format) to alpha_3 (iso639-3) check https://pypi.python.org/pypi/pycountry
+            if len(element.language) == 2:
+                language = pycountry.languages.get(alpha_2=language).alpha_3.encode("utf8")
+            flavors_list.append(Flavor(
+                url=element.absolute_uri,
+                language=language
+            ))
 
-        return flavor_list
+        return flavors_list
 
     def download_chunks_and_concat(self, chunks, output_full_path):
         try:
@@ -98,24 +115,23 @@ class ConcatenationTask(TaskBase):
         token = self.tokenize_url(self.token_url)
         self.url_base_entry = self.nginx_url.format(token)
         self.url_master = os.path.join(self.url_base_entry, 'master.m3u8')
-        flavors_manifest_list = self.extract_flavor_list()
+        flavors_list = self.extract_flavor_dict()
 
-
-        for url_source_manifest in flavors_manifest_list:
-            url_postfix = url_source_manifest.rsplit('/', 1)[1]
+        for obj in flavors_list:
+            url_postfix = obj.url.rsplit('/', 1)[1]
             result = re.search(self.flavor_pattern, url_postfix)
             if not result:
-                error = "Error running concat task, failed to parse flavor from url: [%s]", url_source_manifest
+                error = "Error running concat task, failed to parse flavor from url: [%s]", obj.url
                 self.logger.error(error)
                 raise ValueError(error)
             ts_output_filename = self.get_output_filename(result.group('flavor'))
             output_full_path = os.path.join(self.recording_path, ts_output_filename)
             mp4_full_path = output_full_path.replace('.ts', '.mp4')
-            command = command + ' ' + output_full_path + ' ' + mp4_full_path
+            command = command + ' ' + output_full_path + ' ' + mp4_full_path + ' ' + obj.language
             if os.path.isfile(output_full_path):
                 self.logger.warn("file [%s] already exist", output_full_path)
                 continue
-            playlist = self.download_file(url_source_manifest)
+            playlist = self.download_file(obj.url)
             self.logger.debug("load recording manifest : \n %s ", playlist)
             chunks = m3u8.loads(playlist).files
             self.download_chunks_and_concat(chunks, output_full_path)
