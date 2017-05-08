@@ -396,8 +396,8 @@ int main(int argc, char **argv)
             int ch=getchar();
             if(ch=='s')
             {
-                AVRational time_base = {1,1};
-                int seconds = 100000;
+                //AVRational time_base = {1,1};
+                //int seconds = 100000;
                 //printf("moving forward %d seconds\n",seconds);
                 
                // for (int i=0;i<ifmt_ctx[input]->nb_streams;i++) {
@@ -411,7 +411,7 @@ int main(int argc, char **argv)
                 inputs[loc]->sendMessage("pause");
             } else {
                 loc = resumeIndex.find( ch, 0 );
-                if( loc != std::string::npos ) {
+                if ( loc != std::string::npos ) {
                     inputs[loc]->sendMessage("resume");
                 }
             }
