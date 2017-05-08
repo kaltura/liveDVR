@@ -11,7 +11,6 @@ class Iso639Wrapper:
         # load iso639 database
         with open(full_path) as database:
             self.language_database = json.load(database)
-            database.close()
 
     def convert_language_to_iso639_3(self, in_language):
         size_lang = len(in_language)
@@ -23,6 +22,8 @@ class Iso639Wrapper:
             for entry in self.language_database[u'639-3']:
                 if u'alpha_2' in entry and entry[u'alpha_2'] == in_language:
                     out_language = entry[u'alpha_3'].encode("utf8")
+                    self.logger.debug("found conversion for language: iso639-1: %s --> iso639-3: %s", in_language,
+                                      out_language)
                     break
             if out_language == "und":
                 self.logger.error("no conversion found for language \'%s\'", in_language)
