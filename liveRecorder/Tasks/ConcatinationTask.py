@@ -8,7 +8,7 @@ import subprocess
 import urllib2
 
 import m3u8
-import pycountry
+from Iso639Wrapper import Iso639Wrapper
 
 from Config.config import get_config
 from Logger.LoggerDecorator import log_subprocess_output
@@ -37,6 +37,7 @@ class ConcatenationTask(TaskBase):
         self.token_url = self.token_url_template.format(self.recorded_id)
         self.nginx_url = "http://" + self.token_url + "t/{0}"
         self.flavor_pattern = '[^-]\a*(?P<flavor>\d+)-[^-]'
+        self.iso639_wrapper = Iso639Wrapper(logger_info)
 
 
     def tokenize_url(self, url):
@@ -63,7 +64,7 @@ class ConcatenationTask(TaskBase):
             language = element.language
             # convert alpha_2 (iso639_1 format) to alpha_3 (iso639-3) check https://pypi.python.org/pypi/pycountry
             if len(element.language) == 2:
-                language = pycountry.languages.get(alpha_2=language).alpha_3.encode("utf8")
+                language = self.iso639_wrapper.convert_language_to_iso639_3(unicode(language))
             flavors_list.append(Flavor(
                 url=element.absolute_uri,
                 language=language
