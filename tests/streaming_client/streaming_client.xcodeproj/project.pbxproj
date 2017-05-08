@@ -12,7 +12,7 @@
 		085AAA6D1E0B535D00D29A7D /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 085AAA6C1E0B535D00D29A7D /* libavutil.a */; };
 		085AAA6F1E0B536D00D29A7D /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 085AAA6E1E0B536D00D29A7D /* libz.dylib */; };
 		085AAA711E0B537400D29A7D /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 085AAA701E0B537400D29A7D /* libiconv.dylib */; };
-		086E7AD11E044C7500206F21 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 086E7AD01E044C7500206F21 /* main.c */; };
+		086E7AD11E044C7500206F21 /* main.cc in Sources */ = {isa = PBXBuildFile; fileRef = 086E7AD01E044C7500206F21 /* main.cc */; };
 		086EF1D91E0EE7820038086F /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 086EF1D81E0EE7820038086F /* libswscale.a */; };
 /* End PBXBuildFile section */
 
@@ -35,7 +35,7 @@
 		085AAA6E1E0B536D00D29A7D /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = ../../../usr/lib/libz.dylib; sourceTree = "<group>"; };
 		085AAA701E0B537400D29A7D /* libiconv.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libiconv.dylib; path = ../../../usr/lib/libiconv.dylib; sourceTree = "<group>"; };
 		086E7ACD1E044C7500206F21 /* mux */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mux; sourceTree = BUILT_PRODUCTS_DIR; };
-		086E7AD01E044C7500206F21 /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
+		086E7AD01E044C7500206F21 /* main.cc */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cc; sourceTree = "<group>"; };
 		086EF1D81E0EE7820038086F /* libswscale.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswscale.a; path = "../Documents/ffmpeg-3.0/libswscale/libswscale.a"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -76,7 +76,7 @@
 		086E7ACF1E044C7500206F21 /* mux */ = {
 			isa = PBXGroup;
 			children = (
-				086E7AD01E044C7500206F21 /* main.c */,
+				086E7AD01E044C7500206F21 /* main.cc */,
 			);
 			path = mux;
 			sourceTree = "<group>";
@@ -151,7 +151,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				086E7AD11E044C7500206F21 /* main.c in Sources */,
+				086E7AD11E044C7500206F21 /* main.cc in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -203,6 +203,8 @@
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				WARNING_CFLAGS = "-Wno-literal-suffix";
+				"WARNING_CFLAGS[arch=*]" = "";
 			};
 			name = Debug;
 		};
@@ -244,6 +246,10 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
+				WARNING_CFLAGS = (
+					"-Wall",
+					"-Wno-literal-suffix",
+				);
 			};
 			name = Release;
 		};
@@ -251,9 +257,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				CLANG_CXX_LIBRARY = "compiler-default";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LIBRARY = "libc++";
 				GCC_CW_ASM_SYNTAX = NO;
-				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_C_LANGUAGE_STANDARD = c11;
 				GCC_ENABLE_CPP_RTTI = NO;
 				GCC_ENABLE_PASCAL_STRINGS = NO;
 				GCC_THREADSAFE_STATICS = NO;
@@ -267,10 +274,8 @@
 				OTHER_CFLAGS = "-fno-strict-aliasing";
 				OTHER_LDFLAGS = "-stdlib=libc++";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				WARNING_CFLAGS = (
-					"-Wall",
-					"-Wliteral-suffix",
-				);
+				WARNING_CFLAGS = "";
+				"WARNING_CFLAGS[arch=*]" = "-Wall";
 			};
 			name = Debug;
 		};
@@ -278,9 +283,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				CLANG_CXX_LIBRARY = "compiler-default";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LIBRARY = "libc++";
 				GCC_CW_ASM_SYNTAX = NO;
-				GCC_C_LANGUAGE_STANDARD = "compiler-default";
+				GCC_C_LANGUAGE_STANDARD = c11;
 				GCC_ENABLE_CPP_RTTI = NO;
 				GCC_ENABLE_PASCAL_STRINGS = NO;
 				GCC_THREADSAFE_STATICS = NO;
@@ -293,10 +299,7 @@
 				OTHER_CFLAGS = "-fno-strict-aliasing";
 				OTHER_LDFLAGS = "-stdlib=libc++";
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				WARNING_CFLAGS = (
-					"-Wall",
-					"-Wliteral-suffix",
-				);
+				WARNING_CFLAGS = "-Wall";
 			};
 			name = Release;
 		};

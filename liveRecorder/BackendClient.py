@@ -130,13 +130,13 @@ class BackendClient:
         }
         return json.dumps(result_dictionary, ensure_ascii=False)
 
-    def set_recorded_content(self, entry_id, resource, duration, partner_id, recorded_id):
+    def set_recorded_content(self, entry_id, resource, duration, partner_id, recorded_id, flavor_id):
 
-        self.logger.info("set_recorded_content entry_id  [%s], resource [%s] duration [%s] recorded_id [%s]", entry_id,
-                         resource.__class__.__name__, duration, recorded_id)
-        self.handle_request(partner_id, 'liveStream', 'setRecordedContent', entry_id, 0, resource, duration, recorded_id)
+        self.logger.info("set_recorded_content entry_id  [%s], resource [%s] duration [%s] recorded_id [%s] flavor_id", entry_id,
+                         resource.__class__.__name__, duration, recorded_id, flavor_id)
+        self.handle_request(partner_id, 'liveStream', 'setRecordedContent', entry_id, 0, resource, duration, recorded_id, flavor_id)
 
-    def set_recorded_content_remote(self, upload_session, duration):
+    def set_recorded_content_remote(self, upload_session, duration, flavor_id):
         token_id = upload_session.token_id
         recorded_id = upload_session.recorded_id
         entry_id = upload_session.entry_id
@@ -144,15 +144,16 @@ class BackendClient:
         resource = KalturaUploadedFileTokenResource(token_id)
         self.logger.info("set_recorded_content_remote partner_id [%s] token [%s] duration [%s]", partner_id, token_id,
                          duration)
-        self.set_recorded_content(entry_id, resource, duration, partner_id, recorded_id)
+        self.set_recorded_content(entry_id, resource, duration, partner_id, recorded_id, flavor_id)
 
-    def set_recorded_content_local(self, partner_id, entry_id, output_file, duration, recorded_id):  # todo check it
+    def set_recorded_content_local(self, partner_id, entry_id, output_file, duration, recorded_id, flavor_id):  # todo check it
         self.logger.info("set_recorded_content_local partner_id [%s] output_file [%s] duration [%s]", partner_id,
                          output_file, duration)
         resource = KalturaServerFileResource()
         resource.localFilePath = output_file
+        self.set_recorded_content(entry_id, resource, duration, partner_id, recorded_id, flavor_id)
         resource.keepOriginalFile = False
-        self.set_recorded_content(entry_id, resource, duration, partner_id, recorded_id)
+
 
 
 
