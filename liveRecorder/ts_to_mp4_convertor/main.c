@@ -16,12 +16,13 @@ static void log_packet(const AVFormatContext *fmt_ctx, const AVPacket *pkt, cons
 {
     AVRational *time_base = &fmt_ctx->streams[pkt->stream_index]->time_base;
     
-    printf("%s: pts:%s pts_time:%s dts:%s dts_time:%s duration:%s duration_time:%s stream_index:%d\n",
+    printf("%s: pts:%s pts_time:%s dts:%s dts_time:%s duration:%s duration_time:%s stream_index:%d flags:%d\n",
            tag,
            av_ts2str(pkt->pts), av_ts2timestr(pkt->pts, time_base),
            av_ts2str(pkt->dts), av_ts2timestr(pkt->dts, time_base),
            av_ts2str(pkt->duration), av_ts2timestr(pkt->duration, time_base),
-           pkt->stream_index);
+           pkt->stream_index,
+           pkt->flags);
 }
 
 int kbhit(void) {
@@ -47,11 +48,12 @@ int kbhit(void) {
 struct TrackInfo
 {
     bool waitForKeyFrame;
-    int64_t lastPts,firstPts;
+    int64_t lastPts;
     
 };
 struct FileConversion
 {
+    char inputFileName[10240];
     struct TrackInfo trackInfo[MAX_TRACKS]; //per track
     AVFormatContext *ifmt_ctx;
     AVFormatContext *ofmt_ctx;
@@ -59,34 +61,71 @@ struct FileConversion
 
 struct FileConversion conversion[MAX_CONVERSIONS];
 
+
 uint64_t calculateFirstPts(int total_strams)
 {
     AVPacket pkt;
     int64_t start_time=0;
-    for (int i=0;i<total_strams;i++)
+    //we need two passes so validate that all streams will start together
+    for (int j=0;j<2;j++)
     {
-        struct FileConversion* currentStream = &conversion[i];
-        bool shouldStop=false;
-        while (!shouldStop) {
-            
-            int ret = av_read_frame(currentStream->ifmt_ctx, &pkt);
-            if (ret < 0)
-                break;
-            
-            struct TrackInfo* trackInfo = &currentStream->trackInfo[pkt.stream_index];
-            
-            if (pkt.stream_index==0 && trackInfo->firstPts==-1) { ///if video stream & it's the first packet
-                trackInfo->firstPts=pkt.pts;
-                if (start_time < pkt.pts) {
-                    start_time=pkt.pts;
-                }
-                shouldStop=true;
+        
+        for (int i=0;i<total_strams;i++)
+        {
+            struct FileConversion* currentStream = &conversion[i];
+
+            AVFormatContext* ifmt_ctx=NULL;
+            if (avformat_open_input(&ifmt_ctx, currentStream->inputFileName, 0, 0) < 0) {
+                fprintf(stderr, "Could not open input file '%s'", currentStream->inputFileName);
+                return false;
             }
+
             
+            
+            AVPacket pkt;
+            
+            bool shouldStop=false;
+            printf("[calculateFirstPts] ************ iter %d stream %d\n",j+1,i);
+
+            while (!shouldStop) {
+                
+                int ret = av_read_frame(ifmt_ctx, &pkt);
+                if (ret < 0)
+                    break;
+                
+                struct TrackInfo* trackInfo = &currentStream->trackInfo[pkt.stream_index];
+                
+                if (pkt.stream_index==0 &&
+                    (pkt.flags & AV_PKT_FLAG_KEY)==AV_PKT_FLAG_KEY)
+                { ///if video stream & it's the first packet
+                    if (start_time == pkt.pts) {
+                        printf("[calculateFirstPts] iter %d, stream %d same start_time (%s)\n",j+1,i,av_ts2str(start_time));
+                        shouldStop=true;
+                    }
+                    else
+                    {
+
+                        if (start_time < pkt.pts) {
+                            printf("[calculateFirstPts] iter %d, stream %d changed start_time from %s to %s\n",j+1,i,av_ts2str(start_time),av_ts2str(pkt.pts));
+                            start_time=pkt.pts;
+                            shouldStop=true;
+                        } else {
+                            printf("[calculateFirstPts] iter %d, stream %d frame @ %s is smaller than start time  %s\n",j+1,i,av_ts2str(pkt.pts),av_ts2str(start_time));
+                        }
+                        
+                    }
+                }
+                
+            }
+            avformat_close_input(&ifmt_ctx);
+
         }
     }
+    printf("[calculateFirstPts] calculated start_time is %s\n",av_ts2str(start_time));
+
     return start_time;
 }
+
 
 
 bool initConversion(struct FileConversion* conversion,char* in_filename ,char* out_filename)
@@ -96,12 +135,12 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
     for (int j=0;j<MAX_TRACKS;j++) {
         conversion->trackInfo[j].waitForKeyFrame=true;
         conversion->trackInfo[j].lastPts=-1;
-        conversion->trackInfo[j].firstPts=-1;
         
     }
     conversion->ifmt_ctx=NULL;
     conversion->ofmt_ctx=NULL;
     
+    strcpy(conversion->inputFileName,in_filename);
     
     if ((ret = avformat_open_input(&conversion->ifmt_ctx, in_filename, 0, 0)) < 0) {
         fprintf(stderr, "Could not open input file '%s'", in_filename);
@@ -181,7 +220,6 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
 
     return true;
 }
-
 bool dispose(struct FileConversion* conversion)
 {
     int ret=0;
@@ -208,7 +246,6 @@ bool dispose(struct FileConversion* conversion)
 void convert(struct FileConversion* conversion,uint64_t offset)
 {
     AVPacket pkt;
-    av_seek_frame(conversion->ifmt_ctx, -1,0, AVSEEK_FLAG_BYTE);
     
     while (1) {
         
@@ -262,7 +299,7 @@ void convert(struct FileConversion* conversion,uint64_t offset)
             }
         }
         
-        //log_packet(ofmt_ctx, &pkt, "out");
+        //log_packet(conversion->ofmt_ctx, &pkt, "out");
         
         ret = av_interleaved_write_frame(conversion->ofmt_ctx, &pkt);
         if (ret < 0) {
