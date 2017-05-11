@@ -21,7 +21,8 @@ class UploadTask(TaskBase):
         TaskBase.__init__(self, param, logger_info)
         session_id = self.entry_id + '-' + self.recorded_id
         self.backend_client = BackendClient(session_id)
-        self.mp4_files_list = glob.glob1(self.recording_path, '*.mp4')
+        mp4_filename_pattern = param['directory'] + '_f*_out.mp4'
+        self.mp4_files_list = glob.glob1(self.recording_path, mp4_filename_pattern)
         self.mp4_filename_pattern = "[0,1]_.+_[0,1]_.+_\d+_f(?P<flavor_id>\d+)_out[.]mp4"
 
 

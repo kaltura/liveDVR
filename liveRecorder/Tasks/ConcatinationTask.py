@@ -6,6 +6,7 @@ import platform
 import re
 import subprocess
 import urllib2
+import glob
 
 import m3u8
 from Iso639Wrapper import Iso639Wrapper
@@ -36,7 +37,7 @@ class ConcatenationTask(TaskBase):
         self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
         self.token_url = self.token_url_template.format(self.recorded_id)
         self.nginx_url = "http://" + self.token_url + "t/{0}"
-        self.flavor_pattern = '[^-]\a*(?P<flavor>\d+)-[^-]'
+        self.flavor_pattern = 'index-s(?P<flavor>\d+)'
         self.iso639_wrapper = Iso639Wrapper(logger_info)
 
 
@@ -110,6 +111,22 @@ class ConcatenationTask(TaskBase):
         matches = re.findall(regex, m3u8, re.MULTILINE)
         return matches
 
+    def get_flavor_id(self, url_postfix, single_flavor):
+        if single_flavor:
+            flavors_dirs = filter(os.path.isdir,
+                                  [os.path.join(self.recording_path, f) for f in os.listdir(self.recording_path)])
+            flavor_id = flavors_dirs[0].rsplit('/', 1)[-1]
+        else:
+            result = re.search(self.flavor_pattern, url_postfix)
+            if not result:
+                error = "Error running concat task, failed to parse flavor from url: [%s]", obj.url
+                self.logger.error(error)
+                raise ValueError(error)
+            flavor_id = result.group('flavor')
+
+        return flavor_id
+
+
     def run(self):
 
         command = self.ts_to_mp4_convertor + ' '
@@ -117,15 +134,12 @@ class ConcatenationTask(TaskBase):
         self.url_base_entry = self.nginx_url.format(token)
         self.url_master = os.path.join(self.url_base_entry, 'master.m3u8')
         flavors_list = self.extract_flavor_dict()
+        single_flavor = len(flavors_list) == 1
 
         for obj in flavors_list:
             url_postfix = obj.url.rsplit('/', 1)[1]
-            result = re.search(self.flavor_pattern, url_postfix)
-            if not result:
-                error = "Error running concat task, failed to parse flavor from url: [%s]", obj.url
-                self.logger.error(error)
-                raise ValueError(error)
-            ts_output_filename = self.get_output_filename(result.group('flavor'))
+            flavor_id = self.get_flavor_id(url_postfix, single_flavor)
+            ts_output_filename = self.get_output_filename(flavor_id)
             output_full_path = os.path.join(self.recording_path, ts_output_filename)
             mp4_full_path = output_full_path.replace('.ts', '.mp4')
             command = command + ' ' + output_full_path + ' ' + mp4_full_path + ' ' + obj.language
