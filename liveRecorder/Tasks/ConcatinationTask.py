@@ -37,7 +37,7 @@ class ConcatenationTask(TaskBase):
         self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
         self.token_url = self.token_url_template.format(self.recorded_id)
         self.nginx_url = "http://" + self.token_url + "t/{0}"
-        self.flavor_pattern = '[^-]\a*(?P<flavor>\d+)-[^-]'
+        self.flavor_pattern = 'index-s(?P<flavor>\d+)'
         self.iso639_wrapper = Iso639Wrapper(logger_info)
 
 
@@ -134,7 +134,7 @@ class ConcatenationTask(TaskBase):
         self.url_base_entry = self.nginx_url.format(token)
         self.url_master = os.path.join(self.url_base_entry, 'master.m3u8')
         flavors_list = self.extract_flavor_dict()
-        single_flavor = flavors_list.length == 1
+        single_flavor = len(flavors_list) == 1
 
         for obj in flavors_list:
             url_postfix = obj.url.rsplit('/', 1)[1]
