@@ -38,6 +38,7 @@ class ConcatenationTask(TaskBase):
         self.token_url = self.token_url_template.format(self.recorded_id)
         self.nginx_url = "http://" + self.token_url + "t/{0}"
         self.flavor_pattern = 'index-s(?P<flavor>\d+)'
+        self.playlist_index_pattern = 'index-s(?P<flavor>\d+)-v(?P<video>\d+)(-a(?P<audio>\d+))?.m3u8'
         self.iso639_wrapper = Iso639Wrapper(logger_info)
 
 
@@ -56,12 +57,14 @@ class ConcatenationTask(TaskBase):
         self.logger.debug("About to load master manifest from %s" ,self.url_master)
         m3u8_obj = m3u8.load(self.url_master)
         flavors_list = []
+        multi_audio = len(m3u8_obj.media) > 0
 
         for element in m3u8_obj.playlists:
             flavors_list.append(Flavor(
                 url=element.absolute_uri,
                 language='und'
             ))
+
         for element in m3u8_obj.media:
             language = element.language
             # convert alpha_2 (iso639_1 format) to alpha_3 (iso639-3) check https://pypi.python.org/pypi/pycountry
@@ -71,7 +74,16 @@ class ConcatenationTask(TaskBase):
                 url=element.absolute_uri,
                 language=language
             ))
-
+        ''' extract playlist index in case of multiple audio'''
+        if multi_audio:
+            result = re.search(self.playlist_index_pattern, flavors_list[0].url)
+            if 'audio' not in result.groups() and len(m3u8_obj.media) > 0:
+                result = re.search(self.flavor_pattern, m3u8_obj.media[0].uri)
+                audio_str = "-s{}.m3u8".format(result.group('flavor'))
+                flavors_list[0].url.replace('.m3u8', audio_str)
+            else:
+                error = "missing audio track in multiple audio recording"
+                raise ValueError(error)
         return flavors_list
 
     def download_chunks_and_concat(self, chunks, output_full_path):
