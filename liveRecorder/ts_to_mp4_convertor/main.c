@@ -10,6 +10,9 @@
 
 #define MAX_CONVERSIONS 20
 #define MAX_TRACKS 10
+#define KEY_FRAME_THRESHOLD 1000
+
+static const AVRational standard_timebase = {1,1000};
 
 
 static void log_packet(const AVFormatContext *fmt_ctx, const AVPacket *pkt, const char *tag)
@@ -48,7 +51,7 @@ int kbhit(void) {
 struct TrackInfo
 {
     bool waitForKeyFrame;
-    int64_t lastPts;
+    int64_t lastPts,lastDts,packetCount;
     
 };
 struct FileConversion
@@ -57,6 +60,7 @@ struct FileConversion
     struct TrackInfo trackInfo[MAX_TRACKS]; //per track
     AVFormatContext *ifmt_ctx;
     AVFormatContext *ofmt_ctx;
+    int64_t start_time;
 };
 
 struct FileConversion conversion[MAX_CONVERSIONS];
@@ -64,9 +68,9 @@ struct FileConversion conversion[MAX_CONVERSIONS];
 
 uint64_t calculateFirstPts(int total_strams)
 {
-    AVPacket pkt;
     int64_t start_time=0;
     int i,j;
+    
     
     //we need two passes so validate that all streams will start together
     for (j=0;j<2;j++)
@@ -74,20 +78,20 @@ uint64_t calculateFirstPts(int total_strams)
         
         for ( i=0;i<total_strams;i++)
         {
-            struct FileConversion* currentStream = &conversion[i];
+            struct FileConversion* currentConversion = &conversion[i];
 
             AVFormatContext* ifmt_ctx=NULL;
-            if (avformat_open_input(&ifmt_ctx, currentStream->inputFileName, 0, 0) < 0) {
-                fprintf(stderr, "Could not open input file '%s'", currentStream->inputFileName);
+            if (avformat_open_input(&ifmt_ctx, currentConversion->inputFileName, 0, 0) < 0) {
+                fprintf(stderr, "Could not open input file '%s'", currentConversion->inputFileName);
                 return false;
             }
 
-            
             
             AVPacket pkt;
             
             bool shouldStop=false;
             printf("[calculateFirstPts] ************ iter %d stream %d\n",j+1,i);
+            int64_t threshold = av_rescale_q(KEY_FRAME_THRESHOLD, standard_timebase, ifmt_ctx->streams[0]->time_base);
 
             while (!shouldStop) {
                 
@@ -95,13 +99,13 @@ uint64_t calculateFirstPts(int total_strams)
                 if (ret < 0)
                     break;
                 
-                struct TrackInfo* trackInfo = &currentStream->trackInfo[pkt.stream_index];
-                
+                struct TrackInfo* trackInfo = &currentConversion->trackInfo[pkt.stream_index];
                 if (pkt.stream_index==0 &&
                     (pkt.flags & AV_PKT_FLAG_KEY)==AV_PKT_FLAG_KEY)
                 { ///if video stream & it's the first packet
-                    if (start_time == pkt.pts) {
-                        printf("[calculateFirstPts] iter %d, stream %d same start_time (%s)\n",j+1,i,av_ts2str(start_time));
+                    int64_t diff=llabs(start_time - pkt.pts);
+                    if (diff<threshold) {
+                        printf("[calculateFirstPts] iter %d, stream %d same start_time (%s %s)\n",j+1,i,av_ts2str(start_time),av_ts2str(diff));
                         shouldStop=true;
                     }
                     else
@@ -119,6 +123,7 @@ uint64_t calculateFirstPts(int total_strams)
                 }
                 
             }
+            currentConversion->start_time=pkt.pts;
             avformat_close_input(&ifmt_ctx);
 
         }
@@ -135,7 +140,10 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
     
     for (j=0;j<MAX_TRACKS;j++) {
         conversion->trackInfo[j].waitForKeyFrame=true;
-        conversion->trackInfo[j].lastPts=-1;
+        conversion->trackInfo[j].lastPts=AV_NOPTS_VALUE;
+        conversion->trackInfo[j].lastDts=AV_NOPTS_VALUE;
+        conversion->trackInfo[j].packetCount=0;
+
         
     }
     conversion->ifmt_ctx=NULL;
@@ -163,8 +171,7 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
 
     AVOutputFormat *ofmt = conversion->ofmt_ctx->oformat;
     
-    AVDictionaryEntry *entry = NULL;
-    
+   
     for (j = 0; j < conversion->ifmt_ctx->nb_streams; j++) {
         AVStream *in_stream = conversion->ifmt_ctx->streams[j];
         
@@ -245,10 +252,15 @@ bool dispose(struct FileConversion* conversion)
     
 }
 
-void convert(struct FileConversion* conversion,uint64_t offset)
+bool convert(struct FileConversion* conversion)
 {
+    
+    bool retVal=true;
     AVPacket pkt;
     
+    uint64_t offset = conversion->start_time;
+    
+    printf("Starting to convert %s\n",conversion->inputFileName);
     while (1) {
         
         AVStream *in_stream, *out_stream;
@@ -270,22 +282,18 @@ void convert(struct FileConversion* conversion,uint64_t offset)
             
         }
         
-        
-        // log_packet(ifmt_ctx, &pkt, "in");
-        //if (trackInfo->lastPts!=-1) {
-        //    if (pkt.pts<trackInfo->lastPts) {
-        //        offset+=(pkt.pts-trackInfo->lastPts);
-        //    }
-        //}
-        
-        //pkt.pts+=2^33-100000;
-        
+    
         trackInfo->lastPts=pkt.pts;
+        trackInfo->lastDts=pkt.dts;
+        trackInfo->packetCount++;
+    
+    
         /* copy packet */
         pkt.pts = av_rescale_q_rnd(pkt.pts-offset, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
         pkt.dts = av_rescale_q_rnd(pkt.dts-offset, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
         pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
         pkt.pos = -1;
+        
         
         if (pkt.pts<0) {
             //trim packets outside of start time
@@ -305,12 +313,14 @@ void convert(struct FileConversion* conversion,uint64_t offset)
         
         ret = av_interleaved_write_frame(conversion->ofmt_ctx, &pkt);
         if (ret < 0) {
-            fprintf(stderr, "Error muxing packet\n");
-            break;
+            trackInfo->waitForKeyFrame=true;
+            fprintf(stderr, "Error muxing packet of stream %d packet# (%"PRId64"),with pts %s \n",pkt.stream_index,trackInfo->packetCount, av_ts2str(trackInfo->lastPts));
         }
         av_packet_unref(&pkt);
     }
     av_write_trailer(conversion->ofmt_ctx);
+    
+    return retVal;
     
 }
 
@@ -351,14 +361,19 @@ int main(int argc, char **argv)
     
     uint64_t start_time=calculateFirstPts(total_conversions);
     
+    bool convertionOK=true;
     //convert all streams
     for ( i=0;i<total_conversions;i++)
     {
-        convert(&conversion[i], start_time);
+        convertionOK&=convert(&conversion[i]);
     }
     
-    printf("Conversion was successfull\n");
-    
+    if (convertionOK) {
+        printf("Conversion was successfull\n");
+    } else {
+        printf("Conversion FAILED!!\n");
+
+    }
     //cleanup
     for (i=0;i<total_conversions;i++)
     {
