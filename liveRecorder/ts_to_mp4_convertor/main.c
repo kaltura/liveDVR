@@ -259,6 +259,8 @@ bool convert(struct FileConversion* conversion)
     AVPacket pkt;
     
     uint64_t offset = conversion->start_time;
+    
+    printf("Starting to convert %s\n",conversion->inputFileName);
     while (1) {
         
         AVStream *in_stream, *out_stream;
@@ -280,25 +282,10 @@ bool convert(struct FileConversion* conversion)
             
         }
         
-        if (pkt.dts != AV_NOPTS_VALUE &&
-            trackInfo->lastDts != AV_NOPTS_VALUE) {
-            int64_t max = trackInfo->lastDts + 1;
-            if (pkt.dts < max) {
-                fprintf(stderr, "Non-monotonous DTS in output stream %s:%d (%"PRId64"); previous: %"PRId64", current: %"PRId64"\n",
-                        conversion->inputFileName, pkt.stream_index, trackInfo->packetCount,trackInfo->lastDts, pkt.dts);
-                fprintf(stderr, "Fixing  DTS by (%"PRId64")\n",(pkt.dts-trackInfo->lastDts));
-
-                offset+=(pkt.dts-trackInfo->lastDts);
-            }
-        }
-        
-        
-        
     
         trackInfo->lastPts=pkt.pts;
         trackInfo->lastDts=pkt.dts;
         trackInfo->packetCount++;
-    
     
     
         /* copy packet */
@@ -326,9 +313,7 @@ bool convert(struct FileConversion* conversion)
         
         ret = av_interleaved_write_frame(conversion->ofmt_ctx, &pkt);
         if (ret < 0) {
-            fprintf(stderr, "Error muxing packet from stream %d packet# (%"PRId64"),with pts %s \n",pkt.stream_index,trackInfo->packetCount, av_ts2str(trackInfo->lastPts));
-            retVal=false;
-            break;
+            fprintf(stderr, "Error muxing packet of stream %d packet# (%"PRId64"),with pts %s \n",pkt.stream_index,trackInfo->packetCount, av_ts2str(trackInfo->lastPts));
         }
         av_packet_unref(&pkt);
     }
