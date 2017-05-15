@@ -313,6 +313,7 @@ bool convert(struct FileConversion* conversion)
         
         ret = av_interleaved_write_frame(conversion->ofmt_ctx, &pkt);
         if (ret < 0) {
+            trackInfo->waitForKeyFrame=true;
             fprintf(stderr, "Error muxing packet of stream %d packet# (%"PRId64"),with pts %s \n",pkt.stream_index,trackInfo->packetCount, av_ts2str(trackInfo->lastPts));
         }
         av_packet_unref(&pkt);
