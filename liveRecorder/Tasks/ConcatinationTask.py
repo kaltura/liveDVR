@@ -78,9 +78,17 @@ class ConcatenationTask(TaskBase):
         if multi_audio:
             result = re.search(self.playlist_index_pattern, flavors_list[0].url)
             if 'audio' not in result.groups() and len(m3u8_obj.media) > 0:
-                result = re.search(self.flavor_pattern, m3u8_obj.media[0].uri)
-                audio_str = "-s{}.m3u8".format(result.group('flavor'))
-                flavors_list[0].url.replace('.m3u8', audio_str)
+                flavor_obj = flavors_list[0]
+                result = re.search(self.flavor_pattern, flavor_obj.url)
+                video_flavor_id = result.group('flavor')
+                result = re.search(self.flavor_pattern, m3u8_obj.media[0].absolute_uri)
+                audio_flavor_id = result.group('flavor')
+                merged_flavors_url = "{}/index-s{}-s{}.m3u8".format(flavor_obj.url.rsplit('/', 1)[0], video_flavor_id, audio_flavor_id)
+                new_flavor_obj = Flavor(
+                    url=merged_flavors_url,
+                    language='und'
+                )
+                flavors_list[0] = new_flavor_obj
             else:
                 error = "missing audio track in multiple audio recording"
                 raise ValueError(error)
