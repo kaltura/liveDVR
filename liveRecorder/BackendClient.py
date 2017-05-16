@@ -132,7 +132,7 @@ class BackendClient:
 
     def set_recorded_content(self, entry_id, resource, duration, partner_id, recorded_id, flavor_id):
 
-        self.logger.info("set_recorded_content entry_id  [%s], resource [%s] duration [%s] recorded_id [%s] flavor_id", entry_id,
+        self.logger.info("set_recorded_content entry_id  [%s], resource [%s] duration [%s] recorded_id [%s] flavor_id [%s]", entry_id,
                          resource.__class__.__name__, duration, recorded_id, flavor_id)
         self.handle_request(partner_id, 'liveStream', 'setRecordedContent', entry_id, 0, resource, duration, recorded_id, flavor_id)
 
@@ -142,13 +142,13 @@ class BackendClient:
         entry_id = upload_session.entry_id
         partner_id = upload_session.partner_id
         resource = KalturaUploadedFileTokenResource(token_id)
-        self.logger.info("set_recorded_content_remote partner_id [%s] token [%s] duration [%s]", partner_id, token_id,
-                         duration)
+        self.logger.info("set_recorded_content_remote partner_id [%s] token [%s] duration [%s] recorded_id [%s] flavor_id [%s]", partner_id, token_id,
+                         duration, recorded_id, flavor_id)
         self.set_recorded_content(entry_id, resource, duration, partner_id, recorded_id, flavor_id)
 
     def set_recorded_content_local(self, partner_id, entry_id, output_file, duration, recorded_id, flavor_id):  # todo check it
-        self.logger.info("set_recorded_content_local partner_id [%s] output_file [%s] duration [%s]", partner_id,
-                         output_file, duration)
+        self.logger.info("set_recorded_content_local partner_id [%s] output_file [%s] duration [%s] recorded_id [%s] flavor_id [%s]", partner_id,
+                         output_file, duration, recorded_id, flavor_id)
         resource = KalturaServerFileResource()
         resource.localFilePath = output_file
         self.set_recorded_content(entry_id, resource, duration, partner_id, recorded_id, flavor_id)
