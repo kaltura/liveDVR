@@ -10,7 +10,7 @@
             ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
             <ActionContent
                title = "Run Script"
-               scriptText = "cp /Users/lilach.maliniak/Library/Developer/Xcode/DerivedData/ts_to_mp4_convertor-dffznxxryfjinhecawplwopzcirz/Build/Products/Debug/ts_to_mp4_convertor /Users/lilach.maliniak/Desktop/dev/repositories/liveDVR/bin/Darwin/">
+               scriptText = "">
             </ActionContent>
          </ExecutionAction>
       </PostActions>
