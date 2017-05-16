@@ -58,6 +58,7 @@ class ConcatenationTask(TaskBase):
         m3u8_obj = m3u8.load(self.url_master)
         flavors_list = []
         multi_audio = len(m3u8_obj.media) > 0
+        index_of_audio_flavor = 0
 
         for element in m3u8_obj.playlists:
             flavors_list.append(Flavor(
@@ -65,6 +66,7 @@ class ConcatenationTask(TaskBase):
                 language='und'
             ))
 
+        index_of_audio_flavor = len(flavors_list)
         for element in m3u8_obj.media:
             language = element.language
             # convert alpha_2 (iso639_1 format) to alpha_3 (iso639-3) check https://pypi.python.org/pypi/pycountry
@@ -74,19 +76,20 @@ class ConcatenationTask(TaskBase):
                 url=element.absolute_uri,
                 language=language
             ))
-        ''' extract playlist index in case of multiple audio'''
+        ''' compose playlist index in case of multiple audio'''
         if multi_audio:
             result = re.search(self.playlist_index_pattern, flavors_list[0].url)
             if 'audio' not in result.groups() and len(m3u8_obj.media) > 0:
                 flavor_obj = flavors_list[0]
                 result = re.search(self.flavor_pattern, flavor_obj.url)
                 video_flavor_id = result.group('flavor')
-                result = re.search(self.flavor_pattern, m3u8_obj.media[0].absolute_uri)
+                audio_item = flavors_list[index_of_audio_flavor]
+                result = re.search(self.flavor_pattern, audio_item.url)
                 audio_flavor_id = result.group('flavor')
                 merged_flavors_url = "{}/index-s{}-s{}.m3u8".format(flavor_obj.url.rsplit('/', 1)[0], video_flavor_id, audio_flavor_id)
                 new_flavor_obj = Flavor(
                     url=merged_flavors_url,
-                    language='und'
+                    language=audio_item.language
                 )
                 flavors_list[0] = new_flavor_obj
             else:
