@@ -43,7 +43,7 @@ then
         git clone https://github.com/kaltura/nginx-vod-module || echo "error $?"
     fi
     cd $packagerDir
-    git checkout support-multiple-seq-params
+    git checkout master
     git pull
 fi
 
