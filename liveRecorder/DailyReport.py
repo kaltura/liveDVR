@@ -128,7 +128,7 @@ def get_report(mailAdress = None, relative_date = 1):
     done_path = "/web/content/kLive/liveRecorder/done/"
     error_path = "/web/content/kLive/liveRecorder/error/"
 
-    mail_list = ["ron.yadgar@kaltura.com", "lilach.maliniak@kaltura.com"]
+    mail_list = ["lilach.maliniak@kaltura.com"]
     if mailAdress is not None:
         mail_list.append(mailAdress)
 

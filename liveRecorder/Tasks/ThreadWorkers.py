@@ -43,6 +43,9 @@ class ThreadWorkers:  # singleton object,
         self.logger.info("Thread %d is start working", index)
         while True:
             upload_chunk_job = self.q.get()
+            if not upload_chunk_job:
+                self.logger.warning("Got \'None\' as upload job. Check if it's a bug")
+                continue
             try:
                 upload_chunk_job.upload()
             except Exception as e:

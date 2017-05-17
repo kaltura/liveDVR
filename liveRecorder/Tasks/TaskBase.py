@@ -31,10 +31,11 @@ class TaskBase(object):
         self.entry_directory = param['directory']
         self.entry_id = param['entry_id']
         self.logger = logger_decorator(self.__class__.__name__, logger_info)
-        self.output_filename = self.entry_directory+'_out.ts'
+        self.output_filename = self.entry_directory
         self.recording_path = os.path.join(self.base_directory, self.__class__.__name__, 'processing',
                                            self.entry_directory)
         self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
+
 
     __metaclass__ = abc.ABCMeta
 
