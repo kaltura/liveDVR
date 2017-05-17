@@ -13,8 +13,10 @@ git clone https://github.com/kaltura/liveDVR.git ; cd liveRecorder/
 ```
 
 ## Compile code:
+```
 ./scripts/ts2mp4_build.sh <FFMPEGPATH>
 FFMPEGPATH is the path to the ffmpeg root folder (for example root/ffmpeg/ffmpeg-3.0)
+```
 
 ## fill configMapping.ini in Config 
 ```
