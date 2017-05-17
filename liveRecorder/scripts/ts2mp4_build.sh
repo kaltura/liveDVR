@@ -1,21 +1,23 @@
 # !/bin/bash
 
-currentDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+if [[ $# -eq 0 ]] ; then
+    echo 'missing ffmpeg path parameter. example: ffmpeg_build ../../node_addons/FormatConverter/build/FFmpeg'
+    exit 1
+fi
 
-echo current dir: [$currentDir]
-devRootDir=${devRootDir:-"$currentDir/../.."}
-echo root dir: [$devRootDir]
-FormatConverterDir=${FormatConverterDir:-$devRootDir/node_addons/FormatConverter}
-echo FormatConverter dir: [$FormatConverterDir]
-echo running setenv.sh to set ffmpeg env
-#sudo $FormatConverterDir/setenv.sh
-ffmpegLibsDir=${ffmpegLibsDir:-$devRootDir/node_addons/FormatConverter/build/FFmpeg}
+ffmpegLibsDir=$1
 echo ffmpeg lib dir: [$ffmpegLibsDir]
-ts2mp4ConverterDir="$devRootDir/liveRecorder/ts_to_mp4_convertor"
+
+currentDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+echo current dir: [$currentDir]
+
+ts2mp4ConverterDir="$currentDir/../../liveRecorder/ts_to_mp4_convertor"
 echo ts_to_mp4_convertor dir: [$ts2mp4ConverterDir]
 cd $ts2mp4ConverterDir
-mkdir $ts2mp4ConverterDir/obj
+
+[ -d "$ts2mp4ConverterDir/obj" ] || mkdir -p $ts2mp4ConverterDir/obj
 echo [$ts2mp4ConverterDir/obj]
+
 os_name=`uname`
 echo [$os_name]
 
@@ -35,14 +37,14 @@ echo "********************"
 echo  Starting new build
 echo "********************"
 
-make
+make FFMPEG_LIB_DIR=$ffmpegLibsDir
 
 echo "*******************"
 echo    Build Ended
 echo "*******************"
 
 
-mkdir -p $currentDir/../bin/${os_name}/
+[ -d "$currentDir/../bin/${os_name}" ] || mkdir -p "$currentDir/../bin/${os_name}"
 
 case  $os_name in
 "Darwin")
