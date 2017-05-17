@@ -28,7 +28,7 @@ class ConcatenationTask(TaskBase):
     token_url_template = nginx_host + ":" + nginx_port +"/dc-0/recording/hls/p/0/e/{0}/"
     os_name = platform.system().lower()
     cwd = os.path.dirname(os.path.abspath(__file__))
-    ts_to_mp4_convertor = os.path.join(cwd, '../../bin/{}/ts_to_mp4_convertor'.format(os_name))
+    ts_to_mp4_convertor = os.path.join(cwd, '../bin/{}/ts_to_mp4_convertor'.format(os_name))
 
     def __init__(self, param, logger_info):
         TaskBase.__init__(self, param, logger_info)
