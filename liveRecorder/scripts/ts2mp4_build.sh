@@ -52,7 +52,7 @@ case  $os_name in
     cp $ts2mp4ConverterDir/obj/ts_to_mp4_convertor $currentDir/../bin/${os_name}/
     ;;
 "Linux")
-    echo "Copying $ts2mp4ConverterDir/obj/ts_to_mp4_convertor to $currentDir/../bin/${os_name,,}/"
-    cp $ts2mp4ConverterDir/obj/ts_to_mp4_convertor $currentDir/../bin/${os_name,,}/
+    echo "Copying $ts2mp4ConverterDir/obj/ts_to_mp4_convertor to $currentDir/../bin/${os_name,,}/ts_to_mp4_convertor"
+    cp $ts2mp4ConverterDir/obj/ts_to_mp4_convertor $currentDir/../bin/${os_name,,}/ts_to_mp4_convertor
    ;;
 esac
