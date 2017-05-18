@@ -44,15 +44,15 @@ echo    Build Ended
 echo "*******************"
 
 
-[ -d "$currentDir/../bin/${os_name}" ] || mkdir -p "$currentDir/../bin/${os_name}"
+[ -d "$currentDir/../bin/${OS}" ] || mkdir -p "$currentDir/../bin/${OS}"
 
 case  $os_name in
 "Darwin")
-    echo "Copying $ts2mp4ConverterDir/obj/ts_to_mp4_convertor to $currentDir/../bin/${os_name}/"
-    cp $ts2mp4ConverterDir/obj/ts_to_mp4_convertor $currentDir/../bin/${os_name}/
+    echo "Copying $ts2mp4ConverterDir/obj/ts_to_mp4_convertor to $currentDir/../bin/${OS}/"
+    cp $ts2mp4ConverterDir/obj/ts_to_mp4_convertor $currentDir/../bin/${OS}/
     ;;
 "Linux")
-    echo "Copying $ts2mp4ConverterDir/obj/ts_to_mp4_convertor to $currentDir/../bin/${os_name,,}/ts_to_mp4_convertor"
-    cp $ts2mp4ConverterDir/obj/ts_to_mp4_convertor $currentDir/../bin/${os_name,,}/ts_to_mp4_convertor
+    echo "Copying $ts2mp4ConverterDir/obj/ts_to_mp4_convertor to $currentDir/../bin/${OS,,}/"
+    cp $ts2mp4ConverterDir/obj/ts_to_mp4_convertor $currentDir/../bin/${OS,,}/
    ;;
 esac
