@@ -77,24 +77,27 @@ class ConcatenationTask(TaskBase):
                 language=language
             ))
         ''' compose playlist index in case of multiple audio'''
+        index_of_video_flavor = 0
         if multi_audio:
-            result = re.search(self.playlist_index_pattern, flavors_list[0].url)
-            if 'audio' not in result.groups() and len(m3u8_obj.media) > 0:
-                flavor_obj = flavors_list[0]
-                result = re.search(self.flavor_pattern, flavor_obj.url)
-                video_flavor_id = result.group('flavor')
-                audio_item = flavors_list[index_of_audio_flavor]
-                result = re.search(self.flavor_pattern, audio_item.url)
-                audio_flavor_id = result.group('flavor')
-                merged_flavors_url = "{}/index-s{}-s{}.m3u8".format(flavor_obj.url.rsplit('/', 1)[0], video_flavor_id, audio_flavor_id)
-                new_flavor_obj = Flavor(
-                    url=merged_flavors_url,
-                    language=audio_item.language
-                )
-                flavors_list[0] = new_flavor_obj
-            else:
-                error = "missing audio track in multiple audio recording"
-                raise ValueError(error)
+            for element in m3u8_obj.playlists:
+                result = re.search(self.playlist_index_pattern, element.absolute_uri)
+                if 'audio' not in result.groups() and len(m3u8_obj.media) > 0:
+                    flavor_obj = flavors_list[index_of_video_flavor]
+                    result = re.search(self.flavor_pattern, flavor_obj.url)
+                    video_flavor_id = result.group('flavor')
+                    audio_item = flavors_list[index_of_audio_flavor]
+                    result = re.search(self.flavor_pattern, audio_item.url)
+                    audio_flavor_id = result.group('flavor')
+                    merged_flavors_url = "{}/index-s{}-s{}.m3u8".format(flavor_obj.url.rsplit('/', 1)[0], video_flavor_id, audio_flavor_id)
+                    new_flavor_obj = Flavor(
+                        url=merged_flavors_url,
+                        language=audio_item.language
+                    )
+                    flavors_list[index_of_video_flavor] = new_flavor_obj
+                else:
+                    error = "missing audio track in multiple audio recording"
+                    raise ValueError(error)
+                index_of_video_flavor += 1
         return flavors_list
 
     def download_chunks_and_concat(self, chunks, output_full_path):
