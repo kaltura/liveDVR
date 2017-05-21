@@ -58,7 +58,6 @@ class ConcatenationTask(TaskBase):
         m3u8_obj = m3u8.load(self.url_master)
         flavors_list = []
         multi_audio = len(m3u8_obj.media) > 0
-        index_of_audio_flavor = 0
 
         for element in m3u8_obj.playlists:
             flavors_list.append(Flavor(
@@ -81,7 +80,7 @@ class ConcatenationTask(TaskBase):
         if multi_audio:
             for element in m3u8_obj.playlists:
                 result = re.search(self.playlist_index_pattern, element.absolute_uri)
-                if 'audio' not in result.groups() and len(m3u8_obj.media) > 0:
+                if result and 'audio' not in result.groups() and len(m3u8_obj.media) > 0:
                     flavor_obj = flavors_list[index_of_video_flavor]
                     result = re.search(self.flavor_pattern, flavor_obj.url)
                     video_flavor_id = result.group('flavor')
