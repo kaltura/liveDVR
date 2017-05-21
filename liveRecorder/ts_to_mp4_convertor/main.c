@@ -99,7 +99,7 @@ uint64_t calculateFirstPts(int total_strams)
                 if (ret < 0)
                     break;
                 
-                //struct TrackInfo* trackInfo = &currentConversion->trackInfo[pkt.stream_index];
+                struct TrackInfo* trackInfo = &currentConversion->trackInfo[pkt.stream_index];
                 if (pkt.stream_index==0 &&
                     (pkt.flags & AV_PKT_FLAG_KEY)==AV_PKT_FLAG_KEY)
                 { ///if video stream & it's the first packet
