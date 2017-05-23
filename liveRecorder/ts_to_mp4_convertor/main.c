@@ -176,7 +176,7 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
         AVStream *in_stream = conversion->ifmt_ctx->streams[j];
         
         
-        if (in_stream->codec->codec_id==AV_CODEC_ID_TIMED_ID3 || in_stream->codec->codec_id==AV_CODEC_ID_NONE) {
+        if (in_stream->codec->codec_id==AV_CODEC_ID_TIMED_ID3) {
             in_stream->codec->codec_id=AV_CODEC_ID_MOV_TEXT;
         }
         
