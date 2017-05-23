@@ -34,6 +34,8 @@ if [ -e $CONVERTOR_DIR ]; then
 		mkdir -p obj
 		[ -e  $BUILD_PATH/${TARGET} ] && rm -f ${TARGET}
 		[ -e  obj/${TARGET} ] && rm -f obj/${TRAGET}
+		BASH_VERSION="${BASH_VERSINFO[0]}.${BASH_VERSINFO[1]}"
+		echo BASH_VERSION=${BASH_VERSION}
 		if ((BASH_VERSINFO[0] >= 4)); then
 			OS=\${uname,,}
 			dpkg -l yasm || (echo "yasm is not installed, please install it" ; exit 1)
