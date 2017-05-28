@@ -51,6 +51,7 @@ class TaskRunner:
         self.input_directory = os.path.join(base_directory, hostname, self.task_name, 'incoming')
         self.working_directory = os.path.join(base_directory, hostname, self.task_name, 'processing')
         self.output_directory = output_directory
+        self.task_queue_size = max_task_count
         self.task_queue = Queue(max_task_count)
         self.logger = logging.getLogger(__name__+'-'+self.task_name)
         self.on_startup()
@@ -92,6 +93,11 @@ class TaskRunner:
             time.sleep(1)
 
     def move_and_add_to_queue(self, src_dir):
+
+        if self.task_queue.full():
+            self.logger.warn('cannot add tasks to queue. Queue is full!!! (max size {}, num processes {})'.format(
+                self.task_queue_size, self.number_of_processes))
+            return
 
         for directory_name in os.listdir(src_dir):
             directory_path = os.path.join(src_dir, directory_name)
