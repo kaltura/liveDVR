@@ -6,7 +6,10 @@ def logger_decorator(class_name, decorate):
     return logging.getLogger(logger_info)
 
 
-def log_subprocess_output(logger, pipe, pid, title):
-    header = "[{}] [pid={}]".format(title, pid)
-    for line in iter(pipe.readline, b''):  # b'\n'-separated lines
-        logger.info(header + ' %r', line)
+def log_subprocess_output(process, title, logger):
+    header = "[{}] [pid={}]".format(title, process.pid)
+    while True:
+        nextline = process.stdout.readline()
+        if nextline == '' and process.poll() is not None:
+            break
+        logger.info(header + ' %r', nextline)

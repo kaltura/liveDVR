@@ -6,7 +6,6 @@ import platform
 import re
 import subprocess
 import urllib2
-import glob
 
 import m3u8
 from Iso639Wrapper import Iso639Wrapper
@@ -14,18 +13,18 @@ from Iso639Wrapper import Iso639Wrapper
 from Config.config import get_config
 from Logger.LoggerDecorator import log_subprocess_output
 from TaskBase import TaskBase
+from datetime import datetime
 
 # todo add timeout, and use m3u8 insted of regex
 
-Flavor = collections.namedtuple('Flavor',  'url language')
+Flavor = collections.namedtuple('Flavor', 'url language')
 
 
 class ConcatenationTask(TaskBase):
-
     nginx_port = get_config('nginx_port')
     nginx_host = get_config('nginx_host')
     secret = get_config('token_key')
-    token_url_template = nginx_host + ":" + nginx_port +"/dc-0/recording/hls/p/0/e/{0}/"
+    token_url_template = nginx_host + ":" + nginx_port + "/dc-0/recording/hls/p/0/e/{0}/"
     os_name = platform.system().lower()
     cwd = os.path.dirname(os.path.abspath(__file__))
     ts_to_mp4_convertor = os.path.join(cwd, '../bin/{}/ts_to_mp4_convertor'.format(os_name))
@@ -40,7 +39,6 @@ class ConcatenationTask(TaskBase):
         self.flavor_pattern = 'index-s(?P<flavor>\d+)'
         self.iso639_wrapper = Iso639Wrapper(logger_info)
 
-
     def tokenize_url(self, url):
 
         if self.secret is None:
@@ -53,7 +51,7 @@ class ConcatenationTask(TaskBase):
         return encoded_hash
 
     def extract_flavor_dict(self):
-        self.logger.debug("About to load master manifest from %s" ,self.url_master)
+        self.logger.debug("About to load master manifest from %s", self.url_master)
         m3u8_obj = m3u8.load(self.url_master)
         flavors_list = []
 
@@ -83,7 +81,8 @@ class ConcatenationTask(TaskBase):
                     chunks_url = os.path.join(self.url_base_entry, chunk)
                     try:
                         chunk_bytes = self.download_file(chunks_url)
-                        self.logger.debug("Successfully downloaded from url [%s], about to write it to [%s]", chunks_url, output_full_path)
+                        self.logger.debug("Successfully downloaded from url [%s], about to write it to [%s]",
+                                          chunks_url, output_full_path)
                         file_output.write(chunk_bytes)
                     except urllib2.HTTPError as e:
                         if e.code == 404:
@@ -127,7 +126,6 @@ class ConcatenationTask(TaskBase):
 
         return flavor_id
 
-
     def run(self):
 
         command = self.ts_to_mp4_convertor + ' '
@@ -155,21 +153,43 @@ class ConcatenationTask(TaskBase):
         self.convert_ts_to_mp4(command)
 
     def convert_ts_to_mp4(self, command):
+
+        start_time = datetime.now()
+        exitcode = 0
+        status = 'succeeded'
         # convert the each flavor concatenated ts file to single mp4
         self.logger.debug('About to run TS -> MP4 conversion. Command: %s', command)
-        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        exitcode = process.wait()
-        log_subprocess_output(self.logger, process.stdout, process.pid, "ffmpeg: ts->mp4")
 
-        if exitcode is 0:
-            self.logger.info('Successfully finished TS -> MP4 conversion')
-        else:
-            error = 'Failed to convert TS -> MP4. Error %d', process.returncode
-            self.logger.error(error)
-            raise RuntimeError(error)
+        try:
+            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
+            log_subprocess_output(process, "ffmpeg: ts->mp4", self.logger)
+
+            output, _ = process.communicate()[0]
+            exitcode = process.returncode
+
+            if exitcode is 0:
+                self.logger.info('Successfully finished TS -> MP4 conversion')
+            else:
+                status = 'failed'
+                error = 'Failed to convert TS -> MP4. Convertor process exit code %d', process.returncode
+                self.logger.error(error)
+
+                raise subprocess.CalledProcessError(exitcode, command)
+
+        except (OSError, subprocess.CalledProcessError) as e:
+            self.logger.fatal("Failed to convert TS -> MP4 {}".format(str(e)))
+            raise e
+        except Exception as e:
+            self.logger.fatal("Failed to convert TS -> MP4 {}".format(str(e)))
+            raise e
+
+        finally:
+            end_time = datetime.now()
+            duration = (end_time - start_time).total_seconds()
+            self.logger.info(
+                "Conversion of TS -> MP4, {}, exit code [{}], duration [{}] seconds".format(status, str(
+                    exitcode), str(int(duration))))
 
     def get_output_filename(self, flavor):
         return self.output_filename + '_f' + flavor + '_out.ts'
-
-
