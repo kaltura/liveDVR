@@ -156,8 +156,7 @@ class TaskRunner:
                 except Exception as e:
                     self.logger.fatal("[%s]  Failed to handle failure task %s \n %s", logger_info, str(e)
                                     , traceback.format_exc())
-            finally:
-                self.task_queue.task_done()
+
 
     def get_retry_count(self, src):
         try:
