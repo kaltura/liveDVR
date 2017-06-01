@@ -155,7 +155,7 @@ class ConcatenationTask(TaskBase):
     def convert_ts_to_mp4(self, command):
 
         start_time = datetime.now()
-        exitcode = 0
+        exitcode = -1
         status = 'succeeded'
         # convert the each flavor concatenated ts file to single mp4
         self.logger.debug('About to run TS -> MP4 conversion. Command: %s', command)
@@ -165,14 +165,14 @@ class ConcatenationTask(TaskBase):
 
             log_subprocess_output(process, "ffmpeg: ts->mp4", self.logger)
 
-            output = process.communicate()[0]
+            output, outerr = process.communicate()
             exitcode = process.returncode
 
             if exitcode is 0:
                 self.logger.info('Successfully finished TS -> MP4 conversion')
             else:
                 status = 'failed'
-                error = 'Failed to convert TS -> MP4. Convertor process exit code %d', process.returncode
+                error = 'Failed to convert TS -> MP4. Convertor process exit code {}, {}'.format(exitcode), outerr
                 self.logger.error(error)
 
                 raise subprocess.CalledProcessError(exitcode, command)
