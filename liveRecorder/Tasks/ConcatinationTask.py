@@ -165,7 +165,7 @@ class ConcatenationTask(TaskBase):
 
             log_subprocess_output(process, "ffmpeg: ts->mp4", self.logger)
 
-            output, _ = process.communicate()[0]
+            output = process.communicate()[0]
             exitcode = process.returncode
 
             if exitcode is 0:
