@@ -1,9 +1,9 @@
 /**
  * Created by user on 01/06/2017.
  */
-const BackendClient = require('../../lib/BackendClient');
-const ErrorUtils = require('../../lib/utils/error-utils');
-const Hostname = require('../../common/utils/hostname');
+const BackendClient = require('../lib/BackendClient');
+const ErrorUtils = require('../lib/utils/error-utils');
+const Hostname = require('../common/utils/hostname');
 
 // If hostname is transferred as a parameter take its value, otherwise get hostname of local machine.
 let hostname = (process.argv[2]) ? process.argv[2] : Hostname.getLocalMachineFullHostname();
