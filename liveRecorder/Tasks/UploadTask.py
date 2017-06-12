@@ -101,7 +101,7 @@ class UploadTask(TaskBase):
         try:
             mode = get_config('mode')
             is_first_flavor = True
-            num_flavors = len(self).mp4_files_list
+            num_flavors = len(self.mp4_files_list)
 
             for mp4 in self.mp4_files_list:
                 result = re.search(self.mp4_filename_pattern, mp4)
