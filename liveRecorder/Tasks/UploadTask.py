@@ -86,17 +86,23 @@ class UploadTask(TaskBase):
                              recorded_obj.replacementStatus)
             self.backend_client.cancel_replace(partner_id, self.recorded_id)
 
-    def append_recording_handler(self, file_full_path, flavor_id, is_first_flavor):
+    def append_recording_handler(self, file_full_path, flavor_id, is_first_flavor, num_flavors):
         partner_id = self.backend_client.get_live_entry(self.entry_id).partnerId
         if is_first_flavor:
             self.check_replacement_status(partner_id)
-        self.backend_client.set_recorded_content_local(partner_id, self.entry_id, file_full_path,
+        if num_flavors is 1: # single flavor. Transcoding will be done by BE.
+            self.backend_client.set_recorded_content_local(partner_id, self.entry_id, file_full_path,
+                                                           str(float(self.duration)/1000), self.recorded_id)
+        else: # upload with flavor id to indicate that transcoding was already done
+            self.backend_client.set_recorded_content_local(partner_id, self.entry_id, file_full_path,
                                                        str(float(self.duration)/1000), self.recorded_id, flavor_id)
 
     def run(self):
         try:
             mode = get_config('mode')
             is_first_flavor = True
+            num_flavors = len(self).mp4_files_list
+
             for mp4 in self.mp4_files_list:
                 result = re.search(self.mp4_filename_pattern, mp4)
                 if not result:
@@ -108,7 +114,7 @@ class UploadTask(TaskBase):
                 if mode == 'remote':
                     self.upload_file(file_full_path, flavor_id, is_first_flavor)
                 if mode == 'local':
-                    self.append_recording_handler(file_full_path, flavor_id, is_first_flavor)
+                    self.append_recording_handler(file_full_path, flavor_id, is_first_flavor, num_flavors)
                 is_first_flavor = False
         except KalturaException as e:
             if e.code == 'KALTURA_RECORDING_DISABLED':

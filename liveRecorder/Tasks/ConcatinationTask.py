@@ -114,7 +114,7 @@ class ConcatenationTask(TaskBase):
     def get_flavor_id(self, url_postfix, single_flavor):
         if single_flavor:
             flavors_dirs = filter(os.path.isdir,
-                                  [os.path.join(self.recording_path, f) for f in os.listdir(self.recording_path)])
+                                  [os.path.join(self.recording_path, f) for f in os.listdir(self.recording_path) if re.match(r'^\d+$', f)])
             flavor_id = flavors_dirs[0].rsplit('/', 1)[-1]
         else:
             result = re.search(self.flavor_pattern, url_postfix)
