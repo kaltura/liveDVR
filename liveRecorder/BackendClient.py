@@ -26,6 +26,7 @@ class BackendClient:
     config = KalturaConfiguration(url)
     client = KalturaClient(config)
     client.setPartnerId(partner_id)
+    client.setClientTag("liveRecorder:1.0.0")
     ks = None
     type = KalturaSessionType.ADMIN
 
