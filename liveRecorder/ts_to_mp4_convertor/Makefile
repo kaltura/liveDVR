@@ -6,6 +6,7 @@ _OBJ = $(SRC:.c=.o)
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 _EXE = ts_to_mp4_convertor
 EXE = $(patsubst %,$(ODIR)/%,$(_EXE))
+FFMPEG_LIB_DIR:=$(shell echo $(BUILD_FFMPEG_PATH))
 IDIRS = -I. -I$(FFMPEG_LIB_DIR)
 LDIR = -L$(FFMPEG_LIB_DIR)/libswscale -L$(FFMPEG_LIB_DIR)/libavdevice -L$(FFMPEG_LIB_DIR)/libavutil -L$(FFMPEG_LIB_DIR)/libavformat -L$(FFMPEG_LIB_DIR)/libavcodec -L/usr/local/lib
 FFMPEG_LIBS = -lswscale -lavdevice -lavformat -lavcodec -lavutil
@@ -30,3 +31,4 @@ $(EXE): $(OBJ)
 
 clean:
 	rm -rf $(ODIR)/*.o $(EXE)
+

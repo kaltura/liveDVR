@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# default bash version in Darwin is currently (May 2017), 3.2.
-# the version doesn't support {$a,,} or {$a,} to change string to lower or upper case
-
 APP_NAME=liveRecorder
 PREPDIR="/opt/kaltura/builds/${APP_NAME}"
 BUILD_PATH=
@@ -10,60 +7,59 @@ WEBAPPDIR=/web/kaltura/${APP_NAME}
 BUILD_FFMPEG_PATH=${WEBAPPDIR}/ffmpeg/ffmpeg-3.0
 ROOT_PATH=.
 TARGET=ts_to_mp4_convertor
-BIN_DIR=
+BIN_DIR=${ROOT_PATH}/../bin/
 BUILD_FFMPEG_PATH=
 
 if [ -e $PREPDIR ]; then
 	ROOT_PATH==${PREPDIR}/${APP_VERSION}
-	CONVERTOR_DIR=${TARGET}
-	BUILD_PATH=${ROOT_PATH}/${$CONVERTOR_DIR}
+	CONVERTOR_DIR=${ROOT_PATH}/${TARGET}
+	BUILD_PATH=${CONVERTOR_DIR}/obj
 	BUILD_FFMPEG_PATH=${WEBAPPDIR}/ffmpeg/ffmpeg-3.0
-elif [ -e ../${TARGET} ]; then
-	CONVERTOR_DIR=../${TARGET}
-	BUILD_PATH=../${TARGET}
-	BUILD_FFMPEG_PATH=../../node_addons/FormatConverter/build/FFmpeg
+else
+	SCRIPT_DIR="$( dirname "${BASH_SOURCE[0]}" )"
+	CONVERTOR_DIR=${SCRIPT_DIR}/../${TARGET}
+	BUILD_PATH=${CONVERTOR_DIR}/obj
+	BUILD_FFMPEG_PATH="../../node_addons/FormatConverter/build/FFmpeg"
 fi
 
-if [ -e $CONVERTOR_DIR ]; then
-	echo "CONVERTOR_DIR=${CONVERTOR_DIR}, running make to create ${TARGET}"
-	echo uname=$(uname)
-	uname=$(uname)
-	OS=darwin
+TARGET_FULL_PATH=${BUILD_PATH}/${TARGET}
+export BUILD_FFMPEG_PATH
+echo "FFMPEG_LIB_DIR=${FFMPEG_LIB_DIR}"
+echo "TARGET_FULL_PATH=${TARGET_FULL_PATH}"
+BASH_VERSION="${BASH_VERSINFO[0]}.${BASH_VERSINFO[1]}"
+echo BASH_VERSION=${BASH_VERSION}
+echo "BIN_DIR=${BIN_DIR}"
+echo "make FFMPEG_LIB_DIR=${BUILD_FFMPEG_PATH}"
+echo uname=$(uname)
 
-	pushd $BUILD_PATH
+
+if [ -e $CONVERTOR_DIR ]; then
+	pushd $CONVERTOR_DIR
 		mkdir -p obj
-		[ -e  $BUILD_PATH/${TARGET} ] && rm -f ${TARGET}
-		[ -e  obj/${TARGET} ] && rm -f obj/${TRAGET}
-		BASH_VERSION="${BASH_VERSINFO[0]}.${BASH_VERSINFO[1]}"
-		echo BASH_VERSION=${BASH_VERSION}
-		if ((BASH_VERSINFO[0] >= 4)); then
-			OS=\${uname,,}
-			dpkg -l yasm || (echo "yasm is not installed, please install it" ; exit 1)
-		else
-			OS=$(echo $uname | tr '[:upper:]' '[:lower:]')
-		fi
-		BIN_DIR=${ROOT_PATH}/../bin/${OS}/
-		echo "OS=${OS}"
-		echo "BIN_DIR=${BIN_DIR}"
-		echo "make FFMPEG_LIB_DIR=${BUILD_FFMPEG_PATH}"
-		make FFMPEG_LIB_DIR=${BUILD_FFMPEG_PATH}
-		if [ -s  ${BUILD_PATH}/obj/${TARGET} ] ; then
+		[ -e  ${TARGET} ] && rm -f ${TARGET}
+		[ -e  obj/${TARGET} ] && rm -f obj/${TARGET}
+
+		echo "starting to build ${TARGET} from ${PWD}"
+
+		make
+
+		if [ -s  obj/${TARGET} ] ; then
 			echo "**************************************************************************************"
 			echo "${TARGET} was built successfully, copying to bin folder"
 			echo "**************************************************************************************"
-			mkdir -p ${ROOT_PATH}/bin/${OS}
-			echo "cp ${BUILD_PATH}/obj/${TARGET} ${BIN_DIR}"
-			cp ${BUILD_PATH}/obj/${TARGET} ${BIN_DIR}
+			mkdir -p bin
+			echo "cp obj/${TARGET} bin"
+			cp obj/${TARGET}  bin
 		else
 			echo "**************************************************************************************"
-			echo "Something is wrong, failed to build ts_to_mp4_convertor!!!, please check build results"
+			echo "Something went wrong, failed to build ts_to_mp4_convertor!!!, please check build results"
 			echo "**************************************************************************************"
 			exit 1
 		fi
 	popd
 else
 	echo "**************************************************************************************"
-	echo "${ROOT_DIR}/${$CONVERTOR_DIR} folder is missing, can't build ${TARGET}"
+	echo "${ROOT_DIR}/${CONVERTOR_DIR} folder is missing, can't build ${TARGET}"
 	echo "**************************************************************************************"
 	exit 1
 fi
