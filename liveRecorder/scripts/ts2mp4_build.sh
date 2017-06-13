@@ -9,16 +9,15 @@ ROOT_PATH=.
 TARGET=ts_to_mp4_convertor
 BIN_DIR=${ROOT_PATH}/../bin/
 BUILD_FFMPEG_PATH=
+BUILD_PATH=${CONVERTOR_DIR}/obj
 
 if [ -e $PREPDIR ]; then
 	ROOT_PATH==${PREPDIR}/${APP_VERSION}
 	CONVERTOR_DIR=${ROOT_PATH}/${TARGET}
-	BUILD_PATH=${CONVERTOR_DIR}/obj
 	BUILD_FFMPEG_PATH=${WEBAPPDIR}/ffmpeg/ffmpeg-3.0
 else
 	SCRIPT_DIR="$( dirname "${BASH_SOURCE[0]}" )"
 	CONVERTOR_DIR=${SCRIPT_DIR}/../${TARGET}
-	BUILD_PATH=${CONVERTOR_DIR}/obj
 	BUILD_FFMPEG_PATH="../../node_addons/FormatConverter/build/FFmpeg"
 fi
 
