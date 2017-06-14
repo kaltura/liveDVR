@@ -1,98 +1,133 @@
 # !/bin/bash
 
-[ "$1" = "DEBUG" ] && build_conf=Debug || build_conf=Release
+ROOT_PATH=`dirname ${BASH_SOURCE[0]}`
+echo "ROOT_PATH=$ROOT_PATH"
+FFMPEG_DOWNLOAD_PATH=~/
+# for Darwin recommended:
+# FFMPEG_DOWNLOAD_PATH=~/Documents/
+BIN_PATH=$ROOT_PATH/../../bin
+FFMPEG_DEV_PATH=
+FORMAT_CONVERTER_BIN=FormatConverter.so
+PREPDIR="/opt/kaltura/builds/${APP_NAME}"
+BUILD_CONF=Release
 
-[ "$build_conf" != "Debug" ] && echo "target config: release" ||  echo "target config: debug"
+while [ "$1" != "" ]; do
+	key="$1"
+
+    case $key in
+        -p | --path )
+                    shift
+			        BIN_PATH=$1
+			        #[ ! -e $1 ] && $BIN_PATH=$PREPDIR/$FFMPEG_BIN_DIR
+			        echo "-p | --path $1"
+			        shift
+        ;;
+        -m | --mode )
+                    shift
+                    [ $1 = 'debug' ] && BUILD_CONF=Debug || BUILD_CONF=Release
+			        echo "-m | --mode $1"
+			        shift
+		;;
+        -h | --help )
+			        echo "-p | --path [full path], FormatConverter bin path"
+			        echo "-m | --mode [debug/release], the build mode debug/release"
+			        exit
+		;;
+        * )
+                    echo "$1 is invalid arguments"
+                    exit
+        ;;
+    esac
+
+done
 
 
-os_name=`uname`
+[ "$BUILD_CONF" != "Debug" ] && echo "target config: release" ||  echo "target config: debug"
+
+FFMPEG_BUILD_PATH=$ROOT_PATH/build/$BUILD_CONF
+echo "FFMPEG_BUILD_PATH=$FFMPEG_BUILD_PATH"
+
+[ -d "$FFMPEG_BUILD_PATH" ] || mkdir -p "FFMPEG_BUILD_PATH"
+
+if [ -e $PREPDIR ]; then
+	FFMPEG_DEV_PATH=$PREPDIR/node_addons/FormatConverter/build/FFmpeg
+else
+	FFMPEG_DEV_PATH=$ROOT_PATH/build/FFmpeg
+fi
+
+[ -d "$FFMPEG_BUILD_PATH" ] || mkdir -p "FFMPEG_BUILD_PATH"
+
 
 function makeFFmpeg()
 {
-    local ffmpegDir=$1/FFmpeg
+	echo "FFMPEG_DEV_PATH=$FFMPEG_DEV_PATH"
+    echo "FFMPEG_DOWNLOAD_PATH=$FFMPEG_INSTALL_PATH"
 
-    echo "ffmpegDir=$ffmpegDir"
+    echo "current path [$ROOT_PATH]"
 
-    cd $1
-
-    if [ ! -d "$ffmpegDir" ]
+    if [ -e $FFMPEG_DEV_PATH ]
     then
         curl -OL https://github.com/FFmpeg/FFmpeg/releases/download/n3.0/ffmpeg-3.0.tar.gz
         mv ./ffmpeg-3.0.tar.gz /var/tmp/ffmpeg-3.0.tar.gz
-        case $os_name in
-         'Linux')
-            devFFmpegDir=~/
-            ;;
-        'Darwin')
-            devFFmpegDir=~/Documents/
-            ;;
-        *) ;;
-        esac
 
-        tar -xzvf /var/tmp/ffmpeg-3.0.tar.gz -C $devFFmpegDir
-        ln -s $devFFmpegDir/ffmpeg-3.0 $ffmpegDir
+        tar -xzvf /var/tmp/ffmpeg-3.0.tar.gz -C FFMPEG_DOWNLOAD_PATH
+        ln -s FFMPEG_INSTALL_PATH/ffmpeg-3.0 $FFMPEG_DEV_PATH
     fi
 
-    cd $ffmpegDir
+    pushd $FFMPEG_DEV_PATH
 
-    debug_specifics=
-    [ "$build_conf" = "Debug" ] &&  debug_specifics='--enable-debug --disable-optimizations'
+        echo "current path `pwd`"
 
-    configFileName=$ffmpegDir/lastConfigure
+	    debug_specifics=
+	    [ "$BUILD_CONF" = "Debug" ] &&  debug_specifics='--enable-debug --disable-optimizations'
 
+	    configFileName=./lastConfigure
 
-    confCmd="./configure --disable-everything --disable-doc --enable-protocol=file --enable-demuxer=mpegts --enable-muxer=rtp_mpegts --enable-parser=h264 --enable-parser=aac --enable-muxer=mp4 --enable-zlib --enable-bsf=aac_adtstoasc --enable-decoder=aac --enable-decoder=h264 --enable-muxer=flv --enable-protocol=rtmp --enable-encoder=libmp3lame $debug_specifics"
+	    confCmd="./configure --disable-everything --disable-doc --enable-protocol=file --enable-demuxer=mpegts --enable-muxer=rtp_mpegts --enable-parser=h264 --enable-parser=aac --enable-muxer=mp4 --enable-zlib --enable-bsf=aac_adtstoasc --enable-decoder=aac --enable-decoder=h264 --enable-muxer=flv --enable-protocol=rtmp --enable-encoder=libmp3lame $debug_specifics"
 
+	    [ "$os_name" == "Linux" ] && confCmd="$confCmd --enable-pic"
 
-    [ "$os_name" == "Linux" ] && confCmd="$confCmd --enable-pic"
+	    actualCmd=""
 
-    actualCmd=""
+	    [ -f "$configFileName" ] && actualCmd=`cat $configFileName`
 
-    [ -f "$configFileName" ] && actualCmd=`cat $configFileName`
+	    echo -e "actualCmd=\n<$actualCmd>"
+	    echo -e "confCmd=\n<$confCmd>"
+	    if [ "$actualCmd" != "$confCmd" ]
+	    then
+	        echo "configuring ffmpeg..."
+	        eval "$confCmd"
+	    else
+	        echo "no need to run configure"
+	    fi
 
-    echo -e "actualCmd=\n<$actualCmd>"
-    echo -e "confCmd=\n<$confCmd>"
-    if [ "$actualCmd" != "$confCmd" ]
-    then
-        echo "configuring ffmpeg..."
-         eval "$confCmd"
-    else
-        echo "no need to run configure"
-    fi
+	    echo "$confCmd" > $configFileName
 
-    echo "$confCmd" > $configFileName
-
-    make &> /dev/null
+	    make &> /dev/null
+	popd
 
 }
 
-path=`dirname ${BASH_SOURCE[0]}`
+echo "current path `pwd`"
 
 `which node-gyp` || npm install node-gyp -g
 
 [ -d '/usr/local/lib/node_modules/nan' ] || npm install nan -g
 
-cd $path
-
-path=`pwd`
-
-[ -d "$path/build" ] || mkdir -p "$path/build"
-
-makeFFmpeg $path/build
-
-cd $path
+makeFFmpeg
 
 gyp_args=''
 
 echo "Installing NAN"
 npm install nan
 
-case $os_name in
+case `uname` in
 'Darwin')
     echo "Mac OS"
     gyp_args='-- -f xcode'
     echo "$gyp_args"
     node-gyp configure $gyp_args
+    FORMAT_CONVERTER_BIN=FormatConverter.dylib
     ;;
 *) ;;
 esac
@@ -100,19 +135,15 @@ esac
 echo "Start node-gyp configure"
 node-gyp configure
 
-if [ "$build_conf" = "Debug" ]; then
+debugExt=''
+
+if [ "$BUILD_CONF" = "Debug" ]; then
     gyp_debug="--debug"
     debugExt=".debug"
 fi
 echo "Start node-gyp build. $gyp_debug"
 node-gyp build $gyp_debug -v
 
-case $os_name in
- 'Linux')
-    cp `pwd`/build/$build_conf/FormatConverter.so "`pwd`/../../bin/linux/FormatConverter.node$debugExt"
-    ;;
-'Darwin')
-    cp `pwd`/build/$build_conf/FormatConverter.dylib "`pwd`/../../bin/darwin/FormatConverter.node$debugExt"
-    ;;
-*) ;;
-esac
+echo "cp ${FFMPEG_BUILD_PATH}/${FORMAT_CONVERTER_BIN} ${BIN_PATH}/FormatConverter.node$debugExt"
+
+cp "${FFMPEG_BUILD_PATH}/${FORMAT_CONVERTER_BIN}" "${BIN_PATH}/FormatConverter.node$debugExt"
