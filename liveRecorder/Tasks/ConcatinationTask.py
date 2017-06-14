@@ -2,11 +2,9 @@ import base64
 import collections
 import hashlib
 import os
-import platform
 import re
 import subprocess
 import urllib2
-import glob
 
 import m3u8
 from Iso639Wrapper import Iso639Wrapper
@@ -26,7 +24,6 @@ class ConcatenationTask(TaskBase):
     nginx_host = get_config('nginx_host')
     secret = get_config('token_key')
     token_url_template = nginx_host + ":" + nginx_port +"/dc-0/recording/hls/p/0/e/{0}/"
-    os_name = platform.system().lower()
     cwd = os.path.dirname(os.path.abspath(__file__))
     ts_to_mp4_convertor = os.path.join(cwd, '../bin/ts_to_mp4_convertor')
 
