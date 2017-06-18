@@ -1,15 +1,17 @@
 # !/bin/bash
 
-ROOT_PATH=`dirname ${BASH_SOURCE[0]}`
-echo "ROOT_PATH=$ROOT_PATH"
-FFMPEG_DOWNLOAD_PATH=~/
-# for Darwin recommended:
-# FFMPEG_DOWNLOAD_PATH=~/Documents/
-BIN_PATH=$ROOT_PATH/../../bin
-FFMPEG_DEV_PATH=
-FORMAT_CONVERTER_BIN=FormatConverter.so
+APP_NAME=liveRecorder
 PREPDIR="/opt/kaltura/builds/${APP_NAME}"
+ADDONS_ROOT_PATH=$PREPDIR/node_addons/FormatConverter
+ADDONS_BUILD_PATH=
+ADDONS_BIN_PATH=$PREPDIR/bin
 BUILD_CONF=Release
+SCRIPT_PATH=$PREPDIR/scripts
+FORMAT_CONVERTER_BIN=FormatConverter.so
+FFMPEG_INSTALL_PATH=~/Documents
+
+OS=`uname`
+echo "OS=$OS"
 
 while [ "$1" != "" ]; do
 	key="$1"
@@ -17,8 +19,8 @@ while [ "$1" != "" ]; do
     case $key in
         -p | --path )
                     shift
-			        BIN_PATH=$1
-			        #[ ! -e $1 ] && $BIN_PATH=$PREPDIR/$FFMPEG_BIN_DIR
+			        FFMPEG_INSTALL_PATH=$1
+			        [ ! -e $1 ] &&  FFMPEG_INSTALL_PATH=~/
 			        echo "-p | --path $1"
 			        shift
         ;;
@@ -29,7 +31,7 @@ while [ "$1" != "" ]; do
 			        shift
 		;;
         -h | --help )
-			        echo "-p | --path [full path], FormatConverter bin path"
+			        echo "-p | --path [full path], ffmpeg install path"
 			        echo "-m | --mode [debug/release], the build mode debug/release"
 			        exit
 		;;
@@ -41,109 +43,79 @@ while [ "$1" != "" ]; do
 
 done
 
-
-[ "$BUILD_CONF" != "Debug" ] && echo "target config: release" ||  echo "target config: debug"
-
-FFMPEG_BUILD_PATH=$ROOT_PATH/build/$BUILD_CONF
-echo "FFMPEG_BUILD_PATH=$FFMPEG_BUILD_PATH"
-
-[ -d "$FFMPEG_BUILD_PATH" ] || mkdir -p "FFMPEG_BUILD_PATH"
-
-if [ -e $PREPDIR ]; then
-	FFMPEG_DEV_PATH=$PREPDIR/node_addons/FormatConverter/build/FFmpeg
-else
-	FFMPEG_DEV_PATH=$ROOT_PATH/build/FFmpeg
+if [ ! -e  $PREPDIR ]; then
+	ADDONS_ROOT_PATH=`dirname ${BASH_SOURCE[0]}`
+	SCRIPT_PATH=$ADDONS_ROOT_PATH/../../scripts/
+	ADDONS_BIN_PATH=../../bin
 fi
 
-[ -d "$FFMPEG_BUILD_PATH" ] || mkdir -p "FFMPEG_BUILD_PATH"
+[ BUILD_CONF = "Debug"] && ADDONS_BUILD_PATH=build/Debug || ADDONS_BUILD_PATH=build/Release
 
-
-function makeFFmpeg()
-{
-	echo "FFMPEG_DEV_PATH=$FFMPEG_DEV_PATH"
-    echo "FFMPEG_DOWNLOAD_PATH=$FFMPEG_INSTALL_PATH"
-
-    echo "current path [$ROOT_PATH]"
-
-    if [ -e $FFMPEG_DEV_PATH ]
-    then
-        curl -OL https://github.com/FFmpeg/FFmpeg/releases/download/n3.0/ffmpeg-3.0.tar.gz
-        mv ./ffmpeg-3.0.tar.gz /var/tmp/ffmpeg-3.0.tar.gz
-
-        tar -xzvf /var/tmp/ffmpeg-3.0.tar.gz -C FFMPEG_DOWNLOAD_PATH
-        ln -s FFMPEG_INSTALL_PATH/ffmpeg-3.0 $FFMPEG_DEV_PATH
-    fi
-
-    pushd $FFMPEG_DEV_PATH
-
-        echo "current path `pwd`"
-
-	    debug_specifics=
-	    [ "$BUILD_CONF" = "Debug" ] &&  debug_specifics='--enable-debug --disable-optimizations'
-
-	    configFileName=./lastConfigure
-
-	    confCmd="./configure --disable-everything --disable-doc --enable-protocol=file --enable-demuxer=mpegts --enable-muxer=rtp_mpegts --enable-parser=h264 --enable-parser=aac --enable-muxer=mp4 --enable-zlib --enable-bsf=aac_adtstoasc --enable-decoder=aac --enable-decoder=h264 --enable-muxer=flv --enable-protocol=rtmp --enable-encoder=libmp3lame $debug_specifics"
-
-	    [ "$os_name" == "Linux" ] && confCmd="$confCmd --enable-pic"
-
-	    actualCmd=""
-
-	    [ -f "$configFileName" ] && actualCmd=`cat $configFileName`
-
-	    echo -e "actualCmd=\n<$actualCmd>"
-	    echo -e "confCmd=\n<$confCmd>"
-	    if [ "$actualCmd" != "$confCmd" ]
-	    then
-	        echo "configuring ffmpeg..."
-	        eval "$confCmd"
-	    else
-	        echo "no need to run configure"
-	    fi
-
-	    echo "$confCmd" > $configFileName
-
-	    make &> /dev/null
-	popd
-
-}
 
 echo "current path `pwd`"
 
-`which node-gyp` || npm install node-gyp -g
+echo "*******************************************************************************"
+echo "* about to start ffmpeg build...                                              *"
+echo "*******************************************************************************"
 
-[ -d '/usr/local/lib/node_modules/nan' ] || npm install nan -g
 
-makeFFmpeg
+echo "export BUILD_CONF=$BUILD_CONF"
+echo "export FFMPEG_INSTALL_PATH=$FFMPEG_INSTALL_PATH"
 
-gyp_args=''
+export BUILD_CONF
+export FFMPEG_INSTALL_PATH
 
-echo "Installing NAN"
-npm install nan
+echo "sh $SCRIPT_PATH/build_ffmpeg.sh"
 
-case `uname` in
-'Darwin')
-    echo "Mac OS"
-    gyp_args='-- -f xcode'
-    echo "$gyp_args"
-    node-gyp configure $gyp_args
-    FORMAT_CONVERTER_BIN=FormatConverter.dylib
-    ;;
-*) ;;
-esac
+sh $SCRIPT_PATH/build_ffmpeg.sh
 
-echo "Start node-gyp configure"
-node-gyp configure
+echo "*******************************************************************************"
+echo "*   finished ffmpeg build                                                     *"
+echo "*******************************************************************************"
 
-debugExt=''
+echo "current path `pwd`"
+echo "ADDONS_BUILD_PATH=$ADDONS_BUILD_PATH"
+echo "ADDONS_ROOT_PATH=$ADDONS_ROOT_PATH"
 
-if [ "$BUILD_CONF" = "Debug" ]; then
-    gyp_debug="--debug"
-    debugExt=".debug"
-fi
-echo "Start node-gyp build. $gyp_debug"
-node-gyp build $gyp_debug -v
+pushd $ADDONS_ROOT_PATH
 
-echo "cp ${FFMPEG_BUILD_PATH}/${FORMAT_CONVERTER_BIN} ${BIN_PATH}/FormatConverter.node$debugExt"
+	[ -d "$ADDONS_BUILD_PATH" ] || mkdir -p "ADDONS_BUILD_PATH"
 
-cp "${FFMPEG_BUILD_PATH}/${FORMAT_CONVERTER_BIN}" "${BIN_PATH}/FormatConverter.node$debugExt"
+	`which node-gyp` || npm install node-gyp -g
+
+	[ -d '/usr/local/lib/node_modules/nan' ] || npm install nan -g
+
+	gyp_args=''
+
+	echo "Installing NAN"
+	npm install -unsafe-perm nan
+
+	case $OS in
+	'Darwin')
+	    echo "Mac OS"
+	    gyp_args='-- -f xcode'
+	    echo "$gyp_args"
+	    node-gyp configure $gyp_args
+	    FORMAT_CONVERTER_BIN=FormatConverter.dylib
+	    ;;
+	*) ;;
+	esac
+
+	echo "Start node-gyp configure"
+	node-gyp configure
+
+	debugExt=''
+
+	if [ "$BUILD_CONF" = "Debug" ]; then
+	    gyp_debug="--debug"
+	    debugExt=".debug"
+	fi
+	echo "Start node-gyp build. $gyp_debug"
+	node-gyp build $gyp_debug -v
+
+	echo "cp ${ADDONS_BUILD_PATH}/${FORMAT_CONVERTER_BIN} ${ADDONS_BIN_PATH}/FormatConverter.node$debugExt"
+    cp "${ADDONS_BUILD_PATH}/${FORMAT_CONVERTER_BIN}" "${ADDONS_BIN_PATH}/FormatConverter.node$debugExt"
+
+popd
+
+
