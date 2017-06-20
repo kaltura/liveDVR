@@ -1,10 +1,21 @@
 # !/bin/bash
 
+if [ "$#" -eq 0 ]; then
+	echo "usage build_addons <product path> <release/debug - optional>"
+	exit
+fi
+
+PRODUCT_ROOT_PATH=$1
+BUILD_CONF=$2
+ADDONS_PATH=$PRODUCT_ROOT_PATH/node_addons/FormatConverter
 FORMAT_CONVERTER_BIN=FormatConverter.so
 
-pushd $ADDONS_ROOT_PATH
+if [ "$BUILD_CONF" = "debug" ]; then
+	BUILD_CONF=DEBUG
+else
+	BUILD_CONF=Release
 
-	[ -d "$ADDONS_BUILD_PATH" ] || mkdir -p "$ADDONS_BUILD_PATH"
+pushd $ADDONS_PATH
 
 	`which node-gyp` || npm install node-gyp -g
 
@@ -38,7 +49,7 @@ pushd $ADDONS_ROOT_PATH
 	echo "Start node-gyp build. $gyp_debug"
 	node-gyp build $gyp_debug -v
 
-	echo "cp ${ADDONS_BUILD_PATH}/${FORMAT_CONVERTER_BIN} ${ADDONS_BIN_PATH}/FormatConverter.node$debugExt"
-    cp "${ADDONS_BUILD_PATH}/${FORMAT_CONVERTER_BIN}" "${ADDONS_BIN_PATH}/FormatConverter.node$debugExt"
+	echo "cp build/${BUILD_CONF}/${FORMAT_CONVERTER_BIN} ${PRODUCT_ROOT_PATH}/bin/FormatConverter.node$debugExt"
+    cp "build/${BUILD_CONF}/${FORMAT_CONVERTER_BIN}" "${PRODUCT_ROOT_PATH}/bin/FormatConverter.node$debugExt"
 
 popd

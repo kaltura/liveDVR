@@ -1,22 +1,18 @@
 # !/bin/bash
 
-if [ ! -z "$1" ]; then
-	FFMPEG_BUILD_PATH=$1
-	echo "ffmpeg build path (command line arg #1): [$FFMPEG_BUILD_PATH]"
-elif [ -z "$FFMPEG_BUILD_PATH" ]; then
-	echo "ffmpeg install path not specified, using default"
-	FFMPEG_BUILD_PATH=~/
+if [ "$#" -lt 2 ]; then
+	echo "usage build_ffmpeg <product path> <ffmpeg build path> <release/debug - optional>"
+	exit
 fi
 
-if [ ! -z "$2" ]; then
-	PRODUCT_ROOT_PATH=$2
-	echo "product root path (command line arg #2): [$PRODUCT_ROOT_PATH]"
-fi
+FFMPEG_BUILD_PATH=$1
+PRODUCT_ROOT_PATH=$2
+BUILD_CONF=$3
 
 echo "PRODUCT_ROOT_PATH=$PRODUCT_ROOT_PATH"
 FFMPEG_SYMLINK=$PRODUCT_ROOT_PATH/node_addons/FormatConverter/build/FFmpeg
 
-[ -e $FFMPEG_BUILD_PATH ] || mkdir -p "$ADDONS_BUILD_PATH"
+[ ! -e $FFMPEG_BUILD_PATH ] || mkdir -p "$FFMPEG_BUILD_PATH"
 [ -z "$BUILD_CONF" ] && BUILD_CONF=Release
 
 
