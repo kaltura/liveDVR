@@ -30,5 +30,5 @@ if [ ! -d "$1" ] ; then
         echo "No previous version found"
     fi
 else
-    echo $1 is allready exsist
+    echo $1 is already exists
 fi

@@ -1,40 +1,45 @@
 # !/bin/bash
 
-ROOT_PATH=`dirname ${BASH_SOURCE[0]}`
-PREPDIR="/opt/kaltura/builds/${APP_NAME}"
-FFMPEG_ROOT_PATH=
-
-[ "FFMPEG_BUILD_MODE" != "Debug" ] && echo "target config: release" ||  echo "target config: debug"
-
-
-if [ -e $PREPDIR ]; then
-	FFMPEG_ROOT_PATH=$PREPDIR/node_addons/FormatConverter/build
-else
-	FFMPEG_ROOT_PATH=$ROOT_PATH/../node_addons/FormatConverter/build
+if [ ! -z "$1" ]; then
+	FFMPEG_BUILD_PATH=$1
+	echo "ffmpeg build path (command line arg #1): [$FFMPEG_BUILD_PATH]"
+elif [ -z "$FFMPEG_BUILD_PATH" ]; then
+	echo "ffmpeg install path not specified, using default"
+	FFMPEG_BUILD_PATH=~/
 fi
 
-	FFMPEG_DEV_PATH=$FFMPEG_ROOT_PATH/FFmpeg
+if [ ! -z "$2" ]; then
+	PRODUCT_ROOT_PATH=$2
+	echo "product root path (command line arg #2): [$PRODUCT_ROOT_PATH]"
+fi
 
-	echo "FFMPEG_ROOT_PATH=$FFMPEG_ROOT_PATH"
+echo "PRODUCT_ROOT_PATH=$PRODUCT_ROOT_PATH"
+FFMPEG_SYMLINK=$PRODUCT_ROOT_PATH/node_addons/FormatConverter/build/FFmpeg
+
+[ -e $FFMPEG_BUILD_PATH ] || mkdir -p "$ADDONS_BUILD_PATH"
+[ -z "$BUILD_CONF" ] && BUILD_CONF=Release
 
 
 function makeFFmpeg()
 {
-	echo "FFMPEG_DEV_PATH=$FFMPEG_DEV_PATH"
-    echo "FFMPEG_INSTALL_PATH=$FFMPEG_INSTALL_PATH"
+	echo "current path `pwd`"
+	echo "FFMPEG_BUILD_PATH=$FFMPEG_BUILD_PATH"
+	echo "FFMPEG_SYMLINK=$FFMPEG_SYMLINK"
 
-    echo "current path [$ROOT_PATH]"
+    if [ -d $FFMPEG_BUILD_PATH ]; then
 
-    if [ -e $FFMPEG_INSTALL_PATH ]
-    then
+        if [ -L "$FFMPEG_SYMLINK" ]; then
+            rm $FFMPEG_SYMLINK
+        fi
+
         curl -OL https://github.com/FFmpeg/FFmpeg/releases/download/n3.0/ffmpeg-3.0.tar.gz
         mv ./ffmpeg-3.0.tar.gz /var/tmp/ffmpeg-3.0.tar.gz
 
-        tar -xzvf /var/tmp/ffmpeg-3.0.tar.gz -C $FFMPEG_INSTALL_PATH
-        ln -s $FFMPEG_INSTALL_PATH/ffmpeg-3.0 $FFMPEG_DEV_PATH
+        tar -xzvf /var/tmp/ffmpeg-3.0.tar.gz -C $FFMPEG_BUILD_PATH
+        ln -s $FFMPEG_BUILD_PATH/ffmpeg-3.0 $FFMPEG_SYMLINK
     fi
 
-    pushd $FFMPEG_DEV_PATH
+    pushd $FFMPEG_SYMLINK
 
         echo "current path `pwd`"
 
