@@ -10,7 +10,6 @@ ADDONS_ROOT_PATH=
 ADDONS_BUILD_PATH=build/Release
 ADDONS_BIN_PATH=../../bin
 
-FORMAT_CONVERTER_BIN=FormatConverter.so
 FFMPEG_BUILD_PATH=~/
 FFMPEG_BUILD_PATH_SET=0
 
@@ -100,15 +99,16 @@ echo "current path `pwd`"
 
 if [ "$BUILD_TARGET" = "ffmpeg" ] || [ "$BUILD_TARGET" = "all" ]; then
 
+	echo "export BUILD_CONF=$BUILD_CONF"
+	export BUILD_CONF
+
 	echo "*******************************************************************************"
 	echo "* starting to build ffmpeg build                                              *"
 	echo "*******************************************************************************"
 
-	echo "export BUILD_CONF=$BUILD_CONF"
 	echo "export FFMPEG_BUILD_PATH=$FFMPEG_BUILD_PATH"
 	echo "export PRODUCT_ROOT_PATH=$PRODUCT_ROOT_PATH"
 
-	export BUILD_CONF
 	export FFMPEG_BUILD_PATH
 	export PRODUCT_ROOT_PATH
 
@@ -128,49 +128,18 @@ if [ "$BUILD_TARGET" = "node_addons" ] || [ "$BUILD_TARGET" = "all" ]; then
 	echo "*******************************************************************************"
 
 	echo "current path `pwd`"
-	echo "ADDONS_BUILD_PATH=$ADDONS_BUILD_PATH"
-	echo "ADDONS_ROOT_PATH=$ADDONS_ROOT_PATH"
 
-	pushd $ADDONS_ROOT_PATH
+	echo "export ADDONS_BUILD_PATH=$ADDONS_BUILD_PATH"
+	echo "export ADDONS_ROOT_PATH=$ADDONS_ROOT_PATH"
+	echo "export ADDONS_BIN_PATH=$ADDONS_BIN_PATH"
 
-		[ -d "$ADDONS_BUILD_PATH" ] || mkdir -p "$ADDONS_BUILD_PATH"
+	export ADDONS_BUILD_PATH
+	export ADDONS_ROOT_PATH
+	export ADDONS_BIN_PATH
 
-		`which node-gyp` || npm install node-gyp -g
+	echo "sh $SCRIPT_PATH/build_node_addons.sh"
 
-		[ -d '/usr/local/lib/node_modules/nan' ] || npm install nan -g
-
-		gyp_args=''
-
-		echo "Installing NAN"
-		npm install -unsafe-perm nan
-
-		case $OS in
-		'Darwin')
-		    echo "Mac OS"
-		    gyp_args='-- -f xcode'
-		    echo "$gyp_args"
-		    node-gyp configure $gyp_args
-		    FORMAT_CONVERTER_BIN=FormatConverter.dylib
-		    ;;
-		*) ;;
-		esac
-
-		echo "Start node-gyp configure"
-		node-gyp configure
-
-		debugExt=''
-
-		if [ "$BUILD_CONF" = "Debug" ]; then
-		    gyp_debug="--debug"
-		    debugExt=".debug"
-		fi
-		echo "Start node-gyp build. $gyp_debug"
-		node-gyp build $gyp_debug -v
-
-		echo "cp ${ADDONS_BUILD_PATH}/${FORMAT_CONVERTER_BIN} ${ADDONS_BIN_PATH}/FormatConverter.node$debugExt"
-	    cp "${ADDONS_BUILD_PATH}/${FORMAT_CONVERTER_BIN}" "${ADDONS_BIN_PATH}/FormatConverter.node$debugExt"
-
-	popd
+	sh $SCRIPT_PATH/build_node_addons.sh
 
 	echo "*******************************************************************************"
     echo "* finished building node addons                                               *"
