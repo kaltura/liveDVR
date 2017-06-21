@@ -9,6 +9,7 @@ PRODUCT_ROOT_PATH=$1
 BUILD_CONF=$2
 ADDONS_PATH=$PRODUCT_ROOT_PATH/node_addons/FormatConverter
 FORMAT_CONVERTER_BIN=FormatConverter.so
+OS=`uname`
 
 if [ "$BUILD_CONF" = "debug" ]; then
 	BUILD_CONF=DEBUG
@@ -26,7 +27,7 @@ pushd $ADDONS_PATH
 	echo "Installing NAN"
 	npm install -unsafe-perm nan
 
-	case `uname` in
+	case $OS in
 	'Darwin')
 	    echo "Mac OS"
 	    gyp_args='-- -f xcode'
