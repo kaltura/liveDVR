@@ -53,3 +53,8 @@ liveRecorder/ts_to_mp4_convertor/ts_to_mp4_convertor.xcodeproj/
 
 # ignore streaming_client’s Xcode project dir
 tests/streaming_client/streaming_client.xcodeproj/
+build/config.gypi
+
+ffmpeg-3.0.tar.gz
+
+lastConfigure

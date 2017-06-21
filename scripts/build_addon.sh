@@ -10,8 +10,11 @@ BUILD_CONF=$2
 ADDON_PATH=$PRODUCT_ROOT_PATH/node_addons/FormatConverter
 FORMAT_CONVERTER_BIN=FormatConverter.so
 OS=`uname`
+echo "OS=$OS"
 
-if [ "$BUILD_CONF" = "debug" ]; then
+if [ -z $BUILD_CONF]; then
+	BUILD_CONF=Release
+elif [ "${BUILD_CONF,,}" = "debug" ]; then
 	BUILD_CONF=Debug
 else
 	BUILD_CONF=Release
