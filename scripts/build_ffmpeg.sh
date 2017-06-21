@@ -33,10 +33,9 @@ echo "current path `pwd`"
 echo "FFMPEG_BUILD_PATH=$FFMPEG_BUILD_PATH"
 echo "ADDON_BUILD_PATH=$ADDON_BUILD_PATH"
 
-if [ -e "$FFMPEG_SYMLINK" ]; then
-	echo "unlink $FFMPEG_SYMLINK"
-    unlink $FFMPEG_SYMLINK
-fi
+echo "unlink $FFMPEG_SYMLINK"
+unlink $FFMPEG_SYMLINK
+
 
 if [ ! -d $FFMPEG_SYMLINK ]; then
 
