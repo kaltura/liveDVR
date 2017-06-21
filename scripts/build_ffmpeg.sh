@@ -13,7 +13,13 @@ OS=`uname`
 echo "PRODUCT_ROOT_PATH=$PRODUCT_ROOT_PATH"
 
 [ ! -e $FFMPEG_BUILD_PATH ] || mkdir -p "$FFMPEG_BUILD_PATH"
-[ -z "$BUILD_CONF" ] && BUILD_CONF=Release
+if [ -z "$BUILD_CONF" ]; then
+	BUILD_CONF=Release
+elif [  "${BUILD_CONF,,}" = "debug" ]
+	BUILD_CONF=Debug
+else
+	BUILD_CONF=Release
+fi
 
 FFMPEG_SYMLINK=$PRODUCT_ROOT_PATH/node_addons/FormatConverter/build/${BUILD_CONF}/FFmpeg
 
