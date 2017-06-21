@@ -33,17 +33,23 @@ echo "current path `pwd`"
 echo "FFMPEG_BUILD_PATH=$FFMPEG_BUILD_PATH"
 echo "ADDON_BUILD_PATH=$ADDON_BUILD_PATH"
 
-if [ -d $FFMPEG_BUILD_PATH ]; then
+if [ -e "$FFMPEG_SYMLINK" ]; then
+	echo "unlink $FFMPEG_SYMLINK"
+    unlink $FFMPEG_SYMLINK
+fi
 
-    if [ -L "$FFMPEG_SYMLINK" ]; then
-        unlink $FFMPEG_SYMLINK
-    fi
+if [ ! -d $FFMPEG_SYMLINK ]; then
 
     curl -OL https://github.com/FFmpeg/FFmpeg/releases/download/n3.0/ffmpeg-3.0.tar.gz
     mv ./ffmpeg-3.0.tar.gz /var/tmp/ffmpeg-3.0.tar.gz
 
+	# note: if the second argument already exists and is a directory,
+	# ln will create a symlink to the target inside that directory.
+
     tar -xzvf /var/tmp/ffmpeg-3.0.tar.gz -C $FFMPEG_BUILD_PATH
     ln -s $FFMPEG_BUILD_PATH/ffmpeg-3.0 $FFMPEG_SYMLINK
+else
+	echo "$FFMPEG_SYMLINK exists skipping ffmpeg download"
 fi
 
 pushd $FFMPEG_SYMLINK
