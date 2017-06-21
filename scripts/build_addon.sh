@@ -1,7 +1,7 @@
 # !/bin/bash
 
 if [ "$#" -eq 0 ]; then
-	echo "usage build_addons <product path> <release/debug - optional>"
+	echo "usage build_addon <product path> <release/debug - optional>"
 	exit
 fi
 
