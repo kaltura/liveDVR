@@ -12,7 +12,8 @@ OS=`uname`
 
 echo "PRODUCT_ROOT_PATH=$PRODUCT_ROOT_PATH"
 
-[ ! -e $FFMPEG_BUILD_PATH ] || mkdir -p "$FFMPEG_BUILD_PATH"
+[ -d $FFMPEG_BUILD_PATH ] || mkdir -p "$FFMPEG_BUILD_PATH"
+
 if [ -z "$BUILD_CONF" ]; then
 	BUILD_CONF=Release
 elif [  "${BUILD_CONF,,}" = "debug" ]; then
