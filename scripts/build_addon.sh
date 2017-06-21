@@ -7,16 +7,19 @@ fi
 
 PRODUCT_ROOT_PATH=$1
 BUILD_CONF=$2
-ADDONS_PATH=$PRODUCT_ROOT_PATH/node_addons/FormatConverter
+ADDON_PATH=$PRODUCT_ROOT_PATH/node_addons/FormatConverter
 FORMAT_CONVERTER_BIN=FormatConverter.so
 OS=`uname`
 
 if [ "$BUILD_CONF" = "debug" ]; then
-	BUILD_CONF=DEBUG
+	BUILD_CONF=Debug
 else
 	BUILD_CONF=Release
+fi
 
-pushd $ADDONS_PATH
+echo "ADDON_PATH=$ADDON_PATH"
+
+pushd $ADDON_PATH
 
 	`which node-gyp` || npm install node-gyp -g
 
@@ -51,6 +54,6 @@ pushd $ADDONS_PATH
 	node-gyp build $gyp_debug -v
 
 	echo "cp build/${BUILD_CONF}/${FORMAT_CONVERTER_BIN} ${PRODUCT_ROOT_PATH}/bin/FormatConverter.node$debugExt"
-    cp "build/${BUILD_CONF}/${FORMAT_CONVERTER_BIN}" "${PRODUCT_ROOT_PATH}/bin/FormatConverter.node$debugExt"
+	cp "build/${BUILD_CONF}/${FORMAT_CONVERTER_BIN}" "${PRODUCT_ROOT_PATH}/bin/FormatConverter.node$debugExt"
 
 popd
