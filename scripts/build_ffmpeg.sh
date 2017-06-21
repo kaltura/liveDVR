@@ -7,6 +7,8 @@ fi
 
 FFMPEG_BUILD_PATH=$1
 PRODUCT_ROOT_PATH=$2
+ADDON_BUILD_PATH=$PRODUCT_ROOT_PATH/node_addons/FormatConverter/build/
+FFMPEG_SYMLINK=$ADDON_BUILD_PATH/FFmpeg
 BUILD_CONF=
 OS=`uname`
 
@@ -14,24 +16,27 @@ echo "PRODUCT_ROOT_PATH=$PRODUCT_ROOT_PATH"
 
 [ -d $FFMPEG_BUILD_PATH ] || mkdir -p "$FFMPEG_BUILD_PATH"
 
-[ "$#" -eq 3 ] && BUILD_CONF=$3 || BUILD_CONF=Debug
+[ "$#" -eq 3 ] && BUILD_CONF=$3 || BUILD_CONF=Release
 
-if [  "${BUILD_CONF,,}" = "debug" ]; then
+if [ "$BUILD_CONF" = "debug" ]; then
 	BUILD_CONF=Debug
+	echo "Debug mode"
 else
 	BUILD_CONF=Release
+	echo "Release mode"
 fi
 
-FFMPEG_SYMLINK=$PRODUCT_ROOT_PATH/node_addons/FormatConverter/build/${BUILD_CONF}/FFmpeg
+mkdir -p ${BUILD_CONF}
+
 
 echo "current path `pwd`"
 echo "FFMPEG_BUILD_PATH=$FFMPEG_BUILD_PATH"
-echo "FFMPEG_SYMLINK=$FFMPEG_SYMLINK"
+echo "ADDON_BUILD_PATH=$ADDON_BUILD_PATH"
 
 if [ -d $FFMPEG_BUILD_PATH ]; then
 
     if [ -L "$FFMPEG_SYMLINK" ]; then
-        rm $FFMPEG_SYMLINK
+        unlink $FFMPEG_SYMLINK
     fi
 
     curl -OL https://github.com/FFmpeg/FFmpeg/releases/download/n3.0/ffmpeg-3.0.tar.gz

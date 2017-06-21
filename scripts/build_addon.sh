@@ -12,12 +12,14 @@ FORMAT_CONVERTER_BIN=FormatConverter.so
 OS=`uname`
 echo "OS=$OS"
 
-[ "$#" -eq 2 ] && BUILD_CONF=$2 || BUILD_CONF=Debug
+[ "$#" -eq 2 ] && BUILD_CONF=$2 || BUILD_CONF=Release
 
-if [ "${BUILD_CONF,,}" = "debug" ]; then
+if [ "$BUILD_CONF" = "debug" ]; then
 	BUILD_CONF=Debug
+	echo "Debug mode"
 else
 	BUILD_CONF=Release
+	echo "Release mode"
 fi
 
 echo "ADDON_PATH=$ADDON_PATH"
