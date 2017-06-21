@@ -11,10 +11,11 @@ BUILD_CONF=$3
 OS=`uname`
 
 echo "PRODUCT_ROOT_PATH=$PRODUCT_ROOT_PATH"
-FFMPEG_SYMLINK=$PRODUCT_ROOT_PATH/node_addons/FormatConverter/build/FFmpeg
 
 [ ! -e $FFMPEG_BUILD_PATH ] || mkdir -p "$FFMPEG_BUILD_PATH"
 [ -z "$BUILD_CONF" ] && BUILD_CONF=Release
+
+FFMPEG_SYMLINK=$PRODUCT_ROOT_PATH/node_addons/FormatConverter/build/${BUILD_CONF}/FFmpeg
 
 echo "current path `pwd`"
 echo "FFMPEG_BUILD_PATH=$FFMPEG_BUILD_PATH"
