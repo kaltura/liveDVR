@@ -6,15 +6,15 @@ if [ "$#" -eq 0 ]; then
 fi
 
 PRODUCT_ROOT_PATH=$1
-BUILD_CONF=$2
+BUILD_CONF=
 ADDON_PATH=$PRODUCT_ROOT_PATH/node_addons/FormatConverter
 FORMAT_CONVERTER_BIN=FormatConverter.so
 OS=`uname`
 echo "OS=$OS"
 
-if [ -z $BUILD_CONF ]; then
-	BUILD_CONF=Release
-elif [ "${BUILD_CONF,,}" = "debug" ]; then
+[ "$#" -eq 2 ] && BUILD_CONF=$2 || BUILD_CONF=Debug
+
+if [ "${BUILD_CONF,,}" = "debug" ]; then
 	BUILD_CONF=Debug
 else
 	BUILD_CONF=Release

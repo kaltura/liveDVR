@@ -7,16 +7,16 @@ fi
 
 FFMPEG_BUILD_PATH=$1
 PRODUCT_ROOT_PATH=$2
-BUILD_CONF=$3
+BUILD_CONF=
 OS=`uname`
 
 echo "PRODUCT_ROOT_PATH=$PRODUCT_ROOT_PATH"
 
 [ -d $FFMPEG_BUILD_PATH ] || mkdir -p "$FFMPEG_BUILD_PATH"
 
-if [ -z "$BUILD_CONF" ]; then
-	BUILD_CONF=Release
-elif [  "${BUILD_CONF,,}" = "debug" ]; then
+[ "$#" -eq 3 ] && BUILD_CONF=$3 || BUILD_CONF=Debug
+
+if [  "${BUILD_CONF,,}" = "debug" ]; then
 	BUILD_CONF=Debug
 else
 	BUILD_CONF=Release
