@@ -31,7 +31,7 @@ if [ -e $CONVERTOR_DIR ]; then
 			echo "**************************************************************************************"
 			mkdir -p bin
 			echo "cp obj/${TARGET} bin"
-			cp obj/${TARGET}  bin
+			cp obj/${TARGET}  ../bin
 		else
 			echo "**************************************************************************************"
 			echo "Something went wrong, failed to build ts_to_mp4_convertor!!!, please check build results"
