@@ -58,3 +58,5 @@ build/config.gypi
 ffmpeg-3.0.tar.gz
 
 lastConfigure
+
+liveRecorder/KalturaClient/.DS_Store
