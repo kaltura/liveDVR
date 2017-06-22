@@ -40,7 +40,7 @@ class ThreadWorkers:  # singleton object,
             t.start()
 
     def worker(self, index):
-        self.logger.info("Thread %d is start working", index)
+        self.logger.info("Thread %d started working", index)
         while True:
             upload_chunk_job = self.q.get()
             if not upload_chunk_job:

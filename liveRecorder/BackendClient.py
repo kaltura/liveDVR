@@ -26,6 +26,7 @@ class BackendClient:
     config = KalturaConfiguration(url)
     client = KalturaClient(config)
     client.setPartnerId(partner_id)
+    client.setClientTag("liveRecorder:1.0.0")
     ks = None
     type = KalturaSessionType.ADMIN
 
@@ -151,8 +152,8 @@ class BackendClient:
                          output_file, duration, recorded_id, flavor_id)
         resource = KalturaServerFileResource()
         resource.localFilePath = output_file
-        self.set_recorded_content(entry_id, resource, duration, partner_id, recorded_id, flavor_id)
         resource.keepOriginalFile = False
+        self.set_recorded_content(entry_id, resource, duration, partner_id, recorded_id, flavor_id)
 
 
 

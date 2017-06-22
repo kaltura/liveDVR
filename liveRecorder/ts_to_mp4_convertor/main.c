@@ -308,7 +308,24 @@ bool convert(struct FileConversion* conversion)
                 }
             }
         }
-        
+        /*
+        if ( trackInfo->packetCount==1 && in_stream->codec->codec_type==AVMEDIA_TYPE_DATA) {
+            char* data=(char*)pkt.buf->data;
+            char *json="N/A";
+            char* timestr="N/A\n";
+            
+            if (pkt.buf->size>16) {
+                json=data+16;
+                
+                int64_t epoch64=0;
+                sscanf( json, "{\"timestamp\":%lld}", &epoch64 );
+                if (epoch64!=0) {
+                    time_t t = epoch64/1000;
+                    timestr=ctime(&t);
+                }
+            }
+            printf("ID3: %15s\t%15s\t%s\t%s",av_ts2str(pkt.pts),av_ts2timestr(pkt.pts,&in_stream->time_base),json,timestr);
+        }*/
         //log_packet(conversion->ofmt_ctx, &pkt, "out");
         
         ret = av_interleaved_write_frame(conversion->ofmt_ctx, &pkt);

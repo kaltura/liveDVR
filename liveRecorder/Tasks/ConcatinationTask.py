@@ -12,14 +12,14 @@ from Iso639Wrapper import Iso639Wrapper
 from Config.config import get_config
 from Logger.LoggerDecorator import log_subprocess_output
 from TaskBase import TaskBase
+from datetime import datetime
 
 # todo add timeout, and use m3u8 insted of regex
 
-Flavor = collections.namedtuple('Flavor',  'url language')
+Flavor = collections.namedtuple('Flavor', 'url language')
 
 
 class ConcatenationTask(TaskBase):
-
     nginx_port = get_config('nginx_port')
     nginx_host = get_config('nginx_host')
     secret = get_config('token_key')
@@ -35,9 +35,7 @@ class ConcatenationTask(TaskBase):
         self.token_url = self.token_url_template.format(self.recorded_id)
         self.nginx_url = "http://" + self.token_url + "t/{0}"
         self.flavor_pattern = 'index-s(?P<flavor>\d+)'
-        self.playlist_index_pattern = 'index-s(?P<flavor>\d+)-v(?P<video>\d+)(-a(?P<audio>\d+))?.m3u8'
         self.iso639_wrapper = Iso639Wrapper(logger_info)
-
 
     def tokenize_url(self, url):
 
@@ -51,11 +49,9 @@ class ConcatenationTask(TaskBase):
         return encoded_hash
 
     def extract_flavor_dict(self):
-        self.logger.debug("About to load master manifest from %s" ,self.url_master)
+        self.logger.debug("About to load master manifest from %s", self.url_master)
         m3u8_obj = m3u8.load(self.url_master)
         flavors_list = []
-        multi_audio = len(m3u8_obj.media) > 0
-        index_of_audio_flavor = 0
 
         for element in m3u8_obj.playlists:
             flavors_list.append(Flavor(
@@ -63,7 +59,6 @@ class ConcatenationTask(TaskBase):
                 language='und'
             ))
 
-        index_of_audio_flavor = len(flavors_list)
         for element in m3u8_obj.media:
             language = element.language
             # convert alpha_2 (iso639_1 format) to alpha_3 (iso639-3) check https://pypi.python.org/pypi/pycountry
@@ -73,25 +68,6 @@ class ConcatenationTask(TaskBase):
                 url=element.absolute_uri,
                 language=language
             ))
-        ''' compose playlist index in case of multiple audio'''
-        if multi_audio:
-            result = re.search(self.playlist_index_pattern, flavors_list[0].url)
-            if 'audio' not in result.groups() and len(m3u8_obj.media) > 0:
-                flavor_obj = flavors_list[0]
-                result = re.search(self.flavor_pattern, flavor_obj.url)
-                video_flavor_id = result.group('flavor')
-                audio_item = flavors_list[index_of_audio_flavor]
-                result = re.search(self.flavor_pattern, audio_item.url)
-                audio_flavor_id = result.group('flavor')
-                merged_flavors_url = "{}/index-s{}-s{}.m3u8".format(flavor_obj.url.rsplit('/', 1)[0], video_flavor_id, audio_flavor_id)
-                new_flavor_obj = Flavor(
-                    url=merged_flavors_url,
-                    language=audio_item.language
-                )
-                flavors_list[0] = new_flavor_obj
-            else:
-                error = "missing audio track in multiple audio recording"
-                raise ValueError(error)
         return flavors_list
 
     def download_chunks_and_concat(self, chunks, output_full_path):
@@ -103,7 +79,8 @@ class ConcatenationTask(TaskBase):
                     chunks_url = os.path.join(self.url_base_entry, chunk)
                     try:
                         chunk_bytes = self.download_file(chunks_url)
-                        self.logger.debug("Successfully downloaded from url [%s], about to write it to [%s]", chunks_url, output_full_path)
+                        self.logger.debug("Successfully downloaded from url [%s], about to write it to [%s]",
+                                          chunks_url, output_full_path)
                         file_output.write(chunk_bytes)
                     except urllib2.HTTPError as e:
                         if e.code == 404:
@@ -147,7 +124,6 @@ class ConcatenationTask(TaskBase):
 
         return flavor_id
 
-
     def run(self):
 
         command = self.ts_to_mp4_convertor + ' '
@@ -175,21 +151,43 @@ class ConcatenationTask(TaskBase):
         self.convert_ts_to_mp4(command)
 
     def convert_ts_to_mp4(self, command):
+
+        start_time = datetime.now()
+        exitcode = -1
+        status = 'succeeded'
         # convert the each flavor concatenated ts file to single mp4
         self.logger.debug('About to run TS -> MP4 conversion. Command: %s', command)
-        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        exitcode = process.wait()
-        log_subprocess_output(self.logger, process.stdout, process.pid, "ffmpeg: ts->mp4")
 
-        if exitcode is 0:
-            self.logger.info('Successfully finished TS -> MP4 conversion')
-        else:
-            error = 'Failed to convert TS -> MP4. Error %d', process.returncode
-            self.logger.error(error)
-            raise RuntimeError(error)
+        try:
+            process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
+            log_subprocess_output(process, "ffmpeg: ts->mp4", self.logger)
+
+            output, outerr = process.communicate()
+            exitcode = process.returncode
+
+            if exitcode is 0:
+                self.logger.info('Successfully finished TS -> MP4 conversion')
+            else:
+                status = 'failed'
+                error = 'Failed to convert TS -> MP4. Convertor process exit code {}, {}'.format(exitcode), outerr
+                self.logger.error(error)
+
+                raise subprocess.CalledProcessError(exitcode, command)
+
+        except (OSError, subprocess.CalledProcessError) as e:
+            self.logger.fatal("Failed to convert TS -> MP4 {}".format(str(e)))
+            raise e
+        except Exception as e:
+            self.logger.fatal("Failed to convert TS -> MP4 {}".format(str(e)))
+            raise e
+
+        finally:
+            end_time = datetime.now()
+            duration = (end_time - start_time).total_seconds()
+            self.logger.info(
+                "Conversion of TS -> MP4, {}, exit code [{}], duration [{}] seconds".format(status, str(
+                    exitcode), str(int(duration))))
 
     def get_output_filename(self, flavor):
         return self.output_filename + '_f' + flavor + '_out.ts'
-
-
