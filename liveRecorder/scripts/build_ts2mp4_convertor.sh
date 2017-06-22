@@ -10,9 +10,12 @@ PRODUCT_ROOT_PATH=$2
 TARGET=ts_to_mp4_convertor
 CONVERTOR_DIR=${PRODUCT_ROOT_PATH}/${TARGET}
 
-export FFMPEG_BUILD_PATH
+[ `uname` = "Linux" ] && OS="linux" || OS="darwin"
 
-echo "OS=$(uname)"
+export FFMPEG_BUILD_PATH
+export OS
+
+echo "OS=$OS"
 
 
 if [ -e $CONVERTOR_DIR ]; then
