@@ -1,30 +1,25 @@
 # !/bin/bash
 
 if [ "$#" -lt 2 ]; then
-	echo "usage build_ffmpeg <ffmpeg build path> <product path> <release/debug - optional>"
+	echo "usage build_ffmpeg <ffmpeg build path> <product path> [Release/Debug]"
 	exit
 fi
 
 FFMPEG_BUILD_PATH=$1
 PRODUCT_ROOT_PATH=$2
+FFMPEG_VERSION=3.0
 ADDON_BUILD_PATH=$PRODUCT_ROOT_PATH/node_addons/FormatConverter/build/
 FFMPEG_SYMLINK=$ADDON_BUILD_PATH/FFmpeg
-BUILD_CONF=
+BUILD_CONF=Release
 OS=`uname`
 
 echo "PRODUCT_ROOT_PATH=$PRODUCT_ROOT_PATH"
 
-[ -d $FFMPEG_BUILD_PATH ] || mkdir -p "$FFMPEG_BUILD_PATH"
+mkdir -p "$FFMPEG_BUILD_PATH"
 
-[ "$#" -eq 3 ] && BUILD_CONF=$3 || BUILD_CONF=Release
+[ "$#" -eq 3 && "$3" = "Debug" ] && BUILD_CONF=$3
 
-if [ "$BUILD_CONF" = "debug" ]; then
-	BUILD_CONF=Debug
-	echo "Debug mode"
-else
-	BUILD_CONF=Release
-	echo "Release mode"
-fi
+echo "build mode $BUILD_CONF"
 
 mkdir -p ${BUILD_CONF}
 
@@ -37,16 +32,15 @@ echo "unlink $FFMPEG_SYMLINK"
 unlink $FFMPEG_SYMLINK
 
 
-if [ ! -d $FFMPEG_SYMLINK ]; then
+if [ ! -r $FFMPEG_SYMLINK ]; then
 
-    curl -OL https://github.com/FFmpeg/FFmpeg/releases/download/n3.0/ffmpeg-3.0.tar.gz
-    mv ./ffmpeg-3.0.tar.gz /var/tmp/ffmpeg-3.0.tar.gz
+	curl -L https://github.com/FFmpeg/FFmpeg/releases/download/n3.0/ffmpeg-$FFMPEG_VERSION.tar.gz -o /tmp/ffmpeg-$FFMPEG_VERSION.tar.gz
 
 	# note: if the second argument already exists and is a directory,
 	# ln will create a symlink to the target inside that directory.
 
-    tar -xzvf /var/tmp/ffmpeg-3.0.tar.gz -C $FFMPEG_BUILD_PATH
-    ln -s $FFMPEG_BUILD_PATH/ffmpeg-3.0 $FFMPEG_SYMLINK
+    tar -xzvf /var/tmp/ffmpeg-$FFMPEG_VERSION.tar.gz -C $FFMPEG_BUILD_PATH
+    ln -s $FFMPEG_BUILD_PATH/ffmpeg-$FFMPEG_VERSION $FFMPEG_SYMLINK
 else
 	echo "$FFMPEG_SYMLINK exists skipping ffmpeg download"
 fi

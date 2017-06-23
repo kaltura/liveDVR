@@ -1,18 +1,18 @@
 # !/bin/bash
 
-if [ "$#" -eq 0 ]; then
-	echo "usage build_addon <product path> <release/debug - optional>"
+if [ "$#" -lt 1 ]; then
+	echo "usage build_addon <product path> [Release/Debug]"
 	exit
 fi
 
 PRODUCT_ROOT_PATH=$1
-BUILD_CONF=
+BUILD_CONF=Release
 ADDON_PATH=$PRODUCT_ROOT_PATH/node_addons/FormatConverter
 FORMAT_CONVERTER_BIN=FormatConverter.so
 OS=`uname`
 echo "OS=$OS"
 
-[ "$#" -eq 2 ] && BUILD_CONF=$2 || BUILD_CONF=Release
+[ "$#" -eq 2 && "$2" = "Debug" ] && BUILD_CONF=$2
 
 if [ "$BUILD_CONF" = "debug" ]; then
 	BUILD_CONF=Debug
@@ -28,12 +28,10 @@ pushd $ADDON_PATH
 
 	`which node-gyp` || npm install node-gyp -g
 
-	[ -d '/usr/local/lib/node_modules/nan' ] || npm install nan -g
+	npm list --depth 1 -g nan
+	[[ -z "${$?// }" ]] && npm install nan -g
 
 	gyp_args=''
-
-	echo "Installing NAN"
-	npm install -unsafe-perm nan
 
 	case $OS in
 	'Darwin')

@@ -10,31 +10,24 @@ PRODUCT_ROOT_PATH=$2
 TARGET=ts_to_mp4_convertor
 CONVERTOR_DIR=${PRODUCT_ROOT_PATH}/${TARGET}
 
-[ `uname` = "Linux" ] && OS="linux" || OS="darwin"
-
 export FFMPEG_BUILD_PATH
-export OS
 
-echo "OS=$OS"
+echo `uname`
 
 
-if [ -e $CONVERTOR_DIR ]; then
+if [ -w $CONVERTOR_DIR ]; then
 	pushd $CONVERTOR_DIR
 		mkdir -p obj
-		[ -e  ${TARGET} ] && rm -f ${TARGET}
-		[ -e  obj/${TARGET} ] && rm -f obj/${TARGET}
+		mkdir -p ../bin
 
 		echo "starting to build ${TARGET}"
 
 		make
 
-		if [ -s  obj/${TARGET} ] ; then
+		if [ $? -eq 0 ] ; then
 			echo "**************************************************************************************"
 			echo "${TARGET} was built successfully, copying to bin folder"
 			echo "**************************************************************************************"
-			mkdir -p bin
-			echo "cp obj/${TARGET} bin"
-			cp obj/${TARGET}  ../bin
 		else
 			echo "**************************************************************************************"
 			echo "Something went wrong, failed to build ts_to_mp4_convertor!!!, please check build results"
