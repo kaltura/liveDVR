@@ -12,7 +12,7 @@ FORMAT_CONVERTER_BIN=FormatConverter.so
 OS=`uname`
 echo "OS=$OS"
 
-[ "$#" -eq 2 && "$2" = "Debug" ] && BUILD_CONF=$2
+[ "$#" -eq 2 ] && [ "$2" = "Debug" ] && BUILD_CONF=$2
 
 if [ "$BUILD_CONF" = "debug" ]; then
 	BUILD_CONF=Debug

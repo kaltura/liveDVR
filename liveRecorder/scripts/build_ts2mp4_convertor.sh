@@ -22,7 +22,7 @@ if [ -w $CONVERTOR_DIR ]; then
 
 		echo "starting to build ${TARGET}"
 
-		make
+		make install
 
 		if [ $? -eq 0 ] ; then
 			echo "**************************************************************************************"

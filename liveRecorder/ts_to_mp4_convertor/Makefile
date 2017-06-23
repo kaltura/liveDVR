@@ -29,9 +29,9 @@ $(EXE): $(OBJ)
 
 $(phony install): install
 
-install:
+install: $(EXE)
 	test -w $(../bin) || mkdir $(../bin)
-	install obj/$(EXE)  ../bin
+	install $(EXE)  ../bin
 
 
 .PHONY: clean

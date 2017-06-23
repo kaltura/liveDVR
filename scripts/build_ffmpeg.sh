@@ -17,7 +17,7 @@ echo "PRODUCT_ROOT_PATH=$PRODUCT_ROOT_PATH"
 
 mkdir -p "$FFMPEG_BUILD_PATH"
 
-[ "$#" -eq 3 && "$3" = "Debug" ] && BUILD_CONF=$3
+[ "$#" -eq 3 ] && [ "$3" = "Debug" ] && BUILD_CONF=$3
 
 echo "build mode $BUILD_CONF"
 
