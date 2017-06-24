@@ -1,5 +1,11 @@
 # !/bin/bash
 
+if [ "$#" -lt 1 ]; then
+	echo "usage nginx <version>"
+	exit
+fi
+
+version=$1
 currentDir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo $currentDir
@@ -71,7 +77,8 @@ case  $os_name in
     ;;
 "Linux")
     echo "Copying $nginxDir/objs/nginx to $currentDir/../../bin/${os_name,,}/"
-    cp $nginxDir/objs/nginx $currentDir/../../bin/${os_name,,}/
+    cp $nginxDir/objs/nginx ~/bin/$version/${os_name,,}/release
+    cp $nginxDir/objs/nginx ~/bin/latest/${os_name,,}/release
    ;;
 esac
 
