@@ -76,8 +76,9 @@ case  $os_name in
     cp $nginxDir/objs/nginx $currentDir/../../bin/${os_name}/
     ;;
 "Linux")
-    echo "Copying $nginxDir/objs/nginx to $currentDir/../../bin/${os_name,,}/"
+    echo "Copying $nginxDir/objs/nginx ~/bin/$version/${os_name,,}/release"
     cp $nginxDir/objs/nginx ~/bin/$version/${os_name,,}/release
+    echo "cp $nginxDir/objs/nginx ~/bin/latest/${os_name,,}/release"
     cp $nginxDir/objs/nginx ~/bin/latest/${os_name,,}/release
    ;;
 esac
