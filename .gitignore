@@ -55,10 +55,9 @@ liveRecorder/ts_to_mp4_convertor/ts_to_mp4_convertor.xcodeproj/
 tests/streaming_client/streaming_client.xcodeproj/
 build/config.gypi
 
-ffmpeg-3.0.tar.gz
+# ignore liveRecorder executables under bin
+liveRecorder/bin
 
-lastConfigure
+# ignore liveController executables under bin
+bin
 
-liveRecorder/KalturaClient/.DS_Store
-
-bin/.DS_Store

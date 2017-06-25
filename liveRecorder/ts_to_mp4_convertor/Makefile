@@ -30,9 +30,8 @@ $(EXE): $(OBJ)
 $(phony install): install
 
 install: $(EXE)
-	test -w $(../bin) || mkdir $(../bin)
-	install $(EXE)  ../bin
-
+	mkdir -p ../bin
+	install $(EXE) ../bin/
 
 .PHONY: clean
 
