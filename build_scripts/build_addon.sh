@@ -14,15 +14,10 @@ echo "OS=$OS"
 
 [ "$#" -eq 2 ] && [ "$2" = "Debug" ] && BUILD_CONF=$2
 
-if [ "$BUILD_CONF" = "debug" ]; then
-	BUILD_CONF=Debug
-	echo "Debug mode"
-else
-	BUILD_CONF=Release
-	echo "Release mode"
-fi
-
+echo "BUILD_CONF=$BUILD_CONF"
 echo "ADDON_PATH=$ADDON_PATH"
+
+mkdir -p ${PRODUCT_ROOT_PATH}/bin
 
 pushd $ADDON_PATH
 
