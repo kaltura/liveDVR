@@ -14,19 +14,21 @@
 #===============================================================================
 
 if [ "$#" -lt 1 ]; then
-	echo "usage get_bins <VERSION> [live root path]"
+	echo "usage get_bins <version> [live root path] [os]"
 	exit 1
 fi
 
 LIVE_ROOT_PATH=
+OS=linux
 
 [ "$#" -eq 2 ] && LIVE_ROOT_PATH=$2
+[ "$#" -eq 3 ] && OS=$3
 
 VERSION=$1
 
 FILES_TO_DOWNLOAD=(FormatConverter.node nginx ts_to_mp4_convertor)
 DEST_PATH=(bin bin liveRecorder/bin)
-BASE_URL=http://lna-ci-slave2.kaltura.com/bin/$VERSION/linux/release/
+BASE_URL=http://lna-ci-slave2.kaltura.com/bin/$VERSION/${OS}/release/
 
 function download_files()
 {
