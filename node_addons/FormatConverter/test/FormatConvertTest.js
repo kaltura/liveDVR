@@ -26,7 +26,7 @@ function getArchAndPlatform()
 }
 var Q = require('q');
 var path = require('path');
-var FormatConverter = require(path.join(__dirname, '..', 'bin', getArchAndPlatform(), 'FormatConverter.node'));
+var FormatConverter = require(path.join(__dirname, '..', 'bin', 'FormatConverter.node'));
 
 FormatConverter.Configure({ logLevel:'error'});
 

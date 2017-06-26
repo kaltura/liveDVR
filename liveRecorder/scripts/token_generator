@@ -1,0 +1,41 @@
+#!/usr/bin/python
+
+import sys
+import getopt
+import os
+import re
+import hashlib
+import base64
+
+def tokenizeUrl(url, secret):
+    dir_name = os.path.dirname(url)
+    dir_name = re.sub(r'https?://', '', dir_name)
+    token = "{0} {1}/".format(secret, dir_name)
+    hash = hashlib.md5(token).digest()
+    encoded_hash = base64.urlsafe_b64encode(hash).rstrip('=')
+    return encoded_hash
+
+
+def main(argv):
+    secret = ''
+    url = ''
+
+    try:
+        opts, args = getopt.getopt(argv, "hi:o:", ["ifile=", "ofile="])
+    except getopt.GetoptError:
+        print 'token_generator.py -u <url> -h <hash token>'
+        sys.exit(2)
+    for opt, arg in opts:
+        if opt == '-h':
+            secret = arg
+        elif opt == '-u':
+            url = arg
+        else:
+            print 'invalid or missing params.\n Following is correct format: token_generator.py -u <url> -h <hash token>'
+            sys.exit(-1)
+    tokenizeUrl(url, secret)
+    print tokenizeUrl(url, secret)
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])

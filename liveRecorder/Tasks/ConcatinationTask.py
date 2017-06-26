@@ -2,7 +2,6 @@ import base64
 import collections
 import hashlib
 import os
-import platform
 import re
 import subprocess
 import urllib2
@@ -24,10 +23,9 @@ class ConcatenationTask(TaskBase):
     nginx_port = get_config('nginx_port')
     nginx_host = get_config('nginx_host')
     secret = get_config('token_key')
-    token_url_template = nginx_host + ":" + nginx_port + "/dc-0/recording/hls/p/0/e/{0}/"
-    os_name = platform.system().lower()
+    token_url_template = nginx_host + ":" + nginx_port +"/dc-0/recording/hls/p/0/e/{0}/"
     cwd = os.path.dirname(os.path.abspath(__file__))
-    ts_to_mp4_convertor = os.path.join(cwd, '../bin/{}/ts_to_mp4_convertor'.format(os_name))
+    ts_to_mp4_convertor = os.path.join(cwd, '../bin/ts_to_mp4_convertor')
 
     def __init__(self, param, logger_info):
         TaskBase.__init__(self, param, logger_info)
@@ -172,7 +170,7 @@ class ConcatenationTask(TaskBase):
                 self.logger.info('Successfully finished TS -> MP4 conversion')
             else:
                 status = 'failed'
-                error = 'Failed to convert TS -> MP4. Convertor process exit code {}, {}'.format(exitcode), outerr
+                error = 'Failed to convert TS -> MP4. Convertor process exit code {}, {}'.format(exitcode, outerr)
                 self.logger.error(error)
 
                 raise subprocess.CalledProcessError(exitcode, command)

@@ -4,7 +4,6 @@
 * python 2.7
 * pip 
 * shared nfs storage 
-* pre-complied ffmpeg from https://github.com/FFmpeg/FFmpeg/releases/tag/n3.0 
 
 
 ## Clone repository
@@ -14,8 +13,10 @@ git clone https://github.com/kaltura/liveDVR.git ; cd liveRecorder/
 
 ## Compile code:
 ```
-./scripts/ts2mp4_build.sh <FFMPEGPATH>
+./build_scripts/build_ffmpeg.sh <FFMPEGPATH> <LIVERECORDER_PATH> [Release/Debug]
+./build_scripts/ts2mp4_build.sh <FFMPEGPATH> <LIVERECORDER_PATH>
 FFMPEGPATH is the path to the ffmpeg root folder (for example root/ffmpeg/ffmpeg-3.0)
+LIVERECORDER_PATH is the path to liveRecorder directory tree
 ```
 
 ## fill configMapping.ini in Config 
@@ -28,7 +29,7 @@ session_duration = *** (in seconds)
 
 ### Run the following script
 ```
- ./instal.sh
+ ./install.sh
 ```
 
 ## Setup service script 
