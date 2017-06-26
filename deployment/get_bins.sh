@@ -25,7 +25,7 @@ live_root_path=
 version=$1
 
 echo "starting to download FormatConverter.node"
-wget --header="accept-encoding: gzip" http://lna-ci-slave2.kaltura.com/bin/$version/FormatConverter.node -0 FormatConverter.node.gz
+wget --header="accept-encoding: gzip" http://lna-ci-slave2.kaltura.com/bin/$version/linux/release/FormatConverter.node -O FormatConverter.node.gz
 echo "extracting FormatConverter.node.gz"
 gunzip FormatConverter.node.gz
 if [ ! -w $live_root_path ]; then
@@ -35,7 +35,7 @@ else
 fi
 echo "successfully downloaded FormatConverter.node"
 echo "starting to download nginx"
-wget --header="accept-encoding: gzip" http://lna-ci-slave2.kaltura.com/bin/$version/nginx -0 nginx.gz
+wget --header="accept-encoding: gzip" http://lna-ci-slave2.kaltura.com/bin/$version/linux/release/nginx -O nginx.gz
 echo "extracting nginx.gz"
 gunzip nginx.gz
 if [ ! -w $live_root_path ]; then
@@ -45,7 +45,7 @@ else
 fi
 echo "successfully downloaded nginx"
 echo "starting to download ts_to_mp4_convertor"
-wget --header="accept-encoding: gzip" http://lna-ci-slave2.kaltura.com/bin/$version/ts_to_mp4_convertor -0 ts_to_mp4_convertor.gz
+wget --header="accept-encoding: gzip" http://lna-ci-slave2.kaltura.com/bin/$version/linux/release/ts_to_mp4_convertor -O ts_to_mp4_convertor.gz
 echo "extracting ts_to_mp4_convertor.gz"
 gunzip ts_to_mp4_convertor.gz
 if [ ! -w $live_root_path ]; then
