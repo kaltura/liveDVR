@@ -170,7 +170,7 @@ class ConcatenationTask(TaskBase):
                 self.logger.info('Successfully finished TS -> MP4 conversion')
             else:
                 status = 'failed'
-                error = 'Failed to convert TS -> MP4. Convertor process exit code {}, {}'.format(exitcode), outerr
+                error = 'Failed to convert TS -> MP4. Convertor process exit code {}, {}'.format(exitcode, outerr)
                 self.logger.error(error)
 
                 raise subprocess.CalledProcessError(exitcode, command)

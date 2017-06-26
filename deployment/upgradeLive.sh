@@ -11,6 +11,7 @@ if [ ! -d "$1" ] ; then
         echo try to unzip v$1.tar.gz
         tar -xvzf v$1.tar.gz
         mv liveDVR-$1 $1
+        bash get_bins "$1"
         cd $1
         nvm install
         cp /opt/kaltura/liveController/latest/common/config/configMapping.json /opt/kaltura/liveController/$1/common/config/
