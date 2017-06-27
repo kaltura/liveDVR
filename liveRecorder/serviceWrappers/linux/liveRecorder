@@ -18,6 +18,11 @@
 # Short-Description: Start/stop Kaltura Live Recorder
 ### END INIT INFO
 
+###
+# extend callable functions from "functions" script
+###
+
+source /etc/rc.d/init.d/functions
 APP_NAME=liveRecorder
 SCRIPT_DIR=$(dirname $(readlink -f $0))
 APPDIR=${SCRIPT_DIR%/serviceWrappers/linux}
@@ -64,8 +69,6 @@ stop() {
     if [ -f $PIDFILE ]; then
         echo "Shutting down ${NAME}"
         kill $( cat $PIDFILE ) >> $LOGFILE
-        rm -f $PIDFILE
-	    RETVAL=$?
     else
         echo "${NAME} is not running."
     fi
@@ -76,18 +79,12 @@ restart() {
     start
 }
 
-status() {
-    if [ -f $PIDFILE ] ; then
-	   if cat ${PIDFILE} | xargs ps -p > /dev/null ; then
-            echo "${NAME} is running with PID $( cat $PIDFILE )"
-        else
-            echo "${NAME} is not running but there is stale pidFile: $PIDFILE"
-            RETVAL=1
- 	    fi
-    else
-            echo "${NAME} is not running."
-	        RETVAL=1
-    fi
+###
+# check whether process is running based on /proc/[pid]/exe
+###
+my_status() {
+    status -p ${PIDFILE}
+    RETVAL=$?
 }
 
 killApp() {
@@ -105,7 +102,7 @@ case "$1" in
         stop
         ;;
     status)
-        status
+        my_status
         ;;
     restart)
         restart
