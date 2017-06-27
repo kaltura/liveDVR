@@ -59,6 +59,8 @@ fi
 
 pushd ${ADDON_BUILD_PATH}
 
+	mkdir -p ${BUILD_CONF}
+
 	`which node-gyp` || npm install node-gyp -g
 
 	npm list --depth 1 -g nan
