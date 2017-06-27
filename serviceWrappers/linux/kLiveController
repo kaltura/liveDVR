@@ -106,11 +106,11 @@ my_status() {
         PIDFILE="$PID_DIR/${NAME}_${prefix}.pid"
         if [ -f $PIDFILE ] ; then
             status -p ${PIDFILE}
-            if [ $? -ne 0 ]; then
-                RETVAL=$?
+            ${RETVAL}=$?
+            if [ ${RETVAL} -ne 0 ]; then
+                return ${RETVAL}
             fi
     done
-    return ${RETVAL}
 }
 
 killApp() {
