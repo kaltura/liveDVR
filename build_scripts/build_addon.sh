@@ -22,8 +22,8 @@ fi
 PRODUCT_ROOT_PATH=$1
 FFMPEG_PATH=$2
 BUILD_CONF=Release
-ADDON_BUILD_PATH=${PRODUCT_ROOT_PATH}/node_addons/FormatConverter/build
-FFMPEG_SYMLINK=${ADDON_BUILD_PATH}/FFmpeg
+ADDON_PATH=${PRODUCT_ROOT_PATH}/node_addons/FormatConverter/
+FFMPEG_SYMLINK=${ADDON_PATH}/build/FFmpeg
 FORMAT_CONVERTER_BIN=FormatConverter.so
 OS=`uname`
 RES=0
@@ -38,7 +38,7 @@ echo "FFMPEG_PATH=${FFMPEG_PATH}"
 echo "BUILD_CONF=${BUILD_CONF}"
 
 mkdir -p ${PRODUCT_ROOT_PATH}/bin
-mkdir -p ${ADDON_BUILD_PATH}
+mkdir -p ${ADDON_PATH}
 
 # note: if the second argument already exists and is a directory,
 # ln will create a symlink to the target inside that directory.
@@ -57,7 +57,7 @@ else
 fi
 
 
-pushd ${ADDON_BUILD_PATH}
+pushd ${ADDON_PATH}
 
 	mkdir -p ${BUILD_CONF}
 
@@ -88,9 +88,9 @@ pushd ${ADDON_BUILD_PATH}
 	echo "Start node-gyp build. ${gyp_debug}"
 	node-gyp build ${gyp_debug} -v
 
-    if [ -r "${BUILD_CONF}/${FORMAT_CONVERTER_BIN}"  ]; then
-		echo "cp ${BUILD_CONF}/${FORMAT_CONVERTER_BIN} ${PRODUCT_ROOT_PATH}/bin/FormatConverter.node${debugExt}"
-		cp "${BUILD_CONF}/${FORMAT_CONVERTER_BIN}" "${PRODUCT_ROOT_PATH}/bin/FormatConverter.node${debugExt}"
+    if [ -r "build/${BUILD_CONF}/${FORMAT_CONVERTER_BIN}"  ]; then
+		echo "cp build/${BUILD_CONF}/${FORMAT_CONVERTER_BIN} ${PRODUCT_ROOT_PATH}/bin/FormatConverter.node${debugExt}"
+		cp "build/${BUILD_CONF}/${FORMAT_CONVERTER_BIN}" "${PRODUCT_ROOT_PATH}/bin/FormatConverter.node${debugExt}"
 		echo "### build finished successfully"
 	else
 		echo "### build failed, could not find ${BUILD_CONF}/${FORMAT_CONVERTER_BIN}, check for errors"
