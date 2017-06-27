@@ -25,6 +25,7 @@ FFMPEG_VERSION=3.0
 ADDON_BUILD_PATH=${PRODUCT_ROOT_PATH}/node_addons/FormatConverter/build/
 FFMPEG_SYMLINK=${ADDON_BUILD_PATH}/FFmpeg
 BUILD_CONF=Release
+TMP_PATH=/var/tmp/
 OS=`uname`
 RES=0
 
@@ -51,12 +52,14 @@ fi
 
 if [ ! -r ${FFMPEG_SYMLINK} ]; then
 
-	curl -L https://github.com/FFmpeg/FFmpeg/releases/download/n${FFMPEG_VERSION}/ffmpeg-${FFMPEG_VERSION}.tar.gz -o /tmp/ffmpeg-${FFMPEG_VERSION}.tar.gz
+	mkdir -p ${TMP_PATH}
+
+	curl -L https://github.com/FFmpeg/FFmpeg/releases/download/n${FFMPEG_VERSION}/ffmpeg-${FFMPEG_VERSION}.tar.gz -o ${TMP_PATH}ffmpeg-${FFMPEG_VERSION}.tar.gz
 
 	# note: if the second argument already exists and is a directory,
 	# ln will create a symlink to the target inside that directory.
 
-    tar -xzvf /var/tmp/ffmpeg-${FFMPEG_VERSION}.tar.gz -C ${FFMPEG_BUILD_PATH}
+    tar -xzvf ${TMP_PATH}ffmpeg-${FFMPEG_VERSION}.tar.gz -C ${FFMPEG_BUILD_PATH}
     ln -s ${FFMPEG_BUILD_PATH}/ffmpeg-${FFMPEG_VERSION} ${FFMPEG_SYMLINK}
 else
 	echo "${FFMPEG_SYMLINK} exists skipping ffmpeg download"
@@ -75,23 +78,12 @@ pushd ${FFMPEG_SYMLINK}
 
     [ ${OS} == "Linux" ] && confCmd="${confCmd} --enable-pic"
 
-    actualCmd=""
+     echo "configuring ffmpeg..."
+     eval "${confCmd}"
 
-   [ -f "${configFileName}" ] && actualCmd=`cat ${configFileName}`
+     echo "version=${FFMPEG_VERSION} ${confCmd}" > ${configFileName}
 
-   echo -e "actualCmd=\n<${actualCmd}>"
-   echo -e "confCmd=\n<${confCmd}>"
-   if [ "${actualCmd}" != "${confCmd}" ]
-   then
-      echo "configuring ffmpeg..."
-      eval "${confCmd}"
-   else
-      echo "no need to run configure"
-   fi
-
-   echo "${confCmd}" > ${configFileName}
-
-   make &> /dev/null
+     make &> /dev/null
 popd
 exit $RES
 
