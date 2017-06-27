@@ -15,12 +15,12 @@
 #===============================================================================
 set -e
 if [ "$#" -lt 2 ]; then
-	echo "usage build_addon <ffmpeg path> <product path> [Release/Debug]"
+	echo "usage build_addon <product path> <ffmpeg path> [Release/Debug]"
 	exit 1
 fi
 
-FFMPEG_PATH=$1
-PRODUCT_ROOT_PATH=$2
+PRODUCT_ROOT_PATH=$1
+FFMPEG_PATH=$2
 BUILD_CONF=Release
 ADDON_BUILD_PATH=${PRODUCT_ROOT_PATH}/node_addons/FormatConverter/build
 FFMPEG_SYMLINK=${ADDON_BUILD_PATH}/FFmpeg
