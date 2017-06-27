@@ -23,26 +23,30 @@ FFMPEG_BUILD_PATH=$1
 PRODUCT_ROOT_PATH=$2
 FFMPEG_VERSION=3.0
 BUILD_CONF=Release
-TMP_PATH=/var/tmp/
+TMP_PATH=/var/tmp
 OS=`uname`
 
+[ "${OS}" = "Darwin" ] && TMP_PATH=~/Download
 [ "$3" = "Debug" ] && BUILD_CONF=Debug
 
 echo "current path `pwd`"
 echo "PRODUCT_ROOT_PATH=${PRODUCT_ROOT_PATH}"
 echo "build mode ${BUILD_CONF}"
-echo "current path `pwd`"
+echo "TMP_PATH=${TMP_PATH}"
 echo "FFMPEG_BUILD_PATH=${FFMPEG_BUILD_PATH}"
 
 mkdir -p "${FFMPEG_BUILD_PATH}"
 mkdir -p ${BUILD_CONF}
 mkdir -p ${TMP_PATH}
 
-curl -L https://github.com/FFmpeg/FFmpeg/releases/download/n${FFMPEG_VERSION}/ffmpeg-${FFMPEG_VERSION}.tar.gz -o ${TMP_PATH}ffmpeg-${FFMPEG_VERSION}.tar.gz
+curl -L https://github.com/FFmpeg/FFmpeg/releases/download/n${FFMPEG_VERSION}/ffmpeg-${FFMPEG_VERSION}.tar.gz -o ${TMP_PATH}/ffmpeg-${FFMPEG_VERSION}.tar.gz
 
-echo "opening tarball ${TMP_PATH}ffmpeg-${FFMPEG_VERSION}.tar.gz"
+echo "opening tarball ${TMP_PATH}/ffmpeg-${FFMPEG_VERSION}.tar.gz"
 
-tar -xzf ${TMP_PATH}ffmpeg-${FFMPEG_VERSION}.tar.gz -C ${FFMPEG_BUILD_PATH}
+tar -xzf ${TMP_PATH}/ffmpeg-${FFMPEG_VERSION}.tar.gz -C ${FFMPEG_BUILD_PATH}
+
+cd "${FFMPEG_BUILD_PATH}/ffmpeg-${FFMPEG_VERSION}"
+echo "current path `pwd`"
 
 debug_specifics=
 [ "${BUILD_CONF}" = "Debug" ] &&  debug_specifics='--enable-debug --disable-optimizations'
