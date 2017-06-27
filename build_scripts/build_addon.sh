@@ -63,9 +63,6 @@ pushd ${ADDON_BUILD_PATH}
 
 	`which node-gyp` || npm install node-gyp -g
 
-	npm list --depth 1 -g nan
-	[[ -z "${$?// }" ]] && npm install nan -g
-
 	gyp_args=''
 
 	case ${OS} in
