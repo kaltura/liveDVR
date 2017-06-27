@@ -18,6 +18,11 @@
 # Short-Description: Start/stop Kaltura Live Controller
 ### END INIT INFO
 
+###
+# extend callable functions from "functions" script
+###
+source /etc/rc.d/init.d/functions
+
 NAME="kLiveController"
 KLIVE_CONTROLLER_PREFIX="/opt/kaltura/liveController/latest"
 NODE_PATH="$KLIVE_CONTROLLER_PREFIX/node_modules"
@@ -81,7 +86,6 @@ stop() {
             # Tell Forever to stop the process.
             $FOREVER stop $( cat $PIDFILE )
 	        RETVAL=$(( $RETVAL + $? ))
-            # Get rid of the pidfile, since Forever won't do that.
         else
             echo "${NAME}_${prefix} is not running."
         fi
@@ -93,22 +97,18 @@ restart() {
     start
 }
 
-status() {
+###
+# check whether process is running based on /proc/[pid]/exe
+###
+my_status() {
     RETVAL=0
     for prefix in 0 1 ; do
         PIDFILE="$PID_DIR/${NAME}_${prefix}.pid"
         if [ -f $PIDFILE ] ; then
-	    VAL=$( ( cat ${PIDFILE} | xargs ps -p ) | wc -l )
-	    if [ $VAL -gt 1 ] ; then
-            echo "${NAME}_${prefix} is running with PID $( cat $PIDFILE )"
-            else
-            echo "${NAME}_${prefix} is not running but there is stale pidFile: $PIDFILE"
-            RETVAL=$(( $RETVAL + 1 ))
- 	    fi
-        else
-            echo "${NAME}_${prefix} is not running."
-	        RETVAL=$(( $RETVAL + 1 ))
-        fi
+            status -p ${PIDFILE}
+            if [ ! $? -eq 0 ]; then
+                RETVAL=$?
+            fi
     done
 }
 
@@ -127,7 +127,7 @@ case "$1" in
         stop
         ;;
     status)
-        status
+        my_status
         ;;
     restart)
         restart
