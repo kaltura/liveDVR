@@ -15,7 +15,7 @@
 #===============================================================================
 set -e
 if [ "$#" -lt 2 ]; then
-	echo "usage build_ts2mp4_convertor <ffmpeg build path> <product path>"
+	echo "usage build_ts2mp4_convertor <ffmpeg path> <product path>"
 	exit 1
 fi
 

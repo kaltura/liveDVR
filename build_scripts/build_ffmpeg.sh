@@ -14,23 +14,21 @@
 #      REVISION:  ---
 #===============================================================================
 set -e
-if [ "$#" -lt 2 ]; then
-	echo "usage build_ffmpeg <ffmpeg build path> <product path> [Release/Debug]"
+if [ "$#" -lt 1 ]; then
+	echo "usage build_ffmpeg <ffmpeg build path> [Release/Debug]"
 	exit 1
 fi
 
 FFMPEG_BUILD_PATH=$1
-PRODUCT_ROOT_PATH=$2
 FFMPEG_VERSION=3.0
 BUILD_CONF=Release
 TMP_PATH=/var/tmp
 OS=`uname`
 
 [ "${OS}" = "Darwin" ] && TMP_PATH=~/Download
-[ "$3" = "Debug" ] && BUILD_CONF=Debug
+[ "$2" = "Debug" ] && BUILD_CONF=Debug
 
 echo "current path `pwd`"
-echo "PRODUCT_ROOT_PATH=${PRODUCT_ROOT_PATH}"
 echo "build mode ${BUILD_CONF}"
 echo "TMP_PATH=${TMP_PATH}"
 echo "FFMPEG_BUILD_PATH=${FFMPEG_BUILD_PATH}"
@@ -55,7 +53,7 @@ configFileName=./lastConfigure
 
 confCmd="./configure --disable-everything --disable-doc --enable-protocol=file --enable-demuxer=mpegts --enable-muxer=rtp_mpegts --enable-parser=h264 --enable-parser=aac --enable-muxer=mp4 --enable-zlib --enable-bsf=aac_adtstoasc --enable-decoder=aac --enable-decoder=h264 --enable-muxer=flv --enable-protocol=rtmp --enable-encoder=libmp3lame ${debug_specifics}"
 
-[ ${OS} == "Linux" ] && confCmd="${confCmd} --enable-pic"
+[ "${OS}" = "Linux" ] && confCmd="${confCmd} --enable-pic"
 
 echo "configuring ffmpeg..."
 eval "${confCmd}"
