@@ -13,7 +13,7 @@
 #       CREATED:  June 25, 2017
 #      REVISION:  ---
 #===============================================================================
-set +e
+set -e
 if [ "$#" -lt 2 ]; then
 	echo "usage build_ts2mp4_convertor <ffmpeg build path> <product path>"
 	exit 1
@@ -49,9 +49,9 @@ if [ -w ${CONVERTOR_DIR} ]; then
 	popd
 else
 	echo "**************************************************************************************"
-	echo "${ROOT_DIR}/${CONVERTOR_DIR} folder is missing, can't build ${TARGET}"
+	echo "{CONVERTOR_DIR} is missing or there is no write permission, can't build ${TARGET}"
 	echo "**************************************************************************************"
 	RES=1
 fi
-set -e
+
 exit ${RES}

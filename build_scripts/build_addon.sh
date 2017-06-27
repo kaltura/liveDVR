@@ -13,7 +13,7 @@
 #       CREATED: June 25 2017
 #      REVISION:  ---
 #===============================================================================
-set +e
+set -e
 if [ "$#" -lt 2 ]; then
 	echo "usage build_addon <ffmpeg path> <product path> [Release/Debug]"
 	exit 1
@@ -99,5 +99,5 @@ pushd ${ADDON_BUILD_PATH}
 	fi
 
 popd
-set -e
+
 exit ${RES}

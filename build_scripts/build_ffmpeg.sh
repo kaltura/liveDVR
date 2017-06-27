@@ -13,7 +13,7 @@
 #       CREATED: June 25 2017
 #      REVISION:  ---
 #===============================================================================
-set +e
+set -e
 if [ "$#" -lt 2 ]; then
 	echo "usage build_ffmpeg <ffmpeg build path> <product path> [Release/Debug]"
 	exit 1
@@ -25,7 +25,6 @@ FFMPEG_VERSION=3.0
 BUILD_CONF=Release
 TMP_PATH=/var/tmp/
 OS=`uname`
-RES=0
 
 [ "$3" = "Debug" ] && BUILD_CONF=Debug
 
@@ -41,7 +40,9 @@ mkdir -p ${TMP_PATH}
 
 curl -L https://github.com/FFmpeg/FFmpeg/releases/download/n${FFMPEG_VERSION}/ffmpeg-${FFMPEG_VERSION}.tar.gz -o ${TMP_PATH}ffmpeg-${FFMPEG_VERSION}.tar.gz
 
-tar -xzvf ${TMP_PATH}ffmpeg-${FFMPEG_VERSION}.tar.gz -C ${FFMPEG_BUILD_PATH}
+echo "opening tarball ${TMP_PATH}ffmpeg-${FFMPEG_VERSION}.tar.gz"
+
+tar -xzf ${TMP_PATH}ffmpeg-${FFMPEG_VERSION}.tar.gz -C ${FFMPEG_BUILD_PATH}
 
 debug_specifics=
 [ "${BUILD_CONF}" = "Debug" ] &&  debug_specifics='--enable-debug --disable-optimizations'
@@ -57,8 +58,6 @@ eval "${confCmd}"
 
 echo "version=${FFMPEG_VERSION} ${confCmd}" > ${configFileName}
 
-make &> /dev/null
+make
 
-set -e
-exit $RES
 
