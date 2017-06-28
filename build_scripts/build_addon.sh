@@ -38,7 +38,7 @@ echo "FFMPEG_PATH=${FFMPEG_PATH}"
 echo "BUILD_CONF=${BUILD_CONF}"
 
 mkdir -p ${PRODUCT_ROOT_PATH}/bin
-mkdir -p ${ADDON_PATH}
+mkdir -p ${ADDON_PATH}/build
 
 # note: if the second argument already exists and is a directory,
 # ln will create a symlink to the target inside that directory.
