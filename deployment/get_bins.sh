@@ -24,7 +24,6 @@ OS=linux
 #[ "`uname`" = "Darwin" ] && OS="darwin"
 
 [ "$#" -eq 2 ] && LIVE_ROOT_PATH=$2
-[ "$#" -eq 3 ] && OS=$3
 
 VERSION=$1
 
