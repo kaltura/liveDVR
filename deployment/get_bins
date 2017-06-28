@@ -44,14 +44,14 @@ function download_files()
 	    local filename="${FILES_TO_DOWNLOAD[$i]}"
 	    local dest="${DEST_PATH[$i]}"
 		echo "starting to download ${filename}"
-		echo "wget --header="accept-encoding: gzip" ${VERSION_URL}/${filename} -O ${filename}.gz"
-		wget --header="accept-encoding: gzip" ${VERSION_URL}/${filename} -O ${filename}.gz
+		echo "wget --header="accept-encoding: gzip" ${VERSION_URL}/${filename} -O ${filename}"
+		wget --header="accept-encoding: gzip" ${VERSION_URL}/${filename} -O ${filename}
 		# if failed to download binary from version url try to downlaod from latest url
 		if [ $? -ne 0 ]; then
 		    echo "wget ${VERSION_URL}/${filename} returned $?"
-			wget --header="accept-encoding: gzip" ${LATEST_URL}/${filename} -O ${filename}.gz
+			wget --header="accept-encoding: gzip" ${LATEST_URL}/${filename} -O ${filename}
 			if [ $? -ne 0 ]; then
-                echo "error $?, returned from wget --header="accept-encoding: gzip" ${LATEST_URL}/${filename} -O ${filename}.gz"
+                echo "error $?, returned from wget --header="accept-encoding: gzip" ${LATEST_URL}/${filename} -O ${filename}"
                 exit 1;
             else
                 echo "successfully downloaded ${LATEST_URL}/${filename}"
@@ -61,8 +61,6 @@ function download_files()
 		fi
 
 		# After downloading file, move it to its destination dir
-		echo "extracting ${filename}.gz"
-		gunzip ${filename}.gz
 		if [ ! -w ${LIVE_ROOT_PATH} ]; then
 			echo "moving ${filename} to $VERSION/${dest}"
 			mv -f ${filename} $VERSION/${dest}

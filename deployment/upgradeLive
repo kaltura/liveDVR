@@ -1,7 +1,7 @@
 #!/bin/bash
 # For upgrade just type ./upgradeLive <version>
 # This uploads NVM
-top -e
+set -e
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" || (echo "nvm not found in $NVM_DIR, this is a must, Exiting!" ; exit 1 )
 cd /opt/kaltura/liveController
 echo updating liveController v$1
