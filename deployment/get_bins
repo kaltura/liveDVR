@@ -68,8 +68,8 @@ function download_files()
 		fi
 
 		# After downloading file, move it to its destination dir
-		mv ${DST_DIR}/${filename} ${dest}
-		echo "successfully moved ${DST_DIR}/${filename} ${dest}"
+		mv ${filename} ${DST_DIR}/${dest}
+		echo "successfully moved ${filename} ${DST_DIR}/${dest}"
 	done
 }
 
