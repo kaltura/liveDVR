@@ -38,7 +38,7 @@ LATEST_URL=http://lna-ci-slave2.kaltura.com/bin/latest/${OS}/release
 
 function download_files()
 {
-    [ -w ${LIVE_ROOT_PATH} ] && DST_DIR=${LIVE_ROOT_PATH} || DST_DIR=${VERSION}
+    [ ! -z ${LIVE_ROOT_PATH} ] && DST_DIR=${LIVE_ROOT_PATH} || DST_DIR=${VERSION}
 
 	mkdir -p "${DST_DIR}/bin"
     mkdir -p "${DST_DIR}/liveRecorder/bin"
@@ -69,6 +69,10 @@ function download_files()
 
 		# After downloading file, move it to its destination dir
 		mv ${filename} ${DST_DIR}/${dest}
+		if [ "$?" -ne "0" ]; then
+			echo "Error $?, mv ${filename} ${DST_DIR}/${dest} failed"
+			return $?
+		fi
 		echo "successfully moved ${filename} ${DST_DIR}/${dest}"
 	done
 }

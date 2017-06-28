@@ -24,8 +24,6 @@ if [ ! -d "$1" ] ; then
     echo "### starting to download binaries"
     bash /opt/kaltura/liveController/$1/deployment/get_bins "$1"
     echo "### finished downloading binaries"
-    # start nginx (web server), liveController and liveRecorder
-    /opt/kaltura/liveController/$1/packager/bin/run_nginx.sh
     # create symlinks to latest dir and process script
 	if [ -L "latest" ]; then
 		echo "unlink latest"
@@ -36,8 +34,10 @@ if [ ! -d "$1" ] ; then
 		unlink /etc/init.d/kLiveController
 	fi
     ln -s /opt/kaltura/liveController/$1 /opt/kaltura/liveController/latest
-    ln -s /opt/kaltura/liveController/latest/serviceWrappers/linux/kLiveController /etc/init.d/kLiveController        
+    ln -s /opt/kaltura/liveController/latest/serviceWrappers/linux/kLiveController /etc/init.d/kLiveController
+    # start nginx (web server), liveController and liveRecorder
     /etc/init.d/kLiveController restart
+    /opt/kaltura/liveController/$1/packager/bin/run_nginx.sh
     /etc/init.d/recording_uploder.sh restart
 else
     echo $1 is already exists
