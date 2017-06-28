@@ -15,7 +15,8 @@
 #===============================================================================
 set -e
 if [ "$#" -lt 2 ]; then
-	echo "usage build_addon <product path> <ffmpeg path> [Release/Debug]"
+	echo "usage  : $0 <product path> <ffmpeg path> [Release/Debug]"
+	echo "example: $0 /opt/kaltura/liveController/v1.14.5 /opt/kaltura/liveController/v1.14.5/bin/ffmpeg/ffmpeg-3.0 Release"
 	exit 1
 fi
 
@@ -32,7 +33,6 @@ echo "OS=$OS"
 
 [ "$3" = "Debug" ] && BUILD_CONF=Debug
 
-echo "current path `pwd`"
 echo "PRODUCT_ROOT=${PRODUCT_ROOT}"
 echo "FFMPEG_PATH=${FFMPEG_PATH}"
 echo "BUILD_CONF=${BUILD_CONF}"
@@ -51,11 +51,7 @@ fi
 if [ ! -r ${FFMPEG_SYMLINK} ]; then
 	echo "ln -s ${FFMPEG_PATH} ${FFMPEG_SYMLINK}"
 	ln -s ${FFMPEG_PATH} ${FFMPEG_SYMLINK}
-else
-	echo "failed to unlink ${FFMPEG_PATH}"
-	exit 1
 fi
-
 
 pushd ${ADDON_PATH}
 
@@ -63,14 +59,12 @@ pushd ${ADDON_PATH}
 
 	`which node-gyp` || npm install node-gyp -g
 
-	gyp_args=''
-
 	case ${OS} in
 	'Darwin')
 	    echo "Mac OS"
-	    gyp_args='-- -f xcode'
-	    echo "${gyp_args}"
-	    node-gyp configure ${gyp_args}
+	    GYP_ARGS='-- -f xcode'
+	    echo "${GYP_ARGS}"
+	    node-gyp configure ${GYP_ARGS}
 	    FORMAT_CONVERTER_BIN=FormatConverter.dylib
 	    ;;
 	*) ;;
@@ -79,21 +73,19 @@ pushd ${ADDON_PATH}
 	echo "Start node-gyp configure"
 	node-gyp configure
 
-	debugExt=''
-
 	if [ "${BUILD_CONF}" = "Debug" ]; then
-	    gyp_debug="--debug"
-	    debugExt=".debug"
+	    GYP_DEBUG="--debug"
+	    DEBUG_EXT=".debug"
 	fi
-	echo "Start node-gyp build. ${gyp_debug}"
-	node-gyp build ${gyp_debug} -v
+	echo "Start node-gyp build. ${GYP_DEBUG}"
+	node-gyp build ${GYP_DEBUG} -v
 
     if [ -r "build/${BUILD_CONF}/${FORMAT_CONVERTER_BIN}"  ]; then
-		echo "cp build/${BUILD_CONF}/${FORMAT_CONVERTER_BIN} ${PRODUCT_ROOT_PATH}/bin/FormatConverter.node${debugExt}"
-		cp "build/${BUILD_CONF}/${FORMAT_CONVERTER_BIN}" "${PRODUCT_ROOT_PATH}/bin/FormatConverter.node${debugExt}"
+		echo "cp build/${BUILD_CONF}/${FORMAT_CONVERTER_BIN} ${PRODUCT_ROOT_PATH}/bin/FormatConverter.node${DEBUG_EXT}"
+		cp "build/${BUILD_CONF}/${FORMAT_CONVERTER_BIN}" "${PRODUCT_ROOT_PATH}/bin/FormatConverter.node${DEBUG_EXT}"
 		echo "### build finished successfully"
 	else
-		echo "### build failed, could not find ${BUILD_CONF}/${FORMAT_CONVERTER_BIN}, check for errors"
+		echo "### build failed, could not access build/${BUILD_CONF}/${FORMAT_CONVERTER_BIN}, check if file exists"
 		RES=1
 	fi
 
