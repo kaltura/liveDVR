@@ -38,6 +38,12 @@ LATEST_URL=http://lna-ci-slave2.kaltura.com/bin/latest/${OS}/release
 
 function download_files()
 {
+
+	mkdir -p "bin"
+    mkdir -p "liveRecorder/bin"
+
+    echo "current dir: [`pwd`]"
+
 	# loop to download the binaries
 	for ((i=0;i<${#FILES_TO_DOWNLOAD[@]};++i))
 	do
@@ -62,8 +68,8 @@ function download_files()
 
 		# After downloading file, move it to its destination dir
 		if [ ! -w ${LIVE_ROOT_PATH} ]; then
-			echo "moving ${filename} to $VERSION/${dest}"
-			mv -f ${filename} $VERSION/${dest}
+			echo "moving ${filename} to ${dest}"
+			mv -f ${filename} ${dest}
 		else
 			echo "moving ${filename} to ${LIVE_ROOT_PATH}/${dest}"
 		    mv -f ${filename} ${LIVE_ROOT_PATH}/${dest}
