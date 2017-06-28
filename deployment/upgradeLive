@@ -22,10 +22,10 @@ if [ ! -d "$1" ] ; then
     cd..
     # download binaries from Jenkins
     echo "### starting to download binaries"
-    bash $1/deployment/get_bins "$1"
+    bash /opt/kaltura/liveController/$1/deployment/get_bins "$1"
     echo "### finished downloading binaries"
     # start nginx (web server), liveController and liveRecorder
-    packager/bin/run_nginx.sh
+    /opt/kaltura/liveController/$1/packager/bin/run_nginx.sh
     # create symlinks to latest dir and process script
 	if [ -L "latest" ]; then
 		echo "unlink latest"
