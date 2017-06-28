@@ -14,12 +14,14 @@
 #===============================================================================
 
 if [ "$#" -lt 1 ]; then
-	echo "usage get_bins <version> [live root path] [os]"
+	echo "usage get_bins <version> [live root path]"
 	exit 1
 fi
 
 LIVE_ROOT_PATH=
 OS=linux
+
+#[ "`uname`" = "Darwin" ] && OS="darwin"
 
 [ "$#" -eq 2 ] && LIVE_ROOT_PATH=$2
 [ "$#" -eq 3 ] && OS=$3
@@ -28,7 +30,8 @@ VERSION=$1
 
 FILES_TO_DOWNLOAD=(FormatConverter.node nginx ts_to_mp4_convertor)
 DEST_PATH=(bin bin liveRecorder/bin)
-BASE_URL=http://lna-ci-slave2.kaltura.com/bin/$VERSION/${OS}/release/
+BASE_URL=http://lna-ci-slave2.kaltura.com/bin/$VERSION/${OS}/release
+LATEST_URL=http://lna-ci-slave2.kaltura.com/bin/latest/${OS}/release
 
 function download_files()
 {
@@ -37,7 +40,20 @@ function download_files()
 	    local filename="${FILES_TO_DOWNLOAD[$i]}"
 	    local dest="${DEST_PATH[$i]}"
 		echo "starting to download ${filename}"
-		wget --header="accept-encoding: gzip" ${BASE_URL}${filename} -O ${filename}.gz
+		echo "wget --header="accept-encoding: gzip" ${BASE_URL}/${filename} -O ${filename}.gz"
+		wget --header="accept-encoding: gzip" ${BASE_URL}/${filename} -O ${filename}.gz
+		if [ $? -ne 0 ]; then
+		    echo "wget ${BASE_URL}/${filename} returned $?"
+			wget --header="accept-encoding: gzip" ${LATEST_URL}/${filename} -O ${filename}.gz
+		else
+			echo "successfully downloaded ${BASE_URL}/${filename}"
+		fi
+		if [ $? -ne 0 ]; then
+			echo "error $?, returned from wget --header="accept-encoding: gzip" ${LATEST_URL}/${filename} -O ${filename}.gz"
+			exit 1;
+		else
+			echo "successfully downloaded ${LATEST_URL}/${filename}"
+		fi
 		echo "extracting ${filename}.gz"
 		gunzip ${filename}.gz
 		if [ ! -w ${LIVE_ROOT_PATH} ]; then

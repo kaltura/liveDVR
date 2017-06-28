@@ -11,7 +11,6 @@ if [ ! -d "$1" ] ; then
         echo try to unzip v$1.tar.gz
         tar -xvzf v$1.tar.gz
         mv liveDVR-$1 $1
-        bash get_bins "$1"
         cd $1
         nvm install
         cp /opt/kaltura/liveController/latest/common/config/configMapping.json /opt/kaltura/liveController/$1/common/config/
@@ -21,6 +20,7 @@ if [ ! -d "$1" ] ; then
         unlink /opt/kaltura/liveController/latest
         ln -s /opt/kaltura/liveController/$1 /opt/kaltura/liveController/latest
         ln -s /opt/kaltura/liveController/latest/serviceWrappers/linux/kLiveController /etc/init.d/kLiveController
+        bash /opt/kaltura/liveController/$1/deployment/get_bins "$1"
         /etc/init.d/kLiveController restart
         /etc/init.d/recording_uploder.sh restart
         # also better to call dvr saas config
