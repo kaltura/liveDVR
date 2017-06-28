@@ -8,14 +8,14 @@
 #  REQUIREMENTS: ---
 #          BUGS: ---
 #         NOTES: ---
-#        AUTHOR:  (),
+#        AUTHOR:  (), Lilach Maliniak
 #  ORGANIZATION: Kaltura, inc.
-#       CREATED:
+#       CREATED:  June 25, 2017
 #      REVISION:  ---
 #===============================================================================
-
+set -e
 if [ "$#" -lt 2 ]; then
-	echo "usage build_ts2mp4_convertor <ffmpeg build path> <product path>"
+	echo "usage build_ts2mp4_convertor <ffmpeg path> <product path>"
 	exit 1
 fi
 
@@ -49,7 +49,7 @@ if [ -w ${CONVERTOR_DIR} ]; then
 	popd
 else
 	echo "**************************************************************************************"
-	echo "${ROOT_DIR}/${CONVERTOR_DIR} folder is missing, can't build ${TARGET}"
+	echo "{CONVERTOR_DIR} is missing or there is no write permission, can't build ${TARGET}"
 	echo "**************************************************************************************"
 	RES=1
 fi

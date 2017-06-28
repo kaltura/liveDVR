@@ -8,82 +8,59 @@
 #  REQUIREMENTS: ---
 #          BUGS: ---
 #         NOTES: ---
-#        AUTHOR:  (),
+#        AUTHOR:  (), Lilach Maliniak
 #  ORGANIZATION: Kaltura, inc.
-#       CREATED:
+#       CREATED: June 25 2017
 #      REVISION:  ---
 #===============================================================================
-
+set -e
 if [ "$#" -lt 2 ]; then
-	echo "usage build_ffmpeg <ffmpeg build path> <product path> [Release/Debug]"
+	echo "usage  : $0 <ffmpeg build path> <ffmpeg version> [Release/Debug]"
+	echo "example: $0 /opt/kaltura/liveController/v1.14.5 /opt/kaltura/liveController/v1.14.5/bin/ffmpeg 3.0"
 	exit 1
 fi
 
 FFMPEG_BUILD_PATH=$1
-PRODUCT_ROOT_PATH=$2
-FFMPEG_VERSION=3.0
-ADDON_BUILD_PATH=${PRODUCT_ROOT_PATH}/node_addons/FormatConverter/build/
-FFMPEG_SYMLINK=${ADDON_BUILD_PATH}/FFmpeg
+FFMPEG_VERSION=$2
 BUILD_CONF=Release
-TMP_PATH=/var/tmp/
+TMP_PATH=/var/tmp
 OS=`uname`
-RES=0
 
-echo "PRODUCT_ROOT_PATH=${PRODUCT_ROOT_PATH}"
-
-mkdir -p "${FFMPEG_BUILD_PATH}"
-
+[ "${OS}" = "Darwin" ] && TMP_PATH=.
 [ "$3" = "Debug" ] && BUILD_CONF=Debug
 
 echo "build mode ${BUILD_CONF}"
-
-mkdir -p ${BUILD_CONF}
-
-
-echo "current path `pwd`"
+echo "TMP_PATH=${TMP_PATH}"
 echo "FFMPEG_BUILD_PATH=${FFMPEG_BUILD_PATH}"
-echo "ADDON_BUILD_PATH=${ADDON_BUILD_PATH}"
 
-if [ -L ${FFMPEG_SYMLINK} ]; then
-	echo "unlink ${FFMPEG_SYMLINK}"
-	unlink ${FFMPEG_SYMLINK}
-fi
+mkdir -p ${FFMPEG_BUILD_PATH}
+mkdir -p ${TMP_PATH}
 
+echo "Fetching tar from https://github.com/FFmpeg/FFmpeg/releases/download/n${FFMPEG_VERSION}/ffmpeg-${FFMPEG_VERSION}.tar.gz"
+curl -sL https://github.com/FFmpeg/FFmpeg/releases/download/n${FFMPEG_VERSION}/ffmpeg-${FFMPEG_VERSION}.tar.gz -o ${TMP_PATH}/ffmpeg-${FFMPEG_VERSION}.tar.gz
 
-if [ ! -r ${FFMPEG_SYMLINK} ]; then
+echo "opening tarball ${TMP_PATH}/ffmpeg-${FFMPEG_VERSION}.tar.gz"
+tar -xzf ${TMP_PATH}/ffmpeg-${FFMPEG_VERSION}.tar.gz -C ${FFMPEG_BUILD_PATH}
 
-	mkdir -p ${TMP_PATH}
+cd ${FFMPEG_BUILD_PATH}/ffmpeg-${FFMPEG_VERSION}
 
-	curl -L https://github.com/FFmpeg/FFmpeg/releases/download/n${FFMPEG_VERSION}/ffmpeg-${FFMPEG_VERSION}.tar.gz -o ${TMP_PATH}ffmpeg-${FFMPEG_VERSION}.tar.gz
+[ "${BUILD_CONF}" = "Debug" ] &&  DEBUG_SPECIFICS='--enable-debug --disable-optimizations'
 
-	# note: if the second argument already exists and is a directory,
-	# ln will create a symlink to the target inside that directory.
+CONFIG_FILENAME=./lastConfigure
 
-    tar -xzvf ${TMP_PATH}ffmpeg-${FFMPEG_VERSION}.tar.gz -C ${FFMPEG_BUILD_PATH}
-    ln -s ${FFMPEG_BUILD_PATH}/ffmpeg-${FFMPEG_VERSION} ${FFMPEG_SYMLINK}
-else
-	echo "${FFMPEG_SYMLINK} exists skipping ffmpeg download"
-fi
+CONF_CMD="./configure --disable-everything --disable-doc --enable-protocol=file --enable-demuxer=mpegts --enable-muxer=rtp_mpegts --enable-parser=h264 --enable-parser=aac --enable-muxer=mp4 --enable-zlib --enable-bsf=aac_adtstoasc --enable-decoder=aac --enable-decoder=h264 --enable-muxer=flv --enable-protocol=rtmp --enable-encoder=libmp3lame ${DEBUG_SPECIFICS}"
 
-pushd ${FFMPEG_SYMLINK}
+[ "${OS}" = "Linux" ] && CONF_CMD="${CONF_CMD} --enable-pic"
+[ "${OS}" = "Darwin" ] && CONF_CMD="${CONF_CMD} --disable-static --enable-shared"
 
-    echo "current path `pwd`"
+echo "configuring ffmpeg..."
+eval "${CONF_CMD}"
 
-    debug_specifics=
-    [ "${BUILD_CONF}" = "Debug" ] &&  debug_specifics='--enable-debug --disable-optimizations'
+echo "Saving configs to ${CONFIG_FILENAME} for traceability"
+echo "version=${FFMPEG_VERSION} ${CONF_CMD}" > ${CONFIG_FILENAME}
 
-    configFileName=./lastConfigure
+echo "### starting ffmpeg build..."
 
-    confCmd="./configure --disable-everything --disable-doc --enable-protocol=file --enable-demuxer=mpegts --enable-muxer=rtp_mpegts --enable-parser=h264 --enable-parser=aac --enable-muxer=mp4 --enable-zlib --enable-bsf=aac_adtstoasc --enable-decoder=aac --enable-decoder=h264 --enable-muxer=flv --enable-protocol=rtmp --enable-encoder=libmp3lame ${debug_specifics}"
+make
 
-    [ ${OS} == "Linux" ] && confCmd="${confCmd} --enable-pic"
-
-      echo "configuring ffmpeg..."
-      eval "${confCmd}"
-
-     echo "version=${FFMPEG_VERSION} ${confCmd}" > ${configFileName}
-
-   make &> /dev/null
-popd
-exit $RES
-
+echo "### ffmpeg build finished successfully. ffmpeg path: ${FFMPEG_BUILD_PATH}"
