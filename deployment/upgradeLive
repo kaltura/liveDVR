@@ -19,7 +19,7 @@ if [ ! -d "$1" ] ; then
     cp /opt/kaltura/liveController/configMapping.json /opt/kaltura/liveController/$1/common/config/
     cp /opt/kaltura/liveController/configMapping.ini /opt/kaltura/liveController/$1/liveRecorder/Config/
     npm install
-    cd..
+    cd ..
     # download binaries from Jenkins
     echo "### starting to download binaries"
     bash /opt/kaltura/liveController/$1/deployment/get_bins "$1"
