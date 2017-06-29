@@ -31,7 +31,7 @@ if [ ! -d "$1" ] ; then
 	fi
     ln -s /opt/kaltura/liveController/$1 /opt/kaltura/liveController/latest
 	if [ ! -L /etc/init.d/kLiveController ]; then
-		echo "ln -s /opt/kaltura/liveController/latest/serviceWrappers/linux/kLiveController /etc/init.d/kLiveController"
+		echo "Creating symlink to kLiveController script at - /etc/init.d/kLiveController"
 		ln -s /opt/kaltura/liveController/latest/serviceWrappers/linux/kLiveController /etc/init.d/kLiveController
 	fi
     # start nginx (web server), liveController and liveRecorder
