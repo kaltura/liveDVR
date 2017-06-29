@@ -40,6 +40,7 @@ function download_files()
 {
     [ ! -z ${LIVE_ROOT_PATH} ] && DST_DIR=${LIVE_ROOT_PATH} || DST_DIR=${VERSION}
 
+	# create destination dirs for the binaries
 	mkdir -p "${DST_DIR}/bin"
     mkdir -p "${DST_DIR}/liveRecorder/bin"
 
@@ -73,6 +74,7 @@ function download_files()
 			echo "Error $?, mv ${filename} ${DST_DIR}/${dest} failed"
 			return $?
 		fi
+		# add to binary executable permission
         chmod +x ${DST_DIR}/${dest}/${filename}
         if [ "$?" -ne "0" ]; then
             echo "Error $?, chmod +x ${DST_DIR}/${dest}/${filename} failed"

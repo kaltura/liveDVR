@@ -29,12 +29,11 @@ if [ ! -d "$1" ] ; then
 		echo "unlink latest"
 		unlink latest
 	fi
-	if [ -L /etc/init.d/kLiveController ]; then
-		echo "unlink /etc/init.d/kLiveController"
-		unlink /etc/init.d/kLiveController
-	fi
     ln -s /opt/kaltura/liveController/$1 /opt/kaltura/liveController/latest
-    ln -s /opt/kaltura/liveController/latest/serviceWrappers/linux/kLiveController /etc/init.d/kLiveController
+	if [ ! -L /etc/init.d/kLiveController ]; then
+		echo "ln -s /opt/kaltura/liveController/latest/serviceWrappers/linux/kLiveController /etc/init.d/kLiveController"
+		ln -s /opt/kaltura/liveController/latest/serviceWrappers/linux/kLiveController /etc/init.d/kLiveController
+	fi
     # start nginx (web server), liveController and liveRecorder
     /etc/init.d/kLiveController restart
     sleep 5
