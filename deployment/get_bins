@@ -38,6 +38,8 @@ LATEST_URL=http://lna-ci-slave2.kaltura.com/bin/latest/${OS}/release
 
 function download_files()
 {
+
+    local res=0
     [ ! -z ${LIVE_ROOT_PATH} ] && DST_DIR=${LIVE_ROOT_PATH} || DST_DIR=${VERSION}
 
 	# create destination dirs for the binaries
@@ -60,7 +62,7 @@ function download_files()
 			wget --header="accept-encoding: gzip" ${LATEST_URL}/${filename} -O ${filename}
 			if [ $? -ne 0 ]; then
                 echo "error $?, returned from wget --header="accept-encoding: gzip" ${LATEST_URL}/${filename} -O ${filename}"
-                exit 1;
+                exit $?;
             else
                 echo "successfully downloaded ${LATEST_URL}/${filename}"
             fi
@@ -70,15 +72,15 @@ function download_files()
 
 		# After downloading file, move it to its destination dir
 		mv ${filename} ${DST_DIR}/${dest}
-		if [ "$?" -ne "0" ]; then
+		if [ $? -ne 0 ]; then
 			echo "Error $?, mv ${filename} ${DST_DIR}/${dest} failed"
-			return $?
+			exit $?
 		fi
 		# add to binary executable permission
         chmod +x ${DST_DIR}/${dest}/${filename}
-        if [ "$?" -ne "0" ]; then
+        if [ $? -ne 0 ]; then
             echo "Error $?, chmod +x ${DST_DIR}/${dest}/${filename} failed"
-            return "$?"
+            exit $?
         fi
 		echo "successfully moved ${filename} ${DST_DIR}/${dest}"
 	done
