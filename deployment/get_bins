@@ -73,6 +73,11 @@ function download_files()
 			echo "Error $?, mv ${filename} ${DST_DIR}/${dest} failed"
 			return $?
 		fi
+        chmod +x ${DST_DIR}/${dest}/${filename}
+        if [ "$?" -ne "0" ]; then
+            echo "Error $?, chmod +x ${DST_DIR}/${dest}/${filename} failed"
+            return "$?"
+        fi
 		echo "successfully moved ${filename} ${DST_DIR}/${dest}"
 	done
 }
