@@ -37,6 +37,7 @@ if [ ! -d "$1" ] ; then
     ln -s /opt/kaltura/liveController/latest/serviceWrappers/linux/kLiveController /etc/init.d/kLiveController
     # start nginx (web server), liveController and liveRecorder
     /etc/init.d/kLiveController restart
+    sleep 5
     /opt/kaltura/liveController/$1/packager/bin/run_nginx.sh
     /etc/init.d/recording_uploder.sh restart
 else
