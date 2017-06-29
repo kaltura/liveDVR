@@ -38,6 +38,16 @@ LATEST_URL=http://lna-ci-slave2.kaltura.com/bin/latest/${OS}/release
 
 function download_files()
 {
+
+    local res=0
+    [ ! -z ${LIVE_ROOT_PATH} ] && DST_DIR=${LIVE_ROOT_PATH} || DST_DIR=${VERSION}
+
+	# create destination dirs for the binaries
+	mkdir -p "${DST_DIR}/bin"
+    mkdir -p "${DST_DIR}/liveRecorder/bin"
+
+    echo "current dir: [`pwd`]"
+
 	# loop to download the binaries
 	for ((i=0;i<${#FILES_TO_DOWNLOAD[@]};++i))
 	do
@@ -52,7 +62,7 @@ function download_files()
 			wget --header="accept-encoding: gzip" ${LATEST_URL}/${filename} -O ${filename}
 			if [ $? -ne 0 ]; then
                 echo "error $?, returned from wget --header="accept-encoding: gzip" ${LATEST_URL}/${filename} -O ${filename}"
-                exit 1;
+                exit $?;
             else
                 echo "successfully downloaded ${LATEST_URL}/${filename}"
             fi
@@ -61,14 +71,18 @@ function download_files()
 		fi
 
 		# After downloading file, move it to its destination dir
-		if [ ! -w ${LIVE_ROOT_PATH} ]; then
-			echo "moving ${filename} to $VERSION/${dest}"
-			mv -f ${filename} $VERSION/${dest}
-		else
-			echo "moving ${filename} to ${LIVE_ROOT_PATH}/${dest}"
-		    mv -f ${filename} ${LIVE_ROOT_PATH}/${dest}
+		mv ${filename} ${DST_DIR}/${dest}
+		if [ $? -ne 0 ]; then
+			echo "Error $?, mv ${filename} ${DST_DIR}/${dest} failed"
+			exit $?
 		fi
-		echo "successfully downloaded ${filename}"
+		# add to binary executable permission
+        chmod +x ${DST_DIR}/${dest}/${filename}
+        if [ $? -ne 0 ]; then
+            echo "Error $?, chmod +x ${DST_DIR}/${dest}/${filename} failed"
+            exit $?
+        fi
+		echo "successfully moved ${filename} ${DST_DIR}/${dest}"
 	done
 }
 
