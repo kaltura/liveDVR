@@ -38,7 +38,7 @@ if [ ! -d "$1" ] ; then
     /etc/init.d/kLiveController restart
     sleep 5
     /opt/kaltura/liveController/$1/packager/bin/run_nginx.sh
-    /etc/init.d/recording_uploder.sh restart
+    /etc/init.d/liveRecorder restart
 else
     echo $1 is already exists
 fi
