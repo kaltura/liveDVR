@@ -69,6 +69,10 @@ stop() {
     if [ -f $PIDFILE ]; then
         echo "Shutting down ${NAME}"
         kill $( cat $PIDFILE ) >> $LOGFILE
+        my_status
+        if [ ${RETVAL} -ne 0 ]; then
+            killAll
+        fi
     else
         echo "${NAME} is not running."
     fi
@@ -107,11 +111,8 @@ case "$1" in
     restart)
         restart
         ;;
-    kill)
-        killApp
-        ;;
     *)
-        echo "Usage: {start|stop|status|restart|kill}"
+        echo "Usage: {start|stop|status|restart}"
         exit 1
         ;;
 esac

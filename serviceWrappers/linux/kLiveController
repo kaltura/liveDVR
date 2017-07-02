@@ -86,6 +86,11 @@ stop() {
             # Tell Forever to stop the process.
             $FOREVER stop $( cat $PIDFILE )
 	        RETVAL=$(( $RETVAL + $? ))
+            status -p ${PIDFILE}
+            ${RETVAL}=$?
+	        if [ ${RETVAL} -ne 0 ]; then
+                  killApp()
+	        fi
         else
             echo "${NAME}_${prefix} is not running."
         fi
@@ -104,12 +109,12 @@ my_status() {
     RETVAL=0
     for prefix in 0 1 ; do
         PIDFILE="$PID_DIR/${NAME}_${prefix}.pid"
-        if [ -f $PIDFILE ] ; then
+        if [ -f $PIDFILE ]; then
             status -p ${PIDFILE}
             ${RETVAL}=$?
-            if [ ${RETVAL} -ne 0 ]; then
-                return ${RETVAL}
-            fi
+        if [ ${RETVAL} -ne 0 ]; then
+            return ${RETVAL}
+        fi
     done
 }
 
@@ -133,11 +138,8 @@ case "$1" in
     restart)
         restart
         ;;
-    kill)
-        killApp
-        ;;
     *)
-        echo "Usage: {start|stop|status|restart|kill}"
+        echo "Usage: {start|stop|status|restart}"
         exit 1
         ;;
 esac
