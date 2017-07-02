@@ -67,6 +67,6 @@ make
 
 mkdir -p ${currentDir}/../../bin
 echo "Copying ${nginxDir}/objs/nginx to ${currentDir}/../../bin"
-cp ${nginxDir}/objs/nginx ${currentDir}/../../bin
+cp ${nginxDir}/objs/nginx ${currentDir}/../../bin/
 
 
