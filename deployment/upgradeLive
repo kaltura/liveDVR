@@ -3,15 +3,32 @@
 # This uploads NVM
 set -e
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" || (echo "nvm not found in $NVM_DIR, this is a must, Exiting!" ; exit 1 )
+FORCE=
+REPLACE_SCRIPT=
 cd /opt/kaltura/liveController
+if [ $# -eq 2 ]; then
+ if [ "$2" = "force" ]; then
+    FORCE=$2
+ elif [ "$2" = "replace_script" ]; then
+    REPLACE_SCRIPT=$2
+ fi
+fi
 echo updating liveController v$1
-if [ ! -d "$1" ] ; then
+if [ ! -d "$1" ] || [ "$FORCE" = "force" ] || [ "$REPLACE_SCRIPT" = "replace_script" ]; then
+
     echo Try to download  https://github.com/kaltura/liveDVR/archive/v$1.tar.gz
     wget https://github.com/kaltura/liveDVR/archive/v$1.tar.gz
     echo try to unzip v$1.tar.gz
     tar -xvzf v$1.tar.gz
+    if [ $REPLACE_SCRIPT = "replace_script" ]; then
+        echo "replacing upgradeLive script with v.$1"
+        cp -f /opt/kaltura/liveController/liveDVR-$1/deployment/upgradeLive /etc/init.d/
+        exit 0
+    fi
     mv liveDVR-$1 $1
     rm -rf /opt/kaltura/liveController/v$1.tar.gz
+    /etc/init.d/kLiveController stop
+    /etc/init.d/LiveRecorder stop
     cd $1
     echo "current dir: [`pwd`]"
     nvm install
@@ -22,7 +39,7 @@ if [ ! -d "$1" ] ; then
     cd ..
     # download binaries from Jenkins
     echo "### starting to download binaries"
-    bash /opt/kaltura/liveController/$1/deployment/get_bins "$1"
+    /opt/kaltura/liveController/$1/deployment/get_bins "$1"
     echo "### finished downloading binaries"
     # create symlinks to latest dir and process script
 	if [ -L "latest" ]; then
@@ -35,10 +52,10 @@ if [ ! -d "$1" ] ; then
 		ln -s /opt/kaltura/liveController/latest/serviceWrappers/linux/kLiveController /etc/init.d/kLiveController
 	fi
     # start nginx (web server), liveController and liveRecorder
-    /etc/init.d/kLiveController restart
+    /etc/init.d/kLiveController start
     sleep 5
     /opt/kaltura/liveController/$1/packager/bin/run_nginx.sh
-    /etc/init.d/recording_uploder.sh restart
+    /etc/init.d/liveRecorder start
 else
     echo $1 is already exists
 fi
