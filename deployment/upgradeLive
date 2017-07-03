@@ -40,17 +40,6 @@ function replace_upgrade_script() {
     echo "removing artifacts..."
     rm -rf v$VERSION.tar.gz*
     rm -rf liveDVR-$VERSION
-
-
-    #rm -rf "v$VERSION.tar.gz.*"
-    #echo "replacing upgradeLive script with v$VERSION"
-    #wget https://github.com/kaltura/liveDVR/archive/v$VERSION.tar.gz
-    #tar -zxvf v$VERSION.tar.gz liveDVR-$VERSION/deployment/upgradeLive
-    #echo "copying v$VERSION/deployment/upgradeLive to /etc/init.d/"
-    #cp -f liveDVR-$VERSION/deployment/upgradeLive /etc/init.d/
-    #echo "removing artifacts..."
-    #rm -rf v$VERSION.tar.gz*
-    #rm -rf liveDVR-$VERSION
 }
 
 function install() {
