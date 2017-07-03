@@ -2,68 +2,84 @@
 # For upgrade just type ./upgradeLive <version>
 # This uploads NVM
 set -e
+USAGE="usage: upgradeLive [version] <replace_script|downgrade>"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" || (echo "nvm not found in $NVM_DIR, this is a must, Exiting!" ; exit 1 )
 PARAM=install
 if [ $# -eq 0 ]; then
-   echo "usage: upgradeLive [version] <replace_script|downgrade>"
+   echo ${USAGE}
+   exit 1
 fi
 VERSION=$1
 cd /opt/kaltura/liveController
 if [ $# -eq 2 ]; then
         PARAM=$2
-        echo running upgradLive ${PARAM}
 fi
 
 function download_new_version() {
-    echo Try to download  https://github.com/kaltura/liveDVR/archive/v$1.tar.gz
-    wget https://github.com/kaltura/liveDVR/archive/v$1.tar.gz
-    echo try to unzip v$1.tar.gz
-    tar -xvzf v$1.tar.gz
-    mv liveDVR-$1 $1
-    rm -rf /opt/kaltura/liveController/v$1.tar.gz
+	rm -rf "v$VERSION.tar.gz.1*"
+    echo starting to download  https://github.com/kaltura/liveDVR/archive/v$VERSION.tar.gz
+    wget https://github.com/kaltura/liveDVR/archive/v$VERSION.tar.gz
+    echo running unzip v1.14.6.tar.gz
+    tar -xvzf v$VERSION.tar.gz
+    mv liveDVR-$VERSION $VERSION
+    rm -f /opt/kaltura/liveController/v$VERSION.tar.gz
 }
 
-function update_upgradeLive_script() {
+function replace_upgrade_script() {
+	echo "replacing upgradeLive script with v$VERSION"
+    if [ ! -r v$VERSION.tar.gz ]; then
+        echo "starting to download v$VERSION.tar.gz"
+        wget https://github.com/kaltura/liveDVR/archive/v$VERSION.tar.gz
+    else
+        echo "v$VERSION.tar.gz found, skiping download"
+    fi
+    echo "extracting liveDVR-$VERSION/deployment/upgradeLive from liveDVR-$VERSION.tar.gz"
+    tar -zxvf v$VERSION.tar.gz liveDVR-$VERSION/deployment/upgradeLive
+    echo "copying  liveDVR-$VERSION/deployment/upgradeLive to /etc/init.d/"
+    cp -f liveDVR-$VERSION/deployment/upgradeLive /etc/init.d/
+    echo "removing artifacts..."
+    rm -rf v$VERSION.tar.gz*
+    rm -rf liveDVR-$VERSION
 
-        echo "replacing upgradeLive script with v.$1"
-        wget https://github.com/kaltura/liveDVR/archive/v$1.tar.gz
 
-        tar -zxvf v$1.tar.gz deployment/upgradeLive
-
-        #tar --extract --file={v$1.tar.gz} {deployment/upgradeLive}
-        cp -f ./upgradeLive /etc/init.d/
-        rm -f v$1.tar.gz
-
+    #rm -rf "v$VERSION.tar.gz.*"
+    #echo "replacing upgradeLive script with v$VERSION"
+    #wget https://github.com/kaltura/liveDVR/archive/v$VERSION.tar.gz
+    #tar -zxvf v$VERSION.tar.gz liveDVR-$VERSION/deployment/upgradeLive
+    #echo "copying v$VERSION/deployment/upgradeLive to /etc/init.d/"
+    #cp -f liveDVR-$VERSION/deployment/upgradeLive /etc/init.d/
+    #echo "removing artifacts..."
+    #rm -rf v$VERSION.tar.gz*
+    #rm -rf liveDVR-$VERSION
 }
 
 function install() {
-    /etc/init.d/kLiveController stop
-    /etc/init.d/LiveRecorder stop
-    cd $1
+    cd $VERSION
     nvm install
     # move configuration files (liveController's and liveRecorder's) to latest version
-    cp /opt/kaltura/liveController/configMapping.json /opt/kaltura/liveController/$1/common/config/
-    cp /opt/kaltura/liveController/configMapping.ini /opt/kaltura/liveController/$1/liveRecorder/Config/
+    cp /opt/kaltura/liveController/configMapping.json /opt/kaltura/liveController/$VERSION/common/config/
+    cp /opt/kaltura/liveController/configMapping.ini /opt/kaltura/liveController/$VERSION/liveRecorder/Config/
     npm install
     cd ..
     # download binaries from Jenkins
     echo "### starting to download binaries"
-    /opt/kaltura/liveController/$1/deployment/get_bins "$1"
+    /opt/kaltura/liveController/$VERSION/deployment/get_bins "$VERSION"
     echo "### finished downloading binaries"
     # create symlinks to latest dir and process script
-        if [ -L "latest" ]; then
-                echo "unlink latest"
-                unlink latest
-        fi
-    ln -s /opt/kaltura/liveController/$1 /opt/kaltura/liveController/latest
+    if [ -L "latest" ]; then
+         echo "unlink latest"
+         unlink latest
+    fi
+    ln -s /opt/kaltura/liveController/$VERSION /opt/kaltura/liveController/latest
+
 }
 
 function downgrade() {
-        if [ -L "latest" ]; then
-                echo "unlink latest"
-                unlink latest
-        fi
-    ln -s /opt/kaltura/liveController/$1 /opt/kaltura/liveController/latest
+    if [ -L "latest" ]; then
+        echo "unlink latest"
+        unlink latest
+    fi
+    ln -s /opt/kaltura/liveController/$VERSION /opt/kaltura/liveController/latest
 
 }
 
@@ -80,11 +96,11 @@ function start() {
             ln -s /opt/kaltura/liveController/latest/serviceWrappers/linux/kLiveController /etc/init.d/kLiveController
     fi
     # start nginx (web server), liveController and liveRecorder
-    "starting liveController..."
+    echo "starting liveController..."
     /etc/init.d/kLiveController start
     sleep 5
-    "starting nginx..."
-    /opt/kaltura/liveController/$1/packager/bin/run_nginx.sh
+    echo "starting nginx..."
+    /opt/kaltura/liveController/$VERSION/packager/bin/run_nginx.sh
     if [ -r /etc/init.d/LiveRecorder ]; then
           if [ ! -L /etc/init.d/LiveRecorder ]; then
                 echo "Creating symlink to LiveRecorder script at - /etc/init.d/LiveRecorder"
@@ -93,36 +109,37 @@ function start() {
           echo "starting liveRecorder..."
           /etc/init.d/liveRecorder start
     else
-        echo "this machin dosn't run liveRecorder"
+        echo "this machine doesn't run liveRecorder"
     fi
 }
 
-echo updating liveController v$1
-if [ ! -d "$1" ] || [ "$PARAM" != "install" ] ; then
+if [ ! -d "$VERSION" ] || [ "$PARAM" != "install" ] ; then
 
-        case $PARAM in
-            install)
-                stop
-                download_new_version $1
-                install
-                ;;
-            replace_script)
-                update_upgradeLive_script $1
-                exit 0
-                ;;
-            downgrade)
-                stop
-                downgrade $1
-                ;;
-                    *)
-                        if [ "$PARAM" != "install" ]; then
-                                echo "unknown live upgrade option \"${PARAM}\". Optional flags {replace_script|downgrade}"
-                        fi
-                exit 1
-                ;;
-        esac
+    case $PARAM in
+        install)
+            echo "upgrading liveController to v${VERSION}"
+            stop
+            download_new_version
+            install
+            start
+            ;;
+        replace_script)
+            echo "replacing upgradeLive script to v${VERSION}"
+            replace_upgrade_script $VERSION
+            exit 0
+            ;;
+        downgrade)
+            echo "downgrading liveController to v${VERSION}"
+            stop
+            downgrade
+            start
+            ;;
+                *)
+            echo ${USAGE}
+            exit 2
+            ;;
+    esac
 
-        start $1
 else
-    echo $1 is already exists
+    echo "found v${VERSION}, no action done. ${USAGE}"
 fi
