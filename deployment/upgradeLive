@@ -1,7 +1,7 @@
 #!/bin/bash
 # For upgrade just type ./upgradeLive <version>
 # This uploads NVM
-set -e
+#set -e
 USAGE="usage: upgradeLive [version] <replace_script|downgrade>"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" || (echo "nvm not found in $NVM_DIR, this is a must, Exiting!" ; exit 1 )
 PARAM=install
@@ -56,7 +56,7 @@ function install() {
     /opt/kaltura/liveController/$VERSION/deployment/get_bins "$VERSION"
     echo "### finished downloading binaries"
     # create symlinks to latest dir and process script
-    if [ -L "latest" ]; then
+    if [ -r "latest" ] && [ -L "latest" ]; then
          echo "unlink latest"
          unlink latest
     fi
