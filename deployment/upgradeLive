@@ -15,24 +15,25 @@ if [ $# -eq 2 ]; then
         PARAM=$2
 fi
 
+function download_version() {
+	if [ ! -r v$VERSION.tar.gz ]; then
+        echo starting to download v$VERSION.tar.gz
+        wget https://github.com/kaltura/liveDVR/archive/v$VERSION.tar.gz
+    else
+        echo "found v$VERSION.tar.gz, skipping download"
+    fi
+}
+
 function download_new_version() {
-	rm -rf "v$VERSION.tar.gz.1*"
-    echo starting to download  https://github.com/kaltura/liveDVR/archive/v$VERSION.tar.gz
-    wget https://github.com/kaltura/liveDVR/archive/v$VERSION.tar.gz
-    echo running unzip v1.14.6.tar.gz
+    download_version
+    echo running unzip v$VERSION.tar.gz
     tar -xvzf v$VERSION.tar.gz
     mv liveDVR-$VERSION $VERSION
     rm -f /opt/kaltura/liveController/v$VERSION.tar.gz
 }
 
 function replace_upgrade_script() {
-	echo "replacing upgradeLive script with v$VERSION"
-    if [ ! -r v$VERSION.tar.gz ]; then
-        echo "starting to download v$VERSION.tar.gz"
-        wget https://github.com/kaltura/liveDVR/archive/v$VERSION.tar.gz
-    else
-        echo "v$VERSION.tar.gz found, skiping download"
-    fi
+    download_version
     echo "extracting liveDVR-$VERSION/deployment/upgradeLive from liveDVR-$VERSION.tar.gz"
     tar -zxvf v$VERSION.tar.gz liveDVR-$VERSION/deployment/upgradeLive
     echo "copying  liveDVR-$VERSION/deployment/upgradeLive to /etc/init.d/"
@@ -104,6 +105,11 @@ function start() {
 
 if [ ! -d "$VERSION" ] || [ "$PARAM" != "install" ] ; then
 
+	# check if the version dir exists before downgrading, otherwise perform regular installation
+	# if configMapping.json changed from $VERSION to current installed version the file should be updated
+	# manually
+	[ "$PARAM" = "downgrade" ] && [ ! -r ${VERSION} ] && PARAM="install"
+
     case $PARAM in
         install)
             echo "upgrading liveController to v${VERSION}"
@@ -113,7 +119,7 @@ if [ ! -d "$VERSION" ] || [ "$PARAM" != "install" ] ; then
             start
             ;;
         replace_script)
-            echo "replacing upgradeLive script to v${VERSION}"
+            echo "replacing upgradeLive script with v${VERSION}"
             replace_upgrade_script $VERSION
             exit 0
             ;;
