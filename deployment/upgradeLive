@@ -75,8 +75,8 @@ function downgrade() {
 
 function stop() {
    /etc/init.d/kLiveController stop
-   if [ -r /etc/init.d/LiveRecorder ]; then
-        /etc/init.d/LiveRecorder stop
+   if [ -r /etc/init.d/liveRecorder ]; then
+        /etc/init.d/liveRecorder stop
    fi
 }
 
@@ -91,10 +91,10 @@ function start() {
     sleep 5
     echo "starting nginx..."
     /opt/kaltura/liveController/$VERSION/packager/bin/run_nginx.sh
-    if [ -r /etc/init.d/LiveRecorder ]; then
-          if [ ! -L /etc/init.d/LiveRecorder ]; then
-                echo "Creating symlink to LiveRecorder script at - /etc/init.d/LiveRecorder"
-                ln -s /opt/kaltura/liveController/latest/liveRecorder/serviceWrappers/linux/LiveRecorder /etc/init.d/LiveRecorder
+    if [ -r /etc/init.d/liveRecorder ]; then
+          if [ ! -L /etc/init.d/liveRecorder ]; then
+                echo "Creating symlink to liveRecorder script at - /etc/init.d/liveRecorder"
+                ln -s /opt/kaltura/liveController/latest/liveRecorder/serviceWrappers/linux/liveRecorder /etc/init.d/liveRecorder
           fi
           echo "starting liveRecorder..."
           /etc/init.d/liveRecorder start
