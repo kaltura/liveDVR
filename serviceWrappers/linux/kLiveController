@@ -37,11 +37,10 @@ HOME=${HOME:-~}
 
 loadNvm() {
     # This loads nvm
-    cd ${KLIVE_CONTROLLER_PREFIX}
     [ -z "${NVM_DIR}" ] && NVM_DIR="${HOME}/.nvm"
     if [ -s "${NVM_DIR}/nvm.sh" ] ; then
         source "${NVM_DIR}/nvm.sh"
-        if [ -s .nvmrc ] ; then
+        if [ -s ${KLIVE_CONTROLLER_PREFIX}/.nvmrc ] ; then
             nvm use || nvm install
         else
             echo "no .nvmrc in ${PWD} , Exiting"
@@ -60,7 +59,8 @@ start() {
     for prefix in 0 1 ; do
         PIDFILE="${PID_DIR}/${NAME}_${prefix}.pid"
         LOGFILE="${LOG_DIR}/${NAME}_${prefix}-forever.log"
-        if [ -f ${PIDFILE} ]; then
+        status -p ${PIDFILE}
+        if [ $? -eq 0 ]; then
             echo "${NAME}_${prefix} already running"
         else
             echo "Starting ${NAME}_${prefix}"
@@ -71,7 +71,7 @@ start() {
               --minUptime ${MIN_UPTIME} \
               --spinSleepTime ${SPIN_SLEEP_TIME} \
               start ${APPLICATION_PATH} prefix:${prefix}
-	        RETVAL=$(( ${RETVAL} + $? ))
+            RETVAL=$(( ${RETVAL} + $? ))
         fi
     done
 }
@@ -82,19 +82,19 @@ stop() {
     for prefix in 0 1 ; do
         PIDFILE="$PID_DIR/${NAME}_${prefix}.pid"
         if [ -f $PIDFILE ]; then
-	        echo "Shutting down ${NAME}_${prefix}"
-	        # Tell Forever to stop the process.
-	        ${FOREVER} stop $( cat ${PIDFILE} )
-	        if [ $? -ne 0 ]; then
-	            RETVAL=$(( ${RETVAL} + $? ))
-	            echo "failed to stop ${NAME}_${prefix} with error $?"
-	            killApp
-	            # return $? or RETVAL?
-	            #return ${RETVAL}
-	        else
-	           rm -f $PIDFILE
-	        fi
-	    else
+            echo "Shutting down ${NAME}_${prefix}"
+            # Tell Forever to stop the process.
+            ${FOREVER} stop $( cat ${PIDFILE} )
+            if [ $? -ne 0 ]; then
+               RETVAL=$(( ${RETVAL} + $? ))
+               echo "failed to stop ${NAME}_${prefix} with error $?"
+               killApp
+               # return $? or RETVAL?
+               #return ${RETVAL}
+            else
+               rm -f $PIDFILE
+            fi
+        else
             echo "${NAME}_${prefix} is not running"
         fi
     done
@@ -114,12 +114,12 @@ my_status() {
         PIDFILE="${PID_DIR}/${NAME}_${prefix}.pid"
         if [ -r ${PIDFILE} ]; then
             status -p ${PIDFILE}
-	        if [ $? -ne 0 ]; then
-	            RETVAL=$?
-	            return ${RETVAL}
-	        fi
-	    else
-	        echo "${PIDFILE} is empty, ${NAME} is not running (verify by: ps aux | grep node)"
+            if [ $? -ne 0 ]; then
+                RETVAL=$?
+                return ${RETVAL}
+             fi
+        else
+             echo "${PIDFILE} s not readable. ${NAME} is not running (verify by: ps aux | grep node)"
         fi
     done
 }
