@@ -30,15 +30,15 @@ NAME=${APP_NAME}
 APPLICATION_PATH=${APPDIR}/main.py
 LOG_DIR="/var/log/${APP_NAME}"
 PID_DIR="/var/run"
-PIDFILE="$PID_DIR/${NAME}.pid"
-LOGFILE="$LOG_DIR/${NAME}-service.log"
+PIDFILE="${PID_DIR}/${NAME}.pid"
+LOGFILE="${LOG_DIR}/${NAME}-service.log"
 
 RETVAL=0
 
 createFolders() {
 	[ -d ${LOG_DIR} ] || mkdir -p ${LOG_DIR}
 	SHARED_APP_DIR=$(python ${SCRIPT_DIR}/getRecordingBaseDir.py)
-	echo "Creating folders in ${SHARED_APP_DIR} for $HOSTNAME"
+	echo "Creating folders in ${SHARED_APP_DIR} for ${HOSTNAME}"
 	if [ -d  ${SHARED_APP_DIR} ] ; then 
 		mkdir -p ${SHARED_APP_DIR}/${HOSTNAME}/{UploadTask/{incoming,failed,processing},ConcatenationTask/{failed,processing}}
 		[ -L ${SHARED_APP_DIR}/${HOSTNAME}/ConcatenationTask/incoming ] || ln -s ${SHARED_APP_DIR}/incoming ${SHARED_APP_DIR}/${HOSTNAME}/ConcatenationTask/incoming
@@ -50,31 +50,33 @@ createFolders() {
 
 start() {
 	createFolders || exit 1
-    if [ -f $PIDFILE ]; then
+    if [ -f ${PIDFILE} ]; then
         echo "${NAME} already running"
     else
         echo "Starting ${NAME}"
-        python2.7 $APPLICATION_PATH >> $LOGFILE  2>&1 &
+        python2.7 ${APPLICATION_PATH} >> ${LOGFILE}  2>&1 &
 	    RETVAL=$?
-        echo $! > $PIDFILE
-        if [ $RETVAL -eq 0 ] ; then 
-			echo "started ${NAME} with pid $(cat $PIDFILE)"
+        echo $! > ${PIDFILE}
+        if [ ${RETVAL} -eq 0 ] ; then
+			echo "started ${NAME} with pid $(cat ${PIDFILE})"
 		else
-			echo "starting ${NAME} failed. please see $LOGFILE "
+			echo "starting ${NAME} failed. please see ${LOGFILE}"
 		fi
 	fi
 }
 
 stop() {
-    if [ -f $PIDFILE ]; then
+    if [ -f ${PIDFILE} ]; then
         echo "Shutting down ${NAME}"
-        kill $( cat $PIDFILE ) >> $LOGFILE
-        my_status
-        if [ ${RETVAL} -ne 0 ]; then
-            killAll
+        kill $( cat ${PIDFILE} ) >> ${LOGFILE}
+        if [ $? -ne 0 ]; then
+            killApp
+            RETVAL=$?
+        else
+            rm -f ${PIDFILE}
         fi
     else
-        echo "${NAME} is not running."
+        echo "${NAME} is not running"
     fi
 }
 
@@ -93,7 +95,7 @@ my_status() {
 
 killApp() {
     echo "Aggressively kill all Live processes"
-    pkill -f $APPLICATION_PATH 
+    pkill -f ${APPLICATION_PATH}
     echo "Removing PID file"
     rm -f ${PIDFILE}
 }
@@ -116,4 +118,4 @@ case "$1" in
         exit 1
         ;;
 esac
-exit $RETVAL
+exit ${RETVAL}
