@@ -49,15 +49,20 @@ createFolders() {
 }
 
 start() {
+     modules=(schudle m3u8 poster, psutil)
+     for module in modules; do
+         python -c "import $module"
+         [ $? -ne 0 ] && pip install $module
+    done
 	createFolders || exit 1
     if [ -f ${PIDFILE} ]; then
         echo "${NAME} already running"
     else
         echo "Starting ${NAME}"
         python2.7 ${APPLICATION_PATH} >> ${LOGFILE}  2>&1 &
-	    RETVAL=$?
+        RETVAL=$?
         echo $! > ${PIDFILE}
-        if [ ${RETVAL} -eq 0 ] ; then
+        if [ ${RETVAL} -eq 0 ]; then
 			echo "started ${NAME} with pid $(cat ${PIDFILE})"
 		else
 			echo "starting ${NAME} failed. please see ${LOGFILE}"
@@ -73,6 +78,7 @@ stop() {
             killApp
             RETVAL=$?
         else
+            echo "removing ${PIDFILE}"
             rm -f ${PIDFILE}
         fi
     else
@@ -94,9 +100,9 @@ my_status() {
 }
 
 killApp() {
-    echo "Aggressively kill all Live processes"
+    echo "Aggressively kill all ${NAME} processes"
     pkill -f ${APPLICATION_PATH}
-    echo "Removing PID file"
+    echo "Removing ${PIDFILE}"
     rm -f ${PIDFILE}
 }
 
