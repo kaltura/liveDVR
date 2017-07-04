@@ -6,7 +6,7 @@ location ~ /hls/ {
 location ~ /ehls/ {
     include nginx.conf.live.bootstrap;
     vod hls;
-    vod_secret_key "jKsf!hAuaJak $vod_suburi";
+    vod_secret_key "jFhEpZo0bOpk $vod_suburi";
     vod_hls_encryption_method aes-128;
 }
 
