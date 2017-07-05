@@ -18,6 +18,12 @@
 # Short-Description: Start/stop Kaltura Live Recorder
 ### END INIT INFO
 
+###
+# extend callable functions from "functions" script
+###
+
+source /etc/rc.d/init.d/functions
+. /opt/rh/python27/enable
 APP_NAME=liveRecorder
 SCRIPT_DIR=$(dirname $(readlink -f $0))
 APPDIR=${SCRIPT_DIR%/serviceWrappers/linux}
@@ -25,15 +31,16 @@ NAME=${APP_NAME}
 APPLICATION_PATH=${APPDIR}/main.py
 LOG_DIR="/var/log/${APP_NAME}"
 PID_DIR="/var/run"
-PIDFILE="$PID_DIR/${NAME}.pid"
-LOGFILE="$LOG_DIR/${NAME}-service.log"
+PIDFILE="${PID_DIR}/${NAME}.pid"
+LOGFILE="${LOG_DIR}/${NAME}-service.log"
+LOGFILE="${LOG_DIR}/${NAME}-service.log"
 
 RETVAL=0
 
 createFolders() {
 	[ -d ${LOG_DIR} ] || mkdir -p ${LOG_DIR}
 	SHARED_APP_DIR=$(python ${SCRIPT_DIR}/getRecordingBaseDir.py)
-	echo "Creating folders in ${SHARED_APP_DIR} for $HOSTNAME"
+	echo "Creating folders in ${SHARED_APP_DIR} for ${HOSTNAME}"
 	if [ -d  ${SHARED_APP_DIR} ] ; then 
 		mkdir -p ${SHARED_APP_DIR}/${HOSTNAME}/{UploadTask/{incoming,failed,processing},ConcatenationTask/{failed,processing}}
 		[ -L ${SHARED_APP_DIR}/${HOSTNAME}/ConcatenationTask/incoming ] || ln -s ${SHARED_APP_DIR}/incoming ${SHARED_APP_DIR}/${HOSTNAME}/ConcatenationTask/incoming
@@ -44,30 +51,41 @@ createFolders() {
 }
 
 start() {
+     modules=(schedule m3u8 poster psutil pycrypto)
+     for module in "${modules[@]}"; do
+         python -c "import $module"
+         [ $? -ne 0 ] && pip install $module
+    done
 	createFolders || exit 1
-    if [ -f $PIDFILE ]; then
+    status -p ${PIDFILE}
+    if [ $? -eq 0 ]; then
         echo "${NAME} already running"
     else
         echo "Starting ${NAME}"
-        python2.7 $APPLICATION_PATH >> $LOGFILE  2>&1 &
-	    RETVAL=$?
-        echo $! > $PIDFILE
-        if [ $RETVAL -eq 0 ] ; then 
-			echo "started ${NAME} with pid $(cat $PIDFILE)"
+        python2.7 ${APPLICATION_PATH} >> ${LOGFILE}  2>&1 &
+        RETVAL=$?
+        echo $! > ${PIDFILE}
+        if [ ${RETVAL} -eq 0 ]; then
+			echo "started ${NAME} with pid $(cat ${PIDFILE})"
 		else
-			echo "starting ${NAME} failed. please see $LOGFILE "
+			echo "starting ${NAME} failed. please see ${LOGFILE}"
 		fi
 	fi
 }
 
 stop() {
-    if [ -f $PIDFILE ]; then
+    if [ -f ${PIDFILE} ]; then
         echo "Shutting down ${NAME}"
-        kill $( cat $PIDFILE ) >> $LOGFILE
-        rm -f $PIDFILE
-	    RETVAL=$?
+        kill $( cat ${PIDFILE} ) >> ${LOGFILE}
+        if [ $? -ne 0 ]; then
+            killApp
+            RETVAL=$?
+        else
+            echo "removing ${PIDFILE}"
+            rm -f ${PIDFILE}
+        fi
     else
-        echo "${NAME} is not running."
+        echo "${NAME} is not running"
     fi
 }
 
@@ -76,24 +94,18 @@ restart() {
     start
 }
 
-status() {
-    if [ -f $PIDFILE ] ; then
-	   if cat ${PIDFILE} | xargs ps -p > /dev/null ; then
-            echo "${NAME} is running with PID $( cat $PIDFILE )"
-        else
-            echo "${NAME} is not running but there is stale pidFile: $PIDFILE"
-            RETVAL=1
- 	    fi
-    else
-            echo "${NAME} is not running."
-	        RETVAL=1
-    fi
+###
+# check whether process is running based on /proc/[pid]/exe
+###
+my_status() {
+    status -p ${PIDFILE}
+    RETVAL=$?
 }
 
 killApp() {
-    echo "Aggressively kill all Live processes"
-    pkill -f $APPLICATION_PATH 
-    echo "Removing PID file"
+    echo "Aggressively kill all ${NAME} processes"
+    pkill -f ${APPLICATION_PATH}
+    echo "Removing ${PIDFILE}"
     rm -f ${PIDFILE}
 }
 
@@ -105,17 +117,14 @@ case "$1" in
         stop
         ;;
     status)
-        status
+        my_status
         ;;
     restart)
         restart
         ;;
-    kill)
-        killApp
-        ;;
     *)
-        echo "Usage: {start|stop|status|restart|kill}"
+        echo "Usage: {start|stop|status|restart}"
         exit 1
         ;;
 esac
-exit $RETVAL
+exit ${RETVAL}
