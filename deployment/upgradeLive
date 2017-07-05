@@ -1,44 +1,140 @@
 #!/bin/bash
 # For upgrade just type ./upgradeLive <version>
 # This uploads NVM
-set -e
+#set -e
+USAGE="usage: upgradeLive [version] <replace_script|downgrade>"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" || (echo "nvm not found in $NVM_DIR, this is a must, Exiting!" ; exit 1 )
+PARAM=install
+if [ $# -eq 0 ]; then
+   echo ${USAGE}
+   exit 1
+fi
+VERSION=$1
 cd /opt/kaltura/liveController
-echo updating liveController v$1
-if [ ! -d "$1" ] ; then
-    echo Try to download  https://github.com/kaltura/liveDVR/archive/v$1.tar.gz
-    wget https://github.com/kaltura/liveDVR/archive/v$1.tar.gz
-    echo try to unzip v$1.tar.gz
-    tar -xvzf v$1.tar.gz
-    mv liveDVR-$1 $1
-    rm -rf /opt/kaltura/liveController/v$1.tar.gz
-    cd $1
-    echo "current dir: [`pwd`]"
+if [ $# -eq 2 ]; then
+        PARAM=$2
+fi
+
+function download_version() {
+	if [ ! -r v$VERSION.tar.gz ]; then
+        echo starting to download v$VERSION.tar.gz
+        wget https://github.com/kaltura/liveDVR/archive/v$VERSION.tar.gz
+    else
+        echo "found v$VERSION.tar.gz, skipping download"
+    fi
+}
+
+function download_new_version() {
+    download_version
+    echo running unzip v$VERSION.tar.gz
+    tar -xvzf v$VERSION.tar.gz
+    mv liveDVR-$VERSION $VERSION
+    rm -f /opt/kaltura/liveController/v$VERSION.tar.gz
+}
+
+function replace_upgrade_script() {
+    download_version
+    echo "extracting liveDVR-$VERSION/deployment/upgradeLive from liveDVR-$VERSION.tar.gz"
+    tar -zxvf v$VERSION.tar.gz liveDVR-$VERSION/deployment/upgradeLive
+    echo "copying  liveDVR-$VERSION/deployment/upgradeLive to /etc/init.d/"
+    cp -f liveDVR-$VERSION/deployment/upgradeLive /etc/init.d/
+    echo "removing artifacts..."
+    rm -rf v$VERSION.tar.gz*
+    rm -rf liveDVR-$VERSION
+}
+
+function install() {
+    cd $VERSION
     nvm install
     # move configuration files (liveController's and liveRecorder's) to latest version
-    cp /opt/kaltura/liveController/configMapping.json /opt/kaltura/liveController/$1/common/config/
-    cp /opt/kaltura/liveController/configMapping.ini /opt/kaltura/liveController/$1/liveRecorder/Config/
+    cp /opt/kaltura/liveController/configMapping.json /opt/kaltura/liveController/$VERSION/common/config/
+    cp /opt/kaltura/liveController/configMapping.ini /opt/kaltura/liveController/$VERSION/liveRecorder/Config/
     npm install
     cd ..
     # download binaries from Jenkins
     echo "### starting to download binaries"
-    bash /opt/kaltura/liveController/$1/deployment/get_bins "$1"
+    /opt/kaltura/liveController/$VERSION/deployment/get_bins "$VERSION"
     echo "### finished downloading binaries"
     # create symlinks to latest dir and process script
-	if [ -L "latest" ]; then
-		echo "unlink latest"
-		unlink latest
-	fi
-    ln -s /opt/kaltura/liveController/$1 /opt/kaltura/liveController/latest
-	if [ ! -L /etc/init.d/kLiveController ]; then
-		echo "Creating symlink to kLiveController script at - /etc/init.d/kLiveController"
-		ln -s /opt/kaltura/liveController/latest/serviceWrappers/linux/kLiveController /etc/init.d/kLiveController
-	fi
+    if [ -r "latest" ] && [ -L "latest" ]; then
+         echo "unlink latest"
+         unlink latest
+    fi
+    ln -s /opt/kaltura/liveController/$VERSION /opt/kaltura/liveController/latest
+
+}
+
+function downgrade() {
+    if [ -L "latest" ]; then
+        echo "unlink latest"
+        unlink latest
+    fi
+    ln -s /opt/kaltura/liveController/$VERSION /opt/kaltura/liveController/latest
+
+}
+
+function stop() {
+   /etc/init.d/kLiveController stop
+   if [ -r /etc/init.d/liveRecorder ]; then
+        /etc/init.d/liveRecorder stop
+   fi
+}
+
+function start() {
+    if [ ! -L /etc/init.d/kLiveController ]; then
+            echo "Creating symlink to kLiveController script at - /etc/init.d/kLiveController"
+            ln -s /opt/kaltura/liveController/latest/serviceWrappers/linux/kLiveController /etc/init.d/kLiveController
+    fi
     # start nginx (web server), liveController and liveRecorder
-    /etc/init.d/kLiveController restart
+    echo "starting liveController..."
+    /etc/init.d/kLiveController start
     sleep 5
-    /opt/kaltura/liveController/$1/packager/bin/run_nginx.sh
-    /etc/init.d/liveRecorder restart
+    echo "starting nginx..."
+    /opt/kaltura/liveController/$VERSION/packager/bin/run_nginx.sh
+    if [ -r /etc/init.d/liveRecorder ]; then
+          if [ ! -L /etc/init.d/liveRecorder ]; then
+                echo "Creating symlink to liveRecorder script at - /etc/init.d/liveRecorder"
+                ln -s /opt/kaltura/liveController/latest/liveRecorder/serviceWrappers/linux/liveRecorder /etc/init.d/liveRecorder
+          fi
+          echo "starting liveRecorder..."
+          /etc/init.d/liveRecorder start
+    else
+        echo "this machine doesn't run liveRecorder"
+    fi
+}
+
+if [ ! -d "$VERSION" ] || [ "$PARAM" != "install" ] ; then
+
+	# check if the version dir exists before downgrading, otherwise perform regular installation
+	# if configMapping.json changed from $VERSION to current installed version the file should be updated
+	# manually
+	[ "$PARAM" = "downgrade" ] && [ ! -r ${VERSION} ] && PARAM="install"
+
+    case $PARAM in
+        install)
+            echo "upgrading liveController to v${VERSION}"
+            stop
+            download_new_version
+            install
+            start
+            ;;
+        replace_script)
+            echo "replacing upgradeLive script with v${VERSION}"
+            replace_upgrade_script $VERSION
+            exit 0
+            ;;
+        downgrade)
+            echo "downgrading liveController to v${VERSION}"
+            stop
+            downgrade
+            start
+            ;;
+                *)
+            echo ${USAGE}
+            exit 2
+            ;;
+    esac
+
 else
-    echo $1 is already exists
+    echo "found v${VERSION}, no action done. ${USAGE}"
 fi
