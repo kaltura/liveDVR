@@ -33,7 +33,6 @@ LOG_DIR="/var/log/${APP_NAME}"
 PID_DIR="/var/run"
 PIDFILE="${PID_DIR}/${NAME}.pid"
 LOGFILE="${LOG_DIR}/${NAME}-service.log"
-LOGFILE="${LOG_DIR}/${NAME}-service.log"
 
 RETVAL=0
 
@@ -75,13 +74,16 @@ start() {
 
 stop() {
     if [ -f ${PIDFILE} ]; then
+        local pid=$( cat ${PIDFILE} )
         echo "Shutting down ${NAME}"
-        kill $( cat ${PIDFILE} ) >> ${LOGFILE}
-        if [ $? -ne 0 ]; then
-            killApp
-            RETVAL=$?
+        kill ${pid} >> ${LOGFILE}
+        status -p ${PIDFILE}
+	    if [ $? -eq 0 ]; then
+	        echo "failed to stop ${NAME}, ${pid}"
+            killApp ${pid}
+            return 1
         else
-            echo "removing ${PIDFILE}"
+            echo "${NAME}, ${pid}, successfully stopped"
             rm -f ${PIDFILE}
         fi
     else
@@ -103,10 +105,11 @@ my_status() {
 }
 
 killApp() {
-    echo "Aggressively kill all ${NAME} processes"
+	local pid=$1
+    echo "Aggressively kill all ${NAME} process, $pid"
     pkill -f ${APPLICATION_PATH}
-    echo "Removing ${PIDFILE}"
     rm -f ${PIDFILE}
+
 }
 
 case "$1" in
