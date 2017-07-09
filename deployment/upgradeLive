@@ -2,6 +2,8 @@
 # For upgrade just type ./upgradeLive <version>
 # This uploads NVM
 #set -e
+
+PRODUCT_PATH=/opt/kaltura/liveController
 USAGE="usage: upgradeLive [version] <replace_script|downgrade>"
 [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" || (echo "nvm not found in $NVM_DIR, this is a must, Exiting!" ; exit 1 )
 PARAM=install
@@ -10,7 +12,8 @@ if [ $# -eq 0 ]; then
    exit 1
 fi
 VERSION=$1
-cd /opt/kaltura/liveController
+mkdir -p ${PRODUCT_PATH}
+cd ${PRODUCT_PATH}
 if [ $# -eq 2 ]; then
         PARAM=$2
 fi
