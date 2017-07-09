@@ -5,7 +5,13 @@
 
 PRODUCT_PATH=/opt/kaltura/liveController
 USAGE="usage: upgradeLive [version] <replace_script|downgrade>"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh" || (echo "nvm not found in $NVM_DIR, this is a must, Exiting!" ; exit 1 )
+
+if [ -r "$NVM_DIR/nvm.sh" ]; then
+ . "$NVM_DIR/nvm.sh"
+else
+	(echo "nvm not found in $NVM_DIR, this is a must, Exiting!" ; exit 1 )
+fi
+
 PARAM=install
 if [ $# -eq 0 ]; then
    echo ${USAGE}
