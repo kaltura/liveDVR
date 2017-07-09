@@ -1,7 +1,7 @@
 #!/bin/bash
 # For upgrade just type ./upgradeLive <version> [replace_script|downgrade|build] [ffmpeg build path] [ffmpeg version]
 # in case build is set as parameter then ffmpeg build path and ffmpeg version are mandatory
-# This uploads NVM
+
 #set -e
 
 PRODUCT_PATH=/opt/kaltura/liveController
@@ -80,7 +80,7 @@ function install() {
     if [ "${__build}" = "yes" ]; then
         ${PRODUCT_PATH}/build_scripts/build_ffmpg.sh ${FFMPEG_BUILD_PATH} ${FFMPEG_VERSION}
         ${PRODUCT_PATH}/build_scripts/build_addons.sh ${PRODUCT_PATH} ${FFMPEG_BUILD_PATH}
-        ${PRODUCT_PATH}/build_ts2mp4_convertor.sh ${PRODUCT_PATH} ${FFMPEG_BUILD_PATH}
+        ${PRODUCT_PATH}/build_ts2mp4_convertor.sh ${PRODUCT_PATH}/liveRecorder ${FFMPEG_BUILD_PATH}
     else
 	    # download binaries from Jenkins
 	    echo "### starting to download binaries"
