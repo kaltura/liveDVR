@@ -15,12 +15,12 @@
 #===============================================================================
 set -e
 if [ "$#" -lt 2 ]; then
-	echo "usage build_ts2mp4_convertor <ffmpeg path> <product path>"
+	echo "usage build_ts2mp4_convertor  <product path> <ffmpeg path>"
 	exit 1
 fi
 
-FFMPEG_BUILD_PATH=$1
-PRODUCT_ROOT_PATH=$2
+PRODUCT_ROOT_PATH=$1
+FFMPEG_BUILD_PATH=$2
 TARGET=ts_to_mp4_convertor
 CONVERTOR_DIR=${PRODUCT_ROOT_PATH}/${TARGET}
 RES=0

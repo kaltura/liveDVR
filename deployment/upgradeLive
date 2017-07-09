@@ -1,10 +1,14 @@
 #!/bin/bash
-# For upgrade just type ./upgradeLive <version>
+# For upgrade just type ./upgradeLive <version> [replace_script|downgrade|build] [ffmpeg build path] [ffmpeg version]
+# in case build is set as parameter then ffmpeg build path and ffmpeg version are mandatory
 # This uploads NVM
 #set -e
 
 PRODUCT_PATH=/opt/kaltura/liveController
-USAGE="usage: upgradeLive [version] <replace_script|downgrade>"
+USAGE="usage: upgradeLive [version] <replace_script|downgrade|build> <ffmpeg build path> <ffmpeg version>"
+BUILD_USAGE="usage: upgradeLive [version] build [ffmpeg build path] [ffmpeg version]"
+FFMPEG_BUILD_PATH=
+FFMPEG_VERSION=
 
 if [ -r "$NVM_DIR/nvm.sh" ]; then
     . "$NVM_DIR/nvm.sh"
@@ -17,11 +21,22 @@ if [ $# -eq 0 ]; then
    echo ${USAGE}
    exit 1
 fi
+
 VERSION=$1
 mkdir -p ${PRODUCT_PATH}
 cd ${PRODUCT_PATH}
 if [ $# -eq 2 ]; then
-        PARAM=$2
+    PARAM=$2
+fi
+
+if [ ${PARAM} = "build" ]; then
+	if [ $# -eq 4 ]; then
+		FFMPEG_BUILD_PATH=$3
+		FFMPEG_VERSION=$4
+	else
+		echo "wrong number of parameters running install with build. $BUILD_USAGE"
+		exit 2
+	fi
 fi
 
 function download_version() {
@@ -53,6 +68,8 @@ function replace_upgrade_script() {
 }
 
 function install() {
+	local __build=$1
+    mkdir -p latest
     cd $VERSION
     nvm install
     # move configuration files (liveController's and liveRecorder's) to latest version
@@ -60,10 +77,16 @@ function install() {
     cp /opt/kaltura/liveController/configMapping.ini /opt/kaltura/liveController/$VERSION/liveRecorder/Config/
     npm install
     cd ..
-    # download binaries from Jenkins
-    echo "### starting to download binaries"
-    /opt/kaltura/liveController/$VERSION/deployment/get_bins "$VERSION"
-    echo "### finished downloading binaries"
+    if [ "${__build}" = "yes" ]; then
+        ${PRODUCT_PATH}/build_scripts/build_ffmpg.sh ${FFMPEG_BUILD_PATH} ${FFMPEG_VERSION}
+        ${PRODUCT_PATH}/build_scripts/build_addons.sh ${PRODUCT_PATH} ${FFMPEG_BUILD_PATH}
+        ${PRODUCT_PATH}/build_ts2mp4_convertor.sh ${PRODUCT_PATH} ${FFMPEG_BUILD_PATH}
+    else
+	    # download binaries from Jenkins
+	    echo "### starting to download binaries"
+	    /opt/kaltura/liveController/$VERSION/deployment/get_bins "$VERSION"
+	    echo "### finished downloading binaries"
+	fi
     # create symlinks to latest dir and process script
     if [ -r "latest" ] && [ -L "latest" ]; then
          echo "unlink latest"
@@ -117,14 +140,19 @@ if [ ! -d "$VERSION" ] || [ "$PARAM" != "install" ] ; then
 	# check if the version dir exists before downgrading, otherwise perform regular installation
 	# if configMapping.json changed from $VERSION to current installed version the file should be updated
 	# manually
+	local __build="no"
 	[ "$PARAM" = "downgrade" ] && [ ! -r ${VERSION} ] && PARAM="install"
+	if [ "$PARAM" = "build" ];
+	     __build="yes"
+	     PARAM=install
+	fi
 
     case $PARAM in
         install)
             echo "upgrading liveController to v${VERSION}"
             stop
             download_new_version
-            install
+            install ${__build}
             start
             ;;
         replace_script)
