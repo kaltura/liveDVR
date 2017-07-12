@@ -1,4 +1,4 @@
-[.*]
+[@HOSTNAME@]  # change to .* if you want this configuration to be use for all hosts
 recording_base_dir = @RECORDING_FOLDER@
 admin_secret = @KALTURA_PARTNER_ADMIN_SECRET@
 partner_id = -5
