@@ -39,12 +39,12 @@ function getLocalMachineFullHostname() {
     else
     {
         // On Linux
-        var hostnameCmd = os.hostname().trim();
+        var hostnameCmd = os.hostname();
         if (!hostnameCmd)
         {
             throw new Error('Error getting hostname for local machine');
         }
-        res = hostnameCmd.replace(/(\r\n|\n|\r)/gm," "); // Remove line ending at the end
+        res = hostnameCmd.trim().replace(/(\r\n|\n|\r)/gm," "); // Remove line ending at the end
     }
     return res;
 }
