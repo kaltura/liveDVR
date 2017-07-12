@@ -22,7 +22,7 @@ pip install  poster
 pip install psutil
 pip install m3u8
 pip install schedule
-easy_install pycrypto
+pip install pycrypto
 mkdir -p $HOME_DIRECTORY
 mkdir -p "$HOME_DIRECTORY/recordings"
 mkdir -p "$HOME_DIRECTORY/recordings/newSession"
