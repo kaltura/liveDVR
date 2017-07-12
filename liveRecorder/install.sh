@@ -11,17 +11,17 @@ HOSTNAME=$(hostname)
 HOSTNAME_DIRECTORY="$HOME_DIRECTORY/$HOSTNAME"
 echo "home directory $HOME_DIRECTORY"
 if [ ! -d $HOME_DIRECTORY ]; then
-echo "ERROR: can't find recording path"
-exit
+    echo "ERROR: can't find recording path"
+    exit 1
 fi
-if ! [[ $(python2.7 --version 2>&1) == *2\.7\.* ]]; then
-echo "Requrie python version 2.7.x";
-exit
+if ! [[ $(python --version 2>&1) == *2\.7\.* ]]; then
+    echo "Python version >= 2.7.0 is required";
+    exit 2
 fi
-pip2.7 install  poster
-pip2.7 install psutil
-pip2.7 install m3u8
-pip2.7 install schedule
+pip install  poster
+pip install psutil
+pip install m3u8
+pip install schedule
 easy_install pycrypto
 mkdir -p $HOME_DIRECTORY
 mkdir -p "$HOME_DIRECTORY/recordings"

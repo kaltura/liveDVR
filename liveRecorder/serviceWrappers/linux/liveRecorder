@@ -61,7 +61,7 @@ start() {
         echo "${NAME} already running"
     else
         echo "Starting ${NAME}"
-        python2.7 ${APPLICATION_PATH} >> ${LOGFILE}  2>&1 &
+        python ${APPLICATION_PATH} >> ${LOGFILE}  2>&1 &
         RETVAL=$?
         echo $! > ${PIDFILE}
         if [ ${RETVAL} -eq 0 ]; then
