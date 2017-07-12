@@ -50,7 +50,7 @@ createFolders() {
 }
 
 start() {
-	createFolders || exit 1
+	# createFolders || exit 1
     status -p ${PIDFILE}
     if [ $? -eq 0 ]; then
         echo "${NAME} already running"
