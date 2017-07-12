@@ -1,4 +1,4 @@
-[.]
+[.*]
 recording_base_dir = @RECORDING_FOLDER@
 admin_secret = @KALTURA_PARTNER_ADMIN_SECRET@
 partner_id = -5
