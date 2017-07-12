@@ -26,7 +26,7 @@ source /etc/rc.d/init.d/functions
 . /opt/rh/python27/enable
 APP_NAME=liveRecorder
 SCRIPT_DIR=$(dirname $(readlink -f $0))
-APPDIR=${SCRIPT_DIR%/serviceWrappers/linux}
+APPDIR=${SCRIPT_DIR%/../../}
 NAME=${APP_NAME}
 APPLICATION_PATH=${APPDIR}/main.py
 LOG_DIR="/var/log/${APP_NAME}"
@@ -50,11 +50,6 @@ createFolders() {
 }
 
 start() {
-     modules=(schedule m3u8 poster psutil pycrypto)
-     for module in "${modules[@]}"; do
-         python -c "import $module"
-         [ $? -ne 0 ] && pip install $module
-    done
 	createFolders || exit 1
     status -p ${PIDFILE}
     if [ $? -eq 0 ]; then

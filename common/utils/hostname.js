@@ -3,7 +3,6 @@
  */
 
 var os = require('os');
-var shell = require('shelljs');
 
 
 function homedir() {
@@ -40,12 +39,12 @@ function getLocalMachineFullHostname() {
     else
     {
         // On Linux
-        var hostnameCmd = shell.exec('hostname -f');
-        if (hostnameCmd.code !== 0)
+        var hostnameCmd = os.hostname();
+        if (!hostnameCmd)
         {
             throw new Error('Error getting hostname for local machine');
         }
-        res = hostnameCmd.stdout.replace(/\n$/, ''); // Remove line ending at the end
+        res = hostnameCmd.replace(/(\r\n|\n|\r)/gm, '\n'); // Remove line ending at the end
     }
     return res;
 }

@@ -5,7 +5,7 @@
 #set -e
 
 PRODUCT_PATH=/opt/kaltura/liveController
-USAGE="usage: upgradeLive [version] <replace_script|downgrade|build> <ffmpeg build path> <ffmpeg version>"
+USAGE="usage: upgradeLive [version] <replace_script|downgrade|build|install_live_recorder> <ffmpeg build path> <ffmpeg version>"
 BUILD_USAGE="usage: upgradeLive [version] build [ffmpeg build path] [ffmpeg version]"
 FFMPEG_BUILD_PATH=
 FFMPEG_VERSION=
@@ -30,7 +30,7 @@ if [ $# -eq 2 ]; then
 fi
 
 if [ ${PARAM} = "build" ]; then
-	if [ $# -eq 4 ]; then
+	if [ $# -gt 3 ]; then
 		FFMPEG_BUILD_PATH=$3
 		FFMPEG_VERSION=$4
 	else
@@ -69,6 +69,7 @@ function replace_upgrade_script() {
 
 function install() {
 	local __build=$1
+	local __install_live_recorder=$2
     mkdir -p latest
     cd $VERSION
     nvm install
@@ -93,7 +94,14 @@ function install() {
          unlink latest
     fi
     ln -s /opt/kaltura/liveController/$VERSION /opt/kaltura/liveController/latest
-
+    if [ "__install_live_recorder" = "yes" ]; then
+         . ${PRODUCT_PATH}/liveRecorder/installPython2.7.sh
+	     local __modules=(schedule m3u8 poster psutil pycrypto)
+         for module in "${__modules[@]}"; do
+             python -c "import ${module}"
+             [ $? -ne 0 ] && pip2.7 install ${module}
+        done
+    fi
 }
 
 function downgrade() {
@@ -141,11 +149,16 @@ if [ ! -d "$VERSION" ] || [ "$PARAM" != "install" ] ; then
 	# if configMapping.json changed from $VERSION to current installed version the file should be updated
 	# manually
 	local __build="no"
+	local __install_live_recorder="yes"
 	[ "$PARAM" = "downgrade" ] && [ ! -r ${VERSION} ] && PARAM="install"
 	if [ "$PARAM" = "build" ];
 	     __build="yes"
-	     PARAM=install
+	     PARAM="install"
 	fi
+	if [ "$PARAM" = "install_live_recorder" ];
+	    __install_live_recorder="yes"
+	    PARAM="install"
+	if
 
     case $PARAM in
         install)
