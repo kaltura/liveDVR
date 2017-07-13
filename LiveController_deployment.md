@@ -4,21 +4,23 @@ liveController & liveRecorder can be installed in single or separate machines.
 
 ## Software prerequisites:
 ====================================================
- - Centos 6.8+
+ - RHEL/CentOS 7 or above or Ubuntu 16.0.4 or above
  - ffmpeg 3.0 -  (run build_scripts/build_ffmpeg.sh)
 
 
- ## New installation of liveController version v1.16.1+:
- ====================================================
+ ## New installation of liveController (version format v[X.Y.Z]):
+ ===============================================================
  # General
  - it is recommended to install each version in directory created with the version name
- and use symlic from latest to the currently used version
+ and use symlink from latest to the currently used version
+
+ you can install liveController using deployment/upgradeLive or manually.
 
  - install latest liveController version from git:
- wget https://github.com/kaltura/liveDVR/archive/v[1.16.x].tar.gz
- tar -xvzf v[1.16.x].tar.gz
- mv liveDVR-[1.16.x] [installation base path]
- rm -f v[1.16.x].tar.gz
+ wget https://github.com/kaltura/liveDVR/archive/v[x.y.z].tar.gz
+ tar -xvzf v[x.y.z].tar.gz
+ mv liveDVR-[x.y.z] [installation base path]
+ rm -f v[x.y.z].tar.gz
  - install Node Version Manager 6.3.0+
  - install Node Packaged Modules (npm) 1.4.3+
  - create configMapping.json from common/config/configMapping.json.template:
@@ -33,7 +35,7 @@ liveController & liveRecorder can be installed in single or separate machines.
  	===================================
  	@KALTURA_SERVICE_URL@ - url to access the BE server (example:  "http://my_backend_server.com")
  	@KALTURA_PARTNER_ADMIN_SECRET@ - admin secret for secured access to BE server
- 	@KALTURA_PARTNER_ID@ - partner id
+ 	@KALTURA_PARTNER_ID@ - partner id, used to get stream from wowza and to access BE
 
  	media server configuration section:
  	===================================
@@ -56,9 +58,7 @@ liveController & liveRecorder can be installed in single or separate machines.
 
     optional:
     =================================
-    - create latest directory under liveController installation root path
-    > mkdir -p [installation base path]/latest
-    - create symlink from current installed version path to latest dir
+    - create symlink named latest to current installed version
     ln -s [installation base path]/version [installation base path]/latest
     - create symlink to process daemon wrapper under /etc/init.d
     ln -s [installation base path]/latest/serviceWrappers/linux/kLiveController /etc/init.d/kLiveController
@@ -70,12 +70,12 @@ liveController & liveRecorder can be installed in single or separate machines.
  ## liveController upgrade:
  ====================================================
   - deployment/upgradeLive can be used for upgrade
-  > [installation base path]/latest/deployment/upgradeLive v1.16.x
+  > [installation base path]/latest/deployment/upgradeLive vx.y.z
   alternatively download and install latest version according to following instructions:
-   wget https://github.com/kaltura/liveDVR/archive/v[1.16.x].tar.gz
-   tar -xvzf v[1.16.x].tar.gz
-   mv liveDVR-[1.16.x] [installation base path]
-   rm -f v[1.16.x].tar.gz
+   wget https://github.com/kaltura/liveDVR/archive/v[x.y.z].tar.gz
+   tar -xvzf v[x.y.z].tar.gz
+   mv liveDVR-[x.y.z] [installation base path]
+   rm -f v[x.y.z].tar.gz
    - install Node Version Manager 6.3.0+
    - install Node Packaged Modules (npm) 1.4.3+
    - stop liveController
