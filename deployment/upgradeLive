@@ -74,9 +74,11 @@ function install() {
     npm install
     cd ..
     if [ "${__build}" = "yes" ]; then
+        echo "starting to build binaries..."
         ${PRODUCT_PATH}/build_scripts/build_ffmpg.sh ${FFMPEG_BUILD_PATH} ${FFMPEG_VERSION}
         ${PRODUCT_PATH}/build_scripts/build_addons.sh ${PRODUCT_PATH} ${FFMPEG_BUILD_PATH}
         ${PRODUCT_PATH}/build_ts2mp4_convertor.sh ${PRODUCT_PATH}/liveRecorder ${FFMPEG_BUILD_PATH}
+        echo "finished building binaries"
     else
 	    # download binaries from Jenkins
 	    echo "### starting to download binaries"
@@ -90,12 +92,18 @@ function install() {
     fi
     ln -s /opt/kaltura/liveController/${VERSION} /opt/kaltura/liveController/latest
     if [ "${__install_live_recorder}" = "yes" ]; then
-         . ${PRODUCT_PATH}/liveRecorder/installPython2.7.sh
-	     local __modules=(schedule m3u8 poster psutil pycrypto)
-         for module in "${__modules[@]}"; do
-             python -c "import ${module}"
-             [ $? -ne 0 ] && pip install ${module}
-        done
+	      if [ ! -L /etc/init.d/liveRecorder ]; then
+	            echo "Creating symlink to liveRecorder script at - /etc/init.d/liveRecorder"
+	            ln -s /opt/kaltura/liveController/latest/liveRecorder/serviceWrappers/linux/liveRecorder /etc/init.d/liveRecorder
+	      fi
+          echo "starting installing liveRecoder prerequisites..."
+          . ${PRODUCT_PATH}/liveRecorder/installPython2.7.sh
+	      local __modules=(schedule m3u8 poster psutil pycrypto)
+          for module in "${__modules[@]}"; do
+                python -c "import ${module}"
+                [ $? -ne 0 ] && pip install ${module}
+         done
+         echo "finished installing liveRecorder prerequisites"
     fi
 }
 
@@ -127,10 +135,6 @@ function start() {
     echo "starting nginx..."
     /opt/kaltura/liveController/${VERSION}/packager/bin/run_nginx.sh
     if [ -r /etc/init.d/liveRecorder ]; then
-          if [ ! -L /etc/init.d/liveRecorder ]; then
-                echo "Creating symlink to liveRecorder script at - /etc/init.d/liveRecorder"
-                ln -s /opt/kaltura/liveController/latest/liveRecorder/serviceWrappers/linux/liveRecorder /etc/init.d/liveRecorder
-          fi
           echo "starting liveRecorder..."
           /etc/init.d/liveRecorder start
     else
@@ -160,7 +164,7 @@ if [ ! -d "${VERSION}" ] || [ "${PARAM}" != "install" ] ; then
             echo "upgrading liveController to v${VERSION}"
             stop
             download_new_version
-            install ${__build}
+            install ${__build} ${__install_live_recorder}
             start
             ;;
         replace_script)
