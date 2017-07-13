@@ -1,6 +1,6 @@
 #!/bin/bash
-# For upgrade just type ./upgradeLive <version> [replace_script|downgrade|build] [ffmpeg build path] [ffmpeg version]
-# in case build is set as parameter then ffmpeg build path and ffmpeg version are mandatory
+# For upgrade just type ./upgradeLive <version> [replace_script|downgrade|build|install_live_recorder] [ffmpeg build path] [ffmpeg version]
+# in case 'build' is used as parameter then ffmpeg build path and ffmpeg version are mandatory
 
 #set -e
 
@@ -146,11 +146,11 @@ if [ ! -d "$VERSION" ] || [ "$PARAM" != "install" ] ; then
 	local __build="no"
 	local __install_live_recorder="yes"
 	[ "$PARAM" = "downgrade" ] && [ ! -r ${VERSION} ] && PARAM="install"
-	if [ "$PARAM" = "build" ];
+	if [ "$PARAM" = "build" ]; then
 	     __build="yes"
 	     PARAM="install"
 	fi
-	if [ "$PARAM" = "install_live_recorder" ];
+	if [ "$PARAM" = "install_live_recorder" ]; then
 	    __install_live_recorder="yes"
 	    PARAM="install"
 	if
