@@ -10,11 +10,6 @@ BUILD_USAGE="usage: upgradeLive [version] build [ffmpeg build path] [ffmpeg vers
 FFMPEG_BUILD_PATH=
 FFMPEG_VERSION=
 
-if [ -r "$NVM_DIR/nvm.sh" ]; then
-    . "$NVM_DIR/nvm.sh"
-else
-	(echo "nvm not found in $NVM_DIR, this is a must, Exiting!" ; exit 1 )
-fi
 
 PARAM=install
 if [ $# -eq 0 ]; then
@@ -99,7 +94,7 @@ function install() {
 	     local __modules=(schedule m3u8 poster psutil pycrypto)
          for module in "${__modules[@]}"; do
              python -c "import ${module}"
-             [ $? -ne 0 ] && pip2.7 install ${module}
+             [ $? -ne 0 ] && pip install ${module}
         done
     fi
 }
