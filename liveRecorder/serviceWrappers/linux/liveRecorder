@@ -50,7 +50,7 @@ createFolders() {
 }
 
 start() {
-    modules=(schedule m3u8 poster psutil pycrypto)
+    modules=(schedule m3u8 poster psutil Crypto)
     for module in "${modules[@]}"; do
          python -c "import $module"
         [ $? -ne 0 ] && echo "Missing $module pip module." && exit 3

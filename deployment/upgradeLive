@@ -98,7 +98,10 @@ function install() {
 	            ln -s /opt/kaltura/liveController/latest/liveRecorder/serviceWrappers/linux/liveRecorder /etc/init.d/liveRecorder
 	      fi
           echo "starting installing liveRecoder prerequisites..."
-          . ${PRODUCT_PATH}/liveRecorder/installPython2.7.sh
+
+          echo "need install python 2.7 separately as CentOS comes with different python version and installation break OS functionality"
+          python --version
+          # . ${PRODUCT_PATH}/${VERSION}/liveRecorder/installPython2.7.sh
 	      local __modules=(schedule m3u8 poster psutil pycrypto)
           for module in "${__modules[@]}"; do
                 python -c "import ${module}"
@@ -143,53 +146,58 @@ function start() {
     fi
 }
 
-echo "starting upgradeLive..."
-echo "upgradeLive ${VERSION} ${PARAM} ${FFMPEG_BUILD_PATH} ${FFMPEG_VERSION}"
+function main()
+{
+	echo "starting upgradeLive..."
+	echo "upgradeLive ${VERSION} ${PARAM} ${FFMPEG_BUILD_PATH} ${FFMPEG_VERSION}"
 
-if [ ! -d "${VERSION}" ] || [ "${PARAM}" != "install" ] ; then
+	if [ ! -d "${VERSION}" ] || [ "${PARAM}" != "install" ] ; then
 
-	# check if the version dir exists before downgrading, otherwise perform regular installation
-	# if configMapping.json changed from ${VERSION} to current installed version the file should be updated
-	# manually
-	local __build="no"
-	local __install_live_recorder="no"
-	[ "${PARAM}" = "downgrade" ] && [ ! -r ${VERSION} ] && PARAM="install"
-	if [ "${PARAM}" = "build" ]; then
-	     __build="yes"
-	     PARAM="install"
+		# check if the version dir exists before downgrading, otherwise perform regular installation
+		# if configMapping.json changed from ${VERSION} to current installed version the file should be updated
+		# manually
+		local __build="no"
+		local __install_live_recorder="no"
+		[ "${PARAM}" = "downgrade" ] && [ ! -r ${VERSION} ] && PARAM="install"
+		if [ "${PARAM}" = "build" ]; then
+		     __build="yes"
+		     PARAM="install"
+		fi
+		if [ "${PARAM}" = "install_live_recorder" ]; then
+		    __install_live_recorder="yes"
+		    PARAM="install"
+		fi
+
+	    case ${PARAM} in
+	        install)
+	            echo "upgrading liveController to v${VERSION}"
+	            stop
+	            download_new_version
+	            install ${__build} ${__install_live_recorder}
+	            start
+	            ;;
+	        replace_script)
+	            echo "replacing upgradeLive script with v${VERSION}"
+	            replace_upgrade_script ${VERSION}
+	            exit 0
+	            ;;
+	        downgrade)
+	            echo "downgrading liveController to v${VERSION}"
+	            stop
+	            downgrade
+	            start
+	            ;;
+	                *)
+	            echo ${USAGE}
+	            exit 2
+	            ;;
+	    esac
+
+		echo "upgradeLive finished..."
+
+	else
+	    echo "found v${VERSION}, no action done. ${USAGE}"
 	fi
-	if [ "${PARAM}" = "install_live_recorder" ]; then
-	    __install_live_recorder="yes"
-	    PARAM="install"
-	fi
+}
 
-    case ${PARAM} in
-        install)
-            echo "upgrading liveController to v${VERSION}"
-            stop
-            download_new_version
-            install ${__build} ${__install_live_recorder}
-            start
-            ;;
-        replace_script)
-            echo "replacing upgradeLive script with v${VERSION}"
-            replace_upgrade_script ${VERSION}
-            exit 0
-            ;;
-        downgrade)
-            echo "downgrading liveController to v${VERSION}"
-            stop
-            downgrade
-            start
-            ;;
-                *)
-            echo ${USAGE}
-            exit 2
-            ;;
-    esac
-
-	echo "upgradeLive finished..."
-	
-else
-    echo "found v${VERSION}, no action done. ${USAGE}"
-fi
+main
