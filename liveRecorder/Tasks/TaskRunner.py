@@ -48,6 +48,7 @@ class TaskRunner:
         self.task_directory = os.path.join(base_directory, hostname, self.task_name)
         self.error_directory = os.path.join(base_directory, 'error')
         self.failed_tasks_directory = os.path.join(base_directory, hostname, self.task_name, 'failed')
+        self.web_incoming_directory = os.path.join(base_directory, 'incoming')
         self.input_directory = os.path.join(base_directory, hostname, self.task_name, 'incoming')
         self.working_directory = os.path.join(base_directory, hostname, self.task_name, 'processing')
         self.output_directory = output_directory
@@ -67,13 +68,16 @@ class TaskRunner:
                 os.makedirs(self.failed_tasks_directory)
 
             if not os.path.exists(self.input_directory):  # In case directory not exist
-                os.makedirs(self.input_directory)
+                os.symlink(self.web_incoming_directory, self.input_directory)
 
             if not os.path.exists(self.working_directory):  # In case directory not exist
                 os.makedirs(self.working_directory)
 
             if not os.path.exists(self.output_directory):  # In case directory not exist
                 os.makedirs(self.output_directory)
+
+            if not os.path.exists(self.error_directory):  # In case directory not exist
+                os.makedirs(self.error_directory)
 
             t = threading.Thread(target=self.schedule_job)
             t.daemon = True
