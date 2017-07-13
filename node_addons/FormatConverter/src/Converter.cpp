@@ -314,6 +314,10 @@ namespace converter{
             switch(in_stream->codec->codec_type){
                 case AVMEDIA_TYPE_VIDEO:
                     bValidStream = in_stream->codec->width > 0;
+                    if(in_stream->codec->extradata_size <= 0){
+                        av_log(nullptr,AV_LOG_ERROR,"video stream supposed to contain extradata on codec object. this chunk will be discarded now\n");
+                        throw std::runtime_error("video stream does not contain extradata on codec object. this chunk will be discarded now");
+                    }
                     break;
                 case AVMEDIA_TYPE_AUDIO:
                     bValidStream = in_stream->codec->channels > 0;
