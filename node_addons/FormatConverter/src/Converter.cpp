@@ -274,6 +274,19 @@ namespace converter{
         }
         
   
+        for( size_t i = 0; i < input->nb_streams; i++){
+            
+            AVStream *in_stream =input->streams[i];
+            switch(in_stream->codec->codec_type){
+                case AVMEDIA_TYPE_VIDEO:
+                    // for video make stream parsing based on whole frames  
+                    in_stream->need_parsing = AVSTREAM_PARSE_HEADERS;
+                    break;
+                default:
+                    break;
+            };
+        }
+        
         input->max_analyze_duration =  std::numeric_limits<int64_t>::max();
         int status =  avformat_find_stream_info(*input,NULL);
         
