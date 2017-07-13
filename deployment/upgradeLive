@@ -89,7 +89,7 @@ function install() {
          unlink latest
     fi
     ln -s /opt/kaltura/liveController/${VERSION} /opt/kaltura/liveController/latest
-    if [ "__install_live_recorder" = "yes" ]; then
+    if [ "${__install_live_recorder}" = "yes" ]; then
          . ${PRODUCT_PATH}/liveRecorder/installPython2.7.sh
 	     local __modules=(schedule m3u8 poster psutil pycrypto)
          for module in "${__modules[@]}"; do
@@ -155,7 +155,7 @@ if [ ! -d "${VERSION}" ] || [ "${PARAM}" != "install" ] ; then
 	    PARAM="install"
 	fi
 
-    case ${PARAM}in
+    case ${PARAM} in
         install)
             echo "upgrading liveController to v${VERSION}"
             stop
