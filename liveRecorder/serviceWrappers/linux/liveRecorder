@@ -45,7 +45,7 @@ createFolders() {
 		[ -L ${SHARED_APP_DIR}/${HOSTNAME}/ConcatenationTask/incoming ] || ln -s ${SHARED_APP_DIR}/incoming ${SHARED_APP_DIR}/${HOSTNAME}/ConcatenationTask/incoming
 	else
 		echo "can't find ${SHARED_APP_DIR}, cannot start, check mounts"
-		exit 1
+		exit 2 
 	fi
 }
 
@@ -53,15 +53,15 @@ start() {
      modules=(schedule m3u8 poster psutil pycrypto)
      for module in "${modules[@]}"; do
          python -c "import $module"
-         [ $? -ne 0 ] && pip install $module
+         [ $? -ne 0 ] && echo "Missing $module pip module." && exit 3
     done
-	createFolders || exit 1
+	createFolders || exit 4
     status -p ${PIDFILE}
     if [ $? -eq 0 ]; then
         echo "${NAME} already running"
     else
         echo "Starting ${NAME}"
-        python2.7 ${APPLICATION_PATH} >> ${LOGFILE}  2>&1 &
+        python ${APPLICATION_PATH} >> ${LOGFILE}  2>&1 &
         RETVAL=$?
         echo $! > ${PIDFILE}
         if [ ${RETVAL} -eq 0 ]; then
