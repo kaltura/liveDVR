@@ -4,7 +4,7 @@ liveController & liveRecorder can be installed in single or separate machines.
 
 ## Software prerequisites:
 ====================================================
- - RHEL/CentOS 7 or above or Ubuntu 16.0.4 or above
+ - RHEL/CentOS 6.4 or above or Ubuntu 16.0.4 or above
  - ffmpeg 3.0 - (run build_scripts/build_ffmpeg.sh)
  - python 2.7 or above
 
