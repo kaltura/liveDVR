@@ -20,7 +20,7 @@ fi
 VERSION=$1
 mkdir -p ${PRODUCT_PATH}
 cd ${PRODUCT_PATH}
-if [ $# -eq 2 ]; then
+if [ $# -gt 1 ]; then
     PARAM=$2
 fi
 
@@ -65,6 +65,7 @@ function replace_upgrade_script() {
 function install() {
 	local __build=$1
 	local __install_live_recorder=$2
+	echo "staring install, build=${__build}, install_live_recorder=${__install_live_recorder}"
     mkdir -p latest
     cd ${VERSION}
     nvm install
@@ -75,9 +76,9 @@ function install() {
     cd ..
     if [ "${__build}" = "yes" ]; then
         echo "starting to build binaries..."
-        ${PRODUCT_PATH}/build_scripts/build_ffmpg.sh ${FFMPEG_BUILD_PATH} ${FFMPEG_VERSION}
-        ${PRODUCT_PATH}/build_scripts/build_addons.sh ${PRODUCT_PATH} ${FFMPEG_BUILD_PATH}
-        ${PRODUCT_PATH}/build_ts2mp4_convertor.sh ${PRODUCT_PATH}/liveRecorder ${FFMPEG_BUILD_PATH}
+        ${PRODUCT_PATH}/${VERSION}/build_scripts/build_ffmpg.sh ${FFMPEG_BUILD_PATH} ${FFMPEG_VERSION}
+        ${PRODUCT_PATH}/${VERSION}/build_scripts/build_addons.sh ${PRODUCT_PATH} ${FFMPEG_BUILD_PATH}
+        ${PRODUCT_PATH}/${VERSION}/build_ts2mp4_convertor.sh ${PRODUCT_PATH}/liveRecorder ${FFMPEG_BUILD_PATH}
         echo "finished building binaries"
     else
 	    # download binaries from Jenkins
@@ -142,13 +143,16 @@ function start() {
     fi
 }
 
+echo "starting upgradeLive..."
+echo "upgradeLive ${VERSION} ${PARAM} ${FFMPEG_BUILD_PATH} ${FFMPEG_VERSION}"
+
 if [ ! -d "${VERSION}" ] || [ "${PARAM}" != "install" ] ; then
 
 	# check if the version dir exists before downgrading, otherwise perform regular installation
 	# if configMapping.json changed from ${VERSION} to current installed version the file should be updated
 	# manually
 	local __build="no"
-	local __install_live_recorder="yes"
+	local __install_live_recorder="no"
 	[ "${PARAM}" = "downgrade" ] && [ ! -r ${VERSION} ] && PARAM="install"
 	if [ "${PARAM}" = "build" ]; then
 	     __build="yes"
@@ -184,6 +188,8 @@ if [ ! -d "${VERSION}" ] || [ "${PARAM}" != "install" ] ; then
             ;;
     esac
 
+	echo "upgradeLive finished..."
+	
 else
     echo "found v${VERSION}, no action done. ${USAGE}"
 fi
