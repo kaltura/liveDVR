@@ -22,7 +22,6 @@ liveController & liveRecorder can be installed in single or separate machines.
  mv liveDVR-[x.y.z] [installation base path]
  rm -f v[x.y.z].tar.gz
  - install Node Version Manager 6.3.0+
- - install Node Packaged Modules (npm) 1.4.3+
  - create configMapping.json from common/config/configMapping.json.template:
 
     general configuration:
