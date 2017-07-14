@@ -1,0 +1,170 @@
+
+#user  nobody;
+
+worker_processes  1;
+
+#uncomment for debugging
+#daemon off;
+
+#error_log  logs/error.log;
+#error_log  logs/error.log  notice;
+
+error_log  logs/error.log  debug;
+
+#pid        logs/nginx.pid;
+
+events {
+    worker_connections  1024;
+}
+
+http {
+    #include       mime.types;
+    default_type  application/octet-stream;
+    types {
+        text/xml                              xml;
+    }
+
+    #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+    #                  '$status $body_bytes_sent "$http_referer" '
+    #                  '"$http_user_agent" "$http_x_forwarded_for"';
+
+    #access_log  logs/access.log  main;
+
+    sendfile        on;
+    keepalive_timeout  65;
+
+    #gzip  on;
+
+    server {
+        listen       @PORT@;
+        server_name  localhost;
+
+        #web server access
+        #rewrite_log on;
+        #error_log    /usr/local/nginx/logs/example.com.error.log debug;
+
+
+        vod_last_modified 'Sun, 19 Nov 2000 08:52:00 GMT';
+        vod_last_modified_types *;
+        vod_align_segments_to_key_frames on;
+	    vod_response_cache response_cache 128m 30;
+	    vod_max_mapping_response_size 10m;
+        vod_live_mapping_cache live_mapping_cache 128m 2;
+        vod_live_response_cache live_response_cache 128m 2;
+        vod_mode mapped;
+        vod_expires 1d;
+        vod_expires_live 30;
+        vod_expires_live_time_dependent 3;
+        vod_live_window_duration 0;
+        vod_hls_absolute_master_urls off;
+        vod_hls_absolute_index_urls off;
+        vod_hls_output_id3_timestamps on;
+        vod_dash_profiles urn:mpeg:dash:profile:isoff-live:2011;
+
+        gzip  on;
+        gzip_types application/vnd.apple.mpegurl video/f4m application/dash+xml text/xml;
+
+
+        location = /serverip {
+
+            expires 1d;
+            return 200 "Kaltura";
+        }
+
+        location ~ ^(?<tokenKey>/.*?(?<live_type>live|recording)/[^/]+/p/\d+/e/(?<entryId>[^/]+(?<hashIndex>\w)))(/sd/(?<segmentDuration>\d+))?(/playlist/(?<playlist>[^/]+))?(/t/(?<token>[^/]+))?/ {
+
+            secure_link $token;
+            secure_link_md5 "test $scheme://$http_host$tokenKey/";
+
+            location ~ ^/live/legacy/p/\d+/e/[^/]+(/sd/\d+)?/t/[^/]+/(?<path>.*) {
+                #include nginx.conf.live.bootstrap;
+                proxy_pass http://127.0.0.1:1935/kLive/ngrp:${entryId}_1_all/$path$is_args$args;
+            }
+
+            location ~ /live/ {
+
+                location ~ /sd/2000/ {
+                    vod_expires_live_time_dependent 1;
+                    vod_live_mapping_cache live_mapping_cache_low_latency 64m 1;
+                    vod_live_response_cache live_response_cache_low_latency 64m 1;
+                    vod_segment_duration 2000;
+			        include nginx.conf.location.live.protocols;
+			    }
+                location ~ /sd/4000/ {
+                    vod_expires_live_time_dependent 1;
+                    vod_segment_duration 4000;
+			        include nginx.conf.location.live.protocols;
+			    }
+                location ~ /sd/6000/ {
+                    vod_expires_live_time_dependent 2;
+                    vod_segment_duration 6000;
+			        include nginx.conf.location.live.protocols;
+			    }
+                location ~ ^/  {
+			        include nginx.conf.location.live.protocols;
+                }
+            }
+
+             location ~ /recording/ {
+                include nginx.conf.location.live.protocols;
+                vod_expires_live 1m;
+                vod_expires_live_time_dependent 1m;
+                vod_force_continuous_timestamps on;
+            }
+
+        }
+
+        location ~ ^/(live/hls/)?kLive/smil:(?<entryId>[01]_[^_]+)_[^\.]+.smil/(?<path>.*) {
+            #include nginx.conf.live.bootstrap;
+            proxy_pass http://127.0.0.1:1935/kLive/ngrp:${entryId}_1_all/$path$is_args$args;
+        }
+
+        location / {
+            expires 1d;
+            root   @WWW_DIR@;
+        }
+
+        # vod status page
+        location = /vod_status {
+            vod_status;
+            access_log off;
+        }
+    }
+
+    proxy_cache_path @CONTENT_DIR@/../nginxCache  levels=1:2 keys_zone=one:20m inactive=5h max_size=11023M ;
+    proxy_cache_use_stale updating;
+    proxy_cache_lock on;
+    proxy_cache_lock_timeout 15s;
+    proxy_cache_valid 404   10s;
+    proxy_cache_valid 502   0s;
+    proxy_ignore_client_abort on;
+
+    server {
+
+        proxy_cache one;
+        listen 2000;
+
+        location ~ /entry/(?<entryId>.*)/origin/(?<origin>.*) {
+
+            proxy_cache_valid 403   0s;
+            proxy_cache_valid 404   0s;
+            resolver 8.8.8.8;
+            proxy_cache_key "$origin";
+            proxy_pass $scheme://$origin$is_args$args;
+
+            add_header x-nginx-real-url "$origin" always;
+            add_header x-nginx-proxy_cache_key "$origin" always;
+            add_header x-nginx-cache-control "$upstream_http_cache_control" always;
+            add_header x-nginx-req-entryId "$entryId" always;
+
+        }
+
+        # fetch files from CONTENT_DIR
+        location / {
+            alias @CONTENT_DIR@;
+        }
+
+    }
+
+
+}
