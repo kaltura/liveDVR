@@ -273,13 +273,16 @@ namespace converter{
             }
         }
         
+        std::vector<decltype(AVStream::need_parsing)> orig_need_parsing;
+        orig_need_parsing.resize(input->nb_streams);
   
         for( size_t i = 0; i < input->nb_streams; i++){
             
             AVStream *in_stream =input->streams[i];
             switch(in_stream->codec->codec_type){
                 case AVMEDIA_TYPE_VIDEO:
-                    // for video make stream parsing based on whole frames  
+                    // for video make stream parsing based on whole frames
+                    orig_need_parsing[i] = in_stream->need_parsing;
                     in_stream->need_parsing = AVSTREAM_PARSE_HEADERS;
                     break;
                 default:
@@ -330,6 +333,10 @@ namespace converter{
                     if(in_stream->codec->extradata_size <= 0){
                         av_log(nullptr,AV_LOG_ERROR,"video stream supposed to contain extradata on codec object. this chunk will be discarded now\n");
                         throw std::runtime_error("video stream does not contain extradata on codec object. this chunk will be discarded now");
+                    }
+                    // restore parser flags as intended by codec
+                    if(in_stream->parser){
+                        in_stream->need_parsing = orig_need_parsing[i];
                     }
                     break;
                 case AVMEDIA_TYPE_AUDIO:
