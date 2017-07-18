@@ -97,8 +97,8 @@ class TaskRunner:
             time.sleep(1)
 
     def move_and_add_to_queue(self, src_dir):
-
-        for directory_name in os.listdir(src_dir):
+        file_list = self.getSorterFileList(src_dir)
+        for directory_name in file_list:
             if self.task_queue.full():
                 self.logger.warn(
                     'cannot add tasks to queue. Queue is full!!! (max size {}, num processes {})'.format(
@@ -112,7 +112,7 @@ class TaskRunner:
                         if src_dir != self.working_directory:   # if its not the same directory
                             shutil.move(directory_path, self.working_directory)
                         self.task_queue.put(param, block=False)
-                        self.logger.info("[%s-%s] Add unhanded directory %s from %s to the task queue", param['entry_id'],
+                        self.logger.info("[%s-%s] Add unhandled directory %s from %s to the task queue", param['entry_id'],
                                          param['recorded_id'], directory_name, src_dir)
                     else:
                         self.logger.warn("Can't find the content of %s, move it to %s", directory_path,
@@ -120,7 +120,7 @@ class TaskRunner:
                         self.safe_move(directory_path, self.error_directory)
 
                 except Q.Full:
-                        self.logger.warn("Failed to add new task, queue is full!")
+                        self.logger.warn("Failed to add new task [%s-%s], queue is full!", param['entry_id'], param['recorded_id'])
 
                 except Exception as e:
                         self.logger.error("[%s-%s] Error while try to add task:%s \n %s", param['entry_id'], param['recorded_id'],
@@ -227,3 +227,17 @@ class TaskRunner:
 
         except Exception as e:
             self.logger.error("Failed to move %s to %s : %s \n %s", src, dst, str(e), traceback.format_exc())
+    def getSorterFileList(self, src_dir):
+        file_list = os.listdir(src_dir)
+        file_list_with_ctime = []
+        for path in file_list:
+            full_path = src_dir + '/' + path
+            file_list_with_ctime.append((path, os.stat(full_path).st_ctime))
+
+        sorted_file_list_with_ctime = sorted(file_list_with_ctime, key=lambda file_data: file_data[1])
+        sorted_file_list = []
+        for file_data in sorted_file_list_with_ctime:
+            sorted_file_list.append(file_data[0])
+
+        return sorted_file_list
+
