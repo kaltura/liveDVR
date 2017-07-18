@@ -113,8 +113,8 @@ class TaskRunner:
                         if src_dir != self.working_directory:   # if its not the same directory
                             shutil.move(directory_path, self.working_directory)
                         self.task_queue.put(param, block=False)
-                        self.logger.info("[%s-%s] Add unhandled directory %s from %s to the task queue", param['entry_id'],
-                                         param['recorded_id'], directory_name, src_dir)
+                        self.logger.info("[%s-%s] Add unhandled directory %s from %s to the task queue",
+                                         param['entry_id'], param['recorded_id'], directory_name, src_dir)
                     else:
                         self.logger.warn("Can't find the content of %s, move it to %s", directory_path,
                                          self.error_directory)
@@ -228,6 +228,7 @@ class TaskRunner:
 
         except Exception as e:
             self.logger.error("Failed to move %s to %s : %s \n %s", src, dst, str(e), traceback.format_exc())
+
     def getSorterFileList(self, src_dir):
         file_list = os.listdir(src_dir)
         file_list_with_ctime = []
