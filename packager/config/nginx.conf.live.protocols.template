@@ -1,5 +1,5 @@
 location ~ /hls/ {
-    include /etc/nginx/conf.d/nginx.conf.live.bootstrap;
+    include nginx.conf.live.bootstrap;
     vod hls;
 }
 
@@ -12,16 +12,16 @@ location ~ /ehls/ {
 
 
 location ~ /hds/ {
-    include /etc/nginx/conf.d/nginx.conf.live.bootstrap;
+    include nginx.conf.live.bootstrap;
     vod hds;
 }
 
 location ~ /dash/ {
-    include /etc/nginx/conf.d/nginx.conf.live.bootstrap;
+    include nginx.conf.live.bootstrap;
     vod dash;
 }
 
 location ~ /mss/ {
-    include /etc/nginx/conf.d/nginx.conf.live.bootstrap;
+    include nginx.conf.live.bootstrap;
     vod mss;
 }

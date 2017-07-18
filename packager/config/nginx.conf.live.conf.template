@@ -23,20 +23,20 @@ location ~ \/(?<live_type>live|recording|live-stg)\/[^\/]+\/p\/(?<partnerId>\d+)
 			vod_live_mapping_cache live_mapping_cache_low_latency 256m 1;
 			vod_live_response_cache live_response_cache_low_latency 256m 1;
 			vod_segment_duration 2000;
-			include /etc/nginx/conf.d/nginx.conf.location.live.protocols;
+			include nginx.conf.live.protocols;
 		}
 		location ~ /sd/4000/ {
 			vod_expires_live_time_dependent 1;
 			vod_segment_duration 4000;
-			include /etc/nginx/conf.d/nginx.conf.location.live.protocols;
+			include nginx.conf.live.protocols;
 		}
 		location ~ /sd/6000/ {
 			vod_expires_live_time_dependent 2;
 			vod_segment_duration 6000;
-			include /etc/nginx/conf.d/nginx.conf.location.live.protocols;
+			include nginx.conf.live.protocols;
 		}		
 		location ~ ^/ {
-			include /etc/nginx/conf.d/nginx.conf.location.live.protocols;
+			include nginx.conf.live.protocols;
 		}
 
 	}
@@ -47,7 +47,7 @@ location ~ \/(?<live_type>live|recording|live-stg)\/[^\/]+\/p\/(?<partnerId>\d+)
 
 		#override to do one continuous recording (no gaps)
 		vod_force_continuous_timestamps on;
-		include /etc/nginx/conf.d/nginx.conf.location.live.protocols;
+		include nginx.conf.live.protocols;
 	}
 
 }
