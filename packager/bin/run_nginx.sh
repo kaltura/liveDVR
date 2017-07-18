@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 dirname=`dirname $0`
 
 [[ ${dirname} =~ ^/ ]] || dirname="`pwd`/${dirname}"
@@ -62,7 +63,7 @@ nginxDir="/usr/local/nginx"
 
 [ -d "${nginxDir}/logs" ] || mkdir -p "${nginxDir}/logs"
 
-${nginxPath} -c /var/tmp/nginx.conf &> /dev/null &
+${nginxPath} -c /var/tmp/nginx.conf  &
 
 echo "nginx log dir is: ${nginxDir}/logs"
 
