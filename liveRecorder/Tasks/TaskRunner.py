@@ -97,6 +97,7 @@ class TaskRunner:
             time.sleep(1)
 
     def move_and_add_to_queue(self, src_dir):
+        # In order to avoid starvation we need to handle files/directories in the order of creation.
         file_list = self.getSorterFileList(src_dir)
         for directory_name in file_list:
             if self.task_queue.full():
@@ -231,7 +232,7 @@ class TaskRunner:
         file_list = os.listdir(src_dir)
         file_list_with_ctime = []
         for path in file_list:
-            full_path = src_dir + '/' + path
+            full_path = os.path.join(src_dir, path)
             file_list_with_ctime.append((path, os.stat(full_path).st_ctime))
 
         sorted_file_list_with_ctime = sorted(file_list_with_ctime, key=lambda file_data: file_data[1])
