@@ -6,7 +6,7 @@ It integrates with the BE for live state update and live entry info get/set.
 The liveController supports DC failover.
 Kaltura liveRecorder is responsible for VOD preparation from recorded live content and upload to destination storage.
 
-### Compling
+### Development ###
 Please refer to [liveController deployment doc](development.md)
 
 
@@ -20,7 +20,7 @@ Please refer to [liveRecorder deployment doc](liveRecorder/liveRecorder_deployme
 
 ###
 #### meida_server Deployment
-Please refer to [medi_server deployment doc](https://github.com/kaltura/media-server/media-server_deployment)
+Please refer to [media_server deployment doc](https://github.com/kaltura/media-server/blob/4.5.14/deployment.mdt)
 
 ### Copyright & License
 
