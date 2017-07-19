@@ -68,7 +68,6 @@ function install() {
 	echo "staring install, build=${__build}, install_live_recorder=${__install_live_recorder}"
     mkdir -p latest
     cd ${VERSION}
-    nvm install
     # move configuration files (liveController's and liveRecorder's) to latest version
     cp /opt/kaltura/liveController/configMapping.json /opt/kaltura/liveController/${VERSION}/common/config/
     cp /opt/kaltura/liveController/configMapping.ini /opt/kaltura/liveController/${VERSION}/liveRecorder/Config/
