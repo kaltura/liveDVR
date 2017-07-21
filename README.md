@@ -20,7 +20,7 @@ Please refer to [liveRecorder deployment doc](liveRecorder/liveRecorder_deployme
 
 ###
 #### meida_server Deployment
-Please refer to [media_server deployment doc](https://github.com/kaltura/media-server/blob/4.5.14/deployment.mdt)
+Please refer to [media_server deployment doc](https://github.com/kaltura/media-server/blob/4.5.14/deployment.md)
 
 ### Copyright & License
 
