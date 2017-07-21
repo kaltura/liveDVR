@@ -29,8 +29,8 @@ SCRIPT_DIR=$(dirname $(readlink -f $0))
 APPDIR=${SCRIPT_DIR}/../../
 NAME=${APP_NAME}
 APPLICATION_PATH=${APPDIR}/main.py
-LOG_DIR="/var/log/${APP_NAME}"
-PID_DIR="/var/run"
+LOG_DIR="@LOG_DIR@/${APP_NAME}"
+PID_DIR="@RUN_DIR@"
 PIDFILE="${PID_DIR}/${NAME}.pid"
 LOGFILE="${LOG_DIR}/${NAME}-service.log"
 
@@ -50,10 +50,10 @@ createFolders() {
 }
 
 start() {
-    modules=(schedule m3u8 poster psutil Crypto)
-    for module in "${modules[@]}"; do
-         python -c "import $module"
-        [ $? -ne 0 ] && echo "Missing $module pip module." && exit 3
+    MODULES="schedule m3u8 poster psutil Crypto"
+    for MODULE in $MODULES; do
+         python -c "import $MODULE"
+        [ $? -ne 0 ] && echo "Missing $MODULE pip module." && exit 3
     done
     createFolders || exit 4
     status -p ${PIDFILE}
@@ -65,9 +65,9 @@ start() {
         RETVAL=$?
         echo $! > ${PIDFILE}
         if [ ${RETVAL} -eq 0 ]; then
-			echo "started ${NAME} with pid $(cat ${PIDFILE})"
+			echo "started ${NAME} with PID $(cat ${PIDFILE})"
 		else
-			echo "starting ${NAME} failed. please see ${LOGFILE}"
+			echo "starting ${NAME} failed. Please see ${LOGFILE}"
 		fi
 	fi
 }
