@@ -85,7 +85,7 @@ pushd ${ADDON_PATH}
 		cp "build/${BUILD_CONF}/lib.target/${FORMAT_CONVERTER_BIN}" "${PRODUCT_ROOT_PATH}/bin/FormatConverter.node${DEBUG_EXT}"
 		echo "### build finished successfully"
 	else
-		echo "### build failed, could not access build/${BUILD_CONF}/lib.target/{FORMAT_CONVERTER_BIN}, check if file exists"
+		echo "### build failed, could not access build/${BUILD_CONF}/lib.target/${FORMAT_CONVERTER_BIN}, check if file exists"
 		RES=1
 	fi
 
