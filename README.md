@@ -12,7 +12,7 @@ Please refer to [liveController deployment doc](development.md)
 
 ### Deployment
 #### LiveController Deployment
-Please refer to [liveController deployment doc](liveController_deployment.md)
+Please refer to [liveController deployment doc](LiveController_deployment.md)
 
 ###
 #### liveRecorder Deployment
