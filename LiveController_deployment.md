@@ -1,14 +1,17 @@
 ## Machine prerequisites: ##
 - liveController and liveRecorder can be installed in single or separate machines.
 - RHEL/CentOS 6.4 or above or Ubuntu 16.04 or above 
+
 ## New installation of liveController (version format v[X.Y.Z]) ##
 ### General ###
 - it is recommended to install each version in directory created with the version name and use symlink from latest to the currently used version
 - you can install liveController using deployment/upgradeLive or manually.
+
 ### Binaries build: ###
 - run build_scripts/build_ffmpeg.sh 
 - build_scripts/build_ffmpg.sh <ffmpeg build path> <ffmpeg version>
-- build_scripts/build_addons.sh [installation path] <ffmpeg build path>
+- build_scripts/build_addons.sh </path/to/liveDvr/source> <ffmpeg build path>
+
 ### Install order: ###
    * wget https://github.com/kaltura/liveDVR/archive/v[x.y.z].tar.gz
    * tar -xvzf v[x.y.z].tar.gz
