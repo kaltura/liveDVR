@@ -1,6 +1,6 @@
 ## Machine prerequisites: ##
 - liveController and liveRecorder can be installed in single or separate machines.
-- RHEL/CentOS 6.4 or above or Ubuntu 16.0.4 or above 
+- RHEL/CentOS 6.4 or above or Ubuntu 16.04 or above 
 ## New installation of liveController (version format v[X.Y.Z]) ##
 ### General ###
 - it is recommended to install each version in directory created with the version name and use symlink from latest to the currently used version
