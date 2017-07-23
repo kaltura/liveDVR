@@ -56,7 +56,7 @@ function replace_upgrade_script() {
     echo "extracting liveDVR-${VERSION}/deployment/upgradeLive from liveDVR-${VERSION}.tar.gz"
     tar -zxvf v${VERSION}.tar.gz liveDVR-${VERSION}/deployment/upgradeLive
     echo "copying  liveDVR-${VERSION}/deployment/upgradeLive to ${PRODUCT_PATH}"
-    cp -f liveDVR-${VERSION}/deployment/upgradeLive ${PRODUCT_PATH}
+    cp -f liveDVR-${VERSION}/deployment/upgradeLive ${PRODUCT_PATH}/
     echo "removing artifacts..."
     rm -rf v${VERSION}.tar.gz*
     rm -rf liveDVR-${VERSION}
