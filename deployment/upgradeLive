@@ -120,10 +120,13 @@ function downgrade() {
 }
 
 function stop() {
+   echo "stopping liveController..."
    /etc/init.d/kLiveController stop
    if [ -r /etc/init.d/liveRecorder ]; then
+        echo "stopping liveRecorder..."
         /etc/init.d/liveRecorder stop
    fi
+   echo "finished stopping live processes"
 }
 
 function start() {
@@ -133,13 +136,13 @@ function start() {
     fi
     # start nginx (web server), liveController and liveRecorder
     echo "starting liveController..."
-    /etc/init.d/kLiveController start
+    /etc/init.d/kLiveController restart
     sleep 5
     echo "starting nginx..."
     /opt/kaltura/liveController/${VERSION}/packager/bin/run_nginx.sh
     if [ -r /etc/init.d/liveRecorder ]; then
           echo "starting liveRecorder..."
-          /etc/init.d/liveRecorder start
+          /etc/init.d/liveRecorder restart
     else
         echo "this machine doesn't run liveRecorder"
     fi
