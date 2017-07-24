@@ -55,8 +55,8 @@ function replace_upgrade_script() {
     download_version
     echo "extracting liveDVR-${VERSION}/deployment/upgradeLive from liveDVR-${VERSION}.tar.gz"
     tar -zxvf v${VERSION}.tar.gz liveDVR-${VERSION}/deployment/upgradeLive
-    echo "copying  liveDVR-${VERSION}/deployment/upgradeLive to /etc/init.d/"
-    cp -f liveDVR-${VERSION}/deployment/upgradeLive /etc/init.d/
+    echo "copying  liveDVR-${VERSION}/deployment/upgradeLive to ${PRODUCT_PATH}"
+    cp -f liveDVR-${VERSION}/deployment/upgradeLive ${PRODUCT_PATH}/
     echo "removing artifacts..."
     rm -rf v${VERSION}.tar.gz*
     rm -rf liveDVR-${VERSION}
@@ -68,7 +68,6 @@ function install() {
 	echo "staring install, build=${__build}, install_live_recorder=${__install_live_recorder}"
     mkdir -p latest
     cd ${VERSION}
-    nvm install
     # move configuration files (liveController's and liveRecorder's) to latest version
     cp /opt/kaltura/liveController/configMapping.json /opt/kaltura/liveController/${VERSION}/common/config/
     cp /opt/kaltura/liveController/configMapping.ini /opt/kaltura/liveController/${VERSION}/liveRecorder/Config/
