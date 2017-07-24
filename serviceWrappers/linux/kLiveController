@@ -38,8 +38,8 @@ fi
 if [ "${USE_NVM}" = "@USE_NVM@" ]; then
     USE_NVM="1"
 fi
-if [ ${KLIVE_CONTROLLER_PREFIX} = "@KLIVE_CONTROLLER_PREFIX@" ]; then
-    KLIVE_CONTROLLER_PREFIX = "/opt/kaltura/liveController/latest"
+if [ "${KLIVE_CONTROLLER_PREFIX}" = "@KLIVE_CONTROLLER_PREFIX@" ]; then
+    KLIVE_CONTROLLER_PREFIX=/opt/kaltura/liveController/latest
 fi
 
 
