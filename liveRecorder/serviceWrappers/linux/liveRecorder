@@ -30,15 +30,15 @@ SCRIPT_DIR=$(dirname $(readlink -f $0))
 APPDIR=${SCRIPT_DIR}/../../
 NAME=${APP_NAME}
 APPLICATION_PATH=${APPDIR}/main.py
-LOG_DIR = @LOG_DIR@
-PID_DIR = @RUN_DIR@
+LOG_DIR=@LOG_DIR@
+PID_DIR=@RUN_DIR@
 
 #default values
-if [ ${LOG_DIR} = "@LOG_DIR@" ]; then
-    LOG_DIR = /var/log
+if [ "${LOG_DIR}" = "@LOG_DIR@" ]; then
+    LOG_DIR=/var/log
 fi
-if [ ${PID_DIR} = "@RUN_DIR@" ]; then
-    PID_DIR = /var/run
+if [ "${PID_DIR}" = "@RUN_DIR@" ]; then
+    PID_DIR=/var/run
 fi
 
 LOG_DIR="${LOG_DIR}/${APP_NAME}"

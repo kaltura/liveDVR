@@ -23,20 +23,20 @@
 ###
 source /etc/rc.d/init.d/functions
 
-LOG_DIR = @LOG_DIR@
-__pid_DIR = @RUN_DIR@
-USE_NVM = @USE_NVM@
-KLIVE_CONTROLLER_PREFIX = @KLIVE_CONTROLLER_PREFIX@
+LOG_DIR=@LOG_DIR@
+PID_DIR=@RUN_DIR@
+USE_NVM=@USE_NVM@
+KLIVE_CONTROLLER_PREFIX="@KLIVE_CONTROLLER_PREFIX@"
 
 #default values
-if [ ${LOG_DIR} = "@LOG_DIR@" ]; then
-    LOG_DIR = /var/log
+if [ "${LOG_DIR}" = "@LOG_DIR@" ]; then
+    LOG_DIR=/var/log
 fi
-if [ ${PID_DIR} = "@RUN_DIR@" ]; then
-    PID_DIR = /var/run
+if [ "${PID_DIR}" = "@RUN_DIR@" ]; then
+    PID_DIR=/var/run
 fi
-if [ ${USE_NVM} = "@USE_NVM@" ]; then
-    USE_NVM = "1"
+if [ "${USE_NVM}" = "@USE_NVM@" ]; then
+    USE_NVM="1"
 fi
 if [ ${KLIVE_CONTROLLER_PREFIX} = "@KLIVE_CONTROLLER_PREFIX@" ]; then
     KLIVE_CONTROLLER_PREFIX = "/opt/kaltura/liveController/latest"
@@ -53,7 +53,7 @@ export PATH=$PATH:${NODE_PATH}/forever/bin
 HOME=${HOME:-~}
 
 loadNvm() {
-    if [ ${USE_NVM} = "1" ]; then
+    if [ "${USE_NVM}" = "1" ]; then
         # This loads nvm
         # must cd/pushd due to a bug in /root/.nvm/nvm.sh call to nvm_find_nvmrc()
         pushd ${KLIVE_CONTROLLER_PREFIX}
