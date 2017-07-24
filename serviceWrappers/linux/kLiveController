@@ -23,45 +23,64 @@
 ###
 source /etc/rc.d/init.d/functions
 
+LOG_DIR = @LOG_DIR@
+__pid_DIR = @RUN_DIR@
+USE_NVM = @USE_NVM@
+KLIVE_CONTROLLER_PREFIX = @KLIVE_CONTROLLER_PREFIX@
+
+#default values
+if [ ${LOG_DIR} = "@LOG_DIR@" ]; then
+    LOG_DIR = /var/log
+fi
+if [ ${PID_DIR} = "@RUN_DIR@" ]; then
+    PID_DIR = /var/run
+fi
+if [ ${USE_NVM} = "@USE_NVM@" ]; then
+    USE_NVM = "1"
+fi
+if [ ${KLIVE_CONTROLLER_PREFIX} = "@KLIVE_CONTROLLER_PREFIX@" ]; then
+    KLIVE_CONTROLLER_PREFIX = "/opt/kaltura/liveController/latest"
+fi
+
+
 NAME="kLiveController"
-KLIVE_CONTROLLER_PREFIX="@KLIVE_CONTROLLER_PREFIX@"
-NODE_PATH="@NODE_MODULES_PATH@"
-FOREVER="$NODE_PATH/forever/bin/forever"
-APPLICATION_PATH="$KLIVE_CONTROLLER_PREFIX/lib/App.js"
-LOG_DIR="@LOG_DIR@/liveController"
-PID_DIR="@RUN_DIR@"
+NODE_PATH="${KLIVE_CONTROLLER_PREFIX}/node_modules"
+FOREVER="${NODE_PATH}/forever/bin/forever"
+APPLICATION_PATH="${KLIVE_CONTROLLER_PREFIX}/lib/App.js"
 MIN_UPTIME="5000"
 SPIN_SLEEP_TIME="2000"
-export PATH=$PATH:$NODE_PATH/forever/bin
+export PATH=$PATH:${NODE_PATH}/forever/bin
 HOME=${HOME:-~}
 
 loadNvm() {
-    # This loads nvm
-    # must cd/pushd due to a bug in /root/.nvm/nvm.sh call to nvm_find_nvmrc()  
-    pushd ${KLIVE_CONTROLLER_PREFIX}
-    [ -z "${NVM_DIR}" ] && NVM_DIR="${HOME}/.nvm"
-    if [ -s "${NVM_DIR}/nvm.sh" ]; then
-        source "${NVM_DIR}/nvm.sh"
-        if [ -s ".nvmrc" ] ; then
-            nvm use || nvm install
+    if [ ${USE_NVM} = "1" ]; then
+        # This loads nvm
+        # must cd/pushd due to a bug in /root/.nvm/nvm.sh call to nvm_find_nvmrc()
+        pushd ${KLIVE_CONTROLLER_PREFIX}
+        [ -z "${NVM_DIR}" ] && NVM_DIR="${HOME}/.nvm"
+        if [ -s "${NVM_DIR}/nvm.sh" ]; then
+            source "${NVM_DIR}/nvm.sh"
+            if [ -s ".nvmrc" ] ; then
+                nvm use || nvm install
+            else
+                echo "no .nvmrc in ${KLIVE_CONTROLLER_PREFIX}, Exiting"
+                exit 1
+            fi
         else
-            echo "no .nvmrc in ${KLIVE_CONTROLLER_PREFIX}, Exiting"
+            echo "nvm not found in ${NVM_DIR}, this is a must, Exiting!"
             exit 1
         fi
-    else
-        echo "nvm not found in ${NVM_DIR}, this is a must, Exiting!"
-        exit 1
+        popd
     fi
-    popd
 }
 
 start() {
     [ -d ${LOG_DIR} ] || mkdir -p ${LOG_DIR}
-    #loadNvm
+    loadNvm
     RETVAL=0
     for prefix in 0 1 ; do
         PIDFILE="${PID_DIR}/${NAME}_${prefix}.pid"
-        LOGFILE="${LOG_DIR}/${NAME}_${prefix}-forever.log"
+        LOGFILE="${LOG_DIR}/liveController/${NAME}_${prefix}-forever.log"
         status -p ${PIDFILE}
         if [ $? -eq 0 ]; then
             echo "${NAME}_${prefix} already running"
@@ -80,23 +99,23 @@ start() {
 }
 
 stop() {
-    #loadNvm
+    loadNvm
     RETVAL=0
     for prefix in 0 1 ; do
-        PIDFILE="$PID_DIR/${NAME}_${prefix}.pid"
-        if [ -f $PIDFILE ]; then
-            local pid=$( cat ${PIDFILE} )
+        PIDFILE="${PID_DIR}/${NAME}_${prefix}.pid"
+        if [ -f ${PIDFILE} ]; then
+            local __pid=$( cat ${PIDFILE} )
             echo "Shutting down ${NAME}_${prefix}"
             # Tell Forever to stop the process.
-            ${FOREVER} stop ${pid}
+            ${FOREVER} stop ${__pid}
             status -p ${PIDFILE}
             if [ $? -eq 0 ]; then
                RETVAL=$(( ${RETVAL} + $? ))
-               echo "failed to stop ${NAME}_${prefix}, ${pid}"
+               echo "failed to stop ${NAME}_${prefix}, ${__pid}"
                killApp
                return ${RETVAL}
             else
-               echo "${NAME}_${prefix}, ${pid}, successfully stopped"
+               echo "${NAME}_${prefix}, ${__pid}, successfully stopped"
                rm -f $PIDFILE
             fi
         else
