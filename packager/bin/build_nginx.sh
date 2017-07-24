@@ -10,7 +10,7 @@ echo "${devRootDir}"
 
 ffmpegLibsDir=${ffmpegLibsDir:-${devRootDir}/liveDVR/node_addons/FormatConverter/build/FFmpeg}
 packagerDir="${devRootDir}/nginx-vod-module"
-nginxVersion=${nginxVersion:-1.8.1}
+nginxVersion=${nginxVersion:-1.11.0}
 nginxDir="${devRootDir}/nginx-${nginxVersion}"
 os_name=`uname`
 
@@ -67,6 +67,6 @@ make
 
 mkdir -p ${currentDir}/../../bin
 echo "Copying ${nginxDir}/objs/nginx to ${currentDir}/../../bin"
-cp ${nginxDir}/objs/nginx ${currentDir}/../../bin
+cp ${nginxDir}/objs/nginx ${currentDir}/../../bin/
 
 

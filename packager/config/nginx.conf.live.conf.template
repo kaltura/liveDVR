@@ -1,0 +1,53 @@
+# shared vod settings
+vod_upstream_extra_args "clientTag=vod:$hostname-$request_id";
+vod_max_mapping_response_size 20m;
+vod_mode mapped;
+vod_live_window_duration 0;
+vod_align_segments_to_key_frames on;
+vod_hls_absolute_master_urls off;
+vod_hls_absolute_index_urls off;
+vod_hls_output_id3_timestamps on;
+vod_dash_profiles urn:mpeg:dash:profile:isoff-live:2011;
+expires off;
+vod_upstream_location "";	
+
+location ~ \/(?<live_type>live|recording|live-stg)\/[^\/]+\/p\/(?<partnerId>\d+)\/e\/(?<entryId>[^\/]+(?<entryHash>\w))\/(sd\/(?<segmentDuration>\d+)\/)?t\/(?<token>[^\/]+) {
+	#this is for backward compatability to fetch from wowza  
+	location ~ ^/m/(?<mediaServer>[^/]+)/live/legacy/p/\d+/e/[^/]+(/sd/[^/]+)?/t/[^/]+/(?<path>.*) {
+		proxy_pass http://${mediaServer}:1935/kLive/ngrp:${entryId}_1_all/$path$is_args$args;
+	}
+
+	location ~ /live|live-stg/ {
+		location ~ /sd/2000/ {
+			vod_expires_live_time_dependent 1;
+			vod_live_mapping_cache live_mapping_cache_low_latency 256m 1;
+			vod_live_response_cache live_response_cache_low_latency 256m 1;
+			vod_segment_duration 2000;
+			include nginx.conf.live.protocols;
+		}
+		location ~ /sd/4000/ {
+			vod_expires_live_time_dependent 1;
+			vod_segment_duration 4000;
+			include nginx.conf.live.protocols;
+		}
+		location ~ /sd/6000/ {
+			vod_expires_live_time_dependent 2;
+			vod_segment_duration 6000;
+			include nginx.conf.live.protocols;
+		}		
+		location ~ ^/ {
+			include nginx.conf.live.protocols;
+		}
+
+	}
+	location ~ /recording/ {
+		#override default caching expiration for to 1m
+		vod_expires_live 1m;
+		vod_expires_live_time_dependent 1m;
+
+		#override to do one continuous recording (no gaps)
+		vod_force_continuous_timestamps on;
+		include nginx.conf.live.protocols;
+	}
+
+}

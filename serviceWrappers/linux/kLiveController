@@ -18,6 +18,11 @@
 # Short-Description: Start/stop Kaltura Live Controller
 ### END INIT INFO
 
+###
+# extend callable functions from "functions" script
+###
+source /etc/rc.d/init.d/functions
+
 NAME="kLiveController"
 KLIVE_CONTROLLER_PREFIX="/opt/kaltura/liveController/latest"
 NODE_PATH="$KLIVE_CONTROLLER_PREFIX/node_modules"
@@ -32,20 +37,22 @@ HOME=${HOME:-~}
 
 loadNvm() {
     # This loads nvm
-    cd $KLIVE_CONTROLLER_PREFIX
-    [ -z "$NVM_DIR" ] && NVM_DIR="$HOME/.nvm"
-    if [ -s "$NVM_DIR/nvm.sh" ] ; then
-        source "$NVM_DIR/nvm.sh"
-        if [ -s .nvmrc ] ; then
+    # must cd/pushd due to a bug in /root/.nvm/nvm.sh call to nvm_find_nvmrc()  
+    pushd ${KLIVE_CONTROLLER_PREFIX}
+    [ -z "${NVM_DIR}" ] && NVM_DIR="${HOME}/.nvm"
+    if [ -s "${NVM_DIR}/nvm.sh" ]; then
+        source "${NVM_DIR}/nvm.sh"
+        if [ -s ".nvmrc" ] ; then
             nvm use || nvm install
         else
-            echo "no .nvmrc in $PWD , Exiting"
+            echo "no .nvmrc in ${KLIVE_CONTROLLER_PREFIX}, Exiting"
             exit 1
         fi
     else
-        echo "nvm not found in $NVM_DIR, this is a must, Exiting!"
+        echo "nvm not found in ${NVM_DIR}, this is a must, Exiting!"
         exit 1
     fi
+    popd
 }
 
 start() {
@@ -53,20 +60,21 @@ start() {
     loadNvm
     RETVAL=0
     for prefix in 0 1 ; do
-        PIDFILE="$PID_DIR/${NAME}_${prefix}.pid"
-        LOGFILE="$LOG_DIR/${NAME}_${prefix}-forever.log"
-        if [ -f $PIDFILE ]; then
+        PIDFILE="${PID_DIR}/${NAME}_${prefix}.pid"
+        LOGFILE="${LOG_DIR}/${NAME}_${prefix}-forever.log"
+        status -p ${PIDFILE}
+        if [ $? -eq 0 ]; then
             echo "${NAME}_${prefix} already running"
         else
             echo "Starting ${NAME}_${prefix}"
-            $FOREVER \
-              --pidFile $PIDFILE \
+            ${FOREVER} \
+              --pidFile ${PIDFILE} \
               -a \
-              -l $LOGFILE \
-              --minUptime $MIN_UPTIME \
-              --spinSleepTime $SPIN_SLEEP_TIME \
-              start $APPLICATION_PATH prefix:${prefix}
-	        RETVAL=$(( $RETVAL + $? ))
+              -l ${LOGFILE} \
+              --minUptime ${MIN_UPTIME} \
+              --spinSleepTime ${SPIN_SLEEP_TIME} \
+              start ${APPLICATION_PATH} prefix:${prefix}
+            RETVAL=$(( ${RETVAL} + $? ))
         fi
     done
 }
@@ -77,13 +85,22 @@ stop() {
     for prefix in 0 1 ; do
         PIDFILE="$PID_DIR/${NAME}_${prefix}.pid"
         if [ -f $PIDFILE ]; then
+            local pid=$( cat ${PIDFILE} )
             echo "Shutting down ${NAME}_${prefix}"
             # Tell Forever to stop the process.
-            $FOREVER stop $( cat $PIDFILE )
-	        RETVAL=$(( $RETVAL + $? ))
-            # Get rid of the pidfile, since Forever won't do that.
+            ${FOREVER} stop ${pid}
+            status -p ${PIDFILE}
+            if [ $? -eq 0 ]; then
+               RETVAL=$(( ${RETVAL} + $? ))
+               echo "failed to stop ${NAME}_${prefix}, ${pid}"
+               killApp
+               return ${RETVAL}
+            else
+               echo "${NAME}_${prefix}, ${pid}, successfully stopped"
+               rm -f $PIDFILE
+            fi
         else
-            echo "${NAME}_${prefix} is not running."
+            echo "${NAME}_${prefix} is not running"
         fi
     done
 }
@@ -93,28 +110,28 @@ restart() {
     start
 }
 
-status() {
+###
+# check whether process is running based on /proc/[pid]/exe
+###
+my_status() {
     RETVAL=0
     for prefix in 0 1 ; do
-        PIDFILE="$PID_DIR/${NAME}_${prefix}.pid"
-        if [ -f $PIDFILE ] ; then
-	    VAL=$( ( cat ${PIDFILE} | xargs ps -p ) | wc -l )
-	    if [ $VAL -gt 1 ] ; then
-            echo "${NAME}_${prefix} is running with PID $( cat $PIDFILE )"
-            else
-            echo "${NAME}_${prefix} is not running but there is stale pidFile: $PIDFILE"
-            RETVAL=$(( $RETVAL + 1 ))
- 	    fi
+        PIDFILE="${PID_DIR}/${NAME}_${prefix}.pid"
+        if [ -r ${PIDFILE} ]; then
+            status -p ${PIDFILE}
+            if [ $? -ne 0 ]; then
+                RETVAL=$?
+                return ${RETVAL}
+             fi
         else
-            echo "${NAME}_${prefix} is not running."
-	        RETVAL=$(( $RETVAL + 1 ))
+             echo "${PIDFILE} s not readable. ${NAME} is not running (verify by: ps aux | grep node)"
         fi
     done
 }
 
 killApp() {
-    echo "Aggressively kill all Live processes"
-    pkill -f $APPLICATION_PATH 
+    echo "Aggressively kill all ${NAME} processes"
+    pkill -f ${APPLICATION_PATH}
     echo "Remove all PID files"
     rm -f ${PID_DIR}/${NAME}*.pid
 }
@@ -127,17 +144,14 @@ case "$1" in
         stop
         ;;
     status)
-        status
+        my_status
         ;;
     restart)
         restart
         ;;
-    kill)
-        killApp
-        ;;
     *)
-        echo "Usage: {start|stop|status|restart|kill}"
+        echo "Usage: {start|stop|status|restart}"
         exit 1
         ;;
 esac
-exit $RETVAL
+exit ${RETVAL}

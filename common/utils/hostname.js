@@ -2,8 +2,8 @@
  * Created by elad.benedict on 9/24/2015.
  */
 
-var os = require('os');
-var shell = require('shelljs');
+const os = require('os');
+const child_process = require('child_process');
 
 
 function homedir() {
@@ -27,7 +27,7 @@ function homedir() {
 }
 
 function getLocalMachineFullHostname() {
-    var res = "HOSTNAME_PLACEHOLDER";
+    let res = "HOSTNAME_PLACEHOLDER";
     if (os.platform() == 'win32' || os.platform() == 'win64')
     {
         // On Windows
@@ -40,12 +40,7 @@ function getLocalMachineFullHostname() {
     else
     {
         // On Linux
-        var hostnameCmd = shell.exec('hostname -f');
-        if (hostnameCmd.code !== 0)
-        {
-            throw new Error('Error getting hostname for local machine');
-        }
-        res = hostnameCmd.stdout.replace(/\n$/, ''); // Remove line ending at the end
+        res = child_process.execSync('hostname -f').toString().trim()
     }
     return res;
 }

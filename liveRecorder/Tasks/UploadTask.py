@@ -113,6 +113,8 @@ class UploadTask(TaskBase):
         except KalturaException as e:
             if e.code == 'KALTURA_RECORDING_DISABLED':
                 self.logger.warn("%s, move it to done directory", e.message)
+            elif e.code == 'ENTRY_ID_NOT_FOUND':
+                self.logger.warn("%s, move it to done directory", e.message)
             else:
                 raise e
 

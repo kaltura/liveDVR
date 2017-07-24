@@ -18,56 +18,76 @@
 # Short-Description: Start/stop Kaltura Live Recorder
 ### END INIT INFO
 
+###
+# extend callable functions from "functions" script
+###
+
+source /etc/rc.d/init.d/functions
+. /opt/rh/python27/enable
 APP_NAME=liveRecorder
 SCRIPT_DIR=$(dirname $(readlink -f $0))
-APPDIR=${SCRIPT_DIR%/serviceWrappers/linux}
+APPDIR=${SCRIPT_DIR}/../../
 NAME=${APP_NAME}
 APPLICATION_PATH=${APPDIR}/main.py
 LOG_DIR="/var/log/${APP_NAME}"
 PID_DIR="/var/run"
-PIDFILE="$PID_DIR/${NAME}.pid"
-LOGFILE="$LOG_DIR/${NAME}-service.log"
+PIDFILE="${PID_DIR}/${NAME}.pid"
+LOGFILE="${LOG_DIR}/${NAME}-service.log"
 
 RETVAL=0
 
 createFolders() {
 	[ -d ${LOG_DIR} ] || mkdir -p ${LOG_DIR}
 	SHARED_APP_DIR=$(python ${SCRIPT_DIR}/getRecordingBaseDir.py)
-	echo "Creating folders in ${SHARED_APP_DIR} for $HOSTNAME"
+	echo "Creating folders in ${SHARED_APP_DIR} for ${HOSTNAME}"
 	if [ -d  ${SHARED_APP_DIR} ] ; then 
 		mkdir -p ${SHARED_APP_DIR}/${HOSTNAME}/{UploadTask/{incoming,failed,processing},ConcatenationTask/{failed,processing}}
 		[ -L ${SHARED_APP_DIR}/${HOSTNAME}/ConcatenationTask/incoming ] || ln -s ${SHARED_APP_DIR}/incoming ${SHARED_APP_DIR}/${HOSTNAME}/ConcatenationTask/incoming
 	else
 		echo "can't find ${SHARED_APP_DIR}, cannot start, check mounts"
-		exit 1
+		exit 2 
 	fi
 }
 
 start() {
-	createFolders || exit 1
-    if [ -f $PIDFILE ]; then
+    modules=(schedule m3u8 poster psutil Crypto)
+    for module in "${modules[@]}"; do
+         python -c "import $module"
+        [ $? -ne 0 ] && echo "Missing $module pip module." && exit 3
+    done
+    createFolders || exit 4
+    status -p ${PIDFILE}
+    if [ $? -eq 0 ]; then
         echo "${NAME} already running"
     else
         echo "Starting ${NAME}"
-        python2.7 $APPLICATION_PATH >> $LOGFILE  2>&1 &
-	    RETVAL=$?
-        echo $! > $PIDFILE
-        if [ $RETVAL -eq 0 ] ; then 
-			echo "started ${NAME} with pid $(cat $PIDFILE)"
+        python ${APPLICATION_PATH} >> ${LOGFILE}  2>&1 &
+        RETVAL=$?
+        echo $! > ${PIDFILE}
+        if [ ${RETVAL} -eq 0 ]; then
+			echo "started ${NAME} with pid $(cat ${PIDFILE})"
 		else
-			echo "starting ${NAME} failed. please see $LOGFILE "
+			echo "starting ${NAME} failed. please see ${LOGFILE}"
 		fi
 	fi
 }
 
 stop() {
-    if [ -f $PIDFILE ]; then
+    if [ -f ${PIDFILE} ]; then
+        local pid=$( cat ${PIDFILE} )
         echo "Shutting down ${NAME}"
-        kill $( cat $PIDFILE ) >> $LOGFILE
-        rm -f $PIDFILE
-	    RETVAL=$?
+        kill ${pid} >> ${LOGFILE}
+        status -p ${PIDFILE}
+	    if [ $? -eq 0 ]; then
+	        echo "failed to stop ${NAME}, ${pid}"
+            killApp ${pid}
+            return 1
+        else
+            echo "${NAME}, ${pid}, successfully stopped"
+            rm -f ${PIDFILE}
+        fi
     else
-        echo "${NAME} is not running."
+        echo "${NAME} is not running"
     fi
 }
 
@@ -76,25 +96,20 @@ restart() {
     start
 }
 
-status() {
-    if [ -f $PIDFILE ] ; then
-	   if cat ${PIDFILE} | xargs ps -p > /dev/null ; then
-            echo "${NAME} is running with PID $( cat $PIDFILE )"
-        else
-            echo "${NAME} is not running but there is stale pidFile: $PIDFILE"
-            RETVAL=1
- 	    fi
-    else
-            echo "${NAME} is not running."
-	        RETVAL=1
-    fi
+###
+# check whether process is running based on /proc/[pid]/exe
+###
+my_status() {
+    status -p ${PIDFILE}
+    RETVAL=$?
 }
 
 killApp() {
-    echo "Aggressively kill all Live processes"
-    pkill -f $APPLICATION_PATH 
-    echo "Removing PID file"
+	local pid=$1
+    echo "Aggressively kill all ${NAME} process, $pid"
+    pkill -f ${APPLICATION_PATH}
     rm -f ${PIDFILE}
+
 }
 
 case "$1" in
@@ -105,17 +120,14 @@ case "$1" in
         stop
         ;;
     status)
-        status
+        my_status
         ;;
     restart)
         restart
         ;;
-    kill)
-        killApp
-        ;;
     *)
-        echo "Usage: {start|stop|status|restart|kill}"
+        echo "Usage: {start|stop|status|restart}"
         exit 1
         ;;
 esac
-exit $RETVAL
+exit ${RETVAL}
