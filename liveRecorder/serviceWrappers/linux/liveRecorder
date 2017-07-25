@@ -24,25 +24,15 @@
 
 source /etc/rc.d/init.d/functions
 . /opt/rh/python27/enable
+. /etc/defaults/klive_default_vars.sh
 
 APP_NAME=liveRecorder
 SCRIPT_DIR=$(dirname $(readlink -f $0))
 APPDIR=${SCRIPT_DIR}/../../
 NAME=${APP_NAME}
 APPLICATION_PATH=${APPDIR}/main.py
-LOG_DIR=@LOG_DIR@
-PID_DIR=@RUN_DIR@
-
-#default values
-if [ "${LOG_DIR}" = "@LOG_DIR@" ]; then
-    LOG_DIR=/var/log
-fi
-if [ "${PID_DIR}" = "@RUN_DIR@" ]; then
-    PID_DIR=/var/run
-fi
-
-LOG_DIR="${LOG_DIR}/${APP_NAME}"
-PIDFILE="${PID_DIR}/${NAME}.pid"
+LOG_DIR="${KLIVE_LOG_DIR}/${APP_NAME}"
+PIDFILE="${KLIVE_PID_DIR}/${NAME}.pid"
 LOGFILE="${LOG_DIR}/${NAME}-service.log"
 
 RETVAL=0
@@ -61,6 +51,7 @@ createFolders() {
 }
 
 start() {
+    echo "starting liveRecorder..."
     local __modules="schedule m3u8 poster psutil Crypto"
     for module in ${__modules}; do
          python -c "import ${module}"
@@ -84,6 +75,7 @@ start() {
 }
 
 stop() {
+    echo "stopping liveRecorder..."
     if [ -f ${PIDFILE} ]; then
         local __pid=$( cat ${PIDFILE} )
         echo "Shutting down ${NAME}"

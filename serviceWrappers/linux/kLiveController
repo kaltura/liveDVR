@@ -22,26 +22,12 @@
 # extend callable functions from "functions" script
 ###
 source /etc/rc.d/init.d/functions
+. /etc/defaults/klive_default_vars.sh
 
-LOG_DIR=@LOG_DIR@
-PID_DIR=@RUN_DIR@
-USE_NVM=@USE_NVM@
-KLIVE_CONTROLLER_PREFIX="@KLIVE_CONTROLLER_PREFIX@"
-
-#default values
-if [ "${LOG_DIR}" = "@LOG_DIR@" ]; then
-    LOG_DIR=/var/log
-fi
-if [ "${PID_DIR}" = "@RUN_DIR@" ]; then
-    PID_DIR=/var/run
-fi
-if [ "${USE_NVM}" = "@USE_NVM@" ]; then
-    USE_NVM="1"
-fi
-if [ "${KLIVE_CONTROLLER_PREFIX}" = "@KLIVE_CONTROLLER_PREFIX@" ]; then
-    KLIVE_CONTROLLER_PREFIX=/opt/kaltura/liveController/latest
-fi
-
+LOG_DIR=${KLIVE_LOG_DIR}
+PID_DIR=${KLIVE_PID_DIR}
+USE_NVM=${KLIVE_CONTROLLER_USE_NVM}
+KLIVE_CONTROLLER_PREFIX=${KLIVE_CONTROLLER_PREFIX}
 
 NAME="kLiveController"
 NODE_PATH="${KLIVE_CONTROLLER_PREFIX}/node_modules"
@@ -75,7 +61,8 @@ loadNvm() {
 }
 
 start() {
-    [ -d ${LOG_DIR} ] || mkdir -p ${LOG_DIR}
+    echo "starting liveController..."
+    [ -d ${LOG_DIR}/liveController ] || mkdir -p ${LOG_DIR}/liveController
     loadNvm
     RETVAL=0
     for prefix in 0 1 ; do
@@ -99,6 +86,7 @@ start() {
 }
 
 stop() {
+    echo "stopping liveController..."
     loadNvm
     RETVAL=0
     for prefix in 0 1 ; do
