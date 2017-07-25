@@ -57,7 +57,6 @@ function replace_script() {
     download_version
     echo "extracting liveDVR-${VERSION}/deployment/upgradeLive from liveDVR-${VERSION}.tar.gz"
     tar -zxvf v${VERSION}.tar.gz liveDVR-${VERSION}/deployment/upgradeLive
-
     case ${file} in
             upgradeLive)
                 echo "copying  liveDVR-${VERSION}/deployment/upgradeLive to ${PRODUCT_PATH}"
@@ -68,7 +67,6 @@ function replace_script() {
                 cp -f liveDVR-${VERSION}/deployment/klive_default_vars.sh to /etc/defaults/
             ;;
     esac
-
     echo "removing artifacts..."
     rm -rf v${VERSION}.tar.gz*
     rm -rf liveDVR-${VERSION}
