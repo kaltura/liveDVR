@@ -99,11 +99,11 @@ class UploadTask(TaskBase):
             is_first_flavor = True
             for mp4 in self.mp4_files_list:
                 result = re.search(self.mp4_filename_pattern, mp4)
-                if not result:
+                if not result or not result.group('flavor_id'):
                     error = "Error running upload task, failed to parse flavor id from filename: [%s]", mp4
                     self.logger.error(error)
                     raise ValueError(error)
-                flavor_id = result.group(1)
+                flavor_id = result.group('flavor_id')
                 file_full_path = os.path.join(self.recording_path, mp4)
                 if mode == 'remote':
                     self.upload_file(file_full_path, flavor_id, is_first_flavor)
