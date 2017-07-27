@@ -23,7 +23,7 @@ class UploadTask(TaskBase):
         self.backend_client = BackendClient(session_id)
         mp4_filename_pattern = param['directory'] + '_f*_out.mp4'
         self.mp4_files_list = glob.glob1(self.recording_path, mp4_filename_pattern)
-        self.mp4_filename_pattern = "[0,1]_.+_[0,1]_.+_\d+_f(?P<flavor_id>\d+)_out[.]mp4"
+        self.mp4_filename_pattern = "[0,1]_.+_[0,1]_.+_\d+(.\d+)?_f(?P<flavor_id>\d+)_out[.]mp4"
 
 
     def get_chunks_to_upload(self, file_size):
@@ -99,11 +99,11 @@ class UploadTask(TaskBase):
             is_first_flavor = True
             for mp4 in self.mp4_files_list:
                 result = re.search(self.mp4_filename_pattern, mp4)
-                if not result:
-                    error = "Error running upload task, failed to parse flavor id from filename: [%s]", mp4
+                if not result or not result.group('flavor_id'):
+                    error = "Error running upload task, failed to parse flavor id from filename: [{0}]".format(mp4)
                     self.logger.error(error)
                     raise ValueError(error)
-                flavor_id = result.group(1)
+                flavor_id = result.group('flavor_id')
                 file_full_path = os.path.join(self.recording_path, mp4)
                 if mode == 'remote':
                     self.upload_file(file_full_path, flavor_id, is_first_flavor)
