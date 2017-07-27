@@ -23,7 +23,7 @@ class UploadTask(TaskBase):
         self.backend_client = BackendClient(session_id)
         mp4_filename_pattern = param['directory'] + '_f*_out.mp4'
         self.mp4_files_list = glob.glob1(self.recording_path, mp4_filename_pattern)
-        self.mp4_filename_pattern = "[0,1]_.+_[0,1]_.+_\d+_f(?P<flavor_id>\d+)_out[.]mp4"
+        self.mp4_filename_pattern = "[0,1]_.+_[0,1]_.+_\d+(.\d+)?_f(?P<flavor_id>\d+)_out[.]mp4"
 
 
     def get_chunks_to_upload(self, file_size):
