@@ -100,7 +100,7 @@ class UploadTask(TaskBase):
             for mp4 in self.mp4_files_list:
                 result = re.search(self.mp4_filename_pattern, mp4)
                 if not result or not result.group('flavor_id'):
-                    error = "Error running upload task, failed to parse flavor id from filename: [%s]", mp4
+                    error = "Error running upload task, failed to parse flavor id from filename: [{0}]".format(mp4)
                     self.logger.error(error)
                     raise ValueError(error)
                 flavor_id = result.group('flavor_id')
