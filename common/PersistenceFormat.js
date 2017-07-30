@@ -110,9 +110,9 @@ class PersistenceFormat {
         return tsChunkName;
     }
 
-    getRecordingSessionPath(entryId, recordedStatus, recordedEntryId) {
+    getRecordingSessionPath(entryId, recordStatus, recordedEntryId) {
         let modeDirName = newSessionDirName;
-        if (recordedStatus === kalturaTypes.KalturaRecordStatus.APPENDED){
+        if (recordStatus == kalturaTypes.KalturaRecordStatus.APPENDED){
             modeDirName = appendDirName;
         }
         return path.join(recordingRootPath, modeDirName, entryId.slice(-1), entryId, recordedEntryId);
