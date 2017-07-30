@@ -31,9 +31,9 @@ KLIVE_RECORDER_PREFIX=/opt/kaltura/liveRecorder/latest
 STATUS_FUNCTION=status
 PYTHON=python2.7
 
-if [ -r /etc/defaults/${NAME} ]; then
-    echo ". /etc/defaults/${NAME}"
-    . /etc/defaults/${NAME}
+if [ -r /etc/default/${NAME} ]; then
+    echo ". /etc/default/${NAME}"
+    . /etc/default/${NAME}
 fi
 
 if [ -r /etc/rc.d/init.d/functions ]; then

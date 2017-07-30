@@ -1,5 +1,5 @@
 ## liveController & LiveRecorder
-The liveDVR repository contains to products: liveContrller and liveRecorder.
+The liveDVR repository contains to products: liveController and liveRecorder.
 Kaltura liveController controls the live stream including recording during live.
 The liveController handles live entries state and stream content integrity throughout live session. It integrates with the Wowza to get list of live streams and download the content.
 It integrates with the BE for live state update and live entry info get/set.
