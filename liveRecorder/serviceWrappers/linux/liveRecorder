@@ -22,19 +22,42 @@
 # extend callable functions from "functions" script
 ###
 
-source /etc/rc.d/init.d/functions
 . /opt/rh/python27/enable
-. /etc/defaults/klive_default_vars.sh
 
-APP_NAME=liveRecorder
-SCRIPT_DIR=$(dirname $(readlink -f $0))
-APPDIR=${SCRIPT_DIR}/../../
-NAME=${APP_NAME}
-APPLICATION_PATH=${APPDIR}/main.py
-LOG_DIR="${KLIVE_LOG_DIR}/${APP_NAME}"
+NAME=liveRecorder
+LOG_DIR=/var/log
+PID_DIR=/var/run
+KLIVE_RECORDER_PREFIX=/opt/kaltura/liveRecorder/latest
+STATUS_FUNCTION=status
+PYTHON=python2.7
+
+if [ -r /etc/defaults/${NAME} ]; then
+    echo ". /etc/defaults/${NAME}"
+    . /etc/defaults/${NAME}
+fi
+
+if [ -r /etc/rc.d/init.d/functions ]; then
+   echo ". source /etc/rc.d/init.d/functions"
+   . /etc/rc.d/init.d/functions
+elif [ -r /lib/lsb/init-functions ]; then
+   echo ". /lib/lsb/init-functions"
+   . /lib/lsb/init-functions
+   STATUS_FUNCTION=status_of_proc
+else
+    echo "Error, no function found for checking if ${NAME} is running. either not running in CentOS/Ubuntu or wrong path"
+fi
+
+# these lines added especially for QA
+if [ ! -r ${KLIVE_RECORDER_PREFIX} ]; then
+    SCRIPT_DIR=$(dirname $(readlink -f $0))
+    KLIVE_RECORDER_PREFIX=${SCRIPT_DIR}/../../
+    echo "KLIVE_RECORDER_PREFIX=${KLIVE_RECORDER_PREFIX}"
+fi
+
+LOG_DIR="${KLIVE_LOG_DIR}/${NAME}"
 PIDFILE="${KLIVE_PID_DIR}/${NAME}.pid"
 LOGFILE="${LOG_DIR}/${NAME}-service.log"
-
+APPLICATION_PATH=${KLIVE_RECORDER_PREFIX}/main.py
 RETVAL=0
 
 createFolders() {
@@ -58,7 +81,7 @@ start() {
         [ $? -ne 0 ] && echo "Missing ${module} pip module." && exit 3
     done
     createFolders || exit 4
-    status -p ${PIDFILE}
+    check_pid_status "-p ${PIDFILE}"
     if [ $? -eq 0 ]; then
         echo "${NAME} already running"
     else
@@ -80,7 +103,7 @@ stop() {
         local __pid=$( cat ${PIDFILE} )
         echo "Shutting down ${NAME}"
         kill ${__pid} >> ${LOGFILE}
-        status -p ${PIDFILE}
+        check_pid_status "-p ${PIDFILE}"
 	    if [ $? -eq 0 ]; then
 	        echo "failed to stop ${NAME}, ${__pid}"
             killApp ${__pid}
@@ -103,7 +126,7 @@ restart() {
 # check whether process is running based on /proc/[pid]/exe
 ###
 my_status() {
-    status -p ${PIDFILE}
+    check_pid_status "-p ${PIDFILE}"
     RETVAL=$?
 }
 
@@ -112,7 +135,20 @@ killApp() {
     echo "Aggressively kill all ${NAME} process, ${__pid}"
     pkill -f ${APPLICATION_PATH}
     rm -f ${PIDFILE}
+}
 
+check_pid_status() {
+
+    case ${STATUS_FUNCTION} in
+        status)
+            status $1
+        ;;
+        status_of_proc)
+            status_of_proc $1 ${APPLICATION_PATH} ${PYTHON}
+        ;;
+        *)
+            echo "check_pid_status failed, status function '${STATUS_FUNCTION}' is unsupported"
+        ;;
 }
 
 case "$1" in
