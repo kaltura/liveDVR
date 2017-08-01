@@ -16,7 +16,7 @@
 set -e
 if [ "$#" -lt 2 ]; then
 	echo "usage build_ts2mp4_convertor  <product path> <ffmpeg path>"
-	echo "example: $0 /opt/kaltura/liveController/v1.14.5/liveRecorder /opt/kaltura/liveController/v1.14.5/bin/ffmpeg/ffmpeg-3.0 Release"
+	echo "example: $0 /opt/kaltura/liveController/v1.14.5/liveRecorder /opt/kaltura/liveController/v1.14.5/bin/ffmpeg/ffmpeg-3.0"
 	exit 1
 fi
 

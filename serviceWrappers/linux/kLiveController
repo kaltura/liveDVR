@@ -26,8 +26,8 @@ LOG_DIR=/var/log
 PID_DIR=/var/run
 USE_NVM="1"
 KLIVE_CONTROLLER_PREFIX="/opt/kaltura/liveController/latest"
+NODE_PATH="${KLIVE_CONTROLLER_PREFIX}/node_modules"
 STATUS_FUNCTION=status
-
 
 source /etc/rc.d/init.d/functions
 
@@ -47,13 +47,13 @@ else
     echo "Error, no function found for checking if ${NAME} is running. either not running in CentOS/Ubuntu or wrong path"
 fi
 
-NODE_PATH="${KLIVE_CONTROLLER_PREFIX}/node_modules"
 FOREVER="${NODE_PATH}/forever/bin/forever"
 APPLICATION_PATH="${KLIVE_CONTROLLER_PREFIX}/lib/App.js"
 MIN_UPTIME="5000"
 SPIN_SLEEP_TIME="2000"
 export PATH=$PATH:${NODE_PATH}/forever/bin
 HOME=${HOME:-~}
+LOG_DIR=${LOG_DIR}/liveController
 
 loadNvm() {
     if [ "${USE_NVM}" = "1" ]; then
@@ -79,12 +79,12 @@ loadNvm() {
 
 start() {
     echo "starting liveController..."
-    [ -d ${LOG_DIR}/liveController ] || mkdir -p ${LOG_DIR}/liveController
+    [ -d ${LOG_DIR} ] || mkdir -p ${LOG_DIR}
     loadNvm
     RETVAL=0
     for prefix in 0 1 ; do
         PIDFILE="${PID_DIR}/${NAME}_${prefix}.pid"
-        LOGFILE="${LOG_DIR}/liveController/${NAME}_${prefix}-forever.log"
+        LOGFILE="${LOG_DIR}/${NAME}_${prefix}-forever.log"
         check_pid_status "-p ${PIDFILE}"
         if [ $? -eq 0 ]; then
             echo "${NAME}_${prefix} already running"

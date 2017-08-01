@@ -24,7 +24,7 @@ Follow instructions in [nginx installation](https://github.com/kaltura/nginx-vod
 - install and build ffmpeg 3.0<br>
 ``` build_scripts/build_ffmpg.sh <ffmpeg build path> <ffmpeg version>```
 - build ts_to_mp4_convertor<br>
-``` build_scripts/build_ts2mp4_convertor.sh [installation path] <ffmpeg build path>```
+``` build_scripts/build_ts2mp4_convertor.sh </path/to/liveRecorder/source> <path/to/ffmpeg/source>```
 
 # Installation of live-recorder
 * If you are running both liveController and liveRecorder on the same machine you can install both in single installation:
@@ -35,7 +35,7 @@ Follow instructions in [nginx installation](https://github.com/kaltura/nginx-vod
    ```wget https://github.com/kaltura/liveDVR/archive/v[x.y.z].tar.gz
     tar -xvzf v[x.y.z].tar.gz
     mv liveDVR-[x.y.z] [installation base path]
-    rm -f v[x.y.z].tar.gz
+    rm -f v[x.y.z].tar.gz```
         
 2. create configMapping.ini from liveRecorder/Config/configMapping.ini.template:
 3. edit configMapping.ini parameters
@@ -55,28 +55,32 @@ Follow instructions in [nginx installation](https://github.com/kaltura/nginx-vod
 @LOGS_BASE_PATH@ - the path to all liveRecorder log files<br>
 @KALTURA_SERVICE_URL@ - url to access the BE server (example:  "http://www.kaltura.com")<br>
 @KALTURA_PARTNER_ADMIN_SECRET@ - admin secret for secured access to BE server<br>
-
+@RUN_DIR@ - pid file full path (excluding filename)
+@USE_NVM@ - if you intend to use nvm, set to "1".
+@KLIVE_RECORDER_PREFIX@ - symlink name to be linked to latest installed version
+if value set to [path/to/liveRecorder/source/latest] and
+liveRecorder source is installed under [path/to/liveRecoder/source/[x.y.z]]
+then following symlink will be created:
+[path/to/liveRecorder/source/latest] -> [path/to/liveRecorder/source/[x.y.z]]
 
 ##LiveRecorder upgrade: ##
  
-- deployment/upgradeLive can be used for upgrade
-``` [installation base path]/latest/deployment/upgradeLive vx.y.z
-alternatively download and install latest version according to following instructions:
-wget https://github.com/kaltura/liveDVR/archive/v[x.y.z].tar.gz
-tar -xvzf v[x.y.z].tar.gz
-mv liveDVR-[x.y.z] [installation base path]
-rm -f v[x.y.z].tar.gz
-```
-- install Node Version Manager 6.3.0+
-- install Node Packaged Modules (npm) 1.4.3+
-- stop liveRecorder<br>
-```/etc/init.d/liveRecorder stop```
-- unlink latest<br>
-```unlink [installation base path]/latest```
-- create symlink from current installed version path to latest dir<br>
-```ln -s [installation base path]/version [installation base path]/latest```
-- start liveRecorder<br>
-```/etc/init.d/liveRecorder start```
+1. deployment/upgradeLive can be used for upgrade<br>
+   ```wget https://github.com/kaltura/liveDVR/archive/v[x.y.z].tar.gz
+    tar -xvzf v[x.y.z].tar.gz
+    mv liveDVR-[x.y.z] [installation base path]
+    rm -f v[x.y.z].tar.gz```
+
+2. install Node Version Manager 6.3.0+
+3. install Node Packaged Modules (npm) 1.4.3+
+4. stop liveRecorder<br>
+    ```/etc/init.d/liveRecorder stop```
+5. unlink latest<br>
+    ```unlink [installation base path]/latest```
+6. create symlink from current installed version path to latest dir<br>
+    ```ln -s [installation base path]/version [installation base path]/latest```
+7. start liveRecorder<br>
+    ```/etc/init.d/liveRecorder start```
 
 
 
