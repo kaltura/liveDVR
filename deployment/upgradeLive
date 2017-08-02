@@ -80,7 +80,6 @@ function install() {
     cp /opt/kaltura/liveController/configMapping.json /opt/kaltura/liveController/${VERSION}/common/config/
     cp /opt/kaltura/liveController/configMapping.ini /opt/kaltura/liveController/${VERSION}/liveRecorder/Config/
     cp ${PRODUCT_PATH}/deployment/${DEFAULT_VARS_FILE} /etc/defaults
-    init_vars()
     npm install
     cd ..
     if [ "${__build}" = "yes" ]; then

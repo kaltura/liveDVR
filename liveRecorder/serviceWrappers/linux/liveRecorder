@@ -148,6 +148,7 @@ check_pid_status() {
         *)
             echo "check_pid_status failed, status function '${STATUS_FUNCTION}' is unsupported"
         ;;
+    esac
 }
 
 case "$1" in

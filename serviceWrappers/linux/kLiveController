@@ -59,7 +59,7 @@ loadNvm() {
 
     # Load nvm
     # usage of cd/pushd is required due to a bug in /root/.nvm/nvm.sh call to nvm_find_nvmrc()
-    
+
     pushd ${KLIVE_CONTROLLER_PREFIX}
     [ -z "${NVM_DIR}" ] && NVM_DIR="${HOME}/.nvm"
     if [ -s "${NVM_DIR}/nvm.sh" ]; then
@@ -176,6 +176,7 @@ check_pid_status() {
         *)
             echo "check_pid_status failed, status function '${STATUS_FUNCTION}' is unsupported"
         ;;
+    esac
 }
 
 case "$1" in
