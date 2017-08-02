@@ -29,7 +29,6 @@ LOG_DIR=/var/log
 PID_DIR=/var/run
 KLIVE_RECORDER_PREFIX=/opt/kaltura/liveRecorder/latest
 STATUS_FUNCTION=status
-PYTHON=python2.7
 
 if [ -r /etc/default/${NAME} ]; then
     echo ". /etc/default/${NAME}"
@@ -54,14 +53,14 @@ if [ ! -r ${KLIVE_RECORDER_PREFIX} ]; then
     echo "KLIVE_RECORDER_PREFIX=${KLIVE_RECORDER_PREFIX}"
 fi
 
-LOG_DIR="${KLIVE_LOG_DIR}/${NAME}"
-PIDFILE="${KLIVE_PID_DIR}/${NAME}.pid"
-LOGFILE="${LOG_DIR}/${NAME}-service.log"
+LOGDIR="${LOG_DIR}/${NAME}"
+PIDFILE="${PID_DIR}/${NAME}.pid"
+LOGFILE="${LOGDIR}/${NAME}-service.log"
 APPLICATION_PATH=${KLIVE_RECORDER_PREFIX}/main.py
 RETVAL=0
 
 createFolders() {
-	[ -d ${LOG_DIR} ] || mkdir -p ${LOG_DIR}
+	[ -d ${LOGDIR} ] || mkdir -p ${LOGDIR}
 	SHARED_APP_DIR=$(python ${SCRIPT_DIR}/getRecordingBaseDir.py)
 	echo "Creating folders in ${SHARED_APP_DIR} for ${HOSTNAME}"
 	if [ -d  ${SHARED_APP_DIR} ] ; then 
@@ -144,7 +143,7 @@ check_pid_status() {
             status $1
         ;;
         status_of_proc)
-            status_of_proc $1 ${APPLICATION_PATH} ${PYTHON}
+            status_of_proc $1 ${APPLICATION_PATH} python
         ;;
         *)
             echo "check_pid_status failed, status function '${STATUS_FUNCTION}' is unsupported"

@@ -56,31 +56,33 @@ HOME=${HOME:-~}
 LOG_DIR=${LOG_DIR}/liveController
 
 loadNvm() {
-    if [ "${USE_NVM}" = "1" ]; then
-        # This loads nvm
-        # must cd/pushd due to a bug in /root/.nvm/nvm.sh call to nvm_find_nvmrc()
-        pushd ${KLIVE_CONTROLLER_PREFIX}
-        [ -z "${NVM_DIR}" ] && NVM_DIR="${HOME}/.nvm"
-        if [ -s "${NVM_DIR}/nvm.sh" ]; then
-            source "${NVM_DIR}/nvm.sh"
-            if [ -s ".nvmrc" ] ; then
-                nvm use || nvm install
-            else
-                echo "no .nvmrc in ${KLIVE_CONTROLLER_PREFIX}, Exiting"
-                exit 1
-            fi
+
+    # Load nvm
+    # usage of cd/pushd is required due to a bug in /root/.nvm/nvm.sh call to nvm_find_nvmrc()
+    
+    pushd ${KLIVE_CONTROLLER_PREFIX}
+    [ -z "${NVM_DIR}" ] && NVM_DIR="${HOME}/.nvm"
+    if [ -s "${NVM_DIR}/nvm.sh" ]; then
+        source "${NVM_DIR}/nvm.sh"
+        if [ -s ".nvmrc" ] ; then
+            nvm use || nvm install
         else
-            echo "nvm not found in ${NVM_DIR}, this is a must, Exiting!"
+            echo "no .nvmrc in ${KLIVE_CONTROLLER_PREFIX}, Exiting"
             exit 1
         fi
-        popd
+    else
+        echo "nvm not found in ${NVM_DIR}, this is a must, Exiting!"
+        exit 1
     fi
+    popd
 }
 
 start() {
     echo "starting liveController..."
     [ -d ${LOG_DIR} ] || mkdir -p ${LOG_DIR}
-    loadNvm
+    if [ "${USE_NVM}" = "1" ]; then
+        loadNvm
+    fi
     RETVAL=0
     for prefix in 0 1 ; do
         PIDFILE="${PID_DIR}/${NAME}_${prefix}.pid"
@@ -104,7 +106,9 @@ start() {
 
 stop() {
     echo "stopping liveController..."
-    loadNvm
+    if [ "${USE_NVM}" = "1" ]; then
+        loadNvm
+    fi
     RETVAL=0
     for prefix in 0 1 ; do
         PIDFILE="${PID_DIR}/${NAME}_${prefix}.pid"
