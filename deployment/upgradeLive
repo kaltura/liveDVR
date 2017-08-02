@@ -5,12 +5,10 @@
 #set -e
 
 PRODUCT_PATH=/opt/kaltura/liveController
-USAGE="usage: upgradeLive [version] <replace_script|downgrade|build|install_live_recorder|replace_default_vars> <ffmpeg build path> <ffmpeg version>"
+USAGE="usage: upgradeLive [version] <replace_script|downgrade|build|install_live_recorder> <ffmpeg build path> <ffmpeg version>"
 BUILD_USAGE="usage: upgradeLive [version] build [ffmpeg build path] [ffmpeg version]"
 FFMPEG_BUILD_PATH=
 FFMPEG_VERSION=
-DEFAULT_VARS_FILE=klive_default_vars.sh
-
 
 PARAM=install
 if [ $# -eq 0 ]; then
@@ -62,9 +60,8 @@ function replace_script() {
                 echo "copying  liveDVR-${VERSION}/deployment/upgradeLive to ${PRODUCT_PATH}"
                 cp -f liveDVR-${VERSION}/deployment/upgradeLive ${PRODUCT_PATH}
             ;;
-            klive_default_vars.sh)
-                echo "copying  liveDVR-${VERSION}/deployment/klive_default_vars.sh to /etc/defaults/"
-                cp -f liveDVR-${VERSION}/deployment/klive_default_vars.sh to /etc/defaults/
+            *)
+                echo "replace ${file} is not supported!"
             ;;
     esac
     echo "removing artifacts..."
@@ -204,12 +201,7 @@ function main()
 	            downgrade
 	            start
 	            ;;
-	        replace_default_vars)
-	            echo "replacing klive_default_vars.sh script with v${VERSION}"
-	            replace_script klive_default_vars.sh
-	            exit 0
-	            ;;
-	                *)
+	         *)
 	            echo ${USAGE}
 	            exit 2
 	            ;;
