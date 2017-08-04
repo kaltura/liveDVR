@@ -53,7 +53,7 @@ MIN_UPTIME="5000"
 SPIN_SLEEP_TIME="2000"
 export PATH=$PATH:${NODE_PATH}/forever/bin
 HOME=${HOME:-~}
-LOG_DIR=${LOG_DIR}/liveController
+LOGDIR=${LOG_DIR}/${NAME}
 
 loadNvm() {
 
@@ -79,14 +79,14 @@ loadNvm() {
 
 start() {
     echo "starting liveController..."
-    [ -d ${LOG_DIR} ] || mkdir -p ${LOG_DIR}
+    [ -d ${LOGDIR} ] || mkdir -p ${LOGDIR}
     if [ "${USE_NVM}" = "1" ]; then
         loadNvm
     fi
     RETVAL=0
     for prefix in 0 1 ; do
         PIDFILE="${PID_DIR}/${NAME}_${prefix}.pid"
-        LOGFILE="${LOG_DIR}/${NAME}_${prefix}-forever.log"
+        LOGFILE="${LOGDIR}/${NAME}_${prefix}-forever.log"
         check_pid_status "-p ${PIDFILE}"
         if [ $? -eq 0 ]; then
             echo "${NAME}_${prefix} already running"
