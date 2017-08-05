@@ -58,6 +58,7 @@
   },
   "diagnostics": {
       "diagnosticsReportIntervalRunTimeInSec": 20,
+      "minChunkDurationInSec": 1,
       "maxChunkDurationInSec": 60,
       "errorsWindowSizeInMin" : 5,
       "ptsMaxMisalignmentAllowedInMSec" : 5000,
