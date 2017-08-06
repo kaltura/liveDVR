@@ -1,0 +1,4 @@
+# Kaltura liveRecorder defaults file
+LOG_DIR=/var/log
+PID_DIR=/var/run
+KLIVE_RECORDER_PREFIX=/opt/kaltura/liveRecorder/latest

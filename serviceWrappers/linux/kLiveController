@@ -22,18 +22,17 @@
 # extend callable functions from "functions" script
 ###
 NAME=kLiveController
-LOG_DIR=/var/log
-PID_DIR=/var/run
-USE_NVM="1"
-KLIVE_CONTROLLER_PREFIX="/opt/kaltura/liveController/latest"
-NODE_PATH="${KLIVE_CONTROLLER_PREFIX}/node_modules"
 STATUS_FUNCTION=status
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
 
 source /etc/rc.d/init.d/functions
 
 if [ -r /etc/default/${NAME} ]; then
     echo ". /etc/default/${NAME}"
     . /etc/default/${NAME}
+else
+    echo "${NAME} default file not found in /etc/default, using ${SCRIPT_DIR}/../defaults/${NAME}"
+    . ${SCRIPT_DIR}/../defaults/${NAME}
 fi
 
 if [ -r /etc/rc.d/init.d/functions ]; then
