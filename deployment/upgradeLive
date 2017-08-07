@@ -202,7 +202,7 @@ function main()
 	echo "upgradeLive ${VERSION} ${PARAM} ${FFMPEG_BUILD_PATH} ${FFMPEG_VERSION}"
     pushd ${PRODUCT_PATH}
     echo "current dir: `pwd`"
-	if [ ! -d "${VERSION}" ] || [ !"latest" -ef "${VERSION}" ] || [ ! "${PARAM}" = "install" ] ; then
+	if [ ! -r "${VERSION}" ] || [ ! "latest" -ef "${VERSION}" ] || [ ! "${PARAM}" = "install" ] ; then
 
 		# check if the version dir exists before downgrading, otherwise perform regular installation
 		# if configMapping.json changed from ${VERSION} to current installed version the file should be updated
