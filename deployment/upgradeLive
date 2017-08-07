@@ -1,12 +1,15 @@
 #!/bin/bash
-# For upgrade just type ./upgradeLive <version> [replace_script|downgrade|build|install_live_recorder] [ffmpeg build path] [ffmpeg version]
+# For upgrade just type ./upgradeLive <version> [replace_script|downgrade|build|install_live_recorder|replace_default] [ffmpeg build path] [ffmpeg version] [replace option: all/live/recorder]
 # in case 'build' is used as parameter then ffmpeg build path and ffmpeg version are mandatory
 
 #set -e
 
 PRODUCT_PATH=/opt/kaltura/liveController
-USAGE="usage: upgradeLive [version] <replace_script|downgrade|build|install_live_recorder> <ffmpeg build path> <ffmpeg version>"
+USAGE="usage: upgradeLive [version] <replace_script|downgrade|build|install_live_recorder> <ffmpeg build path> <ffmpeg version> <replace option: all/live/recorder>"
 BUILD_USAGE="usage: upgradeLive [version] build [ffmpeg build path] [ffmpeg version]"
+REPLACE_DEFAULT_USAGE="usage: upgradeLive [version] replace_default [all/live/recorder]"
+REPLACE_TYPE=
+FILES_TO_REPLACE=
 FFMPEG_BUILD_PATH=
 FFMPEG_VERSION=
 VERSION=
@@ -24,7 +27,7 @@ if [ $# -gt 1 ]; then
     PARAM=$2
 fi
 
-if [ ${PARAM} = "build" ]; then
+if [ "${PARAM}" = "build" ]; then
 	if [ $# -gt 3 ]; then
 		FFMPEG_BUILD_PATH=$3
 		FFMPEG_VERSION=$4
@@ -32,7 +35,28 @@ if [ ${PARAM} = "build" ]; then
 		echo "wrong number of parameters running install with build. ${BUILD_USAGE}"
 		exit 2
 	fi
+elif [ "${PARAM}" = "replace_default" ]; then
+    if
+	if [ $# -gt 2 ]; then
+		REPLACE_TYPE=$3
+		case ${REPLACE_TYPE} in
+		    all)
+		        FILES_TO_REPLACE="kLiveController liveRecorder"
+		    ;;
+		    live)
+		        FILES_TO_REPLACE="kLiveController"
+		    ;;
+		    recorder)
+		        FILES_TO_REPLACE="liveRecorder"
+		    ;;
+		esac
+	else
+		echo "wrong number of parameters running upgradeLive with replace_default. ${REPLACE_DEFAULT_USAGE}"
+		exit 3
+	fi
 fi
+
+if [ ${PARAM} ]
 
 function download_version() {
     if [ -r v${VERSION}.tar.gz ]; then
@@ -55,13 +79,33 @@ function download_new_version() {
     rm -f v${VERSION}.tar.gz
 }
 
-function replace_script() {
-    let file=$1
+function replace() {
+    local __files=($1)
     download_version
-    echo "extracting liveDVR-${VERSION}/deployment/upgradeLive from liveDVR-${VERSION}.tar.gz"
-    tar -zxvf v${VERSION}.tar.gz liveDVR-${VERSION}/deployment/upgradeLive
-    echo "copying  liveDVR-${VERSION}/deployment/upgradeLive to ${PRODUCT_PATH}"
-    cp -f liveDVR-${VERSION}/deployment/upgradeLive ./
+    for $file in ${__files}; do
+        case $file in
+            upgradeLive)
+                echo "extracting liveDVR-${VERSION}/deployment/upgradeLive from liveDVR-${VERSION}.tar.gz"
+                tar -zxvf v${VERSION}.tar.gz liveDVR-${VERSION}/deployment/upgradeLive
+                echo "copying  liveDVR-${VERSION}/deployment/upgradeLive to ${PRODUCT_PATH}"
+                cp -f liveDVR-${VERSION}/deployment/upgradeLive ./
+                ;;
+            kLiveController)
+                local __liveController="serviceWrappers/default/kLiveController"
+                echo "extracting liveDVR-${VERSION}/${__liveController} from liveDVR-${VERSION}.tar.gz"
+                tar -zxvf v${VERSION}.tar.gz liveDVR-${VERSION}/s${__liveController}
+                echo "copying  liveDVR-${VERSION}/${__liveController} to /etc/default"
+                cp -f liveDVR-${VERSION}/${__liveController} /etc/default/
+                ;;
+            liveRecorder)
+                local __liveRecorder="liveRecorder/serviceWrappers/default/kLiveController"
+                echo "extracting liveDVR-${VERSION}/${__liveRecorder} from liveDVR-${VERSION}.tar.gz"
+                tar -zxvf v${VERSION}.tar.gz liveDVR-${VERSION}/s${__liveRecorder}
+                echo "copying  liveDVR-${VERSION}/${__liveRecorder} to /etc/default"
+                cp -f liveDVR-${VERSION}/${__liveRecorder} /etc/default/
+                ;;
+        esac
+    done
     echo "removing artifacts..."
     rm -rf v${VERSION}.tar.gz*
     rm -rf liveDVR-${VERSION}
@@ -188,7 +232,7 @@ function main()
 	            ;;
 	        replace_script)
 	            echo "replacing upgradeLive script with v${VERSION}"
-	            replace_script upgradeLive
+	            replace upgradeLive
 	            exit 0
 	            ;;
 	        downgrade)
@@ -197,10 +241,14 @@ function main()
 	            downgrade
 	            start
 	            ;;
-	         *)
-	            echo ${USAGE}
-	            exit 2
+	         replace_default)
+	            echo "replacing ${FILES_TO_REPLACE} default files with v${VERSION}"
+	            replace ${FILES_TO_REPLACE}
 	            ;;
+	         *)
+                echo ${USAGE}
+                exit 2
+                ;;
 	    esac
 
 		echo "upgradeLive finished..."
