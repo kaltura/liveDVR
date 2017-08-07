@@ -95,7 +95,7 @@ function replace() {
                 cp -f liveDVR-${VERSION}/${__liveController} /etc/default/
                 ;;
             liveRecorder)
-                local __liveRecorder="liveRecorder/serviceWrappers/defaults/kLiveController"
+                local __liveRecorder="liveRecorder/serviceWrappers/defaults/liveRecorder"
                 echo "extracting liveDVR-${VERSION}/${__liveRecorder} from liveDVR-${VERSION}.tar.gz"
                 tar -zxvf v${VERSION}.tar.gz liveDVR-${VERSION}/${__liveRecorder}
                 echo "copying  liveDVR-${VERSION}/${__liveRecorder} to /etc/default"
