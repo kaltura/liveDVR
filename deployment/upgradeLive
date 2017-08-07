@@ -112,12 +112,12 @@ function replace() {
 function install() {
 	local __build=$1
 	local __install_live_recorder=$2
-	echo "staring install, build=${__build}, install_live_recorder=${__install_live_recorder}"
+	echo "staring installation, build=${__build}, install_live_recorder=${__install_live_recorder}"
     mkdir -p latest
     cd ${VERSION}
     # move configuration files (liveController's and liveRecorder's) to latest version
-    cp configMapping.json ${VERSION}/common/config/
-    cp configMapping.ini ${VERSION}/liveRecorder/Config/
+    cp ../configMapping.json common/config/
+    cp ../configMapping.ini liveRecorder/Config/
     npm install
     cd ..
     if [ "${__build}" = "yes" ]; then
@@ -198,10 +198,10 @@ function start() {
 
 function main()
 {
-	echo "starting upgradeLive..."
-	echo "upgradeLive ${VERSION} ${PARAM} ${FFMPEG_BUILD_PATH} ${FFMPEG_VERSION}"
+	echo ">>>>>> starting upgrade <<<<<<"
+	echo "upgradeLive ${VERSION} ${PARAM} ${FFMPEG_BUILD_PATH} ${FFMPEG_VERSION} ${REPLACE_TYPE}"
     pushd ${PRODUCT_PATH}
-    echo "current dir: `pwd`"
+
 	if [ ! -r "${VERSION}" ] || [ ! "latest" -ef "${VERSION}" ] || [ ! "${PARAM}" = "install" ] ; then
 
 		# check if the version dir exists before downgrading, otherwise perform regular installation
@@ -228,7 +228,7 @@ function main()
 	            start
 	            ;;
 	        replace_script)
-	            echo "replacing upgradeLive script with v${VERSION}"
+	            echo "updating upgradeLive script to v${VERSION}"
 	            replace upgradeLive
 	            exit 0
 	            ;;
@@ -239,7 +239,7 @@ function main()
 	            start
 	            ;;
 	         replace_default)
-	            echo "replacing ${FILES_TO_REPLACE} default files with v${VERSION}"
+	            echo "updating ${FILES_TO_REPLACE} default files to v${VERSION}"
 	            replace ${FILES_TO_REPLACE}
 	            ;;
 	         *)
@@ -248,11 +248,11 @@ function main()
                 ;;
 	    esac
 
-		echo "upgradeLive finished..."
+		echo ">>>>> finished upgrade <<<<<"
 
 	else
 	    echo "Found that version v${VERSION} is already installed. No action done."
-            echo "Please check upgradeLive ${USAGE}"
+        echo "Please check upgradeLive ${USAGE}"
 	fi
 	popd
 }
