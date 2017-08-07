@@ -79,8 +79,8 @@ function download_new_version() {
 function replace() {
     local __files=($1)
     download_version
-    for $file in ${__files}; do
-        case $file in
+    for file in ${__files}; do
+        case ${file} in
             upgradeLive)
                 echo "extracting liveDVR-${VERSION}/deployment/upgradeLive from liveDVR-${VERSION}.tar.gz"
                 tar -zxvf v${VERSION}.tar.gz liveDVR-${VERSION}/deployment/upgradeLive
