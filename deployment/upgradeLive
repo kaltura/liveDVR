@@ -56,8 +56,6 @@ elif [ "${PARAM}" = "replace_default" ]; then
 	fi
 fi
 
-if [ ${PARAM} ]
-
 function download_version() {
     if [ -r v${VERSION}.tar.gz ]; then
         echo "rm -f v${VERSION}.tar.gz"
