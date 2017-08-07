@@ -88,16 +88,16 @@ function replace() {
                 cp -f liveDVR-${VERSION}/deployment/upgradeLive ./
                 ;;
             kLiveController)
-                local __liveController="serviceWrappers/default/kLiveController"
+                local __liveController="serviceWrappers/defaults/kLiveController"
                 echo "extracting liveDVR-${VERSION}/${__liveController} from liveDVR-${VERSION}.tar.gz"
-                tar -zxvf v${VERSION}.tar.gz liveDVR-${VERSION}/s${__liveController}
+                tar -zxvf v${VERSION}.tar.gz liveDVR-${VERSION}/${__liveController}
                 echo "copying  liveDVR-${VERSION}/${__liveController} to /etc/default"
                 cp -f liveDVR-${VERSION}/${__liveController} /etc/default/
                 ;;
             liveRecorder)
-                local __liveRecorder="liveRecorder/serviceWrappers/default/kLiveController"
+                local __liveRecorder="liveRecorder/serviceWrappers/defaults/kLiveController"
                 echo "extracting liveDVR-${VERSION}/${__liveRecorder} from liveDVR-${VERSION}.tar.gz"
-                tar -zxvf v${VERSION}.tar.gz liveDVR-${VERSION}/s${__liveRecorder}
+                tar -zxvf v${VERSION}.tar.gz liveDVR-${VERSION}/${__liveRecorder}
                 echo "copying  liveDVR-${VERSION}/${__liveRecorder} to /etc/default"
                 cp -f liveDVR-${VERSION}/${__liveRecorder} /etc/default/
                 ;;
