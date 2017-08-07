@@ -36,7 +36,6 @@ if [ "${PARAM}" = "build" ]; then
 		exit 2
 	fi
 elif [ "${PARAM}" = "replace_default" ]; then
-    if
 	if [ $# -gt 2 ]; then
 		REPLACE_TYPE=$3
 		case ${REPLACE_TYPE} in
