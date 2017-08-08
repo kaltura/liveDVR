@@ -25,11 +25,8 @@
 #
 # @ignore
 # ===================================================================================================
-import binascii
 import hashlib
 import json
-
-import six
 
 # Service response formats
 KALTURA_SERVICE_FORMAT_JSON = 1
@@ -91,10 +88,10 @@ class KalturaParams(object):
     def put(self, key, value = None):
         if value == None:
             self.params[key + '__null'] = ''
-        elif isinstance(value, six.binary_type):
-            self.params[key] = value.decode('utf8')
+        elif isinstance(value, unicode):
+            self.params[key] = value.encode('utf8')
         else:
-            self.params[key] = six.text_type(value)
+            self.params[key] = str(value)
 
     def update(self, props):
         self.params.update(props)
@@ -120,7 +117,7 @@ class KalturaParams(object):
             self.params[key] = {'-': ''}
         else:
             arr = []
-            for curIndex in six.moves.range(len(array)):
+            for curIndex in xrange(len(array)):
                 arr.append(array[curIndex].toParams().get())
             self.params[key] = arr
 
@@ -173,17 +170,17 @@ class KalturaParams(object):
         for key in params:
             if isinstance(params[key], dict):
                 params[key] = self.sort(params[key])
-                
-        sortedKeys = sorted(params.keys(), key=lambda x: six.text_type(x))
+
+        sortedKeys = sorted(params.keys())
         sortedDict = {}
         for key in sortedKeys:
             sortedDict[key] = params[key]
-            
+
         return sortedDict
-        
+
     def toJson(self):
         return json.dumps(self.params)
-        
+
     def signature(self, params = None):
         if params == None:
             params = self.params
@@ -191,11 +188,10 @@ class KalturaParams(object):
         return self.md5(self.toJson())
 
     @staticmethod
-    def md5(str_):
+    def md5(str):
         m = hashlib.md5()
-        m.update(
-            str_ if isinstance(str_, six.binary_type) else str_.encode("utf8"))
-        return binascii.hexlify(m.digest())
+        m.update(str)
+        return m.digest().encode('hex')
 
 # Request files container
 class KalturaFiles(object):
@@ -221,8 +217,8 @@ class KalturaObjectFactory(object):
         if objTypeNode == None:
             return None
         objType = getXmlNodeText(objTypeNode)
-        if objType not in KalturaObjectFactory.objectFactories:
-            objType = expectedType.__name__        
+        if not KalturaObjectFactory.objectFactories.has_key(objType):
+            objType = expectedType.__name__
         result = KalturaObjectFactory.objectFactories[objType]()
         if not isinstance(result, expectedType):
             raise KalturaClientException("Unexpected object type '%s'" % objType, KalturaClientException.ERROR_INVALID_OBJECT_TYPE)
@@ -251,22 +247,22 @@ class KalturaObjectFactory(object):
 
 # Abstract base class for all client objects
 class KalturaObjectBase(object):
-    def __init__(self, 
-            relatedObjects=NotImplemented):
+    def __init__(self,
+                 relatedObjects=NotImplemented):
 
         # @var map of KalturaListResponse
         # @readonly
         self.relatedObjects = relatedObjects
-        
+
         from KalturaClient.Plugins.Core import KalturaListResponse
         KalturaObjectBase.PROPERTY_LOADERS = {
-            'relatedObjects': (KalturaObjectFactory.createMap, KalturaListResponse) 
+            'relatedObjects': (KalturaObjectFactory.createMap, KalturaListResponse)
         }
-    
+
     def fromXmlImpl(self, node, propList):
         for childNode in node.childNodes:
             nodeName = childNode.nodeName
-            if nodeName not in propList:
+            if not propList.has_key(nodeName):
                 continue
             propLoader = propList[nodeName]
             if type(propLoader) == tuple:
@@ -280,7 +276,7 @@ class KalturaObjectBase(object):
     def fromXml(self, node):
         self.fromXmlImpl(node, KalturaObjectBase.PROPERTY_LOADERS)
         pass
-    
+
     def toParams(self):
         result = KalturaParams()
         result.put('objectType', 'KalturaObjectBase')
@@ -296,18 +292,19 @@ class KalturaObjectBase(object):
 class KalturaServiceBase(object):
     def __init__(self, client = None):
         self.client = client
-        
+
     def setClient(self, client):
         self.client = client
 
 # Exception class for server errors
 class KalturaException(Exception):
-    def __init__(self, message, code):
+    def __init__(self, message, code, header = None):
         self.code = code
         self.message = message
+        self.header = header
 
     def __str__(self):
-        return "%s (%s)" % (self.message, self.code)
+        return "%s (%s) \n Header: %s" % (self.message, self.code, self.header)
 
 # Exception class for client errors
 class KalturaClientException(Exception):
@@ -321,7 +318,7 @@ class KalturaClientException(Exception):
     ERROR_RESULT_NOT_FOUND = -8
     ERROR_READ_TIMEOUT = -9
     ERROR_READ_GZIP_FAILED = -10
-  
+
     def __init__(self, message, code):
         self.code = code
         self.message = message
@@ -337,11 +334,11 @@ class KalturaConfiguration(object):
         self.serviceUrl                 = serviceUrl
         self.format                     = KALTURA_SERVICE_FORMAT_XML
         self.requestTimeout             = 120
-        
+
     # Set logger to get kaltura client debug logs
     def setLogger(self, log):
         self.logger = log
-        
+
     # Gets the logger (internal client use)
     def getLogger(self):
         return self.logger
@@ -352,15 +349,15 @@ class IKalturaClientPlugin(object):
     @staticmethod
     def get():
         raise NotImplementedError
-        
+
     # @return array<KalturaServiceBase>
     def getServices(self):
         raise NotImplementedError
-        
+
     # @return string
     def getName(self):
         raise NotImplementedError
-        
+
 # Client plugin base class
 class KalturaClientPlugin(IKalturaClientPlugin):
     pass
@@ -371,7 +368,7 @@ class KalturaEnumsFactory(object):
 
     @staticmethod
     def create(enumValue, enumType):
-        if enumType not in KalturaEnumsFactory.enumFactories:
+        if not KalturaEnumsFactory.enumFactories.has_key(enumType):
             raise KalturaClientException("Unrecognized enum '%s'" % enumType, KalturaClientException.ERROR_INVALID_OBJECT_TYPE)
         return KalturaEnumsFactory.enumFactories[enumType](enumValue)
 
