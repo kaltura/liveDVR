@@ -147,8 +147,10 @@ class ConcatenationTask(TaskBase):
                         return True
                     else:
                         for server_node in response_list:
-                            if server_node.getServerNodeId() != server_node_id and server_node.getDuration() > self.duration:
-                                return False
+                            if server_node.getServerNodeId() != server_node_id:
+                                for recorded_entry_info in server_node.recordedInfo:
+                                    if recorded_entry_info.getRecordedEntryId() == self.recorded_id and recorded_entry_info.getDuration() > self.duration:
+                                        return False
                         return True
                 else:
                     self.logger.error('dc file contains wrong number of parameters: [{}], call developer. Assuming processing required'.format(args))
