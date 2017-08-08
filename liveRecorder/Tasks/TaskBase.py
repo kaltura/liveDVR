@@ -43,3 +43,6 @@ class TaskBase(object):
     def run(self):
         """running the task"""
         return
+
+    def is_processing_required(self):
+        return True

@@ -7,12 +7,16 @@ import subprocess
 import urllib2
 
 import m3u8
+
 from Iso639Wrapper import Iso639Wrapper
 
 from Config.config import get_config
 from Logger.LoggerDecorator import log_subprocess_output
 from TaskBase import TaskBase
 from datetime import datetime
+from BackendClient import *
+from KalturaClient.Plugins.Core import  KalturaServerNodeService
+from KalturaClient.Base import KalturaException
 
 # todo add timeout, and use m3u8 insted of regex
 
@@ -29,9 +33,12 @@ class ConcatenationTask(TaskBase):
 
     def __init__(self, param, logger_info):
         TaskBase.__init__(self, param, logger_info)
+        session_id = self.entry_id + '-' + self.recorded_id
+        self.backend_client = BackendClient(session_id)
         concat_task_processing_dir = os.path.join(self.base_directory, self.__class__.__name__, 'processing')
         self.recording_path = os.path.join(concat_task_processing_dir, self.entry_directory)
         self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
+        self.dc_full_path = os.path.join(self.recording_path, 'dc')
         self.token_url = self.token_url_template.format(self.recorded_id)
         self.nginx_url = "http://" + self.token_url + "t/{0}"
         self.flavor_pattern = 'index-s(?P<flavor>\d+)'
@@ -123,6 +130,33 @@ class ConcatenationTask(TaskBase):
             flavor_id = result.group('flavor')
 
         return flavor_id
+
+    def is_processing_required(self):
+        # read dc file && get entry server nodes
+        with open(self.dc_full_path, "r") as dc_file:
+            dc_details = dc_file.read()
+            if dc_details:
+                args = dc_details.split()
+                if len(args) == 2:
+                    server_node_id = args[0]
+                    server_type = args[1]
+                    self.logger.debug('successfully opened dc file. server node id [{}], server type [{}]'.format(server_node_id, server_type))
+                    partner_id = self.backend_client.get_live_entry(self.entry_id).partnerId
+                    response_list = self.backend_client.get_server_entry_nodes_list(partner_id, self.entry_id)
+                    if len(response_list) == 1:
+                        return True
+                    else:
+                        for server_node in response_list:
+                            if server_node.getServerNodeId() != server_node_id and server_node.getDuration() > self.duration:
+                                return False
+                        return True
+                else:
+                    self.logger.error('dc file contains wrong number of parameters: [{}], call developer. Assuming processing required'.format(args))
+                    return True
+            else:
+                self.logger.warn('dc file not found. Assuming processing is required')
+                return True
+
 
     def run(self):
 

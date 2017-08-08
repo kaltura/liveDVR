@@ -1,6 +1,6 @@
 from KalturaClient import *
 from KalturaClient.Plugins.Core import KalturaSessionType, KalturaUploadToken, KalturaUploadedFileTokenResource, \
-    KalturaUploadTokenFilter, KalturaServerFileResource, KalturaUploadTokenStatus
+    KalturaUploadTokenFilter, KalturaServerFileResource, KalturaUploadTokenStatus, KalturaEntryServerNodeFilter
 from Config.config import get_config
 from Logger.LoggerDecorator import logger_decorator
 from threading import Lock
@@ -154,6 +154,13 @@ class BackendClient:
         resource.localFilePath = output_file
         resource.keepOriginalFile = False
         self.set_recorded_content(entry_id, resource, duration, partner_id, recorded_id, flavor_id)
+
+    def get_server_entry_nodes_list(self, partner_id, entry_id):
+        self.logger.info('get_server_entry_nodes [entryId={}]'.format(entry_id))
+        server_entry_nodes_filter = KalturaEntryServerNodeFilter()
+        server_entry_nodes_filter.entryIdEqual = entry_id
+        return self.handle_request(partner_id, 'serverNode', 'listAction', server_entry_nodes_filter)
+
 
 
 
