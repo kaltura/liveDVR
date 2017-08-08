@@ -147,9 +147,9 @@ class ConcatenationTask(TaskBase):
                         return True
                     else:
                         for server_node in response_list:
-                            if server_node.getServerNodeId() != server_node_id:
+                            if server_node.serverNodeId != server_node_id:
                                 for recorded_entry_info in server_node.recordedInfo:
-                                    if recorded_entry_info.getRecordedEntryId() == self.recorded_id and recorded_entry_info.getDuration() > self.duration:
+                                    if recorded_entry_info.recordedEntryId == self.recorded_id and recorded_entry_info.duration > self.duration:
                                         return False
                         return True
                 else:
