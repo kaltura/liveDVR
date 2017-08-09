@@ -15,8 +15,9 @@ from Logger.LoggerDecorator import log_subprocess_output
 from TaskBase import TaskBase
 from datetime import datetime
 from BackendClient import *
-from KalturaClient.Plugins.Core import  KalturaServerNodeService
-from KalturaClient.Base import KalturaException
+from KalturaClient.Plugins.Core import KalturaEntryServerNodeType
+
+
 
 # todo add timeout, and use m3u8 insted of regex
 
@@ -132,25 +133,34 @@ class ConcatenationTask(TaskBase):
         return flavor_id
 
     def is_processing_required(self):
-        # read dc file && get entry server nodes
+        # read dc file && get entry server nodes to decide whether to process the job or skip it
         with open(self.dc_full_path, "r") as dc_file:
             dc_details = dc_file.read()
             if dc_details:
                 args = dc_details.split()
                 if len(args) == 2:
                     server_node_id = args[0]
-                    server_type = args[1]
-                    self.logger.debug('successfully opened dc file. server node id [{}], server type [{}]'.format(server_node_id, server_type))
+                    server_type = KalturaEntryServerNodeType(args[1])
+                    self.logger.debug('successfully read dc file. server node id [{}], server type [{}]'.format(server_node_id, server_type))
                     partner_id = self.backend_client.get_live_entry(self.entry_id).partnerId
-                    response_list = self.backend_client.get_server_entry_nodes_list(partner_id, self.entry_id)
-                    if len(response_list) == 1:
+                    response_list, response_header = self.backend_client.get_server_entry_nodes_list(partner_id, self.entry_id)
+                    if len(response_list.objects) == 1:
+                        self.logger.debug('only one dc returned from call to server nodes list. Recording job will be processed')
                         return True
+                    elif len(response_list.objects) == 0:
+                        if server_type.value == KalturaEntryServerNodeType.LIVE_PRIMARY:
+                            self.logger.debug('recording job was processed by LIVE BACKUP DC')
+                        else:
+                            self.logger.debug('recording job was processed by LIVE PRIMARY DC')
+                        return False
                     else:
-                        for server_node in response_list:
+                        for server_node in response_list.objects:
                             if server_node.serverNodeId != server_node_id:
                                 for recorded_entry_info in server_node.recordedInfo:
                                     if recorded_entry_info.recordedEntryId == self.recorded_id and recorded_entry_info.duration > self.duration:
                                         return False
+                                    elif recorded_entry_info.duration == self.duration:
+                                        return server_type.value == KalturaEntryServerNodeType.LIVE_PRIMARY
                         return True
                 else:
                     self.logger.error('dc file contains wrong number of parameters: [{}], call developer. Assuming processing required'.format(args))

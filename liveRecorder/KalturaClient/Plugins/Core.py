@@ -55329,8 +55329,8 @@ class KalturaEntryServerNodeService(KalturaServiceBase):
 		self.client.queueServiceActionCall("entryservernode", "list", KalturaEntryServerNodeListResponse, kparams)
 		if self.client.isMultiRequest():
 			return self.client.getMultiRequestResult()
-		resultNode = self.client.doQueue()
-		return KalturaObjectFactory.create(resultNode, KalturaEntryServerNodeListResponse)
+		resultNode, header = self.client.doQueue()
+		return (KalturaObjectFactory.create(resultNode, KalturaEntryServerNodeListResponse), header)
 
 	def get(self, id):
 		kparams = KalturaParams()

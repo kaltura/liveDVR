@@ -159,7 +159,7 @@ class BackendClient:
         self.logger.info('get_server_entry_nodes [entryId={}]'.format(entry_id))
         server_entry_nodes_filter = KalturaEntryServerNodeFilter()
         server_entry_nodes_filter.entryIdEqual = entry_id
-        return self.handle_request(partner_id, 'entryServerNode', 'list', server_entry_nodes_filter)
+        return self.client.entryServerNode.list(server_entry_nodes_filter)
 
 
 
