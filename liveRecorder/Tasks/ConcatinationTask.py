@@ -139,9 +139,17 @@ class ConcatenationTask(TaskBase):
             if dc_details:
                 args = dc_details.split()
                 if len(args) == 2:
-                    server_node_id = args[0]
-                    server_type = KalturaEntryServerNodeType(args[1])
-                    self.logger.debug('successfully read dc file. server node id [{}], server type [{}]'.format(server_node_id, server_type))
+                    try:
+                        entry_server_node_id = int(args[0])
+                        server_type = KalturaEntryServerNodeType(args[1])
+                    except ValueError as e:
+                        self.logger.fatal("invalid content in dc file: server_entry {}".format(str(e)))
+                        raise e
+                    except Exception as e:
+                        self.logger.fatal("invalid content in dc file: server_entry {}".format(str(e)))
+                        raise e
+
+                    self.logger.debug('successfully read dc file. Entry server node id [{}], server type [{}]'.format(entry_server_node_id, server_type))
                     partner_id = self.backend_client.get_live_entry(self.entry_id).partnerId
                     response_list, response_header = self.backend_client.get_server_entry_nodes_list(partner_id, self.entry_id)
                     if len(response_list.objects) == 1:
@@ -155,8 +163,8 @@ class ConcatenationTask(TaskBase):
                         return False
                     else:
                         for server_node in response_list.objects:
-                            if server_node.serverNodeId != server_node_id:
-                                for recorded_entry_info in server_node.recordedInfo:
+                            if server_node.serverNodeId != entry_server_node_id:
+                                for recorded_entry_info in server_node.recordingInfo:
                                     if recorded_entry_info.recordedEntryId == self.recorded_id and recorded_entry_info.duration > self.duration:
                                         return False
                                     elif recorded_entry_info.duration == self.duration:
