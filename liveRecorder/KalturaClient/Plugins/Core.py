@@ -55946,7 +55946,7 @@ class KalturaLiveChannelService(KalturaServiceBase):
 		resultNode = self.client.doQueue()
 		return KalturaObjectFactory.create(resultNode, KalturaLiveEntry)
 
-	def registerMediaServer(self, entryId, hostname, mediaServerIndex, applicationName = NotImplemented, liveEntryStatus = 1, shouldCreateRecordedEntry = true):
+	def registerMediaServer(self, entryId, hostname, mediaServerIndex, applicationName = NotImplemented, liveEntryStatus = 1, shouldCreateRecordedEntry = True):
 		"""Register media server to live entry"""
 
 		kparams = KalturaParams()
@@ -56234,7 +56234,7 @@ class KalturaLiveStreamService(KalturaServiceBase):
 		resultNode = self.client.doQueue()
 		return KalturaObjectFactory.create(resultNode, KalturaLiveEntry)
 
-	def registerMediaServer(self, entryId, hostname, mediaServerIndex, applicationName = NotImplemented, liveEntryStatus = 1, shouldCreateRecordedEntry = true):
+	def registerMediaServer(self, entryId, hostname, mediaServerIndex, applicationName = NotImplemented, liveEntryStatus = 1, shouldCreateRecordedEntry = True):
 		"""Register media server to live entry"""
 
 		kparams = KalturaParams()
