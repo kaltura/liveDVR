@@ -162,9 +162,9 @@ class ConcatenationTask(TaskBase):
                             self.logger.debug('recording job was processed by LIVE PRIMARY DC')
                         return False
                     else:
-                        for server_node in response_list.objects:
-                            if server_node.serverNodeId != entry_server_node_id:
-                                for recorded_entry_info in server_node.recordingInfo:
+                        for entry_server_node in response_list.objects:
+                            if entry_server_node.serverNodeId != entry_server_node_id:
+                                for recorded_entry_info in entry_server_node.recordingInfo:
                                     if recorded_entry_info.recordedEntryId == self.recorded_id and recorded_entry_info.duration > self.duration:
                                         return False
                                     elif recorded_entry_info.duration == self.duration:
