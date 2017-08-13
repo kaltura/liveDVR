@@ -55946,7 +55946,7 @@ class KalturaLiveChannelService(KalturaServiceBase):
 		resultNode = self.client.doQueue()
 		return KalturaObjectFactory.create(resultNode, KalturaLiveEntry)
 
-	def registerMediaServer(self, entryId, hostname, mediaServerIndex, applicationName = NotImplemented, liveEntryStatus = 1):
+	def registerMediaServer(self, entryId, hostname, mediaServerIndex, applicationName = NotImplemented, liveEntryStatus = 1, shouldCreateRecordedEntry = true):
 		"""Register media server to live entry"""
 
 		kparams = KalturaParams()
@@ -55955,6 +55955,7 @@ class KalturaLiveChannelService(KalturaServiceBase):
 		kparams.addStringIfDefined("mediaServerIndex", mediaServerIndex)
 		kparams.addStringIfDefined("applicationName", applicationName)
 		kparams.addIntIfDefined("liveEntryStatus", liveEntryStatus);
+		kparams.addBoolIfDefind("shouldCreateRecordedEntry", shouldCreateRecordedEntry);
 		self.client.queueServiceActionCall("livechannel", "registerMediaServer", KalturaLiveEntry, kparams)
 		if self.client.isMultiRequest():
 			return self.client.getMultiRequestResult()
@@ -56233,7 +56234,7 @@ class KalturaLiveStreamService(KalturaServiceBase):
 		resultNode = self.client.doQueue()
 		return KalturaObjectFactory.create(resultNode, KalturaLiveEntry)
 
-	def registerMediaServer(self, entryId, hostname, mediaServerIndex, applicationName = NotImplemented, liveEntryStatus = 1):
+	def registerMediaServer(self, entryId, hostname, mediaServerIndex, applicationName = NotImplemented, liveEntryStatus = 1, shouldCreateRecordedEntry = true):
 		"""Register media server to live entry"""
 
 		kparams = KalturaParams()
@@ -56242,6 +56243,7 @@ class KalturaLiveStreamService(KalturaServiceBase):
 		kparams.addStringIfDefined("mediaServerIndex", mediaServerIndex)
 		kparams.addStringIfDefined("applicationName", applicationName)
 		kparams.addIntIfDefined("liveEntryStatus", liveEntryStatus);
+		kparams.addBoolIfDefinde("shouldCreateRecordedEntry", shouldCreateRecordedEntry);
 		self.client.queueServiceActionCall("livestream", "registerMediaServer", KalturaLiveEntry, kparams)
 		if self.client.isMultiRequest():
 			return self.client.getMultiRequestResult()
