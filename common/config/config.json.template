@@ -108,6 +108,7 @@
        "recordingMaxDurationInHours" : 24,
        "recordingMinDurationInSeconds" : 60,
        "recordingSessionDurationInSec" : 180,
-       "recordingUpdateEntryTimeIntervalInMin" : 15
+       "recordingUpdateEntryTimeIntervalInMin" : 15,
+       "getEntryInfoIntervalMSec" : 60000
      }
 }
