@@ -44,6 +44,7 @@ class ConcatenationTask(TaskBase):
         self.nginx_url = "http://" + self.token_url + "t/{0}"
         self.flavor_pattern = 'index-s(?P<flavor>\d+)'
         self.iso639_wrapper = Iso639Wrapper(logger_info)
+        self.server_type_str = 'UNKNOWN'
 
     def tokenize_url(self, url):
 
@@ -134,45 +135,59 @@ class ConcatenationTask(TaskBase):
 
     def is_processing_required(self):
         # read metadata file && get entry server nodes to decide whether to process the job or skip it
-        with open(self.metadata_full_path, "r") as dc_file:
-            data = dc_file.read()
-            if data:
-                metadata = json.loads(data)
-                try:
-                    entry_server_node_id = int(metadata['entryServerNodeId'])
-                    server_type = KalturaEntryServerNodeType(metadata['serverType'])
-                except ValueError as e:
-                    self.logger.fatal("invalid content in dc file: server_entry {}".format(str(e)))
-                    raise e
-                except Exception as e:
-                    self.logger.fatal("invalid content in dc file: server_entry {}".format(str(e)))
-                    raise e
+        should_process = False
+        try:
+            with open(self.metadata_full_path, "r") as dc_file:
+                data = dc_file.read()
+                if data:
+                    metadata = json.loads(data)
+                    try:
+                        entry_server_node_id = int(metadata['entryServerNodeId'])
+                        server_type = KalturaEntryServerNodeType(metadata['serverType'])
+                        if server_type.value == KalturaEntryServerNodeType.LIVE_PRIMARY:
+                            self.server_type_str = 'PRIMARY'
+                        else:
+                            self.server_type_str = 'BACKUP'
 
-                self.logger.debug('successfully read dc file. Entry server node id [{}], server type [{}]'.format(entry_server_node_id, server_type))
-                partner_id = self.backend_client.get_live_entry(self.entry_id).partnerId
-                response_list, response_header = self.backend_client.get_server_entry_nodes_list(self.entry_id)
-                if len(response_list.objects) == 1:
-                    self.logger.debug('only one dc returned from call to server nodes list. Recording job will be processed')
-                    return True
-                elif len(response_list.objects) == 0:
-                    if server_type.value == KalturaEntryServerNodeType.LIVE_PRIMARY:
-                        self.logger.debug('recording job was processed by LIVE BACKUP DC')
+                    except ValueError as e:
+                        self.logger.fatal("invalid content in dc file: {}".format(str(e)))
+                        raise e
+                    except Exception as e:
+                        self.logger.fatal("failed to read or parse dc file: {}".format(str(e)))
+                        raise e
+
+                    self.logger.debug('successfully read dc file. Entry server node id [{}], server type [{}]'.format(entry_server_node_id, server_type))
+
+                    response_list, response_header = self.backend_client.get_server_entry_nodes_list(self.entry_id)
+                    if len(response_list.objects) == 1:
+                        self.logger.debug('only one dc returned from call to server nodes list. Recording job will be processed')
+                        should_process = True
+                    elif len(response_list.objects) == 0:
+                        self.logger.debug('recording job was processed by LIVE {} DC'.format(self.server_type_str))
                     else:
-                        self.logger.debug('recording job was processed by LIVE PRIMARY DC')
-                    return False
+                        for entry_server_node in response_list.objects:
+                            if entry_server_node.id == entry_server_node_id:
+                                for recorded_entry_info in entry_server_node.recordingInfo:
+                                    if recorded_entry_info.recordedEntryId == self.recorded_id and recorded_entry_info.duration < self.duration:
+                                        should_process = True
+                                    elif recorded_entry_info.recordedEntryId == self.recorded_id and recorded_entry_info.duration == self.duration:
+                                        should_process = server_type.value == KalturaEntryServerNodeType.LIVE_PRIMARY
                 else:
-                    for entry_server_node in response_list.objects:
-                        if entry_server_node.serverNodeId != entry_server_node_id:
-                            for recorded_entry_info in entry_server_node.recordingInfo:
-                                if recorded_entry_info.recordedEntryId == self.recorded_id and recorded_entry_info.duration > self.duration:
-                                    return False
-                                elif recorded_entry_info.duration == self.duration:
-                                    return server_type.value == KalturaEntryServerNodeType.LIVE_PRIMARY
-                    return True
-            else:
-                self.logger.warn('metadata file not found. Assuming processing is required')
-                return True
+                    self.logger.warn('metadata file not found. Assuming processing is required')
+                    should_process = True
 
+                if should_process:
+                    self.logger.info('processing vod in LIVE {} dc'.format(self.server_type_str))
+                else:
+                    self.logger.info('no need to process vod in LIVE {} dc'.format(self.server_type_str))
+                return should_process
+
+        except (OSError, IOError) as e:
+            self.logger.fatal("failed to open dc file. {}".format(str(e)))
+            raise e
+        except Exception as e:
+            self.logger.fatal("exception thrown while checking if job should be processed. {}".format(str(e)))
+            raise e
 
     def run(self):
 

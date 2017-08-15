@@ -156,6 +156,7 @@ class BackendClient:
         self.set_recorded_content(entry_id, resource, duration, partner_id, recorded_id, flavor_id)
 
     def get_server_entry_nodes_list(self, entry_id):
+        self.get_kaltura_session()  # generate KS in case that not existed or expired
         self.logger.info('get_server_entry_nodes [entryId={}]'.format(entry_id))
         server_entry_nodes_filter = KalturaEntryServerNodeFilter()
         server_entry_nodes_filter.entryIdEqual = entry_id
