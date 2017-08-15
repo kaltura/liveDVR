@@ -150,7 +150,7 @@ class ConcatenationTask(TaskBase):
 
                 self.logger.debug('successfully read dc file. Entry server node id [{}], server type [{}]'.format(entry_server_node_id, server_type))
                 partner_id = self.backend_client.get_live_entry(self.entry_id).partnerId
-                response_list, response_header = self.backend_client.get_server_entry_nodes_list(partner_id, self.entry_id)
+                response_list, response_header = self.backend_client.get_server_entry_nodes_list(self.entry_id)
                 if len(response_list.objects) == 1:
                     self.logger.debug('only one dc returned from call to server nodes list. Recording job will be processed')
                     return True
