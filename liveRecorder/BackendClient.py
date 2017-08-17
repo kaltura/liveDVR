@@ -160,7 +160,9 @@ class BackendClient:
         self.logger.info('get_server_entry_nodes [entryId={}]'.format(entry_id))
         server_entry_nodes_filter = KalturaEntryServerNodeFilter()
         server_entry_nodes_filter.entryIdEqual = entry_id
-        return self.client.entryServerNode.list(server_entry_nodes_filter)
+        response_list, response_header = self.client.entryServerNode.list(server_entry_nodes_filter)
+        self.logger.info('Header :{} '.format(response_header))
+        return response_list, response_header
 
 
 

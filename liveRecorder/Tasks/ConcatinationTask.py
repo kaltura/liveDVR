@@ -44,7 +44,6 @@ class ConcatenationTask(TaskBase):
         self.nginx_url = "http://" + self.token_url + "t/{0}"
         self.flavor_pattern = 'index-s(?P<flavor>\d+)'
         self.iso639_wrapper = Iso639Wrapper(logger_info)
-        self.server_type_str = 'UNKNOWN'
 
     def tokenize_url(self, url):
 
@@ -135,7 +134,9 @@ class ConcatenationTask(TaskBase):
 
     def is_processing_required(self):
         # read metadata file && get entry server nodes to decide whether to process the job or skip it
-        should_process = False
+        should_process = True
+        local_dc_type_str = 'UNKNOWN'
+        remote_dc_type_str = 'UNKNOWN'
         try:
             with open(self.metadata_full_path, "r") as dc_file:
                 data = dc_file.read()
@@ -145,10 +146,11 @@ class ConcatenationTask(TaskBase):
                         entry_server_node_id = int(metadata['entryServerNodeId'])
                         server_type = KalturaEntryServerNodeType(metadata['serverType'])
                         if server_type.value == KalturaEntryServerNodeType.LIVE_PRIMARY:
-                            self.server_type_str = 'PRIMARY'
+                            local_dc_type_str = 'PRIMARY'
+                            remote_dc_type_str = 'BACKUP'
                         else:
-                            self.server_type_str = 'BACKUP'
-
+                            local_dc_type_str = 'BACKUP'
+                            remote_dc_type_str = 'PRIMARY'
                     except ValueError as e:
                         self.logger.fatal("invalid content in dc file: {}".format(str(e)))
                         raise e
@@ -156,30 +158,46 @@ class ConcatenationTask(TaskBase):
                         self.logger.fatal("failed to read or parse dc file: {}".format(str(e)))
                         raise e
 
-                    self.logger.debug('successfully read dc file. Entry server node id [{}], server type [{}]'.format(entry_server_node_id, server_type))
+                    self.logger.debug('successfully read dc file. Entry server node id [{}], server type [{}]'.format(
+                        entry_server_node_id, local_dc_type_str))
 
                     response_list, response_header = self.backend_client.get_server_entry_nodes_list(self.entry_id)
-                    if len(response_list.objects) == 1:
-                        self.logger.debug('only one dc returned from call to server nodes list. Recording job will be processed')
-                        should_process = True
-                    elif len(response_list.objects) == 0:
-                        self.logger.debug('recording job was processed by LIVE {} DC'.format(self.server_type_str))
+                    self.logger.info('List length:{}'.format(len(response_list.objects)))
+                    ''' if len(response_list.objects) == 1:
+                        self.logger.debug(
+                            'only one dc returned from call to server nodes list. Recording job will be processed')
+                        should_process = True'''
+                    if len(response_list.objects) == 0:
+                        self.logger.debug('recording job was processed by LIVE {} DC'.format(remote_dc_type_str))
+                        should_process = False
                     else:
+                        local_duration = int(self.duration)
+                        max_duration = local_duration
+                        id_of_processing_dc = entry_server_node_id
                         for entry_server_node in response_list.objects:
-                            if entry_server_node.id == entry_server_node_id:
+                            if entry_server_node.id != entry_server_node_id:
                                 for recorded_entry_info in entry_server_node.recordingInfo:
-                                    if recorded_entry_info.recordedEntryId == self.recorded_id and recorded_entry_info.duration < self.duration:
-                                        should_process = True
-                                    elif recorded_entry_info.recordedEntryId == self.recorded_id and recorded_entry_info.duration == self.duration:
-                                        should_process = server_type.value == KalturaEntryServerNodeType.LIVE_PRIMARY
+                                    if entry_server_node.recordingInfo and recorded_entry_info.recordedEntryId == self.recorded_id:
+                                        if recorded_entry_info.duration > local_duration:
+                                            max_duration = recorded_entry_info.duration
+                                            id_of_processing_dc = entry_server_node.id
+                                        elif recorded_entry_info.duration == local_duration and local_dc_type_str == KalturaEntryServerNodeType.LIVE_BACKUP:
+                                            max_duration = recorded_entry_info.duration
+                                            id_of_processing_dc = entry_server_node.id
+                        if id_of_processing_dc != entry_server_node_id:
+                            should_process = False
+                        if should_process:
+                            self.logger.info(
+                                'processing vod in LIVE {} dc. local dc duration [{}] msec'.format(local_dc_type_str,
+                                                                                                   local_duration))
+                        else:
+                            self.logger.info(
+                                'vod will be processed by {}. local duration [{}] msec, max_duration [{}], msec'.format(
+                                    remote_dc_type_str, local_duration, max_duration))
                 else:
                     self.logger.warn('metadata file not found. Assuming processing is required')
                     should_process = True
 
-                if should_process:
-                    self.logger.info('processing vod in LIVE {} dc'.format(self.server_type_str))
-                else:
-                    self.logger.info('no need to process vod in LIVE {} dc'.format(self.server_type_str))
                 return should_process
 
         except (OSError, IOError) as e:
