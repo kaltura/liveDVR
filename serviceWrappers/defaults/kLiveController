@@ -1,0 +1,6 @@
+# Kaltura liveController defaults file
+LOG_DIR=/var/log
+PID_DIR=/var/run
+USE_NVM="1"
+KLIVE_CONTROLLER_PREFIX=/opt/kaltura/liveController/latest
+NODE_PATH="${KLIVE_CONTROLLER_PREFIX}/node_modules"
