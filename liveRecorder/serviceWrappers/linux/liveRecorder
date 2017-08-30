@@ -22,7 +22,6 @@
 # extend callable functions from "functions" script
 ###
 
-. /opt/rh/python27/enable
 
 NAME=liveRecorder
 STATUS_FUNCTION=status
@@ -59,6 +58,8 @@ LOGFILE="${LOGDIR}/${NAME}-service.log"
 APPLICATION_PATH=${KLIVE_RECORDER_PREFIX}/main.py
 RETVAL=0
 
+. /opt/rh/python27/enable
+
 createFolders() {
 	[ -d ${LOGDIR} ] || mkdir -p ${LOGDIR}
 	SHARED_APP_DIR=$(python ${SCRIPT_DIR}/getRecordingBaseDir.py)
@@ -74,10 +75,13 @@ createFolders() {
 
 start() {
     echo "starting liveRecorder..."
+    python --version
     local __modules="schedule m3u8 poster psutil Crypto"
     for module in ${__modules}; do
-         python -c "import ${module}"
-        [ $? -ne 0 ] && echo "Missing ${module} pip module." && exit 3
+      echo "python -c \"import ${module}\""
+      local __pc=$( python -c """import ${module}""" )
+      echo ${__pc}
+      [ $? -ne 0 ] && echo "Missing '$module', run pip install $module." && exit 3
     done
     createFolders || exit 4
     check_pid_status "-p ${PIDFILE}"
