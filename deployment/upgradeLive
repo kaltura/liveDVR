@@ -1,15 +1,18 @@
 #!/bin/bash
-# For upgrade just type ./upgradeLive <version> [replace_script|downgrade|build|install_live_recorder] [ffmpeg build path] [ffmpeg version]
+# For upgrade just type ./upgradeLive <version> [replace_script|downgrade|build|install_live_recorder|replace_default] [ffmpeg build path] [ffmpeg version] [replace option: all/live/recorder]
 # in case 'build' is used as parameter then ffmpeg build path and ffmpeg version are mandatory
 
 #set -e
 
 PRODUCT_PATH=/opt/kaltura/liveController
-USAGE="usage: upgradeLive [version] <replace_script|downgrade|build|install_live_recorder> <ffmpeg build path> <ffmpeg version>"
+USAGE="usage: upgradeLive [version] <replace_script|downgrade|build|install_live_recorder> <ffmpeg build path> <ffmpeg version> <replace option: all/live/recorder>"
 BUILD_USAGE="usage: upgradeLive [version] build [ffmpeg build path] [ffmpeg version]"
+REPLACE_DEFAULT_USAGE="usage: upgradeLive [version] replace_default [all/live/recorder]"
+REPLACE_TYPE=
+FILES_TO_REPLACE=
 FFMPEG_BUILD_PATH=
 FFMPEG_VERSION=
-
+VERSION=
 
 PARAM=install
 if [ $# -eq 0 ]; then
@@ -24,7 +27,7 @@ if [ $# -gt 1 ]; then
     PARAM=$2
 fi
 
-if [ ${PARAM} = "build" ]; then
+if [ "${PARAM}" = "build" ]; then
 	if [ $# -gt 3 ]; then
 		FFMPEG_BUILD_PATH=$3
 		FFMPEG_VERSION=$4
@@ -32,57 +35,101 @@ if [ ${PARAM} = "build" ]; then
 		echo "wrong number of parameters running install with build. ${BUILD_USAGE}"
 		exit 2
 	fi
+elif [ "${PARAM}" = "replace_default" ]; then
+	if [ $# -gt 2 ]; then
+		REPLACE_TYPE=$3
+		case ${REPLACE_TYPE} in
+		    all)
+		        FILES_TO_REPLACE="kLiveController liveRecorder"
+		    ;;
+		    live)
+		        FILES_TO_REPLACE="kLiveController"
+		    ;;
+		    recorder)
+		        FILES_TO_REPLACE="liveRecorder"
+		    ;;
+		esac
+	else
+		echo "wrong number of parameters running upgradeLive with replace_default. ${REPLACE_DEFAULT_USAGE}"
+		exit 3
+	fi
 fi
 
 function download_version() {
-	if [ ! -r v${VERSION}.tar.gz ]; then
-        echo starting to download v${VERSION}.tar.gz
-        wget https://github.com/kaltura/liveDVR/archive/v${VERSION}.tar.gz
-    else
-        echo "found v${VERSION}.tar.gz, skipping download"
+    if [ -r v${VERSION}.tar.gz ]; then
+        echo "rm -f v${VERSION}.tar.gz"
+        rm -f v${VERSION}.tar.gz
     fi
+    echo "starting to download v${VERSION}.tar.gz"
+    wget https://github.com/kaltura/liveDVR/archive/v${VERSION}.tar.gz
 }
 
 function download_new_version() {
     download_version
-    echo running unzip v${VERSION}.tar.gz
+    if [ -r ${VERSION} ]; then
+       local __time=(date +%s)
+       mv ${VERSION}  ${__time}.${PRODUCT_PATH}/${VERSION}
+    fi
+    echo "running unzip v${VERSION}.tar.gz"
     tar -xvzf v${VERSION}.tar.gz
     mv liveDVR-${VERSION} ${VERSION}
-    rm -f /opt/kaltura/liveController/v${VERSION}.tar.gz
+    rm -f v${VERSION}.tar.gz
 }
 
-function replace_upgrade_script() {
+function replace() {
+    local __files=($1)
     download_version
-    echo "extracting liveDVR-${VERSION}/deployment/upgradeLive from liveDVR-${VERSION}.tar.gz"
-    tar -zxvf v${VERSION}.tar.gz liveDVR-${VERSION}/deployment/upgradeLive
-    echo "copying  liveDVR-${VERSION}/deployment/upgradeLive to ${PRODUCT_PATH}"
-    cp -f liveDVR-${VERSION}/deployment/upgradeLive ${PRODUCT_PATH}/
+    for file in ${__files}; do
+        case ${file} in
+            upgradeLive)
+                echo "extracting liveDVR-${VERSION}/deployment/upgradeLive from liveDVR-${VERSION}.tar.gz"
+                tar -zxvf v${VERSION}.tar.gz liveDVR-${VERSION}/deployment/upgradeLive
+                echo "copying  liveDVR-${VERSION}/deployment/upgradeLive to ${PRODUCT_PATH}"
+                cp -f liveDVR-${VERSION}/deployment/upgradeLive ./
+                ;;
+            kLiveController)
+                local __liveController="serviceWrappers/defaults/kLiveController"
+                echo "extracting liveDVR-${VERSION}/${__liveController} from liveDVR-${VERSION}.tar.gz"
+                tar -zxvf v${VERSION}.tar.gz liveDVR-${VERSION}/${__liveController}
+                echo "copying  liveDVR-${VERSION}/${__liveController} to /etc/default"
+                cp -f liveDVR-${VERSION}/${__liveController} /etc/default/
+                ;;
+            liveRecorder)
+                local __liveRecorder="liveRecorder/serviceWrappers/defaults/liveRecorder"
+                echo "extracting liveDVR-${VERSION}/${__liveRecorder} from liveDVR-${VERSION}.tar.gz"
+                tar -zxvf v${VERSION}.tar.gz liveDVR-${VERSION}/${__liveRecorder}
+                echo "copying  liveDVR-${VERSION}/${__liveRecorder} to /etc/default"
+                cp -f liveDVR-${VERSION}/${__liveRecorder} /etc/default/
+                ;;
+        esac
+    done
     echo "removing artifacts..."
     rm -rf v${VERSION}.tar.gz*
     rm -rf liveDVR-${VERSION}
 }
 
+
 function install() {
 	local __build=$1
 	local __install_live_recorder=$2
-	echo "staring install, build=${__build}, install_live_recorder=${__install_live_recorder}"
+	echo "staring installation, build=${__build}, install_live_recorder=${__install_live_recorder}"
     mkdir -p latest
     cd ${VERSION}
     # move configuration files (liveController's and liveRecorder's) to latest version
-    cp /opt/kaltura/liveController/configMapping.json /opt/kaltura/liveController/${VERSION}/common/config/
-    cp /opt/kaltura/liveController/configMapping.ini /opt/kaltura/liveController/${VERSION}/liveRecorder/Config/
+    cp ../configMapping.json common/config/
+    cp ../configMapping.ini liveRecorder/Config/
     npm install
     cd ..
     if [ "${__build}" = "yes" ]; then
-        echo "starting to build binaries..."
-        ${PRODUCT_PATH}/${VERSION}/build_scripts/build_ffmpg.sh ${FFMPEG_BUILD_PATH} ${FFMPEG_VERSION}
-        ${PRODUCT_PATH}/${VERSION}/build_scripts/build_addons.sh ${PRODUCT_PATH} ${FFMPEG_BUILD_PATH}
-        ${PRODUCT_PATH}/${VERSION}/build_ts2mp4_convertor.sh ${PRODUCT_PATH}/liveRecorder ${FFMPEG_BUILD_PATH}
-        echo "finished building binaries"
+        echo "### starting to build binaries..."
+        ${VERSION}/build_scripts/build_ffmpg.sh ${FFMPEG_BUILD_PATH} ${FFMPEG_VERSION}
+        ${VERSION}/build_scripts/build_addons.sh . ${FFMPEG_BUILD_PATH}
+        ${VERSION}/build_ts2mp4_convertor.sh ./liveRecorder ${FFMPEG_BUILD_PATH}
+        echo "### finished building binaries"
     else
 	    # download binaries from Jenkins
-	    echo "### starting to download binaries"
-	    /opt/kaltura/liveController/${VERSION}/deployment/get_bins "${VERSION}"
+	    echo "### starting to download binaries..."
+	    ${VERSION}/deployment/get_bins "${VERSION}"
 	    echo "### finished downloading binaries"
 	fi
     # create symlinks to latest dir and process script
@@ -90,17 +137,17 @@ function install() {
          echo "unlink latest"
          unlink latest
     fi
-    ln -s /opt/kaltura/liveController/${VERSION} /opt/kaltura/liveController/latest
+    ln -s ${VERSION} latest
     if [ "${__install_live_recorder}" = "yes" ]; then
 	      if [ ! -L /etc/init.d/liveRecorder ]; then
-	            echo "Creating symlink to liveRecorder script at - /etc/init.d/liveRecorder"
-	            ln -s /opt/kaltura/liveController/latest/liveRecorder/serviceWrappers/linux/liveRecorder /etc/init.d/liveRecorder
+	            echo "Creating symlink to latest/liveRecorder/serviceWrappers/linux/liveRecorder from /etc/init.d/liveRecorder"
+	            ln -s latest/liveRecorder/serviceWrappers/linux/liveRecorder /etc/init.d/liveRecorder
 	      fi
-          echo "starting installing liveRecoder prerequisites..."
-
-          echo "need install python 2.7 separately as CentOS comes with different python version and installation break OS functionality"
+          echo "starting to install liveRecoder prerequisites..."
           python --version
-          # . ${PRODUCT_PATH}/${VERSION}/liveRecorder/installPython2.7.sh
+          echo "installing python, suitable for live platform..."
+          . ${VERSION}/liveRecorder/installPython.sh
+          python --version
 	      local __modules=(schedule m3u8 poster psutil pycrypto)
           for module in "${__modules[@]}"; do
                 python -c "import ${module}"
@@ -115,31 +162,35 @@ function downgrade() {
         echo "unlink latest"
         unlink latest
     fi
-    ln -s /opt/kaltura/liveController/${VERSION} /opt/kaltura/liveController/latest
+    ln -s ${VERSION} latest
 
 }
 
 function stop() {
-   /etc/init.d/kLiveController stop
-   if [ -r /etc/init.d/liveRecorder ]; then
+   if [ -x /etc/init.d/kLiveController ]; then
+        /etc/init.d/kLiveController stop
+   else
+        echo "cannot stop liveController since /etc/init.d/kLiveController is not executable"
+   fi
+   if [ -x /etc/init.d/liveRecorder ]; then
         /etc/init.d/liveRecorder stop
+   elif [ -e /etc/init.d/liveRecorder ]; then
+       echo  "cannot stop liveRecorder since /etc/init.d/liveRecorder is not executable"
    fi
 }
 
 function start() {
     if [ ! -L /etc/init.d/kLiveController ]; then
-            echo "Creating symlink to kLiveController script at - /etc/init.d/kLiveController"
-            ln -s /opt/kaltura/liveController/latest/serviceWrappers/linux/kLiveController /etc/init.d/kLiveController
+       echo "Creating symlink to kLiveController script from /etc/init.d/kLiveController"
+       ln -s latest/serviceWrappers/linux/kLiveController /etc/init.d/kLiveController
     fi
-    # start nginx (web server), liveController and liveRecorder
-    echo "starting liveController..."
-    /etc/init.d/kLiveController start
+    # start liveController, nginx (web server), and liveRecorder
+    /etc/init.d/kLiveController restart
     sleep 5
     echo "starting nginx..."
-    /opt/kaltura/liveController/${VERSION}/packager/bin/run_nginx.sh
-    if [ -r /etc/init.d/liveRecorder ]; then
-          echo "starting liveRecorder..."
-          /etc/init.d/liveRecorder start
+    ${VERSION}/packager/bin/run_nginx.sh
+    if [ -x /etc/init.d/liveRecorder ]; then
+          /etc/init.d/liveRecorder restart
     else
         echo "this machine doesn't run liveRecorder"
     fi
@@ -147,10 +198,11 @@ function start() {
 
 function main()
 {
-	echo "starting upgradeLive..."
-	echo "upgradeLive ${VERSION} ${PARAM} ${FFMPEG_BUILD_PATH} ${FFMPEG_VERSION}"
+	echo ">>>>>> starting upgrade <<<<<<"
+	echo "upgradeLive ${VERSION} ${PARAM} ${FFMPEG_BUILD_PATH} ${FFMPEG_VERSION} ${REPLACE_TYPE}"
+    pushd ${PRODUCT_PATH}
 
-	if [ ! -d "${VERSION}" ] || [ "${PARAM}" != "install" ] ; then
+	if [ ! -r "${VERSION}" ] || [ ! "latest" -ef "${VERSION}" ] || [ ! "${PARAM}" = "install" ] ; then
 
 		# check if the version dir exists before downgrading, otherwise perform regular installation
 		# if configMapping.json changed from ${VERSION} to current installed version the file should be updated
@@ -176,8 +228,8 @@ function main()
 	            start
 	            ;;
 	        replace_script)
-	            echo "replacing upgradeLive script with v${VERSION}"
-	            replace_upgrade_script ${VERSION}
+	            echo "updating upgradeLive script to v${VERSION}"
+	            replace upgradeLive
 	            exit 0
 	            ;;
 	        downgrade)
@@ -186,17 +238,23 @@ function main()
 	            downgrade
 	            start
 	            ;;
-	                *)
-	            echo ${USAGE}
-	            exit 2
+	         replace_default)
+	            echo "updating ${FILES_TO_REPLACE} default files to v${VERSION}"
+	            replace ${FILES_TO_REPLACE}
 	            ;;
+	         *)
+                echo ${USAGE}
+                exit 2
+                ;;
 	    esac
 
-		echo "upgradeLive finished..."
+		echo ">>>>> finished upgrade <<<<<"
 
 	else
-	    echo "found v${VERSION}, no action done. ${USAGE}"
+	    echo "Found that version v${VERSION} is already installed. No action done."
+        echo "Please check upgradeLive ${USAGE}"
 	fi
+	popd
 }
 
 main

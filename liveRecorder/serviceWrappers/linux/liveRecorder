@@ -22,22 +22,46 @@
 # extend callable functions from "functions" script
 ###
 
-source /etc/rc.d/init.d/functions
-. /opt/rh/python27/enable
-APP_NAME=liveRecorder
-SCRIPT_DIR=$(dirname $(readlink -f $0))
-APPDIR=${SCRIPT_DIR}/../../
-NAME=${APP_NAME}
-APPLICATION_PATH=${APPDIR}/main.py
-LOG_DIR="/var/log/${APP_NAME}"
-PID_DIR="/var/run"
-PIDFILE="${PID_DIR}/${NAME}.pid"
-LOGFILE="${LOG_DIR}/${NAME}-service.log"
 
+NAME=liveRecorder
+STATUS_FUNCTION=status
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
+
+if [ -r /etc/default/${NAME} ]; then
+    echo ". /etc/default/${NAME}"
+    . /etc/default/${NAME}
+else
+    echo "${NAME} default file not found in /etc/default, using ${SCRIPT_DIR}/../defaults/${NAME}"
+    . ${SCRIPT_DIR}/../defaults/${NAME}
+fi
+
+if [ -r /etc/rc.d/init.d/functions ]; then
+   echo ". source /etc/rc.d/init.d/functions"
+   . /etc/rc.d/init.d/functions
+elif [ -r /lib/lsb/init-functions ]; then
+   echo ". /lib/lsb/init-functions"
+   . /lib/lsb/init-functions
+   STATUS_FUNCTION=status_of_proc
+else
+    echo "Error, no function found for checking if ${NAME} is running. either not running in CentOS/Ubuntu or wrong path"
+fi
+
+# these lines added especially for QA
+if [ ! -r ${KLIVE_RECORDER_PREFIX} ]; then
+    KLIVE_RECORDER_PREFIX=${SCRIPT_DIR}/../../
+    echo "KLIVE_RECORDER_PREFIX=${KLIVE_RECORDER_PREFIX}"
+fi
+
+LOGDIR="${LOG_DIR}/${NAME}"
+PIDFILE="${PID_DIR}/${NAME}.pid"
+LOGFILE="${LOGDIR}/${NAME}-service.log"
+APPLICATION_PATH=${KLIVE_RECORDER_PREFIX}/main.py
 RETVAL=0
 
+. /opt/rh/python27/enable
+
 createFolders() {
-	[ -d ${LOG_DIR} ] || mkdir -p ${LOG_DIR}
+	[ -d ${LOGDIR} ] || mkdir -p ${LOGDIR}
 	SHARED_APP_DIR=$(python ${SCRIPT_DIR}/getRecordingBaseDir.py)
 	echo "Creating folders in ${SHARED_APP_DIR} for ${HOSTNAME}"
 	if [ -d  ${SHARED_APP_DIR} ] ; then 
@@ -50,13 +74,17 @@ createFolders() {
 }
 
 start() {
-    modules=(schedule m3u8 poster psutil Crypto)
-    for module in "${modules[@]}"; do
-         python -c "import $module"
-        [ $? -ne 0 ] && echo "Missing $module pip module." && exit 3
+    echo "starting liveRecorder..."
+    python --version
+    local __modules="schedule m3u8 poster psutil Crypto"
+    for module in ${__modules}; do
+      echo "python -c \"import ${module}\""
+      local __pc=$( python -c """import ${module}""" )
+      echo ${__pc}
+      [ $? -ne 0 ] && echo "Missing '$module', run pip install $module." && exit 3
     done
     createFolders || exit 4
-    status -p ${PIDFILE}
+    check_pid_status "-p ${PIDFILE}"
     if [ $? -eq 0 ]; then
         echo "${NAME} already running"
     else
@@ -65,25 +93,26 @@ start() {
         RETVAL=$?
         echo $! > ${PIDFILE}
         if [ ${RETVAL} -eq 0 ]; then
-			echo "started ${NAME} with pid $(cat ${PIDFILE})"
+			echo "started ${NAME} with PID $(cat ${PIDFILE})"
 		else
-			echo "starting ${NAME} failed. please see ${LOGFILE}"
+			echo "starting ${NAME} failed. Please see ${LOGFILE}"
 		fi
 	fi
 }
 
 stop() {
+    echo "stopping liveRecorder..."
     if [ -f ${PIDFILE} ]; then
-        local pid=$( cat ${PIDFILE} )
+        local __pid=$( cat ${PIDFILE} )
         echo "Shutting down ${NAME}"
-        kill ${pid} >> ${LOGFILE}
-        status -p ${PIDFILE}
+        kill ${__pid} >> ${LOGFILE}
+        check_pid_status "-p ${PIDFILE}"
 	    if [ $? -eq 0 ]; then
-	        echo "failed to stop ${NAME}, ${pid}"
-            killApp ${pid}
+	        echo "failed to stop ${NAME}, ${__pid}"
+            killApp ${__pid}
             return 1
         else
-            echo "${NAME}, ${pid}, successfully stopped"
+            echo "${NAME}, ${__pid}, successfully stopped"
             rm -f ${PIDFILE}
         fi
     else
@@ -100,16 +129,30 @@ restart() {
 # check whether process is running based on /proc/[pid]/exe
 ###
 my_status() {
-    status -p ${PIDFILE}
+    check_pid_status "-p ${PIDFILE}"
     RETVAL=$?
 }
 
 killApp() {
-	local pid=$1
-    echo "Aggressively kill all ${NAME} process, $pid"
+	local __pid=$1
+    echo "Aggressively kill all ${NAME} process, ${__pid}"
     pkill -f ${APPLICATION_PATH}
     rm -f ${PIDFILE}
+}
 
+check_pid_status() {
+
+    case ${STATUS_FUNCTION} in
+        status)
+            status $1
+        ;;
+        status_of_proc)
+            status_of_proc $1 ${APPLICATION_PATH} python
+        ;;
+        *)
+            echo "check_pid_status failed, status function '${STATUS_FUNCTION}' is unsupported"
+        ;;
+    esac
 }
 
 case "$1" in
