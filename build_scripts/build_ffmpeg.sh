@@ -37,12 +37,14 @@ mkdir -p ${FFMPEG_BUILD_PATH}
 mkdir -p ${TMP_PATH}
 
 echo "Fetching tar from https://github.com/FFmpeg/FFmpeg/releases/download/n${FFMPEG_VERSION}/ffmpeg-${FFMPEG_VERSION}.tar.gz"
-curl -sL https://github.com/FFmpeg/FFmpeg/releases/download/n${FFMPEG_VERSION}/ffmpeg-${FFMPEG_VERSION}.tar.gz -o ${TMP_PATH}/ffmpeg-${FFMPEG_VERSION}.tar.gz
+#curl -sL https://github.com/FFmpeg/FFmpeg/releases/download/n${FFMPEG_VERSION}/ffmpeg-${FFMPEG_VERSION}.tar.gz -o ${TMP_PATH}/ffmpeg-${FFMPEG_VERSION}.tar.gz
+curl -sL https://github.com/FFmpeg/FFmpeg/archive/n${FFMPEG_VERSION}/ffmpeg-${FFMPEG_VERSION}.tar.gz -o ${TMP_PATH}/ffmpeg-${FFMPEG_VERSION}.tar.gz
 
 echo "opening tarball ${TMP_PATH}/ffmpeg-${FFMPEG_VERSION}.tar.gz"
 tar -xzf ${TMP_PATH}/ffmpeg-${FFMPEG_VERSION}.tar.gz -C ${FFMPEG_BUILD_PATH}
 
-cd ${FFMPEG_BUILD_PATH}/ffmpeg-${FFMPEG_VERSION}
+#cd ${FFMPEG_BUILD_PATH}/ffmpeg-${FFMPEG_VERSION}
+cd ${FFMPEG_BUILD_PATH}/FFmpeg-n${FFMPEG_VERSION}
 
 [ "${BUILD_CONF}" = "Debug" ] &&  DEBUG_SPECIFICS='--enable-debug --disable-optimizations'
 
