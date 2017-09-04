@@ -64,7 +64,8 @@
       "ptsMaxMisalignmentAllowedInMSec" : 5000,
       "ptsRollingWindowSizeInSec" : 300,
       "ptsDiffPercentageAllowed" : 1,
-      "bitrateDiffPercentageAllowed" : 10
+      "bitrateDiffPercentageAllowed" : 10,
+      "beaconsTtlDurationInDays": 30
   },
   "simulateStreams": {
       "enable":false,
