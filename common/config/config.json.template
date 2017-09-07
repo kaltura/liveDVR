@@ -57,7 +57,7 @@
 
   },
   "diagnostics": {
-      "diagnosticsReportIntervalRunTimeInSec": 60,
+      "diagnosticsReportIntervalRunTimeInSec": 300,
       "minChunkDurationInSec": 1,
       "maxChunkDurationInSec": 60,
       "errorsWindowSizeInMin" : 5,
