@@ -4892,6 +4892,22 @@ class KalturaYahooSyndicationFeedOrderBy(object):
 	def getValue(self):
 		return self.value
 
+
+# @package Kaltura
+# @subpackage Client
+class KalturaEntryServerNodeRecordingStatus(object):
+    STOPPED = 0
+    ON_GOING = 1
+    DONE = 2
+    DISMISSED = 3
+
+    def __init__(self, value):
+        self.value = value
+
+    def getValue(self):
+        return self.value
+
+
 ########## classes ##########
 # @package Kaltura
 # @subpackage Client
@@ -15673,7 +15689,8 @@ class KalturaLiveChannelSegment(KalturaObjectBase):
 class KalturaLiveEntryServerNodeRecordingInfo(KalturaObjectBase):
     def __init__(self,
                  recordedEntryId=NotImplemented,
-                 duration=NotImplemented):
+                 duration=NotImplemented,
+                 recordingStatus=NotImplemented):
         KalturaObjectBase.__init__(self)
 
         # @var string
@@ -15682,9 +15699,13 @@ class KalturaLiveEntryServerNodeRecordingInfo(KalturaObjectBase):
         # @var int
         self.duration = duration
 
+        # @var int
+        self.recordingStatus =  (KalturaEnumsFactory.createInt, "KalturaEntryServerNodeRecordingStatus")
+
     PROPERTY_LOADERS = {
         'recordedEntryId': getXmlNodeText,
         'duration': getXmlNodeInt,
+        'recordingStatus': getXmlNodeInt
     }
 
     def fromXml(self, node):
@@ -15696,6 +15717,7 @@ class KalturaLiveEntryServerNodeRecordingInfo(KalturaObjectBase):
         kparams.put("objectType", "KalturaLiveEntryServerNodeRecordingInfo")
         kparams.addStringIfDefined("recordedEntryId", self.recordedEntryId)
         kparams.addIntIfDefined("duration", self.duration)
+        kparams.addIntIfDefined("recordingStatus", self.recordingStatus)
         return kparams
 
     def getRecordedEntryId(self):
@@ -15709,6 +15731,12 @@ class KalturaLiveEntryServerNodeRecordingInfo(KalturaObjectBase):
 
     def setDuration(self, newDuration):
         self.duration = newDuration
+
+    def getrecordingStatus(self):
+        return self.duration
+
+    def setrecordingStatus(self, newrecordingStatus):
+        self.recordingStatus = newrecordingStatus
 
 # @package Kaltura
 # @subpackage Client
@@ -59313,6 +59341,7 @@ class KalturaCoreClient(KalturaClientPlugin):
 			'KalturaYahooSyndicationFeedAdultValues': KalturaYahooSyndicationFeedAdultValues,
 			'KalturaYahooSyndicationFeedCategories': KalturaYahooSyndicationFeedCategories,
 			'KalturaYahooSyndicationFeedOrderBy': KalturaYahooSyndicationFeedOrderBy,
+            'KalturaEntryServerNodeRecordingStatus' : KalturaEntryServerNodeRecordingStatus,
 		}
 
 	def getTypes(self):

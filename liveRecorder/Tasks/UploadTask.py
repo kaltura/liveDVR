@@ -5,11 +5,11 @@ from Config.config import get_config
 from TaskBase import TaskBase
 from ThreadWorkers import ThreadWorkers
 from KalturaUploadSession import KalturaUploadSession
-from KalturaClient.Plugins.Core import  KalturaEntryReplacementStatus
+from KalturaClient.Plugins.Core import  KalturaEntryReplacementStatus, KalturaEntryServerNodeRecordingStatus
 from KalturaClient.Base import KalturaException
 import glob
 import re
-
+import errno
 
 class UploadTask(TaskBase):
     # Global scope
@@ -93,6 +93,43 @@ class UploadTask(TaskBase):
         self.backend_client.set_recorded_content_local(partner_id, self.entry_id, file_full_path,
                                                        str(float(self.duration)/1000), self.recorded_id, flavor_id)
 
+    def update_recording_status(self):
+        try:
+            with open(self.metadata_full_path, "r") as dc_file:
+                data = dc_file.read()
+                if data:
+                    metadata = json.loads(data)
+                    entry_server_node_id = -1
+                    try:
+                        entry_server_node_id = int(metadata['entryServerNodeId'])
+                        self.logger.debug(
+                            'successfully read dc file. Entry server node id [{}]'.format(entry_server_node_id))
+                    except ValueError as e:
+                        self.logger.fatal("invalid content in dc file: {}".format(str(e)))
+                        raise e
+                    except Exception as e:
+                        self.logger.fatal("failed to read or parse dc file: {}".format(str(e)))
+                        raise e
+
+                    ''' set recording status to DONE'''
+                    self.backend_client.set_recording_status(self.entry_id,
+                                                             KalturaEntryServerNodeRecordingStatus.DONE,
+                                                             entry_server_node_id)
+                else:
+                    self.logger("could not update recording status to DONE. Metadata file not found.")
+
+        # FileNotFoundError does not exist on Python < 3.3
+        except (OSError, IOError) as e:
+            if getattr(e, 'errno', 0) == errno.ENOENT:
+                self.logger.warn("file {} doesn't exit!!! processing concatenation task (default decision)".format(
+                    self.metadata_full_path))
+            else:
+                self.logger.fatal("failed to open {} file. {}".format(self.metadata_full_path, str(e)))
+                raise e
+        except Exception as e:
+            self.logger.fatal("exception thrown while checking if job should be processed. {}".format(str(e)))
+            raise e
+
     def run(self):
         try:
             mode = get_config('mode')
@@ -110,6 +147,9 @@ class UploadTask(TaskBase):
                 if mode == 'local':
                     self.append_recording_handler(file_full_path, flavor_id, is_first_flavor)
                 is_first_flavor = False
+
+            self.update_recording_status()
+
         except KalturaException as e:
             if e.code == 'KALTURA_RECORDING_DISABLED':
                 self.logger.warn("%s, move it to done directory", e.message)

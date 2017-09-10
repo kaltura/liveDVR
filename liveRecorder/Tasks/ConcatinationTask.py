@@ -5,6 +5,7 @@ import os
 import re
 import subprocess
 import urllib2
+import errno
 
 import m3u8
 
@@ -15,7 +16,7 @@ from Logger.LoggerDecorator import log_subprocess_output
 from TaskBase import TaskBase
 from datetime import datetime
 from BackendClient import *
-from KalturaClient.Plugins.Core import KalturaEntryServerNodeType
+from KalturaClient.Plugins.Core import KalturaEntryServerNodeType, KalturaEntryServerNodeRecordingStatus
 
 
 
@@ -31,6 +32,7 @@ class ConcatenationTask(TaskBase):
     token_url_template = nginx_host + ":" + nginx_port +"/dc-0/recording/hls/p/0/e/{0}/"
     cwd = os.path.dirname(os.path.abspath(__file__))
     ts_to_mp4_convertor = os.path.join(cwd, '../bin/ts_to_mp4_convertor')
+    duration_diff_tolerance_sec = get_config('duration_diff_tolerance_sec')
 
     def __init__(self, param, logger_info):
         TaskBase.__init__(self, param, logger_info)
@@ -39,7 +41,6 @@ class ConcatenationTask(TaskBase):
         concat_task_processing_dir = os.path.join(self.base_directory, self.__class__.__name__, 'processing')
         self.recording_path = os.path.join(concat_task_processing_dir, self.entry_directory)
         self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
-        self.metadata_full_path = os.path.join(self.recording_path, 'metadata.json')
         self.token_url = self.token_url_template.format(self.recorded_id)
         self.nginx_url = "http://" + self.token_url + "t/{0}"
         self.flavor_pattern = 'index-s(?P<flavor>\d+)'
@@ -145,6 +146,7 @@ class ConcatenationTask(TaskBase):
                     try:
                         entry_server_node_id = int(metadata['entryServerNodeId'])
                         server_type = KalturaEntryServerNodeType(metadata['serverType'])
+                        max_duration_sec = int(metadata['maxDurationSec'])
                         if server_type.value == KalturaEntryServerNodeType.LIVE_PRIMARY:
                             local_dc_type_str = 'PRIMARY'
                             remote_dc_type_str = 'BACKUP'
@@ -167,9 +169,13 @@ class ConcatenationTask(TaskBase):
                         self.logger.debug(
                             'only one dc returned from call to server nodes list. Recording job will be processed')
                         should_process = True'''
+
                     if len(response_list.objects) == 0:
                         self.logger.debug('recording job was processed by LIVE {} DC'.format(remote_dc_type_str))
                         should_process = False
+                    elif int(self.duration) >= 1000 * max_duration_sec:
+                        self.logger.debug(
+                            "Duration is [{}] msec, processing vod since reached max allowed".format(self.duration))
                     else:
                         local_duration = int(self.duration)
                         max_duration = local_duration
@@ -178,10 +184,17 @@ class ConcatenationTask(TaskBase):
                             if entry_server_node.id != entry_server_node_id:
                                 for recorded_entry_info in entry_server_node.recordingInfo:
                                     if entry_server_node.recordingInfo and recorded_entry_info.recordedEntryId == self.recorded_id:
-                                        if recorded_entry_info.duration > local_duration:
+                                        recording_status = KalturaEntryServerNodeRecordingStatus(entry_server_node.recordingInfo.recordingStatus)
+                                        if recording_status == KalturaEntryServerNodeRecordingStatus.ON_GOING:
                                             max_duration = recorded_entry_info.duration
                                             id_of_processing_dc = entry_server_node.id
-                                        elif recorded_entry_info.duration == local_duration and local_dc_type_str == KalturaEntryServerNodeType.LIVE_BACKUP:
+                                            break
+                                        duration_diff_sec = (local_duration - recorded_entry_info.duration) / 1000
+                                        duration_is_equal = abs(duration_diff_sec) <= self.duration_diff_tolerance_sec
+                                        if not duration_is_equal and recorded_entry_info.duration > local_duration:
+                                            max_duration = recorded_entry_info.duration
+                                            id_of_processing_dc = entry_server_node.id
+                                        elif duration_is_equal and local_dc_type_str == KalturaEntryServerNodeType.LIVE_BACKUP:
                                             max_duration = recorded_entry_info.duration
                                             id_of_processing_dc = entry_server_node.id
                         if id_of_processing_dc != entry_server_node_id:
@@ -196,16 +209,23 @@ class ConcatenationTask(TaskBase):
                                     remote_dc_type_str, local_duration, max_duration))
                 else:
                     self.logger.warn('metadata file not found. Assuming processing is required')
-                    should_process = True
 
-                return should_process
+                if not should_process:
+                    ''' set recording status to DISMISSED'''
+                    self.backend_client.set_recording_status(self.entry_id, KalturaEntryServerNodeRecordingStatus.DISMISSED, entry_server_node_id)
 
+        # FileNotFoundError does not exist on Python < 3.3
         except (OSError, IOError) as e:
-            self.logger.fatal("failed to open dc file. {}".format(str(e)))
-            raise e
+            if getattr(e, 'errno', 0) == errno.ENOENT:
+                self.logger.warn("file {} doesn't exit!!! processing concatenation task (default decision)".format(self.metadata_full_path))
+            else:
+                self.logger.fatal("failed to open {} file. {}".format(self.metadata_full_path, str(e)))
+                raise e
         except Exception as e:
             self.logger.fatal("exception thrown while checking if job should be processed. {}".format(str(e)))
             raise e
+
+        return should_process
 
     def run(self):
 

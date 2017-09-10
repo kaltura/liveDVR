@@ -35,6 +35,7 @@ class TaskBase(object):
         self.recording_path = os.path.join(self.base_directory, self.__class__.__name__, 'processing',
                                            self.entry_directory)
         self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
+        self.metadata_full_path = os.path.join(self.recording_path, 'metadata.json')
 
 
     __metaclass__ = abc.ABCMeta
