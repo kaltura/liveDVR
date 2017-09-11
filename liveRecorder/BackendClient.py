@@ -1,4 +1,5 @@
 from KalturaClient import *
+from KalturaClient.Base import IKalturaLogger
 from KalturaClient.Plugins.Core import KalturaSessionType, KalturaUploadToken, KalturaUploadedFileTokenResource, \
     KalturaUploadTokenFilter, KalturaServerFileResource, KalturaUploadTokenStatus
 from Config.config import get_config
@@ -7,6 +8,11 @@ from threading import Lock
 import time
 import json
 
+class KalturaClientLogger(IKalturaLogger):
+    def __init__(self, session_id):
+        self.clientLogger = logger_decorator('KalturaClient', session_id)
+    def log(self, msg):
+        self.clientLogger.info(msg)
 
 class BackendClient:
 
@@ -23,10 +29,6 @@ class BackendClient:
     request_timeout = 120
     expiration_time_ks = -1
     mutex = Lock()
-    config = KalturaConfiguration(url)
-    client = KalturaClient(config)
-    client.setPartnerId(partner_id)
-    client.setClientTag("liveRecorder:1.0.0")
     ks = None
     type = KalturaSessionType.ADMIN
 
@@ -34,6 +36,10 @@ class BackendClient:
         self.logger = logger_decorator(self.__class__.__name__, session_id)
         self.logger.info("Init BackendClient: admin_secret XXX, partner_id %s, session_duration %s, url %s",
                          self.partner_id, self.session_duration, self.url)
+        self.config = KalturaConfiguration(self.url, KalturaClientLogger(session_id))
+        self.client = KalturaClient(self.config)
+        self.client.setPartnerId(self.partner_id)
+        self.client.setClientTag("liveRecorder:1.0.0")
 
     def create_new_session(self):
         ks= self.client.generateSessionV2(self.admin_secret, None, self.type, self.partner_id, int(self.session_duration), self.ks_privileges)
@@ -65,8 +71,8 @@ class BackendClient:
         service_attribute = getattr(client, service)
         action_attribute = getattr(service_attribute, action)
         self.logger.debug("[%s][%s] About to call", service, action)
-        (result, header) = action_attribute(*parameters)
-        self.logger.debug("[%s][%s] API result's header : %s  ", service, action, header)
+        result = action_attribute(*parameters)
+        self.logger.debug("[%s][%s] API result's header : %s  ", service, action, client.responseHeaders)
         return result
 
     def cancel_replace(self, partner_id, entry_id):
@@ -78,8 +84,8 @@ class BackendClient:
     def get_live_entry(self, entry_id):
         self.get_kaltura_session()  # generate KS in case that not existed or expired
         result = self.client.liveStream.get(entry_id)
-        self.logger.info("Header :%s ", result[1])
-        return result[0]
+        self.logger.info("Header :%s ", self.client.responseHeaders)
+        return result
 
     def upload_token_add(self, partner_id, file_name, file_size):
 

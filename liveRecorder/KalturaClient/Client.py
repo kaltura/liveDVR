@@ -25,25 +25,25 @@
 #
 # @ignore
 # ===================================================================================================
-from Plugins.Core import *
-from Base import *
+from __future__ import absolute_import
+
+from .Plugins.Core import *
+from .Base import *
 from xml.parsers.expat import ExpatError
 from xml.dom import minidom
-from threading import Timer
-from StringIO import StringIO
+import binascii
 import hashlib
+import mimetypes
 import random
 import base64
-import socket
 import urllib
 import types
-import gzip
 import time
 import os
 
-from poster.streaminghttp import register_openers
-from poster.encode import multipart_encode
-import urllib2
+import requests
+from requests_toolbelt.multipart.encoder import MultipartEncoder
+import six
 
 try:
     from Crypto import Random
@@ -54,8 +54,18 @@ except ImportError:
 from KalturaClient.Plugins.Core import KalturaClientConfiguration
 from KalturaClient.Plugins.Core import KalturaRequestConfiguration
 
-# Register the streaming http handlers with urllib2
-register_openers()
+
+def _get_file_params(files):
+    """Return the full parameters needed for uploading files - name, file
+    handle and mimetype."""
+    for key, value in files.items():
+        if hasattr(value, "read"):
+            filename = getattr(value, "name", None)
+            filetype = mimetypes.guess_type(filename)[0] if filename else None
+            yield (key, (filename, value, filetype))
+        else:
+            yield (key, value)
+
 
 class MultiRequestSubResult(object):
     def __init__(self, value):
@@ -179,7 +189,7 @@ class KalturaClient(object):
         self.callsQueue = []
 
         if params != None:
-            result += '?' + urllib.urlencode(params.get())
+            result += '?' + six.moves.urllib.parse.urlencode(params.get())
         self.log("Returned url [%s]" % result)
         return result        
         
@@ -230,68 +240,53 @@ class KalturaClient(object):
         fh.close()
 
     @staticmethod
-    def openRequestUrl(url, params, files, requestHeaders):
+    def openRequestUrl(url, params, files, requestHeaders, requestTimeout):
         requestHeaders['Accept'] = 'text/xml'
         requestHeaders['Accept-encoding'] = 'gzip'
-        if len(files.get()) == 0:
-            requestHeaders['Content-Type'] = 'application/json'
-            request = urllib2.Request(url, params.toJson(), requestHeaders)
-        else:
-            if 'Content-Type' in requestHeaders:
-                del requestHeaders['Content-Type']
-            fullParams = KalturaParams()
-            fullParams.put('json', params.toJson())
-            fullParams.update(files.get())
-            datagen, headers = multipart_encode(fullParams.get())
-            headers.update(requestHeaders)
-            request = urllib2.Request(url, datagen, headers)
-
         try:
-            f = urllib2.urlopen(request)
-        except Exception, e:
-            raise KalturaClientException(e, KalturaClientException.ERROR_CONNECTION_FAILED)
-        return f
+            if not (params.get() or files.get()):
+                requestHeaders['Content-Type'] = 'application/json'
+                return requests.post(
+                    url, headers=requestHeaders, timeout=requestTimeout)
+            if files.get():
+                if 'Content-Type' in requestHeaders:
+                    del requestHeaders['Content-Type']
+                fields = {}
+                fields["json"] = params.toJson()
+                fields.update(_get_file_params(files.get()))
+                encoder = MultipartEncoder(fields=fields)
+                requestHeaders['Content-Type'] = encoder.content_type
+                return requests.post(
+                    url, headers=requestHeaders,
+                    data=encoder, timeout=requestTimeout)
+            else:
+                requestHeaders['Content-Type'] = 'application/json'
+                return requests.post(
+                    url, json=params.get(), headers=requestHeaders,
+                    timeout=requestTimeout)
+        except Exception as e:
+            raise KalturaClientException(
+                e, KalturaClientException.ERROR_CONNECTION_FAILED)
 
     @staticmethod
-    def readHttpResponse(f, requestTimeout):
-        if requestTimeout != None:
-            readTimer = Timer(requestTimeout, KalturaClient.closeHandle, [f])
-            readTimer.start()
+    def readHttpResponse(r):
         try:
-            try:
-                data = f.read()
-            except AttributeError, e:      # socket was closed while reading
-                raise KalturaClientException(e, KalturaClientException.ERROR_READ_TIMEOUT)
-            except Exception, e:
-                raise KalturaClientException(e, KalturaClientException.ERROR_READ_FAILED)
-            if f.info().get('Content-Encoding') == 'gzip':
-                gzipFile = gzip.GzipFile(fileobj=StringIO(data))
-                try:
-                    data = gzipFile.read()
-                except IOError, e:
-                    raise KalturaClientException(e, KalturaClientException.ERROR_READ_GZIP_FAILED)
-        finally:
-            if requestTimeout != None:
-                readTimer.cancel()
-        return data
+            return r.content
+        except Exception as e:
+            raise KalturaClientException(
+                e, KalturaClientException.ERROR_READ_FAILED)
 
     # Send http request
     def doHttpRequest(self, url, params = KalturaParams(), files = KalturaFiles()):
         if len(files.get()) == 0:
             requestTimeout = self.config.requestTimeout
         else:
-            requestTimeout = None
-            
-        if requestTimeout != None:
-            origSocketTimeout = socket.getdefaulttimeout()
-            socket.setdefaulttimeout(requestTimeout)
-        try:
-            f = self.openRequestUrl(url, params, files, self.requestHeaders)
-            data = self.readHttpResponse(f, requestTimeout)
-            self.responseHeaders = f.info().headers
-        finally:
-            if requestTimeout != None:
-                socket.setdefaulttimeout(origSocketTimeout)
+            # 10 seconds is a reasonable default timeout
+            requestTimeout = 10
+        r = self.openRequestUrl(
+                url, params, files, self.requestHeaders, requestTimeout)
+        data = self.readHttpResponse(r)
+        self.responseHeaders = r.headers
         return data
         
     def parsePostResult(self, postResult):
@@ -302,7 +297,7 @@ class KalturaClient(object):
 
         try:        
             resultXml = minidom.parseString(postResult)
-        except ExpatError, e:
+        except ExpatError as e:
             raise KalturaClientException(e, KalturaClientException.ERROR_INVALID_XML)
             
         resultNode = getChildNodeByXPath(resultXml, 'xml/result')
@@ -352,15 +347,11 @@ class KalturaClient(object):
         if serverName != None or serverSession != None:
             self.log("server: [%s], session [%s]" % (serverName, serverSession))
 
-        try:
-            # parse the result
-            resultNode = self.parsePostResult(postResult)
-        except KalturaException as e:
-            e.header = self.responseHeaders # attach the header
-            raise e
+        # parse the result
+        resultNode = self.parsePostResult(postResult)
 
-        return (resultNode, self.responseHeaders)
-
+        return resultNode
+        
     def getConfig(self):
         return self.config
         
@@ -421,14 +412,15 @@ class KalturaClient(object):
             self.config.getLogger().log(msg)
 
     @staticmethod
-    def generateSession(adminSecretForSigning, userId, type, partnerId, expiry = 86400, privileges = ''):
+    def generateSession(adminSecretForSigning, userId, type_, partnerId, expiry = 86400, privileges = ''):
         rand = random.randint(0, 0x10000)
         expiry = int(time.time()) + expiry
-        fields = [partnerId, partnerId, expiry, type, rand, userId, privileges]
-        fields = map(lambda x: str(x), fields)
-        info = ';'.join(fields)
-        signature = KalturaClient.hash(adminSecretForSigning + info).encode('hex')
-        decodedKS = signature + "|" + info
+        fields = [partnerId, partnerId, expiry, type_, rand, userId, privileges]
+        fields = [x if isinstance(x, six.binary_type) else six.text_type(x).encode("utf8") for x in fields]
+        info = six.b(';').join(fields)
+        signature = binascii.hexlify(
+            KalturaClient.hash(adminSecretForSigning.encode("utf8") + info))
+        decodedKS = signature + six.b("|") + info
         KS = base64.b64encode(decodedKS)
         return KS
 
