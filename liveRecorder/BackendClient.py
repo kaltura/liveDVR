@@ -169,7 +169,6 @@ class BackendClient:
         self.get_kaltura_session()  # generate KS in case that not existed or expired
         self.logger.info('set_recording_status [entryId={}][status={}]'.format(entry_id, recording_status))
         entry_server_node = KalturaLiveEntryServerNode()
-        entry_server_node.entryId = entry_id
         recordingInfo = KalturaLiveEntryServerNodeRecordingInfo()
         recordingInfo.recordingStatus = recording_status
         entry_server_node.recordingInfo = [recordingInfo]
