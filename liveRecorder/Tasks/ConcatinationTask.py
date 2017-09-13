@@ -6,6 +6,7 @@ import re
 import subprocess
 import urllib2
 import errno
+import collections
 
 import m3u8
 
@@ -16,8 +17,10 @@ from Logger.LoggerDecorator import log_subprocess_output
 from TaskBase import TaskBase
 from datetime import datetime
 from BackendClient import *
-from KalturaClient.Plugins.Core import KalturaEntryServerNodeType, KalturaEntryServerNodeRecordingStatus
+from KalturaClient.Plugins.Core import KalturaEntryServerNodeType, KalturaEntryServerNodeRecordingStatus, \
+    KalturaLiveEntryServerNodeRecordingInfo
 
+Recording_Dcs_Info = collections.namedtuple('Recording_Dcs_Info', 'local remote')
 
 
 # todo add timeout, and use m3u8 insted of regex
@@ -28,11 +31,13 @@ Flavor = collections.namedtuple('Flavor', 'url language')
 class ConcatenationTask(TaskBase):
     nginx_port = get_config('nginx_port')
     nginx_host = get_config('nginx_host')
+    max_session_duration_sec = get_config('session_duration')
     secret = get_config('token_key')
     token_url_template = nginx_host + ":" + nginx_port +"/dc-0/recording/hls/p/0/e/{0}/"
     cwd = os.path.dirname(os.path.abspath(__file__))
     ts_to_mp4_convertor = os.path.join(cwd, '../bin/ts_to_mp4_convertor')
     duration_diff_tolerance_sec = get_config('duration_diff_tolerance_sec')
+    server_node_type = ['LIVE_PRIMARY', 'LIVE_BACKUP']
 
     def __init__(self, param, logger_info):
         TaskBase.__init__(self, param, logger_info)
@@ -133,26 +138,202 @@ class ConcatenationTask(TaskBase):
 
         return flavor_id
 
+    def is_duration_equal(self, recording_info_array):
+        for recording_info in recording_info_array:
+            if recording_info.recordingEntryId == self.recorded_id and abs(self.duration - recording_info.duration) <= self.duration_diff_tolerance_sec:
+                return True
+        return False
+
+    def is_job_duration_greater(self, recording_info_array):
+        for recording_info in recording_info_array:
+            if recording_info.recordingEntryId == self.recorded_id and self.duration > recording_info.duration:
+                return True
+        return False
+
+    def is_single_dc(self, nodes_list, entry_server_node_id):
+        if len(nodes_list.objects) == 1 and nodes_list.objects[0].id == entry_server_node_id:
+            return True
+        return False
+
+    def is_remote_dc_live(self, recording_info_array):
+        for recording_info in recording_info_array:
+            if recording_info.recordingEntryId == self.recorded_id and recording_info.recordingStatus == KalturaEntryServerNodeRecordingStatus.ON_GOING:
+                return True
+        return False
+
+    def is_duration_max_allowed(self):
+        return int(self.duration) >= 1000 * self.max_session_duration_sec
+
+    def filter_by_recorded_entry_id(self, nodes_list):
+        return [i for i in nodes_list.objects() if self.is_recorded_entry_id_found(i)]
+
+    def is_recorded_entry_id_found(self, recorded_info_array):
+        for recorded_info in recorded_info_array:
+            if recorded_info.recordedEntryId == self.recorded_id:
+                return True
+        return False
+
+    def is_valid_server_nodes(self, nodes_list, entry_server_node_id):
+        duplicate_found = False
+        correct_recording_status = True
+        is_valid = True
+        # check that there are is only single recordingInfo entry, in each dc, per recorded_entry_id
+        for server_node in nodes_list.objects:
+            if not is_valid:
+                break
+            start = 1
+            for x in server_node.recordingInfo:
+                for y in server_node.recordingInfo[start:]:
+                    if y.recordedEntryId == x.recordedEntryId:
+                       duplicate_found = True
+                       self.logger.error('entry server node {}, has duplicate entry in RecordingInfo: [RecordingEntryId:{}, RecordingStatus:{}] and [RecordingEntryId: {}, RecordingStatus:{}]'.format(
+                           server_node.id, y.recordedEntryId, y.recordingStatus, x.recordedEntryId, x.recordingStatus))
+                       break
+                start += 1
+                if duplicate_found:
+                    break
+            if duplicate_found:
+                break
+            elif server_node.id == entry_server_node_id:
+                incorrect_recording_status = [z for z in server_node.recordingInfo if z.recordingId == self.recorded_id and
+                                              (z.recordingStatus == KalturaEntryServerNodeRecordingStatus.DISMISSED or
+                                               z.recordingStatus == KalturaEntryServerNodeRecordingStatus.DONE)]
+                if len(incorrect_recording_status) > 0:
+                    correct_recording_status = False
+
+            is_valid = not duplicate_found and correct_recording_status
+
+        return is_valid
+
+    def get_recording_item(self, filtered_server_nodes):
+        recording_item = [x for x in filtered_server_nodes.recordingInfo if x.recordingEntryId == self.recorded_id]
+        return recording_item
+
+    def get_recording_items(self, server_nodes, entry_server_node_id):
+        for entry_server_node in server_nodes:
+            if entry_server_node.id != entry_server_node_id:
+                local_dc_recording_info = self.get_recording_item(entry_server_node)
+            else:
+                remote_dc_recording_info = self.get_recording_item(entry_server_node)
+        return Recording_Dcs_Info(local=local_dc_recording_info, remote=remote_dc_recording_info)
+
+    def should_process_as_single_dc(self, server_nodes, dc_type):
+        should_process = True
+        recording_item = self.get_recording_item(server_nodes[0])
+        local_duration_sec = recording_item[0].local.duration / 1000
+
+        # handle use case that couldn't find recordingInfo
+        if len(recording_item) == 0:
+            self.logger.error(
+                'It is {} and couldn\'t find recordingInfo for recorderEntryId {}. Check if job was processed by remote DC. job won\'t be processed'.format(dc_type, self.recorded_id))
+            should_process = False
+        # verify that recordingStatus is valid
+        elif recording_item[0].recordingStatus == KalturaEntryServerNodeRecordingStatus.STOPPED:
+            self.logger.debug(
+                'It is {} and recording was done by single DC, duration [{}] sec. Recording status is STOPPED. Job will be processed.'.format(dc_type, local_duration_sec))
+            should_process = True
+
+        elif recording_item[0].recordingStatus == KalturaEntryServerNodeRecordingStatus.ON_GOING:
+            if recording_item[0].duration/1000 >= self.duration_diff_tolerance_sec:
+                self.logger.debug(
+                    'It is {} and recording was done by single DC, duration is max allowed [{}] sec ignoring status ON_GOING. Job will be processed.'.format(
+                        dc_type, local_duration_sec))
+                should_process = False
+            else:
+                self.logger.debug('It is {} and recording was done by single DC, duration [{}] sec, but status is ON_GOING. Job won\'t be processed.'.format(
+                        dc_type, local_duration_sec))
+                should_process = False
+        else:
+            self.logger.debug(
+                'It is {} and recording was done by single DC, duration [{}] sec. Recording status is unexpected DONE/DISMISSED ({}, hence job won\'t be processed.'.format(
+                    dc_type, local_duration_sec, recording_item.recordingStatus))
+            should_process = False
+
+        return should_process
+
+    def should_process_as_redundant_dc(self, server_nodes, entry_server_node_id, server_type):
+        should_process = False
+        recording_item_per_dcs = self.get_recording_items(server_nodes, entry_server_node_id)
+        dc_type = self.server_node_type[server_type]
+        local_duration_sec = recording_item_per_dcs.local.duration/1000
+
+        # handle use case of equal duration
+        duration_diff_sec = abs(recording_item_per_dcs.local.duration - recording_item_per_dcs.remote.duration)
+        if duration_diff_sec <= self.duration_diff_tolerance_sec:
+            should_process = server_type == KalturaEntryServerNodeType.LIVE_PRIMARY
+            if should_process:
+                self.logger.debug(
+                    'It is {} and recording duration equal between DCs, duration [{}] sec. Job will be processed'.format(dc_type, local_duration_sec))
+            else:
+                self.logger.debug(
+                    'It is {} and recording duration equal between DCs, duration [{}] sec. Job won\'t be processed'.format(dc_type, local_duration_sec))
+
+        # handle use case of max duration
+        elif local_duration_sec >= self.max_session_duration_sec:
+            self.logger.debug('It is {} and recording duration is max allowed [{}] sec. Job will be processed'.format(dc_type, local_duration_sec))
+            should_process = True
+
+        # handle use case of greater duration
+        elif recording_item_per_dcs.local.duration > recording_item_per_dcs.remote.duration:
+
+            # do not process job if entry is live
+            if recording_item_per_dcs.local.recordingStatus == KalturaEntryServerNodeRecordingStatus.ON_GOING \
+                    or recording_item_per_dcs.remote.recordingStatus == KalturaEntryServerNodeRecordingStatus.ON_GOING:
+                self.logger.debug('It is {} and recording duraiton is greater, [{}] sec,  but entry is live in one or two DCs. Job won\'t be processed'.format(dc_type, local_duration_sec))
+                should_process = False
+            else:
+                self.logger.debug(
+                    'It is {} and recording duration is greater from remote dc, , [{}] sec, Job will be processed'.format(dc_type, local_duration_sec))
+                should_process = True
+
+        # handle use case of lower duration
+        else:
+            # process job if remote status is DISMISSED
+            if recording_item_per_dcs.remote.recordingStatus == KalturaEntryServerNodeRecordingStatus.DISMISSED:
+                self.logger.debug('it is {} and recording duraiton is lower, [{}] sec, but remote recording entry status is DISMISSED. Job will be processed'.format(dc_type, local_duration_sec))
+                should_process = True
+            else:
+                should_process = False
+        return should_process
+
+    def analyze_entry_nodes(self, nodes_list, entry_server_node_id, server_type):
+        dc_type = self.server_node_type[server_type]
+        other_dc_type = self.server_node_type[server_type + 1 % 2]
+
+        if not self.is_valid_server_nodes(nodes_list):
+            self.logger.error('found problem with entry server nodes. Job won\'t be processed')
+            should_process = False
+        else:
+            filtered_server_nodes = self.filter_by_recorded_entry_id(nodes_list)
+            self.logger.info('[{}] DCs provided the live stream, in this recording job'.format(len(filtered_server_nodes)))
+
+            if len(filtered_server_nodes) == 0:
+                self.logger.debug('recording job was processed by {}'.format(other_dc_type))
+                should_process = False
+            # handle use case that recording was in single DC
+            elif self.is_single_dc(filtered_server_nodes, entry_server_node_id):
+                should_process = self.should_process_as_single_dc(filtered_server_nodes, dc_type)
+            # handle use case that recording was redundant (2 Dcs)
+            else:
+                should_process = self.should_process_as_redundant_dc(filtered_server_nodes, entry_server_node_id, server_type)
+
+        return should_process
+
+
     def is_processing_required(self):
         # read metadata file && get entry server nodes to decide whether to process the job or skip it
         should_process = True
-        local_dc_type_str = 'UNKNOWN'
-        remote_dc_type_str = 'UNKNOWN'
+
         try:
             with open(self.metadata_full_path, "r") as dc_file:
                 data = dc_file.read()
                 if data:
                     metadata = json.loads(data)
+                    dc_type = 'UNKNWON'
                     try:
                         entry_server_node_id = int(metadata['entryServerNodeId'])
                         server_type = KalturaEntryServerNodeType(metadata['serverType'])
-                        max_duration_sec = int(metadata['maxDurationSec'])
-                        if server_type.value == KalturaEntryServerNodeType.LIVE_PRIMARY:
-                            local_dc_type_str = 'PRIMARY'
-                            remote_dc_type_str = 'BACKUP'
-                        else:
-                            local_dc_type_str = 'BACKUP'
-                            remote_dc_type_str = 'PRIMARY'
+                        dc_type = self.server_node_type[server_type]
                     except ValueError as e:
                         self.logger.fatal("invalid content in dc file: {}".format(str(e)))
                         raise e
@@ -161,52 +342,12 @@ class ConcatenationTask(TaskBase):
                         raise e
 
                     self.logger.debug('successfully read dc file. Entry server node id [{}], server type [{}]'.format(
-                        entry_server_node_id, local_dc_type_str))
+                        entry_server_node_id, dc_type))
 
                     response_list, response_header = self.backend_client.get_server_entry_nodes_list(self.entry_id)
-                    self.logger.info('List length:{}'.format(len(response_list.objects)))
-                    ''' if len(response_list.objects) == 1:
-                        self.logger.debug(
-                            'only one dc returned from call to server nodes list. Recording job will be processed')
-                        should_process = True'''
 
-                    if len(response_list.objects) == 0:
-                        self.logger.debug('recording job was processed by LIVE {} DC'.format(remote_dc_type_str))
-                        should_process = False
-                    elif int(self.duration) >= 1000 * max_duration_sec:
-                        self.logger.debug(
-                            "Duration is [{}] msec, processing vod since reached max allowed".format(self.duration))
-                    else:
-                        local_duration = int(self.duration)
-                        max_duration = local_duration
-                        id_of_processing_dc = entry_server_node_id
-                        for entry_server_node in response_list.objects:
-                            if entry_server_node.id != entry_server_node_id:
-                                for recorded_entry_info in entry_server_node.recordingInfo:
-                                    if entry_server_node.recordingInfo and recorded_entry_info.recordedEntryId == self.recorded_id:
-                                        recording_status = KalturaEntryServerNodeRecordingStatus(entry_server_node.recordingInfo.recordingStatus)
-                                        if recording_status == KalturaEntryServerNodeRecordingStatus.ON_GOING:
-                                            max_duration = recorded_entry_info.duration
-                                            id_of_processing_dc = entry_server_node.id
-                                            break
-                                        duration_diff_sec = (local_duration - recorded_entry_info.duration) / 1000
-                                        duration_is_equal = abs(duration_diff_sec) <= self.duration_diff_tolerance_sec
-                                        if not duration_is_equal and recorded_entry_info.duration > local_duration:
-                                            max_duration = recorded_entry_info.duration
-                                            id_of_processing_dc = entry_server_node.id
-                                        elif duration_is_equal and local_dc_type_str == KalturaEntryServerNodeType.LIVE_BACKUP:
-                                            max_duration = recorded_entry_info.duration
-                                            id_of_processing_dc = entry_server_node.id
-                        if id_of_processing_dc != entry_server_node_id:
-                            should_process = False
-                        if should_process:
-                            self.logger.info(
-                                'processing vod in LIVE {} dc. local dc duration [{}] msec'.format(local_dc_type_str,
-                                                                                                   local_duration))
-                        else:
-                            self.logger.info(
-                                'vod will be processed by {}. local duration [{}] msec, max_duration [{}], msec'.format(
-                                    remote_dc_type_str, local_duration, max_duration))
+                    should_process = self.analyze_entry_nodes(response_list, entry_server_node_id, server_type)
+
                 else:
                     self.logger.warn('metadata file not found. Assuming processing is required')
 

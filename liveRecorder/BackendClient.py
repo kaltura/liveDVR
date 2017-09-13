@@ -173,8 +173,8 @@ class BackendClient:
         recordingInfo = KalturaLiveEntryServerNodeRecordingInfo()
         recordingInfo.recordingStatus = recording_status
         entry_server_node.recordingInfo = [recordingInfo]
-        response_list, response_header = self.client.entryServerNode.update(entry_server_node_id, entry_server_node)
-        self.logger.info('Header :{} '.format(response_header))
+        updated_entry_server_node = self.client.entryServerNode.update(entry_server_node_id, entry_server_node)
+        self.logger.info('KalturaEntryServerNode :{} '.format(updated_entry_server_node))
 
 
 

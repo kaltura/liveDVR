@@ -32,6 +32,7 @@ class UploadTask(TaskBase):
 
         return int(file_size / self.upload_token_buffer_size) + 1
 
+    # todo: handle errors while upload and after retries ended on failure change recording status to DISMISSED
     def upload_file(self, file_name, flavor_id, is_first_flavor):
 
         threadWorkers = ThreadWorkers()
@@ -71,6 +72,7 @@ class UploadTask(TaskBase):
                 self.logger.info("successfully upload all chunks, call append recording")
                 if is_first_flavor:
                     self.check_replacement_status(upload_session.partner_id)
+                self.update_recording_status(KalturaEntryServerNodeRecordingStatus.DONE)
                 self.backend_client.set_recorded_content_remote(upload_session, str(float(self.duration)/1000), flavor_id)
                 os.rename(file_name, file_name + '.done')
             else:
@@ -86,34 +88,36 @@ class UploadTask(TaskBase):
                              recorded_obj.replacementStatus)
             self.backend_client.cancel_replace(partner_id, self.recorded_id)
 
+    # todo: handle errors while upload and after retries ended on failure change recording status to DISMISSED
     def append_recording_handler(self, file_full_path, flavor_id, is_first_flavor):
         partner_id = self.backend_client.get_live_entry(self.entry_id).partnerId
         if is_first_flavor:
             self.check_replacement_status(partner_id)
+        self.update_recording_status(KalturaEntryServerNodeRecordingStatus.DONE)
         self.backend_client.set_recorded_content_local(partner_id, self.entry_id, file_full_path,
                                                        str(float(self.duration)/1000), self.recorded_id, flavor_id)
 
-    def update_recording_status(self):
+    def update_recording_status(self, status):
         try:
-            with open(self.metadata_full_path, "r") as dc_file:
-                data = dc_file.read()
+            with open(self.metadata_full_path, "r") as metadata_file:
+                data = metadata_file.read()
                 if data:
                     metadata = json.loads(data)
                     entry_server_node_id = -1
                     try:
                         entry_server_node_id = int(metadata['entryServerNodeId'])
                         self.logger.debug(
-                            'successfully read dc file. Entry server node id [{}]'.format(entry_server_node_id))
+                            'successfully read metadata.json. Entry server node id [{}]'.format(entry_server_node_id))
                     except ValueError as e:
-                        self.logger.fatal("invalid content in dc file: {}".format(str(e)))
-                        raise e
+                        self.logger.fatal("invalid content in [{}]: {}".format(self.metadata_full_path, str(e)))
+                        #raise e
                     except Exception as e:
-                        self.logger.fatal("failed to read or parse dc file: {}".format(str(e)))
-                        raise e
+                        self.logger.fatal("Error extracting [{}]: {}".format(self.metadata_full_path, str(e)))
+                        #raise e
 
                     ''' set recording status to DONE'''
                     self.backend_client.set_recording_status(self.entry_id,
-                                                             KalturaEntryServerNodeRecordingStatus.DONE,
+                                                             status,
                                                              entry_server_node_id)
                 else:
                     self.logger("could not update recording status to DONE. Metadata file not found.")
@@ -125,10 +129,10 @@ class UploadTask(TaskBase):
                     self.metadata_full_path))
             else:
                 self.logger.fatal("failed to open {} file. {}".format(self.metadata_full_path, str(e)))
-                raise e
+                #raise e
         except Exception as e:
-            self.logger.fatal("exception thrown while checking if job should be processed. {}".format(str(e)))
-            raise e
+            self.logger.fatal("update recording status to DONE failed. Error: {}".format(str(e)))
+            #raise e
 
     def run(self):
         try:
@@ -147,8 +151,6 @@ class UploadTask(TaskBase):
                 if mode == 'local':
                     self.append_recording_handler(file_full_path, flavor_id, is_first_flavor)
                 is_first_flavor = False
-
-            self.update_recording_status()
 
         except KalturaException as e:
             if e.code == 'KALTURA_RECORDING_DISABLED':
