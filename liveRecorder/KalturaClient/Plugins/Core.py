@@ -55347,8 +55347,8 @@ class KalturaEntryServerNodeService(KalturaServiceBase):
 		self.client.queueServiceActionCall("entryservernode", "update", KalturaEntryServerNode, kparams)
 		if self.client.isMultiRequest():
 			return self.client.getMultiRequestResult()
-		resultNode = self.client.doQueue()
-		return KalturaObjectFactory.create(resultNode, KalturaEntryServerNode)
+		resultNode, header = self.client.doQueue()
+		return (KalturaObjectFactory.create(resultNode, KalturaEntryServerNode), header)
 
 	def list(self, filter = NotImplemented, pager = NotImplemented):
 		kparams = KalturaParams()

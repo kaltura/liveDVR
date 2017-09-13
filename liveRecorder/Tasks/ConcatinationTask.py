@@ -138,34 +138,13 @@ class ConcatenationTask(TaskBase):
 
         return flavor_id
 
-    def is_duration_equal(self, recording_info_array):
-        for recording_info in recording_info_array:
-            if recording_info.recordingEntryId == self.recorded_id and abs(self.duration - recording_info.duration) <= self.duration_diff_tolerance_sec:
-                return True
-        return False
-
-    def is_job_duration_greater(self, recording_info_array):
-        for recording_info in recording_info_array:
-            if recording_info.recordingEntryId == self.recorded_id and self.duration > recording_info.duration:
-                return True
-        return False
-
     def is_single_dc(self, nodes_list, entry_server_node_id):
-        if len(nodes_list.objects) == 1 and nodes_list.objects[0].id == entry_server_node_id:
+        if len(nodes_list) == 1 and nodes_list[0].id == entry_server_node_id:
             return True
         return False
 
-    def is_remote_dc_live(self, recording_info_array):
-        for recording_info in recording_info_array:
-            if recording_info.recordingEntryId == self.recorded_id and recording_info.recordingStatus == KalturaEntryServerNodeRecordingStatus.ON_GOING:
-                return True
-        return False
-
-    def is_duration_max_allowed(self):
-        return int(self.duration) >= 1000 * self.max_session_duration_sec
-
     def filter_by_recorded_entry_id(self, nodes_list):
-        return [i for i in nodes_list.objects() if self.is_recorded_entry_id_found(i)]
+        return [i for i in nodes_list.objects if self.is_recorded_entry_id_found(i.recordingInfo)]
 
     def is_recorded_entry_id_found(self, recorded_info_array):
         for recorded_info in recorded_info_array:
@@ -195,7 +174,7 @@ class ConcatenationTask(TaskBase):
             if duplicate_found:
                 break
             elif server_node.id == entry_server_node_id:
-                incorrect_recording_status = [z for z in server_node.recordingInfo if z.recordingId == self.recorded_id and
+                incorrect_recording_status = [z for z in server_node.recordingInfo if z.recordedEntryId == self.recorded_id and
                                               (z.recordingStatus == KalturaEntryServerNodeRecordingStatus.DISMISSED or
                                                z.recordingStatus == KalturaEntryServerNodeRecordingStatus.DONE)]
                 if len(incorrect_recording_status) > 0:
@@ -206,7 +185,7 @@ class ConcatenationTask(TaskBase):
         return is_valid
 
     def get_recording_item(self, filtered_server_nodes):
-        recording_item = [x for x in filtered_server_nodes.recordingInfo if x.recordingEntryId == self.recorded_id]
+        recording_item = [x for x in filtered_server_nodes.recordingInfo if x.recordedEntryId == self.recorded_id]
         return recording_item
 
     def get_recording_items(self, server_nodes, entry_server_node_id):
@@ -220,7 +199,7 @@ class ConcatenationTask(TaskBase):
     def should_process_as_single_dc(self, server_nodes, dc_type):
         should_process = True
         recording_item = self.get_recording_item(server_nodes[0])
-        local_duration_sec = recording_item[0].local.duration / 1000
+        local_duration_sec = recording_item[0].duration / 1000
 
         # handle use case that couldn't find recordingInfo
         if len(recording_item) == 0:
@@ -254,7 +233,8 @@ class ConcatenationTask(TaskBase):
     def should_process_as_redundant_dc(self, server_nodes, entry_server_node_id, server_type):
         should_process = False
         recording_item_per_dcs = self.get_recording_items(server_nodes, entry_server_node_id)
-        dc_type = self.server_node_type[server_type]
+        int_server_type = int(server_type.value)
+        dc_type = self.server_node_type[int_server_type]
         local_duration_sec = recording_item_per_dcs.local.duration/1000
 
         # handle use case of equal duration
@@ -297,10 +277,11 @@ class ConcatenationTask(TaskBase):
         return should_process
 
     def analyze_entry_nodes(self, nodes_list, entry_server_node_id, server_type):
-        dc_type = self.server_node_type[server_type]
-        other_dc_type = self.server_node_type[server_type + 1 % 2]
+        int_server_type = int(server_type.value)
+        dc_type = self.server_node_type[int_server_type]
+        other_dc_type = self.server_node_type[int_server_type + 1 % 2]
 
-        if not self.is_valid_server_nodes(nodes_list):
+        if not self.is_valid_server_nodes(nodes_list, entry_server_node_id):
             self.logger.error('found problem with entry server nodes. Job won\'t be processed')
             should_process = False
         else:
@@ -333,7 +314,7 @@ class ConcatenationTask(TaskBase):
                     try:
                         entry_server_node_id = int(metadata['entryServerNodeId'])
                         server_type = KalturaEntryServerNodeType(metadata['serverType'])
-                        dc_type = self.server_node_type[server_type]
+                        dc_type = self.server_node_type[int(server_type.value)]
                     except ValueError as e:
                         self.logger.fatal("invalid content in dc file: {}".format(str(e)))
                         raise e
