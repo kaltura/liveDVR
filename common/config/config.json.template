@@ -60,11 +60,14 @@
       "diagnosticsReportIntervalRunTimeInSec": 300,
       "minChunkDurationInSec": 1,
       "maxChunkDurationInSec": 60,
-      "errorsWindowSizeInMin" : 5,
+      "errorsWindowSizeInMin" : 3,
       "ptsMaxMisalignmentAllowedInMSec" : 5000,
       "ptsRollingWindowSizeInSec" : 300,
       "ptsDiffPercentageAllowed" : 1,
-      "bitrateDiffPercentageAllowed" : 10
+      "bitrateDiffPercentageAllowed" : 10,
+      "keyFrameIntervalConfiguredInMSec" : 2000,
+      "keyFrameIntervalDiffAllowedInMSec" : 500,
+      "maxFramesPerSeconds" : 30
   },
   "simulateStreams": {
       "enable":false,
