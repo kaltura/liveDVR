@@ -65,8 +65,8 @@
       "ptsRollingWindowSizeInSec" : 300,
       "ptsDiffPercentageAllowed" : 1,
       "bitrateDiffPercentageAllowed" : 10,
-      "keyFrameIntervalConfiguredInMSec" : 2000,
-      "keyFrameIntervalDiffAllowedInMSec" : 500,
+      "keyFrameIntervalExpectedInMSec" : 2000,
+      "keyFrameIntervalDiffAllowedInMSec" : 200,
       "maxFramesPerSeconds" : 30
   },
   "simulateStreams": {
