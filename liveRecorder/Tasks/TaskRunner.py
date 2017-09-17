@@ -146,6 +146,7 @@ class TaskRunner:
                     self.logger.info("[%s] Task %s completed, Move %s to %s", logger_info, self.task_name, src,
                                      self.output_directory)
                 else:
+                    self.logger.info('[{}] Task {} was not processed. This job\'s owner is remote DC. Move {} to {}'.format(logger_info, self.task_name, src, self.done_directory))
                     shutil.move(src, self.done_directory)
             except UnequallStampException as e:
                     self.logger.error("[%s] %s \n %s", logger_info, str(e), traceback.format_exc())
