@@ -12,6 +12,8 @@ const sinon = require('sinon');
 const config = require('./../../common/Configuration');
 const kalturaTypes = require('../../lib/kaltura-client-lib/KalturaTypes');
 const qio = require('q-io/fs');
+const entryServerNodeId = '1111';
+
 describe('Session manager spec', () =>{
 
     let recordingConfigurationObj = config.get('recording')
@@ -56,7 +58,7 @@ describe('Session manager spec', () =>{
             }
         };
         const RecordingEntrySession = proxyquire('../../lib/recording/RecordingEntrySession.js', mocks)
-        let recordingEntrySession = new RecordingEntrySession(entryObj, flavorsObjArray)
+        let recordingEntrySession = new RecordingEntrySession(entryObj, entryServerNodeId, null, flavorsObjArray)
         let playlistTemplatePath = path.join(recordingEntrySession.recordingSessionPath, 'playlist.json.template')
         let playlistPath = path.join(recordingEntrySession.recordingSessionPath, 'playlist.json')
         return qio.copy(playlistTemplatePath, playlistPath)
@@ -117,7 +119,7 @@ describe('Session manager spec', () =>{
             }
         };
         const RecordingEntrySession = proxyquire('../../lib/recording/RecordingEntrySession.js', mocks)
-        let recordingEntrySession = new RecordingEntrySession(entryObj, flavorsObjArray)
+        let recordingEntrySession = new RecordingEntrySession(entryObj, entryServerNodeId, null, flavorsObjArray)
         let playlistTemplatePath = path.join(recordingEntrySession.recordingSessionPath, 'playlist.json.template')
         let playlistPath = path.join(recordingEntrySession.recordingSessionPath, 'playlist.json')
         return qio.copy(playlistTemplatePath, playlistPath)

@@ -52,6 +52,7 @@ class TaskRunner:
         self.input_directory = os.path.join(base_directory, hostname, self.task_name, 'incoming')
         self.working_directory = os.path.join(base_directory, hostname, self.task_name, 'processing')
         self.output_directory = output_directory
+        self.done_directory = os.path.join(base_directory, 'done')
         self.task_queue_size = max_task_count
         self.task_queue = Queue(max_task_count)
         self.logger = logging.getLogger(__name__+'-'+self.task_name)
@@ -137,12 +138,16 @@ class TaskRunner:
                 src = os.path.join(self.working_directory, task_parameter['directory'])
 
                 job = self.task(task_parameter, logger_info)  # operate the function task_job, with argument task_parameters
-                job.check_stamp()  # raise error if stamp is not valid
-                job.run()
-                job.check_stamp()
-                shutil.move(src, self.output_directory)
-                self.logger.info("[%s] Task %s completed, Move %s to %s", logger_info, self.task_name, src,
-                                 self.output_directory)
+                if job.is_processing_required():
+                    job.check_stamp()  # raise error if stamp is not valid
+                    job.run()
+                    job.check_stamp()
+                    shutil.move(src, self.output_directory)
+                    self.logger.info("[%s] Task %s completed, Move %s to %s", logger_info, self.task_name, src,
+                                     self.output_directory)
+                else:
+                    self.logger.info('[{}] Task {} was not processed. This job\'s owner is remote DC. Move {} to {}'.format(logger_info, self.task_name, src, self.done_directory))
+                    shutil.move(src, self.done_directory)
             except UnequallStampException as e:
                     self.logger.error("[%s] %s \n %s", logger_info, str(e), traceback.format_exc())
                     self.safe_move(src, self.error_directory)

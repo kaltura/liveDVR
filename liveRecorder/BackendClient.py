@@ -1,6 +1,7 @@
 from KalturaClient import *
 from KalturaClient.Plugins.Core import KalturaSessionType, KalturaUploadToken, KalturaUploadedFileTokenResource, \
-    KalturaUploadTokenFilter, KalturaServerFileResource, KalturaUploadTokenStatus
+    KalturaUploadTokenFilter, KalturaServerFileResource, KalturaUploadTokenStatus, KalturaEntryServerNodeFilter, \
+    KalturaLiveEntryServerNode, KalturaLiveEntryServerNodeRecordingInfo
 from Config.config import get_config
 from Logger.LoggerDecorator import logger_decorator
 from threading import Lock
@@ -154,6 +155,27 @@ class BackendClient:
         resource.localFilePath = output_file
         resource.keepOriginalFile = False
         self.set_recorded_content(entry_id, resource, duration, partner_id, recorded_id, flavor_id)
+
+    def get_server_entry_nodes_list(self, entry_id):
+        self.get_kaltura_session()  # generate KS in case that not existed or expired
+        self.logger.info('get_server_entry_nodes [entryId={}]'.format(entry_id))
+        server_entry_nodes_filter = KalturaEntryServerNodeFilter()
+        server_entry_nodes_filter.entryIdEqual = entry_id
+        response_list, response_header = self.client.entryServerNode.list(server_entry_nodes_filter)
+        self.logger.info('Header :{} '.format(response_header))
+        return response_list, response_header
+
+    def set_recording_status(self, entry_id, recording_status, entry_server_node_id):
+        self.get_kaltura_session()  # generate KS in case that not existed or expired
+        self.logger.info('set_recording_status [entryId={}][status={}]'.format(entry_id, recording_status))
+        entry_server_node = KalturaLiveEntryServerNode()
+        recordingInfo = KalturaLiveEntryServerNodeRecordingInfo()
+        recordingInfo.recordingStatus = recording_status
+        entry_server_node.recordingInfo = [recordingInfo]
+        updated_entry_server_node = self.client.entryServerNode.update(entry_server_node_id, entry_server_node)
+        self.logger.info('KalturaEntryServerNode :{} '.format(updated_entry_server_node))
+
+
 
 
 

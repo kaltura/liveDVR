@@ -113,7 +113,7 @@ class KalturaClient(object):
     def loadConfigurations(self):
         self.loadConfiguration(KalturaClientConfiguration, self.clientConfiguration)
         self.loadConfiguration(KalturaRequestConfiguration, self.requestConfiguration)
-        
+
     def loadPlugins(self):
         pluginFiles = ['Core']
         pluginsFolder = os.path.normpath(os.path.join(os.path.dirname(__file__), 'Plugins'))
@@ -139,7 +139,7 @@ class KalturaClient(object):
             pluginClass = 'Kaltura%sClientPlugin' % pluginFile
         if not pluginClass in dir(pluginModule):
             return
-        
+
         pluginClassType = getattr(pluginModule, pluginClass)
 
         plugin = pluginClassType.get()
@@ -181,15 +181,15 @@ class KalturaClient(object):
         if params != None:
             result += '?' + urllib.urlencode(params.get())
         self.log("Returned url [%s]" % result)
-        return result        
-        
+        return result
+
     def queueServiceActionCall(self, service, action, returnType, params = KalturaParams(), files = KalturaFiles()):
         for param in self.requestConfiguration:
             if isinstance(self.requestConfiguration[param], KalturaObjectBase):
                 params.addObjectIfDefined(param, self.requestConfiguration[param])
             else:
                 params.put(param, self.requestConfiguration[param])
-                
+
         call = KalturaServiceActionCall(service, action, params, files)
         if(self.multiRequestReturnType != None):
             self.multiRequestReturnType.append(returnType)
@@ -281,7 +281,7 @@ class KalturaClient(object):
             requestTimeout = self.config.requestTimeout
         else:
             requestTimeout = None
-            
+
         if requestTimeout != None:
             origSocketTimeout = socket.getdefaulttimeout()
             socket.setdefaulttimeout(requestTimeout)
@@ -293,18 +293,18 @@ class KalturaClient(object):
             if requestTimeout != None:
                 socket.setdefaulttimeout(origSocketTimeout)
         return data
-        
+
     def parsePostResult(self, postResult):
         if len(postResult) > 1024:
             self.log("result (xml): %s bytes" % len(postResult))
         else:
             self.log("result (xml): %s" % postResult)
 
-        try:        
+        try:
             resultXml = minidom.parseString(postResult)
         except ExpatError, e:
             raise KalturaClientException(e, KalturaClientException.ERROR_INVALID_XML)
-            
+
         resultNode = getChildNodeByXPath(resultXml, 'xml/result')
         if resultNode == None:
             raise KalturaClientException('Could not find result node in response xml', KalturaClientException.ERROR_RESULT_NOT_FOUND)
@@ -314,9 +314,9 @@ class KalturaClient(object):
             self.executionTime = getXmlNodeFloat(execTime)
 
         self.throwExceptionIfError(resultNode)
-        return resultNode        
-        
-    # Call all API services that are in queue
+        return resultNode
+
+        # Call all API services that are in queue
     def doQueue(self):
         self.responseHeaders = None
         self.executionTime = None
@@ -326,16 +326,16 @@ class KalturaClient(object):
 
         if self.config.format != KALTURA_SERVICE_FORMAT_XML:
             raise KalturaClientException("unsupported format: %s" % (postResult), KalturaClientException.ERROR_FORMAT_NOT_SUPPORTED)
-            
+
         startTime = time.time()
 
         # get request params
-        (url, params, files) = self.getRequestParams()        
-            
+        (url, params, files) = self.getRequestParams()
+
         # reset state
         self.callsQueue = []
-        
-        # issue the request        
+
+        # issue the request
         postResult = self.doHttpRequest(url, params, files)
 
         endTime = time.time()
@@ -363,13 +363,13 @@ class KalturaClient(object):
 
     def getConfig(self):
         return self.config
-        
+
     def setConfig(self, config):
         self.config = config
         logger = self.config.getLogger()
         if isinstance(logger, IKalturaLogger):
             self.shouldLog = True
-        
+
     def getExceptionIfError(self, resultNode):
         errorNode = getChildNodeByXPath(resultNode, 'error')
         if errorNode == None:
@@ -389,7 +389,7 @@ class KalturaClient(object):
 
     def startMultiRequest(self):
         self.multiRequestReturnType = []
-        
+
     def doMultiRequest(self):
         resultXml = self.doQueue()
         if resultXml == None:
@@ -412,10 +412,10 @@ class KalturaClient(object):
 
     def isMultiRequest(self):
         return (self.multiRequestReturnType != None)
-        
+
     def getMultiRequestResult(self):
         return MultiRequestSubResult('%s:result' % len(self.callsQueue))
-        
+
     def log(self, msg):
         if self.shouldLog:
             self.config.getLogger().log(msg)
@@ -477,12 +477,12 @@ class KalturaServiceActionCall(object):
         self.action = action
         self.params = params
         self.files = files
-        
+
     # Return the parameters for a multi request
     def getParamsForMultiRequest(self, multiRequestIndex):
         self.params.put('service', self.service)
         self.params.put('action', self.action)
-        
+
         multiRequestParams = KalturaParams()
         multiRequestParams.add(multiRequestIndex, self.params.get())
         return multiRequestParams.get()

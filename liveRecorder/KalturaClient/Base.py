@@ -170,17 +170,17 @@ class KalturaParams(object):
         for key in params:
             if isinstance(params[key], dict):
                 params[key] = self.sort(params[key])
-                
+
         sortedKeys = sorted(params.keys())
         sortedDict = {}
         for key in sortedKeys:
             sortedDict[key] = params[key]
-            
+
         return sortedDict
-        
+
     def toJson(self):
         return json.dumps(self.params)
-        
+
     def signature(self, params = None):
         if params == None:
             params = self.params
@@ -218,7 +218,7 @@ class KalturaObjectFactory(object):
             return None
         objType = getXmlNodeText(objTypeNode)
         if not KalturaObjectFactory.objectFactories.has_key(objType):
-            objType = expectedType.__name__        
+            objType = expectedType.__name__
         result = KalturaObjectFactory.objectFactories[objType]()
         if not isinstance(result, expectedType):
             raise KalturaClientException("Unexpected object type '%s'" % objType, KalturaClientException.ERROR_INVALID_OBJECT_TYPE)
@@ -247,18 +247,18 @@ class KalturaObjectFactory(object):
 
 # Abstract base class for all client objects
 class KalturaObjectBase(object):
-    def __init__(self, 
-            relatedObjects=NotImplemented):
+    def __init__(self,
+                 relatedObjects=NotImplemented):
 
         # @var map of KalturaListResponse
         # @readonly
         self.relatedObjects = relatedObjects
-        
+
         from KalturaClient.Plugins.Core import KalturaListResponse
         KalturaObjectBase.PROPERTY_LOADERS = {
-            'relatedObjects': (KalturaObjectFactory.createMap, KalturaListResponse) 
+            'relatedObjects': (KalturaObjectFactory.createMap, KalturaListResponse)
         }
-    
+
     def fromXmlImpl(self, node, propList):
         for childNode in node.childNodes:
             nodeName = childNode.nodeName
@@ -276,7 +276,7 @@ class KalturaObjectBase(object):
     def fromXml(self, node):
         self.fromXmlImpl(node, KalturaObjectBase.PROPERTY_LOADERS)
         pass
-    
+
     def toParams(self):
         result = KalturaParams()
         result.put('objectType', 'KalturaObjectBase')
@@ -292,7 +292,7 @@ class KalturaObjectBase(object):
 class KalturaServiceBase(object):
     def __init__(self, client = None):
         self.client = client
-        
+
     def setClient(self, client):
         self.client = client
 
@@ -318,7 +318,7 @@ class KalturaClientException(Exception):
     ERROR_RESULT_NOT_FOUND = -8
     ERROR_READ_TIMEOUT = -9
     ERROR_READ_GZIP_FAILED = -10
-  
+
     def __init__(self, message, code):
         self.code = code
         self.message = message
@@ -334,11 +334,11 @@ class KalturaConfiguration(object):
         self.serviceUrl                 = serviceUrl
         self.format                     = KALTURA_SERVICE_FORMAT_XML
         self.requestTimeout             = 120
-        
+
     # Set logger to get kaltura client debug logs
     def setLogger(self, log):
         self.logger = log
-        
+
     # Gets the logger (internal client use)
     def getLogger(self):
         return self.logger
@@ -349,15 +349,15 @@ class IKalturaClientPlugin(object):
     @staticmethod
     def get():
         raise NotImplementedError
-        
+
     # @return array<KalturaServiceBase>
     def getServices(self):
         raise NotImplementedError
-        
+
     # @return string
     def getName(self):
         raise NotImplementedError
-        
+
 # Client plugin base class
 class KalturaClientPlugin(IKalturaClientPlugin):
     pass
