@@ -61,3 +61,5 @@ liveRecorder/bin
 # ignore liveController executables under bin
 bin
 
+
+liveRecorder/Config/config.ini
