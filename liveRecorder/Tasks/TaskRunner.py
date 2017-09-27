@@ -232,6 +232,7 @@ class TaskRunner:
     def getSorterFileList(self, src_dir):
         file_list = os.listdir(src_dir)
         file_list_with_ctime = []
+        full_path = ""
         for path in file_list:
             try:
                 full_path = os.path.join(src_dir, path)
@@ -239,9 +240,10 @@ class TaskRunner:
                 file_list_with_ctime.append((path, dir_update_time))
             except (IOError, OSError) as e:
                 if e.errno == 2:  # no such file or directory
-                    self.logger.error("Failed to stat [{}]. Error: no such file or directory".format(full_path))
+                    self.logger.error("Failed to stat [{}]. Error: no such file or directory. Moving to [{}]".format(full_path, self.error_directory))
                 else:
-                    self.logger.error("Failed to stat [{}]. Error {} \n {}".format(full_path, str(e), traceback.format_exc()))
+                    self.logger.error("Failed to stat [{}]. Error {} \n {}. Moving to [{}]".format(full_path, str(e), traceback.format_exc(), self.error_directory))
+                self.safe_move(full_path, self.error_directory)
 
         sorted_file_list_with_ctime = sorted(file_list_with_ctime, key=lambda file_data: file_data[1])
         sorted_file_list = []
