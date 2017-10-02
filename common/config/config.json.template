@@ -5,6 +5,7 @@
   "rootFolderPath" : "~/kLive_content/live",
   "oldContentFolderPath" : "~/kLive_content/archive",
   "requestTimeout" : 20000,
+  "flavorSourceId" : "32",
   "flavorSuccessPollingInterval" : 2000,
   "flavorFailPollingInterval" : 10000,
   "backendPollingInterval" : 5000,
