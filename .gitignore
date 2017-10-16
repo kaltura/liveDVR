@@ -57,7 +57,7 @@ build/config.gypi
 
 # ignore liveRecorder executables under bin
 liveRecorder/bin
+liveRecorder/Config/config.ini
 
 # ignore liveController executables under bin
 bin
-
