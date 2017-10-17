@@ -1,6 +1,6 @@
 from multiprocessing import Process, Queue
 import logging.handlers
-import os
+import os, errno
 from Config.config import get_config
 from threading import Timer
 import shutil
@@ -215,12 +215,12 @@ class TaskRunner:
     def start(self):
         try:
             self.logger.info("Starting %d workers", self.number_of_processes)
-            workers = [Process(target=self.work, args=(i,)) for i in xrange(1, self.number_of_processes+1)]
-            for w in workers:
-                w.start()
             self.move_to_incoming_queue(self.working_directory, self.input_directory)
             self.add_new_task_handler()
             self.failed_task_handler()
+            workers = [Process(target=self.work, args=(i,)) for i in xrange(1, self.number_of_processes+1)]
+            for w in workers:
+                w.start()
 
         except Exception as e:
             self.logger.fatal("Failed to start task runner: %s  \n %s ", str(e), traceback.format_exc())
