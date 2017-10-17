@@ -1,6 +1,6 @@
 from multiprocessing import Process, Queue
 import logging.handlers
-import os
+import os, errno
 from Config.config import get_config
 from threading import Timer
 import shutil
@@ -124,8 +124,25 @@ class TaskRunner:
                         self.logger.warn("Failed to add new task [%s-%s], queue is full!", param['entry_id'], param['recorded_id'])
 
                 except Exception as e:
-                        self.logger.error("[%s-%s] Error while try to add task:%s \n %s", param['entry_id'], param['recorded_id'],
-                                          str(e), traceback.format_exc())
+                        self.logger.error("[%s-%s] Error while try to add task:%s \n %s", param['entry_id'], param['recorded_id'], str(e), traceback.format_exc())
+
+    def move_to_incoming_queue(self, src_dir, dst_dir):
+        file_list = os.listdir(src_dir)
+
+        for path in file_list:
+            full_path = ""
+            try:
+                full_path = os.path.join(src_dir, path)
+                self.safe_move(full_path, dst_dir)
+                self.logger.info("successfully move [{}] to [{}]".format(full_path, dst_dir))
+            except (IOError, OSError) as e:
+                if e.errno == 2:  # no such file or directory
+                    self.logger.error("Failed to move job from [{}] [{}]. Error: no such file or directory".format(full_path, dst_dir))
+                else:
+                    self.logger.error("Failed to move job from [{}] to [{}]. Error {} \n {}. Moving to [{}]".format(full_path, dst_dir, str(e), traceback.format_exc(), self.error_directory))
+                    self.safe_move(full_path, self.error_directory)
+
+
 
     def work(self, index):
         self.logger.info("Worker %s start working", index)
@@ -198,13 +215,12 @@ class TaskRunner:
     def start(self):
         try:
             self.logger.info("Starting %d workers", self.number_of_processes)
-            self.move_and_add_to_queue(self.working_directory)
+            self.move_to_incoming_queue(self.working_directory, self.input_directory)
             self.add_new_task_handler()
             self.failed_task_handler()
             workers = [Process(target=self.work, args=(i,)) for i in xrange(1, self.number_of_processes+1)]
             for w in workers:
                 w.start()
-
 
         except Exception as e:
             self.logger.fatal("Failed to start task runner: %s  \n %s ", str(e), traceback.format_exc())
