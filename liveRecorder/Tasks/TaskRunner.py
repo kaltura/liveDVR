@@ -198,12 +198,13 @@ class TaskRunner:
     def start(self):
         try:
             self.logger.info("Starting %d workers", self.number_of_processes)
-            workers = [Process(target=self.work, args=(i,)) for i in xrange(1, self.number_of_processes+1)]
-            for w in workers:
-                w.start()
             self.move_and_add_to_queue(self.working_directory)
             self.add_new_task_handler()
             self.failed_task_handler()
+            workers = [Process(target=self.work, args=(i,)) for i in xrange(1, self.number_of_processes+1)]
+            for w in workers:
+                w.start()
+
 
         except Exception as e:
             self.logger.fatal("Failed to start task runner: %s  \n %s ", str(e), traceback.format_exc())
