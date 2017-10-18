@@ -68,7 +68,8 @@
       "keyFrameIntervalExpectedInMSec" : 2000,
       "keyFrameIntervalDiffAllowedInMSec" : 200,
       "maxFramesPerSeconds" : 30,
-      "highSeverityKeyFrameInterval" : 4
+      "maxRecommendedKeyFrameInterval" : 4,
+      "minRecommendedKekFrameInterval" : 0.75
   },
   "simulateStreams": {
       "enable":false,
