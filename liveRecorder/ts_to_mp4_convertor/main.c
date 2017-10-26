@@ -268,9 +268,17 @@ bool dispose(struct FileConversion* conversion)
     
 }
 
+/*
+ 
+ This function should fill silence for all audio tracks that didn't start,
+ to avoid too-long silence period that will disturbe the interlaving factor of the mp4 files, 
+ we keep a threshold (THRESHOLD_IN_SECONDS_FOR_ADDING_SILENCE) to determin  if the video is too ahead and insert the silence
+ once we got the first packet and we know the actual time of the first packet, we fill until that time.
+ */
 void fillSilence(int64_t currentPts,struct TrackInfo* currentTrack,struct FileConversion* conversion)
 {
     conversion->skipSilenceFilling = true;
+    
     for (int i = 0; i < conversion->ofmt_ctx->nb_streams; i++) {
         struct TrackInfo* trackInfo = &conversion->trackInfo[i];
         AVStream * out_stream  = conversion->ofmt_ctx->streams[i];
@@ -279,10 +287,12 @@ void fillSilence(int64_t currentPts,struct TrackInfo* currentTrack,struct FileCo
         {
             //printf("Check if need to add silence to audio tracks stream_index:%d current_pts:%lld  (%s)\n",i,currentPts, av_ts2timestr(currentPts, &standard_timebase));
 
+            //we detected at least stream without content, so we need to fill up silence
             conversion->skipSilenceFilling = false;
             
             int64_t threshold=THRESHOLD_IN_SECONDS_FOR_ADDING_SILENCE*1000;
             
+            //check if the next packet is the first packet so we need to fillup the gap until that time
             if (currentTrack==trackInfo)
             {
                 printf("Got first packet of audio track, filling silence stream_index:%d current_pts:%lld (%s)\n",i,currentPts, av_ts2timestr(currentPts, &standard_timebase));
