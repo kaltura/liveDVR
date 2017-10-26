@@ -121,9 +121,9 @@ void generateADTSpacket(AVCodecContext *pContext,AVPacket pkt,  AVPacket *dst)
     int chanCfg = pContext->channels;  //MPEG-4 Audio Channel Configuration. 1 Channel front-center
     
 #define adtsLength 7
-    uint8_t *packet = malloc(pkt.size + adtsLength);
     int16_t fullLength = adtsLength + pkt.size;
 
+    uint8_t *packet = malloc(fullLength);
     
     
     //https://wiki.multimedia.cx/index.php/ADTS
@@ -161,59 +161,7 @@ void createSilentAudio(AVCodecContext *pContext,AVPacket* dst)
     }
 }
 
-    
-    /*
-     
-     static uint8_t array[] = {0xff,0xf1,0x50,0x80,0x3,0xff,0xfc,0xde,0x4,0x0,0x4c,0x61,0x76,0x63,0x35,0x37,
-     0x2e,0x31,0x30,0x30,0x2e,0x31,0x30,0x33,0x0,0x42,0x20,0x8,0xc1,0x18,0x38};
-     
-     static uint8_t array2[] = {0x21, 0x00, 0x49, 0x90, 0x02, 0x19, 0x00, 0x23, 0x80};
-     
-     
-     */
-    
-    
-    /*
-     int ret = 0 ;
-     AVFormatContext* ifmt_ctx=NULL;
-     
-     // av_log_set_level(AV_LOG_TRACE  );
-     char* fileName="/Users/guyjacubovski/1.mp4";
-     if ((ret = avformat_open_input(&ifmt_ctx, fileName, 0, 0)) < 0) {
-     fprintf(stderr, "Could not open silence file '%s'\n", fileName);
-     return ;
-     }
-     
-     AVPacket pkt;
-     if (ret = av_read_frame(ifmt_ctx, &pkt)<0) {
-     return;
-     }
-     
-     
-     *arr=alloca(pkt.size);
-     memcpy(*arr,pkt.data,pkt.size);
-     *len=pkt.size;
-     *duration = (90000*pContext->frame_size)/(1*pContext->sample_rate);
-     av_packet_unref(&pkt);
-     
-     
-     avformat_close_input(&ifmt_ctx);
-     
-     */
-    /*
-     ./ffmpeg -y -f lavfi -i "aevalsrc=0:d=0.01" -c:a aac -profile:a aac_low -b:a 4k -f adts output.aac && hexdump -v -e '16/1 "0x%x," "\n"' -v output.aac
-     
-     
-     int channelCount=pContext->channels;
-     pContext->codec_descriptor->profiles->profile;
-     AVCodec *output_codec          = NULL;
-     if (!(output_codec = avcodec_find_encoder(pContext->codec_id))) {
-     fprintf(stderr, "Could not find an AAC encoder.\n");
-     return NULL;
-     }
-     av_free(output_codec);
-     */
-    
+
     
     
 

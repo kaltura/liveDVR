@@ -10,6 +10,7 @@
 #define MAX_CONVERSIONS 20
 #define MAX_TRACKS 10
 #define KEY_FRAME_THRESHOLD 1000
+#define THRESHOLD_IN_SECONDS_FOR_ADDING_SILENCE 5
 
 static  AVRational standard_timebase = {1,1000};
 
@@ -276,11 +277,11 @@ void fillSilence(int64_t currentPts,struct TrackInfo* currentTrack,struct FileCo
 
         if (trackInfo->silent_packet.data!=NULL && trackInfo->packetCount==0 )
         {
-            printf("Check if need to add silence to audio tracks stream_index:%d current_pts:%lld  (%s)\n",i,currentPts, av_ts2timestr(currentPts, &standard_timebase));
+            //printf("Check if need to add silence to audio tracks stream_index:%d current_pts:%lld  (%s)\n",i,currentPts, av_ts2timestr(currentPts, &standard_timebase));
 
             conversion->skipSilenceFilling = false;
             
-            int64_t threshold=5*1000;//5 seconds
+            int64_t threshold=THRESHOLD_IN_SECONDS_FOR_ADDING_SILENCE*1000;
             
             if (currentTrack==trackInfo)
             {
@@ -324,7 +325,8 @@ bool convert(struct FileConversion* conversion)
     
     printf("Starting to convert %s\n",conversion->inputFileName);
     
-    int64_t max_pts = AV_NOPTS_VALUE;//30*60*1000;//AV_NOPTS_VALUE;
+    //this value is what is the maximum length of the converted file
+    int64_t max_duration = AV_NOPTS_VALUE;//30*60*1000;//AV_NOPTS_VALUE;
     while (1) {
         
         AVStream *in_stream, *out_stream;
@@ -352,16 +354,17 @@ bool convert(struct FileConversion* conversion)
         pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
         pkt.pos = -1;
         
-        /*
+/*   //for debugging, this makes the audio to start 5 min. after video
         if (  in_stream->codec->codec_type==AVMEDIA_TYPE_AUDIO &&
             av_rescale_q(pkt.pts, out_stream->time_base, standard_timebase)<5*60*1000) {
-            //continue;
+            continue;
         }
-        if (max_pts!=AV_NOPTS_VALUE &&  av_rescale_q(pkt.pts, out_stream->time_base, standard_timebase) > max_pts)
+*/
+
+        if (max_duration!=AV_NOPTS_VALUE &&  av_rescale_q(pkt.pts, out_stream->time_base, standard_timebase) > max_duration)
         {
             break;
         }
-        */
         
         
         if (!conversion->skipSilenceFilling) {
