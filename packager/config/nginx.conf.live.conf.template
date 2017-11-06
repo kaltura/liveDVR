@@ -6,7 +6,7 @@ vod_live_window_duration 0;
 vod_align_segments_to_key_frames on;
 vod_hls_absolute_master_urls off;
 vod_hls_absolute_index_urls off;
-vod_hls_output_id3_timestamps on;
+vod_hls_mpegts_output_id3_timestamps on;
 vod_dash_profiles urn:mpeg:dash:profile:isoff-live:2011;
 expires off;
 vod_upstream_location "";	
