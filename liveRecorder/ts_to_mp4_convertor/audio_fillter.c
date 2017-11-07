@@ -11,7 +11,35 @@
 #include "audio_filler.h"
 #include <stdbool.h>
 
+static char AAC_Silent_Packet_mono[] = {0x00, 0xc8, 0x00, 0x80, 0x23, 0x80};
+static char AAC_Silent_Packet_stereo[] = {0x21, 0x00, 0x49, 0x90, 0x02, 0x19, 0x00, 0x23, 0x80};
 
+
+bool generateAACSilentPacket(AVCodecContext *pContext,AVPacket* packet) {
+    
+    char* source=NULL;
+    if (pContext->profile!=FF_PROFILE_AAC_LOW) {
+        
+        return false;
+    }
+    if (pContext->channels==1) {
+        source = AAC_Silent_Packet_mono;
+        packet->size=sizeof(AAC_Silent_Packet_mono);
+    }
+    if (pContext->channels==2) {
+        source = AAC_Silent_Packet_stereo;
+        packet->size=sizeof(AAC_Silent_Packet_stereo);
+    }
+
+    if (source) {
+        packet->data=alloca(packet->size);
+        memcpy(packet->data,source,packet->size);
+        
+        packet->duration = pContext->frame_size;
+        return true;
+    }
+    return false;
+}
 
 /*
 Creates one encoder sample that contains absolute silence
@@ -48,9 +76,16 @@ bool generateCodecSilentPacket(AVCodecContext *pContext,AVPacket* packet)
     frame->format         = pNewContext->sample_fmt;
     frame->channel_layout = pNewContext->channel_layout;
     
-    int buffer_size = av_samples_get_buffer_size(NULL, pNewContext->channels, pNewContext->frame_size,pNewContext->sample_fmt, 0);
+    int buffer_size = av_samples_get_buffer_size(NULL, pNewContext->channels, frame->nb_samples ,pNewContext->sample_fmt, 0);
+    if (buffer_size < 0) {
+        fprintf(stderr, "Could not get sample buffer size\n");
+        return false;
+    }
     uint16_t * samples = av_malloc(buffer_size);
-    
+    if (!samples) {
+        fprintf(stderr, "Could not allocate %d bytes for samples buffer\n",buffer_size);
+        return false;
+    }
     
     ret = avcodec_fill_audio_frame(frame,pNewContext->channels, pNewContext->sample_fmt,
                                    (const uint8_t*)samples,  buffer_size, 0);
@@ -94,6 +129,7 @@ int getFreqIdx(AVCodecContext *pContext)
     while (1)
     {
         if (freqIdx>=sizeof(sample_rate_index)) {
+            fprintf(stderr, "Unsupported audio sampling rate (%d)\n",pContext->sample_rate);
             return -1;
         }
         if (sample_rate_index[freqIdx]==pContext->sample_rate) {
@@ -149,16 +185,38 @@ void createSilentAudio(AVCodecContext *pContext,AVPacket* dst)
     pkt.data = NULL; // packet data will be allocated by the encoder
     pkt.size = 0;
     
-    if (!generateCodecSilentPacket(pContext,&pkt)) {
-        return ;
+    
+    if (pContext->codec_id==AV_CODEC_ID_AAC) {
+        printf("generateAACSilentPacket\n");
+        if (!generateAACSilentPacket(pContext,&pkt)) {
+            printf("generateAACSilentPacket failed\n");
+            return ;
+        }
+    }
+    else {
+        printf("createSilentAudio\n");
+        if (!generateCodecSilentPacket(pContext,&pkt)) {
+            return ;
+        }
     }
     
     if (pContext->codec_id==AV_CODEC_ID_AAC) {
+        printf("generateADTSpacket!\n");
         //we need to wrap the AAC packet with ADTS header
         generateADTSpacket(pContext,pkt, dst);
     } else {
+        printf("av_copy_packet!\n");
         av_copy_packet(dst,&pkt);
     }
+    printf("~createSilentAudio  pkt.size=%d ({", dst->size);
+    for(int i = 0; i<dst->size; i++) {
+        if (i>0) {
+            printf(",");
+        }
+        printf("0x%x", dst->data[i]);
+    }
+    printf("})\n");
+
 }
 
 
