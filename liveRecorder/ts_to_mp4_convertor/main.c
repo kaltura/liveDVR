@@ -337,6 +337,9 @@ bool convert(struct FileConversion* conversion)
     
     //this value is what is the maximum length of the converted file
     int64_t max_duration = AV_NOPTS_VALUE;//30*60*1000;//AV_NOPTS_VALUE;
+    
+    uint64_t progressReportInterval = av_rescale_q(30*60*1000, standard_timebase, conversion->ifmt_ctx->streams[0]->time_base) ; //30 min
+    uint64_t nextProgressReport = progressReportInterval;
     while (1) {
         
         AVStream *in_stream, *out_stream;
@@ -357,7 +360,7 @@ bool convert(struct FileConversion* conversion)
             }
             
         }
-    
+        
         /* copy packet */
         pkt.pts = av_rescale_q_rnd(pkt.pts-offset, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
         pkt.dts = av_rescale_q_rnd(pkt.dts-offset, in_stream->time_base, out_stream->time_base, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX);
@@ -385,12 +388,13 @@ bool convert(struct FileConversion* conversion)
         trackInfo->packetCount++;
         
         if (pkt.pts<0) {
+            //printf("trim packets outside of start time track: %d, %s\n",pkt.stream_index, av_ts2str(pkt.pts));
             //trim packets outside of start time
             continue;
         } else {
             if ( trackInfo->waitForKeyFrame) {
                 if ((pkt.flags & AV_PKT_FLAG_KEY)==AV_PKT_FLAG_KEY) {
-                    // printf("Recieving key frame on track %d at time pts %s vs %s\n",pkt.stream_index, av_ts2str(trackInfo->lastPts),av_ts2str(offset));
+                    // printf("Recieving key frame on track %d at time pts %s\n",pkt.stream_index, av_ts2str(trackInfo->lastPts-offset));
                     trackInfo->waitForKeyFrame=false;
                 } else {
                     continue;
@@ -418,14 +422,17 @@ bool convert(struct FileConversion* conversion)
             printf("ID3: %15s\t%15s\t%s\t%s",av_ts2str(pkt.pts),av_ts2timestr(pkt.pts,&in_stream->time_base),json,timestr);
         }*/
         //log_packet(conversion->ofmt_ctx, &pkt, "out");
-        
+        if (pkt.stream_index==0 && pkt.pts>nextProgressReport) {
+            printf("Progress %s (%s)\n",av_ts2str(pkt.pts),av_ts2timestr(pkt.pts,&out_stream->time_base));
+            nextProgressReport=pkt.pts + progressReportInterval ;
+        }
+
         ret = av_interleaved_write_frame(conversion->ofmt_ctx, &pkt);
         if (ret < 0) {
             trackInfo->waitForKeyFrame=true;
             fprintf(stderr, "Error muxing packet of stream %d packet# (%"PRId64"),with pts %s \n",pkt.stream_index,trackInfo->packetCount, av_ts2str(trackInfo->lastPts));
         }
         av_packet_unref(&pkt);
-        
         
     }
     av_write_trailer(conversion->ofmt_ctx);
