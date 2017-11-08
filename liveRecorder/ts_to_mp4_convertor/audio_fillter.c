@@ -32,7 +32,7 @@ bool generateAACSilentPacket(AVCodecContext *pContext,AVPacket* packet) {
     }
 
     if (source) {
-        packet->data=alloca(packet->size);
+        packet->data=malloc(packet->size);
         memcpy(packet->data,source,packet->size);
         
         packet->duration = pContext->frame_size;
