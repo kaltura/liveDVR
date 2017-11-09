@@ -72,13 +72,13 @@ function build_addons
     local __error=$?
     if [ "$__error" -eq "0" ] && [ "$version" != "0" ]; then
         echo "cp ./bin/FormatConverter.node /home/kaltura-ci/bin/latest/linux/release"
-        y | cp ./bin/FormatConverter.node /home/kaltura-ci/bin/latest/linux/release
+        cp ./bin/FormatConverter.node /home/kaltura-ci/bin/latest/linux/release
         echo "cp ./bin/FormatConverter.node /home/kaltura-ci/bin/${version}/linux/release"
-        y | cp ./bin/FormatConverter.node /home/kaltura-ci/bin/${version}/linux/release
+        cp ./bin/FormatConverter.node /home/kaltura-ci/bin/${version}/linux/release
         echo "cp ./bin/FormatConverter.node.debug /home/kaltura-ci/bin/latest/linux/debug"
-        y | cp ./bin/FormatConverter.node.debug /home/kaltura-ci/bin/latest/linux/debug
+        cp ./bin/FormatConverter.node.debug /home/kaltura-ci/bin/latest/linux/debug
         echo "cp ./bin/FormatConverter.node.debug /home/kaltura-ci/bin/${version}/linux/debug"
-        y | cp ./bin/FormatConverter.node.debug /home/kaltura-ci/bin/${version}/linux/debug
+        cp ./bin/FormatConverter.node.debug /home/kaltura-ci/bin/${version}/linux/debug
     elif [ "$__error" -ne "0" ]; then
         echo "build addons failed with error [${__error}]"
     fi
@@ -103,9 +103,9 @@ function build_nginx
     local __error=$?
     if [ "$__error" -eq "0" ] && [ "$version" != "0" ]; then
         echo "cp ./bin/nginx /home/kaltura-ci/bin/${version}/linux/release"
-        y | cp ./bin/nginx /home/kaltura-ci/bin/${version}/linux/release
+        cp ./bin/nginx /home/kaltura-ci/bin/${version}/linux/release
         echo "cp $product_root_path/bin/nginx /home/kaltura-ci/bin/latest/linux/release"
-        y | cp ./bin/nginx /home/kaltura-ci/bin/latest/linux/release
+        cp ./bin/nginx /home/kaltura-ci/bin/latest/linux/release
     elif [ "$__error" -ne "0" ]; then
         echo "build nginx failed with error [${__error}]" 
     fi   
@@ -122,9 +122,9 @@ function build_ts2mp4_convertor
     local __error=$?
     if [ "$__error" -eq "0" ] && [ "$version" != "0" ]; then
         echo "cp ./liveRecorder/bin/ts_to_mp4_convertor /home/kaltura-ci/bin/latest/linux/release"
-        y | cp ./liveRecorder/bin/ts_to_mp4_convertor /home/kaltura-ci/bin/latest/linux/release
+        cp ./liveRecorder/bin/ts_to_mp4_convertor /home/kaltura-ci/bin/latest/linux/release
         echo "cp ./liveRecorder/bin/ts_to_mp4_convertor /home/kaltura-ci/bin/${version}/linux/release"
-        y | cp ./liveRecorder/bin/ts_to_mp4_convertor /home/kaltura-ci/bin/${version}/linux/release
+        cp ./liveRecorder/bin/ts_to_mp4_convertor /home/kaltura-ci/bin/${version}/linux/release
     elif [ $__error -ne "0" ]; then
         echo "build ts2mp4_convertor failed with error [${__error}]"
     fi
