@@ -10,7 +10,7 @@ echo "${devRootDir}"
 
 ffmpegLibsDir=${ffmpegLibsDir:-${devRootDir}/liveDVR/node_addons/FormatConverter/build/FFmpeg}
 packagerDir="${devRootDir}/nginx-vod-module"
-nginxVersion=${nginxVersion:-1.11.0}
+nginxVersion=${nginxVersion:-1.20.0}
 nginxDir="${devRootDir}/nginx-${nginxVersion}"
 os_name=`uname`
 
