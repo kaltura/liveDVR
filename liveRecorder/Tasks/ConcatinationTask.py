@@ -203,5 +203,5 @@ class ConcatenationTask(TaskBase):
                     retries_file.write(self.failed_tasks_max_retries)
 
         except Exception as e:
-            self.logger.error("Failed to get retry count for %s: %s \n %s", src, str(e), traceback.format_exc())
+            self.logger.error("Failed to reset retries count for %s: %s \n %s", src, str(e), traceback.format_exc())
             return 0
