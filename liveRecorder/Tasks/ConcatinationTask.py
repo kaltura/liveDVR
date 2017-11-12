@@ -5,6 +5,7 @@ import os
 import re
 import subprocess
 import urllib2
+import traceback
 
 import m3u8
 from Iso639Wrapper import Iso639Wrapper
@@ -36,6 +37,7 @@ class ConcatenationTask(TaskBase):
         self.nginx_url = "http://" + self.token_url + "t/{0}"
         self.flavor_pattern = 'index-s(?P<flavor>\d+)'
         self.iso639_wrapper = Iso639Wrapper(logger_info)
+        self.failed_tasks_max_retries = get_config('failed_tasks_max_retries')
 
     def tokenize_url(self, url):
 
@@ -126,6 +128,7 @@ class ConcatenationTask(TaskBase):
 
     def run(self):
 
+        self.reset_retry_count(self.recording_path)
         command = self.ts_to_mp4_convertor + ' '
         token = self.tokenize_url(self.token_url)
         self.url_base_entry = self.nginx_url.format(token)
@@ -191,3 +194,14 @@ class ConcatenationTask(TaskBase):
 
     def get_output_filename(self, flavor):
         return self.output_filename + '_f' + flavor + '_out.ts'
+
+    def reset_retry_count(self, src):
+        try:
+            retries_file_path = os.path.join(src, 'retries')
+            if os.path.exists(retries_file_path):
+                with open(retries_file_path, "w") as retries_file:
+                    retries_file.write(self.failed_tasks_max_retries)
+
+        except Exception as e:
+            self.logger.error("Failed to get retry count for %s: %s \n %s", src, str(e), traceback.format_exc())
+            return 0
