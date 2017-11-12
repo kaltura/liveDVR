@@ -4,7 +4,7 @@ from Logger.LoggerDecorator import logger_decorator
 from socket import gethostname
 from Config.config import get_config
 from RecordingException import UnequallStampException
-
+import traceback
 
 class TaskBase(object):
 
@@ -35,7 +35,7 @@ class TaskBase(object):
         self.recording_path = os.path.join(self.base_directory, self.__class__.__name__, 'processing',
                                            self.entry_directory)
         self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
-
+        self.failed_tasks_max_retries = get_config('failed_tasks_max_retries')
 
     __metaclass__ = abc.ABCMeta
 
@@ -43,3 +43,15 @@ class TaskBase(object):
     def run(self):
         """running the task"""
         return
+
+
+    def reset_retry_count(self, src):
+        try:
+            retries_file_path = os.path.join(src, 'retries')
+            if os.path.exists(retries_file_path):
+                with open(retries_file_path, "w") as retries_file:
+                    retries_file.write(self.failed_tasks_max_retries)
+
+        except Exception as e:
+            self.logger.error("Failed to reset retries count for %s: %s \n %s", src, str(e), traceback.format_exc())
+            return 0

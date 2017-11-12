@@ -95,6 +95,7 @@ class UploadTask(TaskBase):
 
     def run(self):
         try:
+            self.reset_retry_count(self.recording_path)
             mode = get_config('mode')
             is_first_flavor = True
             for mp4 in self.mp4_files_list:
