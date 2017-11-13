@@ -125,6 +125,7 @@ class ConcatenationTask(TaskBase):
         return flavor_id
 
     def run(self):
+        
         command = self.ts_to_mp4_convertor + ' '
         token = self.tokenize_url(self.token_url)
         self.url_base_entry = self.nginx_url.format(token)
@@ -190,5 +191,3 @@ class ConcatenationTask(TaskBase):
 
     def get_output_filename(self, flavor):
         return self.output_filename + '_f' + flavor + '_out.ts'
-
-
