@@ -5,6 +5,7 @@ from socket import gethostname
 from Config.config import get_config
 from RecordingException import UnequallStampException
 
+
 class TaskBase(object):
 
     hostname = gethostname()
@@ -34,7 +35,7 @@ class TaskBase(object):
         self.recording_path = os.path.join(self.base_directory, self.__class__.__name__, 'processing',
                                            self.entry_directory)
         self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
-        self.failed_tasks_max_retries = get_config('failed_tasks_max_retries')
+
 
     __metaclass__ = abc.ABCMeta
 
@@ -42,5 +43,3 @@ class TaskBase(object):
     def run(self):
         """running the task"""
         return
-
-
