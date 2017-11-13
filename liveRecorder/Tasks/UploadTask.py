@@ -97,19 +97,27 @@ class UploadTask(TaskBase):
         try:
             mode = get_config('mode')
             is_first_flavor = True
+            count_uploaded_mp4 = 0
             for mp4 in self.mp4_files_list:
-                result = re.search(self.mp4_filename_pattern, mp4)
-                if not result or not result.group('flavor_id'):
-                    error = "Error running upload task, failed to parse flavor id from filename: [{0}]".format(mp4)
-                    self.logger.error(error)
-                    raise ValueError(error)
-                flavor_id = result.group('flavor_id')
-                file_full_path = os.path.join(self.recording_path, mp4)
-                if mode == 'remote':
-                    self.upload_file(file_full_path, flavor_id, is_first_flavor)
-                if mode == 'local':
-                    self.append_recording_handler(file_full_path, flavor_id, is_first_flavor)
-                is_first_flavor = False
+                try:
+                    count_uploaded_mp4 += 1
+                    result = re.search(self.mp4_filename_pattern, mp4)
+                    if not result or not result.group('flavor_id'):
+                        error = "Error running upload task, failed to parse flavor id from filename: [{0}]".format(mp4)
+                        self.logger.error(error)
+                        raise ValueError(error)
+                    flavor_id = result.group('flavor_id')
+                    file_full_path = os.path.join(self.recording_path, mp4)
+                    if mode == 'remote':
+                        self.upload_file(file_full_path, flavor_id, is_first_flavor)
+                    if mode == 'local':
+                        self.append_recording_handler(file_full_path, flavor_id, is_first_flavor)
+                    is_first_flavor = False
+                except KalturaException as e:
+                    if e.code == 'FLAVOR_PARAMS_ID_NOT_FOUND':
+                        self.logger.warn('{}, failed to upload {}, flavor id {}'.format(e.message, mp4, flavor_id))
+                    else:
+                        raise e
         except KalturaException as e:
             if e.code == 'KALTURA_RECORDING_DISABLED':
                 self.logger.warn("%s, move it to done directory", e.message)
@@ -117,5 +125,9 @@ class UploadTask(TaskBase):
                 self.logger.warn("%s, move it to done directory", e.message)
             else:
                 raise e
+        if count_uploaded_mp4 > 0:
+            mp4_files = str(self.mp4_files_list)
+            err = Exception('failed to upload any of [{}] check log errors'.format(mp4_files))
+            raise err
 
 
