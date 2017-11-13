@@ -100,7 +100,6 @@ class UploadTask(TaskBase):
             count_uploaded_mp4 = 0
             for mp4 in self.mp4_files_list:
                 try:
-                    count_uploaded_mp4 += 1
                     result = re.search(self.mp4_filename_pattern, mp4)
                     if not result or not result.group('flavor_id'):
                         error = "Error running upload task, failed to parse flavor id from filename: [{0}]".format(mp4)
@@ -113,6 +112,7 @@ class UploadTask(TaskBase):
                     if mode == 'local':
                         self.append_recording_handler(file_full_path, flavor_id, is_first_flavor)
                     is_first_flavor = False
+                    count_uploaded_mp4 += 1
                 except KalturaException as e:
                     if e.code == 'FLAVOR_PARAMS_ID_NOT_FOUND':
                         self.logger.warn('{}, failed to upload {}, flavor id {}'.format(e.message, mp4, flavor_id))
