@@ -96,11 +96,9 @@ class TaskRunner:
             schedule.run_pending()
             time.sleep(1)
 
-    def move_and_add_to_queue(self, src_dir):
+    def move_and_add_to_queue(self, src_dir, queue_name):
         # In order to avoid starvation we need to handle files/directories in the order of creation.
         file_list = self.getSorterFileList(src_dir)
-        job_src_queue = src_dir.split('/').pop()
-        is_new_job = job_src_queue == 'incoming'
 
         for directory_name in file_list:
             if self.task_queue.full():
@@ -113,7 +111,7 @@ class TaskRunner:
                 try:
                     if os.path.isdir(directory_path):
                         param = self.get_param(directory_name)
-                        if is_new_job:
+                        if queue_name == 'incoming':
                             self.reset_retry_count(directory_path)
                         if src_dir != self.working_directory:   # if its not the same directory
                             shutil.move(directory_path, self.working_directory)
@@ -131,7 +129,7 @@ class TaskRunner:
                 except Exception as e:
                         self.logger.error("[%s-%s] Error while try to add task:%s \n %s", param['entry_id'], param['recorded_id'], str(e), traceback.format_exc())
 
-    def move_to_incoming_queue(self, src_dir, dst_dir):
+    def move_to_incoming_dir(self, src_dir, dst_dir):
         file_list = os.listdir(src_dir)
 
         for path in file_list:
@@ -139,7 +137,7 @@ class TaskRunner:
             try:
                 full_path = os.path.join(src_dir, path)
                 self.safe_move(full_path, dst_dir)
-                self.logger.info("successfully move [{}] to [{}]".format(full_path, dst_dir))
+                self.logger.info("successfully moved [{}] to [{}]".format(full_path, dst_dir))
             except (IOError, OSError) as e:
                 if e.errno == 2:  # no such file or directory
                     self.logger.error("Failed to move job from [{}] [{}]. Error: no such file or directory".format(full_path, dst_dir))
@@ -209,18 +207,18 @@ class TaskRunner:
         thread = Timer(self.polling_interval, self.add_new_task_handler)
         thread.daemon = True
         thread.start()
-        self.move_and_add_to_queue(self.input_directory)
+        self.move_and_add_to_queue(self.input_directory, 'incoming')
 
     def failed_task_handler(self):
         thread = Timer(self.failed_tasks_handling_interval, self.failed_task_handler)
         thread.daemon = True
         thread.start()
-        self.move_and_add_to_queue(self.failed_tasks_directory)
+        self.move_and_add_to_queue(self.failed_tasks_directory, 'failed')
 
     def start(self):
         try:
             self.logger.info("Starting %d workers", self.number_of_processes)
-            self.move_to_incoming_queue(self.working_directory, self.input_directory)
+            self.move_to_incoming_dir(self.working_directory, self.input_directory)
             self.add_new_task_handler()
             self.failed_task_handler()
             workers = [Process(target=self.work, args=(i,)) for i in xrange(1, self.number_of_processes+1)]
