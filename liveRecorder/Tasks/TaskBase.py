@@ -42,6 +42,7 @@ class TaskBase(object):
     @abc.abstractmethod
     def run(self):
         """running the task"""
+        self.reset_retry_count(self.recording_path)
         return
 
 

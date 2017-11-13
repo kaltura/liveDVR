@@ -126,7 +126,7 @@ class ConcatenationTask(TaskBase):
 
     def run(self):
 
-        self.reset_retry_count(self.recording_path)
+        super(ConcatenationTask, self).run()
         command = self.ts_to_mp4_convertor + ' '
         token = self.tokenize_url(self.token_url)
         self.url_base_entry = self.nginx_url.format(token)
