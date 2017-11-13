@@ -125,7 +125,7 @@ class UploadTask(TaskBase):
                 self.logger.warn("%s, move it to done directory", e.message)
             else:
                 raise e
-        if count_uploaded_mp4 > 0:
+        if count_uploaded_mp4 == 0:
             mp4_files = str(self.mp4_files_list)
             err = Exception('failed to upload any of [{}] check log errors'.format(mp4_files))
             raise err
