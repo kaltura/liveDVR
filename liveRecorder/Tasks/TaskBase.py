@@ -41,18 +41,6 @@ class TaskBase(object):
     @abc.abstractmethod
     def run(self):
         """running the task"""
-        self.reset_retry_count(self.recording_path)
         return
 
 
-    def reset_retry_count(self, src):
-        try:
-            raise Exception('test')
-            retries_file_path = os.path.join(src, 'retries')
-            if os.path.exists(retries_file_path):
-                with open(retries_file_path, "w") as retries_file:
-                    retries_file.write(self.failed_tasks_max_retries)
-
-        except Exception as e:
-            self.logger.error('Failed to reset retries count for {}: {} \n'.format(src, str(e)), exc_info=True)
-            return 0

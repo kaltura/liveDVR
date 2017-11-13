@@ -99,6 +99,9 @@ class TaskRunner:
     def move_and_add_to_queue(self, src_dir):
         # In order to avoid starvation we need to handle files/directories in the order of creation.
         file_list = self.getSorterFileList(src_dir)
+        job_src_queue = src_dir.split('/').pop()
+        is_new_job = job_src_queue == 'incoming'
+
         for directory_name in file_list:
             if self.task_queue.full():
                 self.logger.warn(
@@ -110,6 +113,8 @@ class TaskRunner:
                 try:
                     if os.path.isdir(directory_path):
                         param = self.get_param(directory_name)
+                        if is_new_job:
+                            self.reset_retry_count(directory_path)
                         if src_dir != self.working_directory:   # if its not the same directory
                             shutil.move(directory_path, self.working_directory)
                         self.task_queue.put(param, block=False)
@@ -268,4 +273,13 @@ class TaskRunner:
             sorted_file_list.append(file_data[0])
 
         return sorted_file_list
+
+    def reset_retry_count(self, src):
+        try:
+            retries_file_path = os.path.join(src, 'retries')
+            if os.path.exists(retries_file_path):
+                with open(retries_file_path, "w") as retries_file:
+                    retries_file.write(self.failed_tasks_max_retries)
+        except Exception as e:
+            self.logger.error('Failed to reset retries count for {}: {} \n'.format(src, str(e)), exc_info=True)
 
