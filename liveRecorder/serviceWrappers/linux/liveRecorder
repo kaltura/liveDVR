@@ -58,7 +58,11 @@ LOGFILE="${LOGDIR}/${NAME}-service.log"
 APPLICATION_PATH=${KLIVE_RECORDER_PREFIX}/main.py
 RETVAL=0
 
-. /opt/rh/python27/enable
+if [ -e  /opt/rh/python27/enable ]; then
+    . /opt/rh/python27/enable
+else
+   echo "warning... couldn't find /opt/rh/python27/enable"
+fi
 
 createFolders() {
 	[ -d ${LOGDIR} ] || mkdir -p ${LOGDIR}
@@ -102,22 +106,32 @@ start() {
 
 stop() {
     echo "stopping liveRecorder..."
-    if [ -f ${PIDFILE} ]; then
-        local __pid=$( cat ${PIDFILE} )
-        echo "Shutting down ${NAME}"
-        kill ${__pid} >> ${LOGFILE}
-        check_pid_status "-p ${PIDFILE}"
-	    if [ $? -eq 0 ]; then
-	        echo "failed to stop ${NAME}, ${__pid}"
-            killApp ${__pid}
-            return 1
+    local __retries=5
+    local __success=-1
+    while : ; do
+        echo "stopping iteration #$((5 - ${__retries} + 1))"
+        if [ -f ${PIDFILE} ]; then
+                local __pid=$( cat ${PIDFILE} )
+                echo "Shutting down ${NAME}"
+                kill ${__pid} >> ${LOGFILE}
+                check_pid_status "-p ${PIDFILE}"
+            if [ $? -eq 0 ]; then
+                        echo "failed to stop ${NAME}, ${__pid}"
+                killApp ${__pid}
+                return 1
+            else
+                echo "${NAME}, ${__pid}, successfully stopped"
+                __success = 0
+                rm -f ${PIDFILE}
+            fi
         else
-            echo "${NAME}, ${__pid}, successfully stopped"
-            rm -f ${PIDFILE}
+                echo "${NAME} is not running"
         fi
-    else
-        echo "${NAME} is not running"
-    fi
+        __retries--
+        [[ (__retries -gt 0 && __success -ne 0) ]] || break
+        echo "number of retries left ${__retries}"
+        sleep 1
+   done
 }
 
 restart() {
