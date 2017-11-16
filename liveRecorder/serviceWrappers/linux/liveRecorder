@@ -116,7 +116,7 @@ stop() {
                 kill ${__pid} >> ${LOGFILE}
                 check_pid_status "-p ${PIDFILE}"
             if [ $? -eq 0 ]; then
-                        echo "failed to stop ${NAME}, ${__pid}"
+                echo "failed to stop ${NAME}, ${__pid}"
                 killApp ${__pid}
                 return 1
             else
