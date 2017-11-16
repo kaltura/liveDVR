@@ -50,7 +50,7 @@ cd ${FFMPEG_BUILD_PATH}/FFmpeg-n${FFMPEG_VERSION}
 
 CONFIG_FILENAME=./lastConfigure
 
-CONF_CMD="./configure --disable-everything --disable-doc --enable-protocol=file --enable-demuxer=mpegts --enable-muxer=rtp_mpegts --enable-parser=h264 --enable-parser=aac --enable-muxer=mp4 --enable-zlib --enable-bsf=aac_adtstoasc --enable-decoder=aac --enable-decoder=h264 --enable-muxer=flv --enable-protocol=rtmp --enable-encoder=libmp3lame ${DEBUG_SPECIFICS}"
+CONF_CMD="./configure --disable-everything --disable-doc --enable-protocol=file --enable-demuxer=mpegts --enable-muxer=rtp_mpegts --enable-parser=h264 --enable-parser=aac --enable-muxer=mp4 --enable-zlib --enable-bsf=aac_adtstoasc --enable-decoder=aac  --enable-encoder=aac --enable-decoder=h264 --enable-muxer=flv --enable-protocol=rtmp --enable-encoder=libmp3lame ${DEBUG_SPECIFICS}"
 
 [ "${OS}" = "Linux" ] && CONF_CMD="${CONF_CMD} --enable-pic"
 [ "${OS}" = "Darwin" ] && CONF_CMD="${CONF_CMD} --disable-static --enable-shared"

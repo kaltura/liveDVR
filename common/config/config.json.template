@@ -57,14 +57,19 @@
 
   },
   "diagnostics": {
-      "diagnosticsReportIntervalRunTimeInSec": 60,
+      "diagnosticsReportIntervalRunTimeInSec": 300,
       "minChunkDurationInSec": 1,
       "maxChunkDurationInSec": 60,
-      "errorsWindowSizeInMin" : 5,
+      "errorsWindowSizeInMin" : 3,
       "ptsMaxMisalignmentAllowedInMSec" : 5000,
       "ptsRollingWindowSizeInSec" : 300,
       "ptsDiffPercentageAllowed" : 1,
-      "bitrateDiffPercentageAllowed" : 10
+      "bitrateDiffPercentageAllowed" : 10,
+      "keyFrameIntervalExpectedInMSec" : 2000,
+      "keyFrameIntervalDiffAllowedInMSec" : 200,
+      "maxFramesPerSeconds" : 30,
+      "maxRecommendedKeyFrameInterval" : 4,
+      "minRecommendedKekFrameInterval" : 0.75
   },
   "simulateStreams": {
       "enable":false,
@@ -109,6 +114,7 @@
        "recordingMaxDurationInHours" : 24,
        "recordingMinDurationInSeconds" : 60,
        "recordingSessionDurationInSec" : 180,
-       "recordingUpdateEntryTimeIntervalInMin" : 15
+       "recordingUpdateEntryTimeIntervalInMin" : 15,
+       "recordingMaxAllowedMp4FilesQueueSize" : 100
      }
 }
