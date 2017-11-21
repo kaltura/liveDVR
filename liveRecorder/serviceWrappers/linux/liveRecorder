@@ -36,7 +36,7 @@ else
 fi
 
 if [ -r /etc/rc.d/init.d/functions ]; then
-   echo ". source /etc/rc.d/init.d/functions"
+   echo ". /etc/rc.d/init.d/functions"
    . /etc/rc.d/init.d/functions
 elif [ -r /lib/lsb/init-functions ]; then
    echo ". /lib/lsb/init-functions"
@@ -116,7 +116,11 @@ stop() {
             if [ $__status -eq 0 ]; then
                 echo "failed to stop ${NAME}, ${__pid}"
                 killApp ${__pid}
-                $__status=$?
+                __status=$?
+            fi
+            if [ $__status -eq 1 ]; then
+                echo "${NAME} is not running, but pid file exists"
+                __status=0
             fi
             if [ $__status -eq 0 ]; then
                 echo "${NAME}, ${__pid}, successfully stopped"
