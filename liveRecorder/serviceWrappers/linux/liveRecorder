@@ -36,7 +36,7 @@ else
 fi
 
 if [ -r /etc/rc.d/init.d/functions ]; then
-   echo ". source /etc/rc.d/init.d/functions"
+   echo ". /etc/rc.d/init.d/functions"
    . /etc/rc.d/init.d/functions
 elif [ -r /lib/lsb/init-functions ]; then
    echo ". /lib/lsb/init-functions"
@@ -46,11 +46,8 @@ else
     echo "Error, no function found for checking if ${NAME} is running. either not running in CentOS/Ubuntu or wrong path"
 fi
 
-# these lines added especially for QA
-if [ ! -r ${KLIVE_RECORDER_PREFIX} ]; then
-    KLIVE_RECORDER_PREFIX=${SCRIPT_DIR}/../../
-    echo "KLIVE_RECORDER_PREFIX=${KLIVE_RECORDER_PREFIX}"
-fi
+KLIVE_RECORDER_PREFIX=${SCRIPT_DIR}/../../
+echo "KLIVE_RECORDER_PREFIX=${KLIVE_RECORDER_PREFIX}"
 
 LOGDIR="${LOG_DIR}/${NAME}"
 PIDFILE="${PID_DIR}/${NAME}.pid"
@@ -107,7 +104,7 @@ start() {
 stop() {
     echo "stopping liveRecorder..."
     local __retries=5
-    local __success=-1
+    local __status=0
     while : ; do
         echo "stopping iteration #$((5 - ${__retries} + 1))"
         if [ -f ${PIDFILE} ]; then
@@ -115,20 +112,25 @@ stop() {
                 echo "Shutting down ${NAME}"
                 kill ${__pid} >> ${LOGFILE}
                 check_pid_status "-p ${PIDFILE}"
-            if [ $? -eq 0 ]; then
+                __status=$?
+            if [ $__status -eq 0 ]; then
                 echo "failed to stop ${NAME}, ${__pid}"
                 killApp ${__pid}
-                return 1
-            else
+                __status=$?
+            fi
+            if [ $__status -eq 1 ]; then
+                echo "${NAME} is not running, but pid file exists"
+                __status=0
+            fi
+            if [ $__status -eq 0 ]; then
                 echo "${NAME}, ${__pid}, successfully stopped"
-                __success = 0
                 rm -f ${PIDFILE}
             fi
         else
                 echo "${NAME} is not running"
         fi
-        __retries--
-        [[ (__retries -gt 0 && __success -ne 0) ]] || break
+        __retries=$(($__retries-1))
+        [[ ($__retries -gt 0 && $__status -ne 0) ]] || break
         echo "number of retries left ${__retries}"
         sleep 1
    done
