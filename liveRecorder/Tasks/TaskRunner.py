@@ -36,7 +36,7 @@ class TaskRunner:
 
         return param
 
-    def __init__(self, task, number_of_processes, output_directory, max_task_count):
+    def __init__(self, task, number_of_processes, output_directory, max_task_count, skipped_task_output):
         self.number_of_processes = number_of_processes
         self.task = task
         self.task_name = task.__name__
@@ -55,6 +55,7 @@ class TaskRunner:
         self.task_queue_size = max_task_count
         self.task_queue = Queue(max_task_count)
         self.logger = logging.getLogger(__name__+'-'+self.task_name)
+        self.skipped_task_output = skipped_task_output
         self.on_startup()
 
     def on_startup(self):
@@ -161,13 +162,13 @@ class TaskRunner:
                 job.run()
                 job.check_stamp()
                 shutil.move(src, self.output_directory)
-                self.logger.info("[%s] Task %s completed, Move %s to %s", logger_info, self.task_name, src,
-                                 self.output_directory)
+                self.logger.info("[{}] Task {} completed, move {} to {}".format(logger_info, self.task_name, src,
+                                 self.output_directory))
             except UnequallStampException as e:
-                    self.logger.error("[%s] %s \n %s", logger_info, str(e), traceback.format_exc())
-                    self.safe_move(src, self.error_directory)
+                    self.logger.warning("[{}] skip processing, a newer job exits. Move to {}. Mismatch details: {}".format(logger_info, self.skipped_task_output, str(e)), exc_info=True)
+                    self.safe_move(src, self.skipped_task_output)
             except Exception as e:
-                self.logger.error("[%s] Failed to perform task :%s \n %s", logger_info, str(e), traceback.format_exc())
+                self.logger.error("[{}] Failed to perform task :{}".format(logger_info, str(e)), exc_info=True)
                 retries = self.get_retry_count(src)
                 try:
                     if retries > 0:
