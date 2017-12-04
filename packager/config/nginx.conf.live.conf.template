@@ -11,11 +11,18 @@ vod_dash_profiles urn:mpeg:dash:profile:isoff-live:2011;
 expires off;
 vod_upstream_location "";	
 
-location ~ \/(?<live_type>live|recording|live-stg)\/[^\/]+\/p\/(?<partnerId>\d+)\/e\/(?<entryId>[^\/]+(?<entryHash>\w))\/(sd\/(?<segmentDuration>\d+)\/)?t\/(?<token>[^\/]+) {
+map $user_type $overrideClipTo{
+	"user" "";
+	default '{"clipFrom":0, "clipTo":0}';
+}
+
+location ~ \/(?<live_type>live|recording|live-stg)\/[^\/]+\/p\/(?<partnerId>\d+)\/e\/(?<entryId>[^\/]+(?<entryHash>\w))\/(sd\/(?<segmentDuration>\d+)\/)?t\/(?<token>[^\/]+)(/type/(?<user_type>\w+))?\/ {
 	#this is for backward compatability to fetch from wowza  
 	location ~ ^/m/(?<mediaServer>[^/]+)/live/legacy/p/\d+/e/[^/]+(/sd/[^/]+)?/t/[^/]+/(?<path>.*) {
 		proxy_pass http://${mediaServer}:1935/kLive/ngrp:${entryId}_1_all/$path$is_args$args;
 	}
+
+	vod_media_set_override_json $overrideClipTo;
 
 	location ~ /live|live-stg/ {
 		location ~ /sd/2000/ {
