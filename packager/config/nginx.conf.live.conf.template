@@ -13,7 +13,7 @@ vod_upstream_location "";
 
 map $user_type $overrideClipTo{
 	"user" "";
-	default '{"clipFrom":0, "clipTo":0}';
+	default '{"clipFrom":0, "clipTo":-1}';
 }
 
 location ~ \/(?<live_type>live|recording|live-stg)\/[^\/]+\/p\/(?<partnerId>\d+)\/e\/(?<entryId>[^\/]+(?<entryHash>\w))\/(sd\/(?<segmentDuration>\d+)\/)?(type\/(?<user_type>\w+)\/)?t\/(?<token>[^\/]+)\/ {
