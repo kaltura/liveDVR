@@ -9,12 +9,7 @@ vod_hls_absolute_index_urls off;
 vod_hls_mpegts_output_id3_timestamps on;
 vod_dash_profiles urn:mpeg:dash:profile:isoff-live:2011;
 expires off;
-vod_upstream_location "";	
-
-map $user_type $overrideClipTo{
-	"user" "";
-	default '{"clipFrom":0, "clipTo":-1}';
-}
+vod_upstream_location "";
 
 location ~ \/(?<live_type>live|recording|live-stg)\/[^\/]+\/p\/(?<partnerId>\d+)\/e\/(?<entryId>[^\/]+(?<entryHash>\w))\/(sd\/(?<segmentDuration>\d+)\/)?(type\/(?<user_type>\w+)\/)?t\/(?<token>[^\/]+)\/ {
 	#this is for backward compatability to fetch from wowza  
