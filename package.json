@@ -37,6 +37,7 @@
     "q": "1.4.1",
     "q-io": "1.13.4",
     "request": "^2.61.0",
+    "socket.io-client": "^2.0.4",
     "touch": "1.0.0",
     "underscore": "1.8.3",
     "nan": "2.7.0"
