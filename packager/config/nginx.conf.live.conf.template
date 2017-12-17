@@ -6,18 +6,19 @@ vod_live_window_duration 0;
 vod_align_segments_to_key_frames on;
 vod_hls_absolute_master_urls off;
 vod_hls_absolute_index_urls off;
-vod_hls_output_id3_timestamps on;
+vod_hls_mpegts_output_id3_timestamps on;
 vod_dash_profiles urn:mpeg:dash:profile:isoff-live:2011;
 expires off;
-vod_upstream_location "";	
+vod_upstream_location "";
 
-location ~ \/(?<live_type>live|recording|live-stg)\/[^\/]+\/p\/(?<partnerId>\d+)\/e\/(?<entryId>[^\/]+(?<entryHash>\w))\/(sd\/(?<segmentDuration>\d+)\/)?t\/(?<token>[^\/]+) {
+location ~ \/(?<live_type>live|recording|live-stg)\/[^\/]+\/p\/(?<partnerId>\d+)\/e\/(?<entryId>[^\/]+(?<entryHash>\w))\/(sd\/(?<segmentDuration>\d+)\/)?(type\/(?<user_type>\w+)\/)?t\/(?<token>[^\/]+)\/ {
 	#this is for backward compatability to fetch from wowza  
 	location ~ ^/m/(?<mediaServer>[^/]+)/live/legacy/p/\d+/e/[^/]+(/sd/[^/]+)?/t/[^/]+/(?<path>.*) {
 		proxy_pass http://${mediaServer}:1935/kLive/ngrp:${entryId}_1_all/$path$is_args$args;
 	}
 
 	location ~ /live|live-stg/ {
+		vod_media_set_override_json $overrideClipTo;
 		location ~ /sd/2000/ {
 			vod_expires_live_time_dependent 1;
 			vod_live_mapping_cache live_mapping_cache_low_latency 256m 1;

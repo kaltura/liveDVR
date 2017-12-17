@@ -1,0 +1,3 @@
+# Kaltura liveRecorder defaults file
+LOG_DIR=/var/log
+PID_DIR=/var/run

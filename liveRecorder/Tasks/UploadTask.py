@@ -65,6 +65,7 @@ class UploadTask(TaskBase):
                 job_result = threadWorkers.wait_jobs_done()
                 failed_jobs.extend(job_result)
             self.check_stamp()
+
             upload_session_json = str(vars(upload_session))
 
             if len(failed_jobs) == 0:
@@ -97,20 +98,39 @@ class UploadTask(TaskBase):
         try:
             mode = get_config('mode')
             is_first_flavor = True
+            count_uploaded_mp4 = 0
+            code = ''
             for mp4 in self.mp4_files_list:
-                result = re.search(self.mp4_filename_pattern, mp4)
-                if not result or not result.group('flavor_id'):
-                    error = "Error running upload task, failed to parse flavor id from filename: [{0}]".format(mp4)
-                    self.logger.error(error)
-                    raise ValueError(error)
-                flavor_id = result.group('flavor_id')
-                file_full_path = os.path.join(self.recording_path, mp4)
-                if mode == 'remote':
-                    self.upload_file(file_full_path, flavor_id, is_first_flavor)
-                if mode == 'local':
-                    self.append_recording_handler(file_full_path, flavor_id, is_first_flavor)
-                is_first_flavor = False
+                try:
+                    result = re.search(self.mp4_filename_pattern, mp4)
+                    if not result or not result.group('flavor_id'):
+                        error = "Error running upload task, failed to parse flavor id from filename: [{0}]".format(mp4)
+                        self.logger.error(error)
+                        raise ValueError(error)
+                    flavor_id = result.group('flavor_id')
+                    file_full_path = os.path.join(self.recording_path, mp4)
+                    if mode == 'remote':
+                        self.upload_file(file_full_path, flavor_id, is_first_flavor)
+                    if mode == 'local':
+                        self.append_recording_handler(file_full_path, flavor_id, is_first_flavor)
+                    is_first_flavor = False
+                    count_uploaded_mp4 += 1
+                except KalturaException as e:
+                    code = e.code
+                    if e.code == 'FLAVOR_PARAMS_ID_NOT_FOUND':
+                        self.logger.warn('{}, failed to upload {}, flavor id {}'.format(e.message, mp4, flavor_id))
+                    else:
+                        raise e
+            if count_uploaded_mp4 == 0:
+                if len(self.mp4_files_list) > 0:
+                    mp4_files = str(self.mp4_files_list)
+                    err = Exception('failed to upload any of {} check log errors'.format(mp4_files))
+                    err.code = code
+                    raise err
+                else:
+                    self.logger.warn('there were no mp4 files to upload. check {}'.format(self.recording_path))
         except KalturaException as e:
+            self.logger.error('failed to upload VOD with error {}, exception details: {}'.format(e.code, e.message))
             if e.code == 'KALTURA_RECORDING_DISABLED':
                 self.logger.warn("%s, move it to done directory", e.message)
             elif e.code == 'ENTRY_ID_NOT_FOUND':

@@ -1,4 +1,4 @@
-CC = gcc -v
+CC = gcc -v -std=c99
 SRC = $(wildcard *.c)
 DEPS = $(wildcard *.h)
 ODIR=obj

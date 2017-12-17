@@ -7,9 +7,13 @@ var path = require('path');
 var qio = require('q-io/fs');
 var _ = require('underscore');
 var Q = require('q');
+const kalturaTypes = require('../lib/kaltura-client-lib/KalturaTypes');
 
 const tsChunktMatch = new RegExp(/media-([^_]+).*?([\d]+)\.ts.*/);
 const rootFolder = config.get('rootFolderPath');
+const recordingRootPath = config.get('recording').recordingFolderPath;
+const appendDirName = 'append';
+const newSessionDirName = 'newSession';
 
 class PersistenceFormat {
     getFlavorFromLivePath(filePath){
@@ -104,6 +108,14 @@ class PersistenceFormat {
             return matched[1] + '-' + matched[2] + '.ts';
         }
         return tsChunkName;
+    }
+
+    getRecordingSessionPath(entryId, recordStatus, recordedEntryId) {
+        let modeDirName = newSessionDirName;
+        if (recordStatus == kalturaTypes.KalturaRecordStatus.APPENDED){
+            modeDirName = appendDirName;
+        }
+        return path.join(recordingRootPath, modeDirName, entryId.slice(-1), entryId, recordedEntryId);
     }
 
 }

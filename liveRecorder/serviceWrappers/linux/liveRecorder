@@ -22,22 +22,47 @@
 # extend callable functions from "functions" script
 ###
 
-source /etc/rc.d/init.d/functions
-. /opt/rh/python27/enable
-APP_NAME=liveRecorder
-SCRIPT_DIR=$(dirname $(readlink -f $0))
-APPDIR=${SCRIPT_DIR}/../../
-NAME=${APP_NAME}
-APPLICATION_PATH=${APPDIR}/main.py
-LOG_DIR="/var/log/${APP_NAME}"
-PID_DIR="/var/run"
-PIDFILE="${PID_DIR}/${NAME}.pid"
-LOGFILE="${LOG_DIR}/${NAME}-service.log"
 
+NAME=liveRecorder
+STATUS_FUNCTION=status
+SCRIPT_DIR=$(dirname "$(readlink -f "$0")")
+
+if [ -r /etc/default/${NAME} ]; then
+    echo ". /etc/default/${NAME}"
+    . /etc/default/${NAME}
+else
+    echo "${NAME} default file not found in /etc/default, using ${SCRIPT_DIR}/../defaults/${NAME}"
+    . ${SCRIPT_DIR}/../defaults/${NAME}
+fi
+
+if [ -r /etc/rc.d/init.d/functions ]; then
+   echo ". /etc/rc.d/init.d/functions"
+   . /etc/rc.d/init.d/functions
+elif [ -r /lib/lsb/init-functions ]; then
+   echo ". /lib/lsb/init-functions"
+   . /lib/lsb/init-functions
+   STATUS_FUNCTION=status_of_proc
+else
+    echo "Error, no function found for checking if ${NAME} is running. either not running in CentOS/Ubuntu or wrong path"
+fi
+
+KLIVE_RECORDER_PREFIX=${SCRIPT_DIR}/../../
+echo "KLIVE_RECORDER_PREFIX=${KLIVE_RECORDER_PREFIX}"
+
+LOGDIR="${LOG_DIR}/${NAME}"
+PIDFILE="${PID_DIR}/${NAME}.pid"
+LOGFILE="${LOGDIR}/${NAME}-service.log"
+APPLICATION_PATH=${KLIVE_RECORDER_PREFIX}/main.py
 RETVAL=0
 
+if [ -e  /opt/rh/python27/enable ]; then
+    . /opt/rh/python27/enable
+else
+   echo "warning... couldn't find /opt/rh/python27/enable"
+fi
+
 createFolders() {
-	[ -d ${LOG_DIR} ] || mkdir -p ${LOG_DIR}
+	[ -d ${LOGDIR} ] || mkdir -p ${LOGDIR}
 	SHARED_APP_DIR=$(python ${SCRIPT_DIR}/getRecordingBaseDir.py)
 	echo "Creating folders in ${SHARED_APP_DIR} for ${HOSTNAME}"
 	if [ -d  ${SHARED_APP_DIR} ] ; then 
@@ -50,13 +75,17 @@ createFolders() {
 }
 
 start() {
-    modules=(schedule m3u8 poster psutil Crypto)
-    for module in "${modules[@]}"; do
-         python -c "import $module"
-        [ $? -ne 0 ] && echo "Missing $module pip module." && exit 3
+    echo "starting liveRecorder..."
+    python --version
+    local __modules="schedule m3u8 poster psutil Crypto"
+    for module in ${__modules}; do
+      echo "python -c \"import ${module}\""
+      local __pc=$( python -c """import ${module}""" )
+      echo ${__pc}
+      [ $? -ne 0 ] && echo "Missing '$module', run pip install $module." && exit 3
     done
     createFolders || exit 4
-    status -p ${PIDFILE}
+    check_pid_status "-p ${PIDFILE}"
     if [ $? -eq 0 ]; then
         echo "${NAME} already running"
     else
@@ -65,30 +94,46 @@ start() {
         RETVAL=$?
         echo $! > ${PIDFILE}
         if [ ${RETVAL} -eq 0 ]; then
-			echo "started ${NAME} with pid $(cat ${PIDFILE})"
+			echo "started ${NAME} with PID $(cat ${PIDFILE})"
 		else
-			echo "starting ${NAME} failed. please see ${LOGFILE}"
+			echo "starting ${NAME} failed. Please see ${LOGFILE}"
 		fi
 	fi
 }
 
 stop() {
-    if [ -f ${PIDFILE} ]; then
-        local pid=$( cat ${PIDFILE} )
-        echo "Shutting down ${NAME}"
-        kill ${pid} >> ${LOGFILE}
-        status -p ${PIDFILE}
-	    if [ $? -eq 0 ]; then
-	        echo "failed to stop ${NAME}, ${pid}"
-            killApp ${pid}
-            return 1
+    echo "stopping liveRecorder..."
+    local __retries=5
+    local __status=0
+    while : ; do
+        echo "stopping iteration #$((5 - ${__retries} + 1))"
+        if [ -f ${PIDFILE} ]; then
+                local __pid=$( cat ${PIDFILE} )
+                echo "Shutting down ${NAME}"
+                kill ${__pid} >> ${LOGFILE}
+                check_pid_status "-p ${PIDFILE}"
+                __status=$?
+            if [ $__status -eq 0 ]; then
+                echo "failed to stop ${NAME}, ${__pid}"
+                killApp ${__pid}
+                __status=$?
+            fi
+            if [ $__status -eq 1 ]; then
+                echo "${NAME} is not running, but pid file exists"
+                __status=0
+            fi
+            if [ $__status -eq 0 ]; then
+                echo "${NAME}, ${__pid}, successfully stopped"
+                rm -f ${PIDFILE}
+            fi
         else
-            echo "${NAME}, ${pid}, successfully stopped"
-            rm -f ${PIDFILE}
+                echo "${NAME} is not running"
         fi
-    else
-        echo "${NAME} is not running"
-    fi
+        __retries=$(($__retries-1))
+        [[ ($__retries -gt 0 && $__status -ne 0) ]] || break
+        echo "number of retries left ${__retries}"
+        sleep 1
+   done
 }
 
 restart() {
@@ -100,16 +145,30 @@ restart() {
 # check whether process is running based on /proc/[pid]/exe
 ###
 my_status() {
-    status -p ${PIDFILE}
+    check_pid_status "-p ${PIDFILE}"
     RETVAL=$?
 }
 
 killApp() {
-	local pid=$1
-    echo "Aggressively kill all ${NAME} process, $pid"
+	local __pid=$1
+    echo "Aggressively kill all ${NAME} process, ${__pid}"
     pkill -f ${APPLICATION_PATH}
     rm -f ${PIDFILE}
+}
 
+check_pid_status() {
+
+    case ${STATUS_FUNCTION} in
+        status)
+            status $1
+        ;;
+        status_of_proc)
+            status_of_proc $1 ${APPLICATION_PATH} python
+        ;;
+        *)
+            echo "check_pid_status failed, status function '${STATUS_FUNCTION}' is unsupported"
+        ;;
+    esac
 }
 
 case "$1" in

@@ -35,6 +35,11 @@ http {
 
     #gzip  on;
 
+    map $user_type $overrideClipTo{
+        "user" "";
+        default '{"clipFrom":0, "clipTo":-1}';
+    }
+
     server {
         listen       @PORT@;
         server_name  localhost;

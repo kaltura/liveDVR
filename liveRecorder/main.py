@@ -50,9 +50,9 @@ signal.signal(signal.SIGINT, signal_term_handler)
 
 
 ConcatenationTaskRunner = TaskRunner(ConcatenationTask, concat_processors_count, incoming_upload_directory,
-                                     max_task_count).start()
+                                     max_task_count, tasks_done_directory).start()
 
-UploadTaskRunner = TaskRunner(UploadTask, uploading_processors_count, tasks_done_directory, max_task_count).start()
+UploadTaskRunner = TaskRunner(UploadTask, uploading_processors_count, tasks_done_directory, max_task_count, tasks_done_directory).start()
 
 for p in ConcatenationTaskRunner:
     processes.append(p)

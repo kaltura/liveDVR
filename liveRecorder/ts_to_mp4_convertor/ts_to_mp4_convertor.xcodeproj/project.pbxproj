@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		08516DF91FA10B5D0077B9F0 /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = 08516DF81FA10B5D0077B9F0 /* Makefile */; };
+		08516DFC1FA10B7C0077B9F0 /* audio_fillter.c in Sources */ = {isa = PBXBuildFile; fileRef = 08516DFA1FA10B7C0077B9F0 /* audio_fillter.c */; };
 		085AAA691E0B534500D29A7D /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 085AAA681E0B534500D29A7D /* libavcodec.a */; };
 		085AAA6B1E0B535000D29A7D /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 085AAA6A1E0B535000D29A7D /* libavformat.a */; };
 		085AAA6D1E0B535D00D29A7D /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 085AAA6C1E0B535D00D29A7D /* libavutil.a */; };
@@ -29,6 +31,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		08516DF81FA10B5D0077B9F0 /* Makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = Makefile; sourceTree = "<group>"; };
+		08516DFA1FA10B7C0077B9F0 /* audio_fillter.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = audio_fillter.c; sourceTree = "<group>"; };
+		08516DFB1FA10B7C0077B9F0 /* audio_filler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = audio_filler.h; sourceTree = "<group>"; };
 		085AAA681E0B534500D29A7D /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = "../../node_addons/FormatConverter/build/ffmpeg-3.0/libavcodec/libavcodec.a"; sourceTree = "<group>"; };
 		085AAA6A1E0B535000D29A7D /* libavformat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavformat.a; path = "../../node_addons/FormatConverter/build/ffmpeg-3.0/libavformat/libavformat.a"; sourceTree = "<group>"; };
 		085AAA6C1E0B535D00D29A7D /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavutil.a; path = "../../node_addons/FormatConverter/build/ffmpeg-3.0/libavutil/libavutil.a"; sourceTree = "<group>"; };
@@ -59,6 +64,9 @@
 		086E7AC41E044C7400206F21 = {
 			isa = PBXGroup;
 			children = (
+				08516DFA1FA10B7C0077B9F0 /* audio_fillter.c */,
+				08516DFB1FA10B7C0077B9F0 /* audio_filler.h */,
+				08516DF81FA10B5D0077B9F0 /* Makefile */,
 				085E1F5F1EA6BA470056B80C /* main.c */,
 				086E7ACE1E044C7500206F21 /* Products */,
 				086E7AD71E044DEB00206F21 /* Frameworks */,
@@ -143,6 +151,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				08516DFC1FA10B7C0077B9F0 /* audio_fillter.c in Sources */,
+				08516DF91FA10B5D0077B9F0 /* Makefile in Sources */,
 				085E1F601EA6BA470056B80C /* main.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
