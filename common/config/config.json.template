@@ -117,5 +117,6 @@
        "recordingUpdateEntryTimeIntervalInMin" : 15,
        "recordingMaxAllowedMp4FilesQueueSize" : 100
      },
-   "explicitLivePushNotificationTemplateName": "EXPLICIT_LIVE_PUSH_NOTIFICATIONS"
+   "explicitLivePushNotificationTemplateName": "EXPLICIT_LIVE_PUSH_NOTIFICATIONS",
+   "recordingNotStartedMaxQueueSize": "10"
 }
