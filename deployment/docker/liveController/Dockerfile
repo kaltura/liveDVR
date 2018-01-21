@@ -10,4 +10,4 @@ COPY . .
 RUN build_scripts/build_ffmpeg.sh . 3.0
 RUN build_scripts/build_addon.sh /opt/kaltura/liveDVR/ /opt/kaltura/liveDVR/ffmpeg-3.0/
 
-ENTRYPOINT ["node","lib/App.js"]
+ENTRYPOINT ["registerNodeAndRun.sh"]
