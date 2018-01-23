@@ -1,0 +1,25 @@
+version: '3.1'
+services:
+ media-server:
+  env_file: .env
+  image: kaltura/media-server
+  networks: ['internal_net']
+  volumes:
+   - "/var/log/wowza/:/var/log/wowza/"
+  container_name: ms
+  ports:
+   - "1935:1935"
+ liveController:
+  env_file: .env
+  image: kaltura/livecontroller:${VERSION}
+  networks: ['internal_net']
+  volumes:
+   - "/myconfig/:/myconfig/"
+   - "/var/log/liveController/:/var/log/liveController/"
+   - "/web/content/kLive:/opt/kaltura/web/"
+  container_name: lc
+  command: ["./registerNodeAndRun.sh", "${HOSTNAME}"]
+  depends_on:
+   - media-server
+
+networks: {internal_net: {}}
