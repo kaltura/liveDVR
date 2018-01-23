@@ -1,9 +1,13 @@
+#We still need to add more configuration to .env and change the configMapping accordingly, then make sure it's in /myconfig/
 version: '3.1'
 services:
  media-server:
   env_file: .env
   image: kaltura/media-server
-  networks: ['internal_net']
+  networks:
+   internal_net:
+    aliases:
+     - ${MEDIA_SERVER_HOSTNAME}
   volumes:
    - "/var/log/wowza/:/var/log/wowza/"
   container_name: ms
@@ -18,7 +22,7 @@ services:
    - "/var/log/liveController/:/var/log/liveController/"
    - "/web/content/kLive:/opt/kaltura/web/"
   container_name: lc
-  command: ["./registerNodeAndRun.sh", "${HOSTNAME}"]
+  command: ["./registerNodeAndRun.sh", "${LIVE_CONTROLLERL_HOSTNAME}"]
   depends_on:
    - media-server
 
