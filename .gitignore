@@ -61,3 +61,4 @@ liveRecorder/bin
 # ignore liveController executables under bin
 bin
 
+deployment/docker/.env

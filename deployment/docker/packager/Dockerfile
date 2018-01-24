@@ -1,5 +1,5 @@
 #docker stop $(docker ps -a -q) && docker rm  $(docker ps -a -q)
-#docker build -t  live-packager  .
+#docker build -t  kaltura/live-packager  .
 #docker  run --add-host pa-udrm:127.0.0.1   -v /Users/guyjacubovski/dev/nginx-vod-module-saas:/opt/nginx-vod-module-saas   -p 80:80  --name packager  -t live-packager
 #docker exec -it `docker ps | grep "live-packager" | awk '{print $1}'` bash
 
