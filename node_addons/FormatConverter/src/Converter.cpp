@@ -206,7 +206,8 @@ namespace converter{
             dts2msec(m_stream.first_dts),
             dts2msec(m_stream.start_time-m_stream.first_dts),
             dts2msec(m_stream.duration),
-            m_stream.codec->codec_type
+            m_stream.codec->codec_type,
+            0UL
         };
     }
 
@@ -472,6 +473,7 @@ namespace converter{
                            pkt.stream_index, pkt.pts);
                 } else {
                     m_totalBitrate += (pkt.size * 8.f);
+                    xtra.m_tsInfo.m_frameCount++;
                     _S(av_interleaved_write_frame(*output, &pkt));
                 }
             }

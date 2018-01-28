@@ -61,8 +61,9 @@ namespace converter{
         MediaTrackInfo::value_type m_dts;
         MediaTrackInfo::value_type m_ptsDelay;
         MediaTrackInfo::value_type m_duration;
-        AVMediaType  mtype;
-
+        AVMediaType                mtype;
+        size_t                     m_frameCount;
+        
         friend std::ostream& operator<<(std::ostream& os, const TSTrackInfo& tti);
      };
 
