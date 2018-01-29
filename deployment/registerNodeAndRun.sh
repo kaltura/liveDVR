@@ -11,6 +11,7 @@ WOWZA_ADMIN_USER=wowza
 WOWZA_ADMIN_PASSWORD=wowza
 RECORDING_FOLDER=${CONTENT_DIR}/liveRecorder
 WOWZA_HOSTNAME=media-server
+SERVER_NODE_HOST_NAME=`hostname`
 
 sed -e "s#@LIVE_CONTENT_PATH@#$LIVE_CONTENT_PATH#g" \
     -e "s#@LIVE_ARCHIVE_CONTENT_PATH@#$LIVE_ARCHIVE_CONTENT_PATH#g" \
@@ -26,7 +27,7 @@ sed -e "s#@LIVE_CONTENT_PATH@#$LIVE_CONTENT_PATH#g" \
 
 cat ./common/config/configMapping.json
 
-SERVER_NODE_NAME=$1;shift
-node ./deployment/addServerNode.js ${SERVER_NODE_NAME}
-node ./lib/App.js $@
+echo adding  $SERVER_NODE_HOST_NAME to backend
+node ./deployment/addServerNode.js $SERVER_NODE_HOST_NAME
+node ./lib/App.js
 echo "it's the end of the world"

@@ -4,10 +4,11 @@ services:
  media-server:
   env_file: .env
   image: kaltura/media-server:${VERSION}
+  hostname: ${SERVER_NODE_HOST_NAME}
   networks:
    internal_net:
     aliases:
-     - ${MEDIA_SERVER_HOSTNAME}
+     - ${SERVER_NODE_HOST_NAME}
   volumes:
    - "${LOGS_DIR}/wowza/:/var/log/wowza/"
   container_name: ms
@@ -17,11 +18,12 @@ services:
   env_file: .env
   image: kaltura/live-controller:${VERSION}
   networks: ['internal_net']
+  hostname: ${SERVER_NODE_HOST_NAME}
   volumes:
    - "${LOGS_DIR}/liveController/:/var/log/liveController/"
    - "${CONTENT_DIR}:/web/content/kLive:"
   container_name: lc
-  command: ["./registerNodeAndRun.sh", "${LIVE_CONTROLLER_HOSTNAME}"]
+  command: ["./registerNodeAndRun.sh"]
   depends_on:
    - media-server
  livePackager:
@@ -30,6 +32,8 @@ services:
    networks: ['internal_net']
    extra_hosts:
     - "pa-udrm:127.0.0.1"
+   ports:
+    - "80:80"
    volumes:
     - "${LOGS_DIR}/livePackager/:/var/log/nginx/"
     - "${CONFIG_DIR}/nginx-vod-module-saas:/opt/nginx-vod-module-saas:"

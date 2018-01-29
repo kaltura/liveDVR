@@ -9,7 +9,7 @@
 			"partnerId" : @KALTURA_PARTNER_ID@
 		},
 		"mediaServer" : {
-            "hostname" : "@HOSTNAME@",
+		    "wowzaServer": "@HOSTNAME@",
 			"user" : "@WOWZA_ADMIN_USER@",
 			"password" : "@WOWZA_ADMIN_PASSWORD@"
 		},
