@@ -37,7 +37,6 @@ VOLUME /web/content/kLive
 
 
 
-COPY ./deployment/registerNodeAndRun.sh .
-RUN chmod +x registerNodeAndRun.sh
+COPY ./deployment/docker/liveController/registerNodeAndRun.sh .
 
 ENTRYPOINT ["./registerNodeAndRun.sh"]

@@ -36,7 +36,6 @@ services:
     - "80:80"
    volumes:
     - "${LOGS_DIR}/livePackager/:/var/log/nginx/"
-    - "${CONFIG_DIR}/nginx-vod-module-saas:/opt/nginx-vod-module-saas:"
     - "${CONTENT_DIR}:/web/content/kLive"
    container_name: lp
    depends_on:

@@ -1,6 +1,5 @@
 node_modules
 build
 bin
-packager
 tests
 .git
