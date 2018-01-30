@@ -69,7 +69,10 @@
       "keyFrameIntervalDiffAllowedInMSec" : 200,
       "maxFramesPerSeconds" : 30,
       "maxRecommendedKeyFrameInterval" : 4,
-      "minRecommendedKekFrameInterval" : 0.75
+      "minRecommendedKeyFrameInterval" : 0.75,
+      "numOfFrameRateSamples" : 5,
+      "decimalDigitsForFrameRateCalculation" : 2,
+      "frameRateFluctuationPercentAllowed": 0.2
   },
   "simulateStreams": {
       "enable":false,
