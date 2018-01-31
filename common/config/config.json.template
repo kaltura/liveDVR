@@ -72,7 +72,7 @@
       "minRecommendedKeyFrameInterval" : 0.75,
       "numOfFrameRateSamples" : 5,
       "decimalDigitsForFrameRateCalculation" : 2,
-      "frameRateFluctuationPercentAllowed": 0.2
+      "frameRateDifferentialPercentAllowed": 0.2
   },
   "simulateStreams": {
       "enable":false,
