@@ -23,9 +23,16 @@ services:
    - "${LOGS_DIR}/liveController/:/var/log/liveController/"
    - "${CONTENT_DIR}:/web/content/kLive:"
   container_name: lc
-  command: ["./registerNodeAndRun.sh"]
   depends_on:
    - media-server
+ liveRecorder:
+  env_file: .env
+  image: kaltura/live-recorder:${VERSION}
+  hostname: ${SERVER_NODE_HOST_NAME}
+  volumes:
+   - "${LOGS_DIR}/liveRecorder:/var/log/liveRecorder"
+   - "${CONTENT_DIR}:/web/content/kLive"
+  container_name: lr
  livePackager:
    env_file: .env
    image: kaltura/live-packager:${VERSION}
