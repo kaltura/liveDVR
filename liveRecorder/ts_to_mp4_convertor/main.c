@@ -67,7 +67,7 @@ struct FileConversion
 struct FileConversion conversion[MAX_CONVERSIONS];
 
 
-uint64_t calculateFirstPts(int total_strams)
+uint64_t calculateFirstPts(int total_conversions)
 {
     int64_t start_time=0;
     int i,j;
@@ -77,7 +77,7 @@ uint64_t calculateFirstPts(int total_strams)
     for (j=0;j<2;j++)
     {
         
-        for ( i=0;i<total_strams;i++)
+        for ( i=0;i<total_conversions;i++)
         {
             struct FileConversion* currentConversion = &conversion[i];
 
@@ -123,11 +123,15 @@ uint64_t calculateFirstPts(int total_strams)
                 }
                 
             }
-            
-            currentConversion->start_time=start_time;
             avformat_close_input(&ifmt_ctx);
             
         }
+    }
+    
+    for ( i=0;i<total_conversions;i++)
+    {
+        struct FileConversion* currentConversion = &conversion[i];
+        currentConversion->start_time=start_time;
     }
     printf("[calculateFirstPts] calculated start_time is %s\n",av_ts2str(start_time));
     
