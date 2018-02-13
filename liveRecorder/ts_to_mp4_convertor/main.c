@@ -67,7 +67,7 @@ struct FileConversion
 struct FileConversion conversion[MAX_CONVERSIONS];
 
 
-uint64_t calculateFirstPts(int total_strams)
+uint64_t calculateFirstPts(int total_conversions)
 {
     int64_t start_time=0;
     int i,j;
@@ -77,7 +77,7 @@ uint64_t calculateFirstPts(int total_strams)
     for (j=0;j<2;j++)
     {
         
-        for ( i=0;i<total_strams;i++)
+        for ( i=0;i<total_conversions;i++)
         {
             struct FileConversion* currentConversion = &conversion[i];
 
@@ -106,14 +106,13 @@ uint64_t calculateFirstPts(int total_strams)
                 { ///if video stream & it's the first packet
                     int64_t diff=llabs(start_time - pkt.pts);
                     if (diff<threshold) {
-                        printf("[calculateFirstPts] iter %d, stream %d same start_time (%s %s)\n",j+1,i,av_ts2str(start_time),av_ts2str(diff));
+                        printf("[calculateFirstPts] iter %d, stream %d same start_time (%s %s < %s)\n",j+1,i,av_ts2str(start_time),av_ts2str(diff),av_ts2str(threshold));
                         shouldStop=true;
                     }
                     else
                     {
-
                         if (start_time < pkt.pts) {
-                            printf("[calculateFirstPts] iter %d, stream %d changed start_time from %s to %s\n",j+1,i,av_ts2str(start_time),av_ts2str(pkt.pts));
+                            printf("[calculateFirstPts] iter %d, stream %d changed start_time from %s to %s (diff=%s)\n",j+1,i,av_ts2str(start_time),av_ts2str(pkt.pts),av_ts2str(diff));
                             start_time=pkt.pts;
                             shouldStop=true;
                         } else {
@@ -124,14 +123,18 @@ uint64_t calculateFirstPts(int total_strams)
                 }
                 
             }
-            
-            currentConversion->start_time=pkt.pts;
             avformat_close_input(&ifmt_ctx);
-
+            
         }
     }
+    
+    for ( i=0;i<total_conversions;i++)
+    {
+        struct FileConversion* currentConversion = &conversion[i];
+        currentConversion->start_time=start_time;
+    }
     printf("[calculateFirstPts] calculated start_time is %s\n",av_ts2str(start_time));
-
+    
     return start_time;
 }
 
@@ -173,10 +176,10 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
         ret = AVERROR_UNKNOWN;
         return false;
     }
-
+    
     AVOutputFormat *ofmt = conversion->ofmt_ctx->oformat;
     
-   
+    
     for (j = 0; j < conversion->ifmt_ctx->nb_streams; j++) {
         AVStream *in_stream = conversion->ifmt_ctx->streams[j];
         
@@ -188,7 +191,7 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
         if (in_stream->codec->codec_id==AV_CODEC_ID_TIMED_ID3) {
             in_stream->codec->codec_id=AV_CODEC_ID_MOV_TEXT;
         }
-
+        
         
         AVStream *out_stream = avformat_new_stream(conversion->ofmt_ctx, in_stream->codec->codec);
         if (!out_stream) {
@@ -223,7 +226,7 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
             
             createSilentAudio(in_stream->codec,&conversion->trackInfo[j].silent_packet);
         }
-
+        
     }
     av_dump_format(conversion->ofmt_ctx, 0, out_filename, 1);
     
@@ -263,7 +266,7 @@ bool dispose(struct FileConversion* conversion)
         fprintf(stderr, "Error occurred: %s\n", av_err2str(ret));
         return  false;
     }
-
+    
     return true;
     
 }
@@ -271,7 +274,7 @@ bool dispose(struct FileConversion* conversion)
 /*
  
  This function should fill silence for all audio tracks that didn't start,
- to avoid too-long silence period that will disturbe the interlaving factor of the mp4 files, 
+ to avoid too-long silence period that will disturbe the interlaving factor of the mp4 files,
  we keep a threshold (THRESHOLD_IN_SECONDS_FOR_ADDING_SILENCE) to determin  if the video is too ahead and insert the silence
  once we got the first packet and we know the actual time of the first packet, we fill until that time.
  */
@@ -282,11 +285,11 @@ void fillSilence(int64_t currentPts,struct TrackInfo* currentTrack,struct FileCo
     for (int i = 0; i < conversion->ofmt_ctx->nb_streams; i++) {
         struct TrackInfo* trackInfo = &conversion->trackInfo[i];
         AVStream * out_stream  = conversion->ofmt_ctx->streams[i];
-
+        
         if (trackInfo->silent_packet.data!=NULL && trackInfo->packetCount==0 )
         {
             //printf("Check if need to add silence to audio tracks stream_index:%d current_pts:%lld  (%s)\n",i,currentPts, av_ts2timestr(currentPts, &standard_timebase));
-
+            
             //we detected at least stream without content, so we need to fill up silence
             conversion->skipSilenceFilling = false;
             
@@ -302,14 +305,14 @@ void fillSilence(int64_t currentPts,struct TrackInfo* currentTrack,struct FileCo
             while (av_rescale_q_rnd(trackInfo->lastSilencePts +  trackInfo->silent_packet.duration, out_stream->time_base, standard_timebase, AV_ROUND_NEAR_INF|AV_ROUND_PASS_MINMAX)
                    < currentPts - threshold)
             {
-
+                
                 AVPacket silent_pkt;
                 av_init_packet(&silent_pkt);
                 av_copy_packet(&silent_pkt,&trackInfo->silent_packet);
                 silent_pkt.pts= silent_pkt.dts = trackInfo->lastSilencePts;
                 silent_pkt.stream_index = i;
                 log_packet(conversion->ofmt_ctx, &silent_pkt, "silence");
-
+                
                 av_interleaved_write_frame(conversion->ofmt_ctx, &silent_pkt);
                 trackInfo->lastSilencePts += trackInfo->silent_packet.duration;
                 
@@ -319,7 +322,7 @@ void fillSilence(int64_t currentPts,struct TrackInfo* currentTrack,struct FileCo
             
             currentTrack->lastSilencePts=AV_NOPTS_VALUE;
         }
-            
+        
     }
 }
 
@@ -333,7 +336,7 @@ bool convert(struct FileConversion* conversion)
     
     uint64_t offset = conversion->start_time;
     
-    printf("Starting to convert %s\n",conversion->inputFileName);
+    printf("Starting to convert %s offset=%s\n",conversion->inputFileName,av_ts2str(offset));
     
     //this value is what is the maximum length of the converted file
     int64_t max_duration = AV_NOPTS_VALUE;//30*60*1000;//AV_NOPTS_VALUE;
@@ -367,13 +370,13 @@ bool convert(struct FileConversion* conversion)
         pkt.duration = av_rescale_q(pkt.duration, in_stream->time_base, out_stream->time_base);
         pkt.pos = -1;
         
-/*   //for debugging, this makes the audio to start 5 min. after video
-        if (  in_stream->codec->codec_type==AVMEDIA_TYPE_AUDIO &&
-            av_rescale_q(pkt.pts, out_stream->time_base, standard_timebase)<5*60*1000) {
-            continue;
-        }
-*/
-
+        /*   //for debugging, this makes the audio to start 5 min. after video
+         if (  in_stream->codec->codec_type==AVMEDIA_TYPE_AUDIO &&
+         av_rescale_q(pkt.pts, out_stream->time_base, standard_timebase)<5*60*1000) {
+         continue;
+         }
+         */
+        
         if (max_duration!=AV_NOPTS_VALUE &&  av_rescale_q(pkt.pts, out_stream->time_base, standard_timebase) > max_duration)
         {
             break;
@@ -388,7 +391,7 @@ bool convert(struct FileConversion* conversion)
         trackInfo->packetCount++;
         
         if (pkt.pts<0) {
-            //printf("trim packets outside of start time track: %d, %s\n",pkt.stream_index, av_ts2str(pkt.pts));
+            //printf("trim packets outside of start time track: %d, %s %s\n",pkt.stream_index, av_ts2str(pkt.pts), av_ts2str(pkt.dts));
             //trim packets outside of start time
             continue;
         } else {
@@ -401,32 +404,32 @@ bool convert(struct FileConversion* conversion)
                 }
             }
         }
-
+        
         
         /*
-        if ( trackInfo->packetCount==1 && in_stream->codec->codec_type==AVMEDIA_TYPE_DATA) {
-            char* data=(char*)pkt.buf->data;
-            char *json="N/A";
-            char* timestr="N/A\n";
-            
-            if (pkt.buf->size>16) {
-                json=data+16;
-                
-                int64_t epoch64=0;
-                sscanf( json, "{\"timestamp\":%lld}", &epoch64 );
-                if (epoch64!=0) {
-                    time_t t = epoch64/1000;
-                    timestr=ctime(&t);
-                }
-            }
-            printf("ID3: %15s\t%15s\t%s\t%s",av_ts2str(pkt.pts),av_ts2timestr(pkt.pts,&in_stream->time_base),json,timestr);
-        }*/
+         if ( trackInfo->packetCount==1 && in_stream->codec->codec_type==AVMEDIA_TYPE_DATA) {
+         char* data=(char*)pkt.buf->data;
+         char *json="N/A";
+         char* timestr="N/A\n";
+         
+         if (pkt.buf->size>16) {
+         json=data+16;
+         
+         int64_t epoch64=0;
+         sscanf( json, "{\"timestamp\":%lld}", &epoch64 );
+         if (epoch64!=0) {
+         time_t t = epoch64/1000;
+         timestr=ctime(&t);
+         }
+         }
+         printf("ID3: %15s\t%15s\t%s\t%s",av_ts2str(pkt.pts),av_ts2timestr(pkt.pts,&in_stream->time_base),json,timestr);
+         }*/
         //log_packet(conversion->ofmt_ctx, &pkt, "out");
         if (pkt.stream_index==0 && pkt.pts>nextProgressReport) {
             printf("Progress %s (%s)\n",av_ts2str(pkt.pts),av_ts2timestr(pkt.pts,&out_stream->time_base));
             nextProgressReport=pkt.pts + progressReportInterval ;
         }
-
+        
         ret = av_interleaved_write_frame(conversion->ofmt_ctx, &pkt);
         if (ret < 0) {
             trackInfo->waitForKeyFrame=true;
@@ -465,11 +468,11 @@ int main(int argc, char **argv)
     //initialize the streams
     for (i=0;i<total_conversions;i++)
     {
-       
+        
         char* in_filename  = argv[i*3+1];
         char* out_filename = argv[i*3+2];
         char* language = argv[i*3+3];
-
+        
         if (!initConversion(&conversion[i],in_filename,out_filename, language))
         {
             printf("Conversion initialization failed\n");
@@ -490,7 +493,7 @@ int main(int argc, char **argv)
         printf("Conversion was successfull\n");
     } else {
         printf("Conversion FAILED!!\n");
-
+        
     }
     //cleanup
     for (i=0;i<total_conversions;i++)
@@ -502,3 +505,4 @@ int main(int argc, char **argv)
     
     return 0;
 }
+
