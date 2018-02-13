@@ -111,11 +111,6 @@ uint64_t calculateFirstPts(int total_strams)
                     }
                     else
                     {
-                        if (currentConversion->ifmt_ctx->streams[pkt.stream_index]->codec->codec_type==AVMEDIA_TYPE_AUDIO) {
-                            shouldStop=true;
-                            printf("[calculateFirstPts] iter %d, stream %d audio only first sample @ %s vs %s diff= %s\n",j+1,i,av_ts2str(pkt.pts),av_ts2str(start_time),av_ts2str(diff));
-                            break;
-                        }
                         if (start_time < pkt.pts) {
                             printf("[calculateFirstPts] iter %d, stream %d changed start_time from %s to %s (diff=%s)\n",j+1,i,av_ts2str(start_time),av_ts2str(pkt.pts),av_ts2str(diff));
                             start_time=pkt.pts;
