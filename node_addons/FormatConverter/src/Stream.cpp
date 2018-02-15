@@ -68,7 +68,8 @@ namespace converter{
         os << "{";
         field(os,"dts")  <<  std::fixed << tti.m_dts << ",";
         field(os,"ptsDelay")  <<  std::fixed << tti.m_ptsDelay << ",";
-        field(os,"duration")  <<  std::fixed << tti.m_duration;
+        field(os,"duration")  <<  std::fixed << tti.m_duration << ",";
+        field(os,"frameCount")  <<  std::fixed << tti.m_frameCount;
         os << "}";
         return os;
     }
