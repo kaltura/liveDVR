@@ -12,6 +12,9 @@
 #define KEY_FRAME_THRESHOLD 1000
 #define THRESHOLD_IN_SECONDS_FOR_ADDING_SILENCE 5
 
+#ifndef VERSION
+#define VERSION __TIMESTAMP__
+#endif
 static  AVRational standard_timebase = {1,1000};
 
 
@@ -50,6 +53,7 @@ int kbhit(void) {
 struct TrackInfo
 {
     bool waitForKeyFrame;
+    bool displayedFirstPacket;
     int64_t lastPts,lastDts,packetCount,lastSilencePts;
     AVPacket silent_packet;
     
@@ -94,34 +98,41 @@ uint64_t calculateFirstPts(int total_conversions)
             printf("[calculateFirstPts] ************ iter %d stream %d\n",j+1,i);
             int64_t threshold = av_rescale_q(KEY_FRAME_THRESHOLD, standard_timebase, ifmt_ctx->streams[0]->time_base);
 
-            while (!shouldStop) {
-                
-                int ret = av_read_frame(ifmt_ctx, &pkt);
-                if (ret < 0)
-                    break;
-                
-                //struct TrackInfo* trackInfo = &currentConversion->trackInfo[pkt.stream_index];
-                if (pkt.stream_index==0 &&
-                    (pkt.flags & AV_PKT_FLAG_KEY)==AV_PKT_FLAG_KEY)
-                { ///if video stream & it's the first packet
-                    int64_t diff=llabs(start_time - pkt.pts);
-                    if (diff<threshold) {
-                        printf("[calculateFirstPts] iter %d, stream %d same start_time (%s %s < %s)\n",j+1,i,av_ts2str(start_time),av_ts2str(diff),av_ts2str(threshold));
-                        shouldStop=true;
-                    }
-                    else
-                    {
-                        if (start_time < pkt.pts) {
-                            printf("[calculateFirstPts] iter %d, stream %d changed start_time from %s to %s (diff=%s)\n",j+1,i,av_ts2str(start_time),av_ts2str(pkt.pts),av_ts2str(diff));
-                            start_time=pkt.pts;
+            
+            if (currentConversion->ifmt_ctx->nb_streams>0 && currentConversion->ifmt_ctx->streams[0]->codec->codec_type==AVMEDIA_TYPE_VIDEO) {
+            
+                while (!shouldStop) {
+                    
+                    int ret = av_read_frame(ifmt_ctx, &pkt);
+                    if (ret < 0)
+                        break;
+                    
+                    //struct TrackInfo* trackInfo = &currentConversion->trackInfo[pkt.stream_index];
+                    if (pkt.stream_index==0 &&
+                        (pkt.flags & AV_PKT_FLAG_KEY)==AV_PKT_FLAG_KEY)
+                    { ///if video stream & it's the first packet
+                        int64_t diff=llabs(start_time - pkt.pts);
+                        if (diff<threshold) {
+                            printf("[calculateFirstPts] iter %d, stream %d same start_time (%s %s < %s)\n",j+1,i,av_ts2str(start_time),av_ts2str(diff),av_ts2str(threshold));
                             shouldStop=true;
-                        } else {
-                            printf("[calculateFirstPts] iter %d, stream %d frame @ %s is smaller than start time  %s\n",j+1,i,av_ts2str(pkt.pts),av_ts2str(start_time));
                         }
-                        
+                        else
+                        {
+                            if (start_time < pkt.pts) {
+                                printf("[calculateFirstPts] iter %d, stream %d changed start_time from %s to %s (diff=%s)\n",j+1,i,av_ts2str(start_time),av_ts2str(pkt.pts),av_ts2str(diff));
+                                start_time=pkt.pts;
+                                shouldStop=true;
+                            } else {
+                                printf("[calculateFirstPts] iter %d, stream %d frame @ %s is smaller than start time  %s\n",j+1,i,av_ts2str(pkt.pts),av_ts2str(start_time));
+                            }
+                            
+                        }
                     }
+                    
                 }
-                
+            } else {
+                printf("[calculateFirstPts] audio only stream ignoring\n");
+
             }
             avformat_close_input(&ifmt_ctx);
             
@@ -146,6 +157,7 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
     
     for (j=0;j<MAX_TRACKS;j++) {
         conversion->trackInfo[j].waitForKeyFrame=true;
+        conversion->trackInfo[j].displayedFirstPacket=false;
         conversion->trackInfo[j].lastPts=AV_NOPTS_VALUE;
         conversion->trackInfo[j].lastDts=AV_NOPTS_VALUE;
         conversion->trackInfo[j].packetCount=0;
@@ -424,7 +436,10 @@ bool convert(struct FileConversion* conversion)
          }
          printf("ID3: %15s\t%15s\t%s\t%s",av_ts2str(pkt.pts),av_ts2timestr(pkt.pts,&in_stream->time_base),json,timestr);
          }*/
-        //log_packet(conversion->ofmt_ctx, &pkt, "out");
+        if (!trackInfo->displayedFirstPacket){
+            log_packet(conversion->ofmt_ctx, &pkt, "out");
+            trackInfo->displayedFirstPacket=true;
+        }
         if (pkt.stream_index==0 && pkt.pts>nextProgressReport) {
             printf("Progress %s (%s)\n",av_ts2str(pkt.pts),av_ts2timestr(pkt.pts,&out_stream->time_base));
             nextProgressReport=pkt.pts + progressReportInterval ;
@@ -448,7 +463,8 @@ int main(int argc, char **argv)
 {
     
     int i=0;
-    
+    printf("Version: %s\n", VERSION);
+
     if (argc < 4 || (argc-1) % 3!=0) {
         printf("usage: %s input1 ouput1 language1... inputn outputn language\n"
                "\n", argv[0]);
