@@ -76,6 +76,7 @@ uint64_t calculateFirstPts(int total_conversions)
     int64_t start_time=0;
     int i,j;
     
+    int64_t threshold_in_seconds=KEY_FRAME_THRESHOLD;
     
     //we need two passes so validate that all streams will start together
     for (j=0;j<2;j++)
@@ -96,43 +97,40 @@ uint64_t calculateFirstPts(int total_conversions)
             
             bool shouldStop=false;
             printf("[calculateFirstPts] ************ iter %d stream %d\n",j+1,i);
-            int64_t threshold = av_rescale_q(KEY_FRAME_THRESHOLD, standard_timebase, ifmt_ctx->streams[0]->time_base);
+            int64_t threshold = av_rescale_q(threshold_in_seconds, standard_timebase, ifmt_ctx->streams[0]->time_base);
 
-            
-            if (currentConversion->ifmt_ctx->nb_streams>0 && currentConversion->ifmt_ctx->streams[0]->codec->codec_type==AVMEDIA_TYPE_VIDEO) {
-            
-                while (!shouldStop) {
-                    
-                    int ret = av_read_frame(ifmt_ctx, &pkt);
-                    if (ret < 0)
-                        break;
-                    
-                    //struct TrackInfo* trackInfo = &currentConversion->trackInfo[pkt.stream_index];
-                    if (pkt.stream_index==0 &&
-                        (pkt.flags & AV_PKT_FLAG_KEY)==AV_PKT_FLAG_KEY)
-                    { ///if video stream & it's the first packet
-                        int64_t diff=llabs(start_time - pkt.pts);
-                        if (diff<threshold) {
-                            printf("[calculateFirstPts] iter %d, stream %d same start_time (%s %s < %s)\n",j+1,i,av_ts2str(start_time),av_ts2str(diff),av_ts2str(threshold));
-                            shouldStop=true;
-                        }
-                        else
-                        {
-                            if (start_time < pkt.pts) {
-                                printf("[calculateFirstPts] iter %d, stream %d changed start_time from %s to %s (diff=%s)\n",j+1,i,av_ts2str(start_time),av_ts2str(pkt.pts),av_ts2str(diff));
-                                start_time=pkt.pts;
-                                shouldStop=true;
-                            } else {
-                                printf("[calculateFirstPts] iter %d, stream %d frame @ %s is smaller than start time  %s\n",j+1,i,av_ts2str(pkt.pts),av_ts2str(start_time));
-                            }
-                            
-                        }
-                    }
-                    
+            while (!shouldStop) {
+                
+                int ret = av_read_frame(ifmt_ctx, &pkt);
+                if (ret < 0)
+                    break;
+                
+                bool bAudioOnly = (currentConversion->ifmt_ctx->streams[0]->codec->codec_type==AVMEDIA_TYPE_AUDIO);
+                if (bAudioOnly && j>0) {
+                    continue;
                 }
-            } else {
-                printf("[calculateFirstPts] audio only stream ignoring\n");
-
+                //struct TrackInfo* trackInfo = &currentConversion->trackInfo[pkt.stream_index];
+                if (pkt.stream_index==0 &&
+                    (pkt.flags & AV_PKT_FLAG_KEY)==AV_PKT_FLAG_KEY)
+                { ///if video stream & it's the first packet
+                    int64_t diff=llabs(start_time - pkt.pts);
+                    if (diff<threshold ) {
+                        printf("[calculateFirstPts] iter %d, stream %d same start_time (%s %s < %s)\n",j+1,i,av_ts2str(start_time),av_ts2str(diff),av_ts2str(threshold));
+                        shouldStop=true;
+                    }
+                    else
+                    {
+                        if (start_time < pkt.pts) {
+                            threshold_in_seconds=bAudioOnly ? 0 : KEY_FRAME_THRESHOLD;
+                            printf("[calculateFirstPts] iter %d, stream %d changed start_time from %s to %s (diff=%s, threshold=%s)\n",j+1,i,av_ts2str(start_time),av_ts2str(pkt.pts),av_ts2str(diff),av_ts2str(threshold));
+                            start_time=pkt.pts;
+                            shouldStop=true;
+                        } else {
+                            printf("[calculateFirstPts] iter %d, stream %d frame @ %s is smaller than start time  %s\n",j+1,i,av_ts2str(pkt.pts),av_ts2str(start_time));
+                        }
+                        
+                    }
+                }
             }
             avformat_close_input(&ifmt_ctx);
             
@@ -412,6 +410,8 @@ bool convert(struct FileConversion* conversion)
                     // printf("Recieving key frame on track %d at time pts %s\n",pkt.stream_index, av_ts2str(trackInfo->lastPts-offset));
                     trackInfo->waitForKeyFrame=false;
                 } else {
+                    printf("trim P frames outside of start time track: %d, %s %s\n",pkt.stream_index, av_ts2str(pkt.pts), av_ts2str(pkt.dts));
+
                     continue;
                 }
             }
