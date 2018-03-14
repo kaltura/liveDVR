@@ -63,4 +63,13 @@ char *test3[] = {"",
     "0_tcwszl6n_0_2sk6or15_444434_f37_out.mp4",
     "und"};
 
+char *test4[] = {"",
+    "1_8x9l5leh_1_nqgux1am_3382038_f42_out.ts",
+    "1_8x9l5leh_1_nqgux1am_3382038_f42_out.mp4",
+    "und",
+    "1_8x9l5leh_1_nqgux1am_3382038_f43_out.ts",
+    "1_8x9l5leh_1_nqgux1am_3382038_f43_out.mp4",
+    "und"};
+
+
 #endif /* tests_h */
