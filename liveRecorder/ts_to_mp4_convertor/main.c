@@ -6,6 +6,7 @@
 #include <termios.h>
 #include <stdbool.h>
 #include "audio_filler.h"
+#include "tests.h"
 
 #define MAX_CONVERSIONS 20
 #define MAX_TRACKS 10
@@ -107,25 +108,25 @@ uint64_t calculateFirstPts(int total_conversions)
                     if (ret < 0)
                         break;
                     
+                    int64_t time = pkt.pts;
+                    
                     //struct TrackInfo* trackInfo = &currentConversion->trackInfo[pkt.stream_index];
                     if (pkt.stream_index==0 &&
                         (pkt.flags & AV_PKT_FLAG_KEY)==AV_PKT_FLAG_KEY)
                     { ///if video stream & it's the first packet
-                        int64_t diff=llabs(start_time - pkt.pts);
-                        if (diff<threshold) {
-                            printf("[calculateFirstPts] iter %d, stream %d same start_time (%s %s < %s)\n",j+1,i,av_ts2str(start_time),av_ts2str(diff),av_ts2str(threshold));
+                        if (time>=start_time && time<start_time+threshold) {
+                            printf("[calculateFirstPts] iter %d, stream %d comes a bit after start_time (%s %s < %s)\n",j+1,i,av_ts2str(start_time),av_ts2str(time-start_time),av_ts2str(threshold));
                             shouldStop=true;
                         }
                         else
                         {
-                            if (start_time < pkt.pts) {
-                                printf("[calculateFirstPts] iter %d, stream %d changed start_time from %s to %s (diff=%s)\n",j+1,i,av_ts2str(start_time),av_ts2str(pkt.pts),av_ts2str(diff));
-                                start_time=pkt.pts;
+                            if (time>=start_time-threshold ) {
+                                printf("[calculateFirstPts] iter %d, stream %d changed start_time from %s to %s (diff=%s)\n",j+1,i,av_ts2str(start_time),av_ts2str(time),av_ts2str(start_time-time));
+                                start_time=time;
                                 shouldStop=true;
                             } else {
-                                printf("[calculateFirstPts] iter %d, stream %d frame @ %s is smaller than start time  %s\n",j+1,i,av_ts2str(pkt.pts),av_ts2str(start_time));
+                                printf("[calculateFirstPts] iter %d, stream %d frame @ %s is smaller than start time  %s\n",j+1,i,av_ts2str(time),av_ts2str(start_time));
                             }
-                            
                         }
                     }
                     
@@ -411,7 +412,15 @@ bool convert(struct FileConversion* conversion)
                 if ((pkt.flags & AV_PKT_FLAG_KEY)==AV_PKT_FLAG_KEY) {
                     // printf("Recieving key frame on track %d at time pts %s\n",pkt.stream_index, av_ts2str(trackInfo->lastPts-offset));
                     trackInfo->waitForKeyFrame=false;
+                    //don't allow EDT list since packager doesn't support them, so move first frame to the beginning
+                    if ( in_stream->codec->codec_type==AVMEDIA_TYPE_VIDEO && pkt.pts>0) {
+                        printf("Corrected first video key frame to 0  on track %d (pts = %s)\n",pkt.stream_index,av_ts2str(pkt.pts));
+                        trackInfo->lastPts=pkt.pts=0;
+                        trackInfo->lastDts=pkt.dts=0;
+                    }
+
                 } else {
+                    printf("Skipping non key frame on track %d at time pts %s\n",pkt.stream_index, av_ts2str(trackInfo->lastPts-offset));
                     continue;
                 }
             }
@@ -459,8 +468,12 @@ bool convert(struct FileConversion* conversion)
     
 }
 
+
 int main(int argc, char **argv)
 {
+    
+    //argv=&test2;
+    //argc=sizeof(test2)/sizeof(test2[0]);
     
     int i=0;
     printf("Version: %s\n", VERSION);
