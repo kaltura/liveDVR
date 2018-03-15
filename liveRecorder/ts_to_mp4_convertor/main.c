@@ -416,8 +416,12 @@ bool convert(struct FileConversion* conversion)
                     //don't allow EDT list since packager doesn't support them, so move first frame to the beginning
                     if ( in_stream->codec->codec_type==AVMEDIA_TYPE_VIDEO && pkt.pts>0 && resetPtsOnFirstKeyFrame ) {
                         printf("Corrected first video key frame to 0  on track %d pts = %s (%s)\n",pkt.stream_index,av_ts2str(pkt.pts),av_ts2timestr(pkt.pts, &out_stream->time_base));
-                        trackInfo->lastPts=pkt.pts=0;
-                        trackInfo->lastDts=pkt.dts=0;
+                        int64_t newOffset = pkt.pts;
+                        pkt.pts-=newOffset;
+                        pkt.dts-=newOffset;
+                        pkt.duration+=newOffset;
+                        trackInfo->lastPts=pkt.pts;
+                        trackInfo->lastDts=pkt.dts;
                         resetPtsOnFirstKeyFrame=false;
                     }
 
