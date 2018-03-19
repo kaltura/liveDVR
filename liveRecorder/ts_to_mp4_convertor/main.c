@@ -72,15 +72,38 @@ struct FileConversion
 struct FileConversion conversion[MAX_CONVERSIONS];
 
 
+bool hasVideo(AVFormatContext* ctx)
+{
+    for (int i=0;i<ctx->nb_streams;i++) {
+        if (ctx->streams[i]->codec->codec_type==AVMEDIA_TYPE_VIDEO) {
+            return true;
+        }
+    }
+    return false;
+}
+
+int getMainTrackIndex(AVFormatContext* ctx)
+{
+    for (int i=0;i<ctx->nb_streams;i++) {
+        if (ctx->streams[i]->codec->codec_type==AVMEDIA_TYPE_VIDEO) {
+            return i;
+        }
+    }
+    return 0;
+}
+
 uint64_t calculateFirstPts(int total_conversions)
 {
     int64_t start_time=0;
     int i,j;
     
+    //if the entire conversion is audio only
+    bool audioOnlyConversion=false;
     
     //we need two passes so validate that all streams will start together
     for (j=0;j<2;j++)
     {
+        bool hasVideoStream=false;
         
         for ( i=0;i<total_conversions;i++)
         {
@@ -95,13 +118,17 @@ uint64_t calculateFirstPts(int total_conversions)
             
             AVPacket pkt;
             
+            int mainTrackIndex=getMainTrackIndex(currentConversion->ifmt_ctx);
             bool shouldStop=false;
             int64_t threshold = av_rescale_q(KEY_FRAME_THRESHOLD, standard_timebase, ifmt_ctx->streams[0]->time_base);
-            printf("[calculateFirstPts] ************ iter %d stream %d  threshold=%s \n",j+1,i,av_ts2str(threshold));
-
+            printf("[calculateFirstPts] ************ iter %d stream %d  threshold=%s; audioOnlyConversion=%d \n",j+1,i,av_ts2str(threshold),audioOnlyConversion);
+            //find first key frame  (only if video or audio only)
+            bool conversionHasVideo=hasVideo(currentConversion->ifmt_ctx);
+            if (audioOnlyConversion || conversionHasVideo) {
             
-            if (currentConversion->ifmt_ctx->nb_streams>0 && currentConversion->ifmt_ctx->streams[0]->codec->codec_type==AVMEDIA_TYPE_VIDEO) {
-            
+                if (conversionHasVideo) {
+                    hasVideoStream=true;
+                }
                 while (!shouldStop) {
                     
                     int ret = av_read_frame(ifmt_ctx, &pkt);
@@ -111,7 +138,7 @@ uint64_t calculateFirstPts(int total_conversions)
                     int64_t time = pkt.pts;
                     
                     //struct TrackInfo* trackInfo = &currentConversion->trackInfo[pkt.stream_index];
-                    if (pkt.stream_index==0 &&
+                    if (pkt.stream_index==mainTrackIndex &&
                         (pkt.flags & AV_PKT_FLAG_KEY)==AV_PKT_FLAG_KEY)
                     { ///if video stream & it's the first packet
                         if (time>=start_time && time<start_time+threshold) {
@@ -135,6 +162,7 @@ uint64_t calculateFirstPts(int total_conversions)
                 printf("[calculateFirstPts] audio only stream ignoring\n");
 
             }
+            audioOnlyConversion=!hasVideoStream;
             avformat_close_input(&ifmt_ctx);
             
         }
@@ -415,7 +443,10 @@ bool convert(struct FileConversion* conversion)
                     trackInfo->waitForKeyFrame=false;
                     //don't allow EDT list since packager doesn't support them, so move first frame to the beginning
                     if ( in_stream->codec->codec_type==AVMEDIA_TYPE_VIDEO && pkt.pts>0 && resetPtsOnFirstKeyFrame ) {
-                        printf("Corrected first video key frame to 0  on track %d pts = %s (%s)\n",pkt.stream_index,av_ts2str(pkt.pts),av_ts2timestr(pkt.pts, &out_stream->time_base));
+                        printf("Corrected first video key frame to 0  on track %d pts = %s (%s)  dts = %s (%s)\n",
+                               pkt.stream_index,
+                               av_ts2str(pkt.pts),av_ts2timestr(pkt.pts, &out_stream->time_base),
+                               av_ts2str(pkt.dts),av_ts2timestr(pkt.dts, &out_stream->time_base));
                         int64_t newOffset = pkt.dts;
                         pkt.pts-=newOffset;
                         pkt.dts-=newOffset;
@@ -479,7 +510,7 @@ int main(int argc, char **argv)
 {
     
     //argv=&test3;
-    //argc=sizeof(test3)/sizeof(test3[0]);
+   // argc=sizeof(test3)/sizeof(test3[0]);
     
     int i=0;
     printf("Version: %s\n", VERSION);
