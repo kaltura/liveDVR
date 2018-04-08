@@ -1,6 +1,5 @@
  to build dockers run from root:
  `docker build -t  kaltura/live-controller -f ./deployment/docker/liveController/Dockerfile .`
- cd ./deployment/docker/packager
  `docker build -t  kaltura/live-packager -f ./deployment/docker/packager/Dockerfile .`
  
  on wowza:
@@ -9,4 +8,4 @@
   
   
  run
- `docker up`
+ `docker-compose up`
