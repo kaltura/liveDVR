@@ -1,13 +1,3 @@
-#docker stop $(docker ps -a -q) && docker rm  $(docker ps -a -q)
-#docker build -t  kaltura/live-packager  .
-#option1:
-#docker  run --add-host pa-udrm:127.0.0.1    -v /Users/guyjacubovski/dev/nginx-vod-module-saas:/usr/local/nginx/externalConf  -p 80:80  --name packager  -t live-packager
-#or docker  run    -p 80:80  --name packager  -t kaltura/live-packager
-
-
-#docker exec -it `docker ps | grep "live-packager" | awk '{print $1}'` bash
-
-
 FROM debian:stretch-slim AS builder
 
 ARG CONF_FILE=/opt/nginx-vod-module-saas/conf/nginx.conf
@@ -62,7 +52,10 @@ VOLUME /web/content/kLive
 VOLUME /usr/local/nginx/externalConf
 
 
-EXPOSE 80
+ENV PACKAGER_PORT 80
+ENV LIVE_ENCRYPT_HLS_KEY 1234
+
+EXPOSE $PACKAGER_PORT
 
 STOPSIGNAL SIGTERM
 

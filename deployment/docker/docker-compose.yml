@@ -2,7 +2,7 @@
 version: '3.1'
 services:
  media-server:
-  env_file: .env
+  env_file: ./.env
   image: kaltura/media-server:${VERSION}
   hostname: ${SERVER_NODE_HOST_NAME}
   networks:
@@ -40,9 +40,9 @@ services:
    extra_hosts:
     - "pa-udrm:127.0.0.1"
    ports:
-    - "80:80"
+    - "8080:8080"
    volumes:
-    - "${LOGS_DIR}/livePackager/:/var/log/nginx/"
+    - "${LOGS_DIR}/livePackager/:/usr/local/nginx/logs/"
     - "${CONTENT_DIR}:/web/content/kLive"
    container_name: lp
    depends_on:

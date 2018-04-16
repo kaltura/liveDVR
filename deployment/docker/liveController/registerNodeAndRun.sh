@@ -29,5 +29,5 @@ cat ./common/config/configMapping.json
 
 echo adding  $SERVER_NODE_HOST_NAME to backend
 node ./deployment/addServerNode.js $SERVER_NODE_HOST_NAME
-node ./lib/App.js
+exec node ./lib/App.js
 echo "it's the end of the world"
