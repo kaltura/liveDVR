@@ -70,5 +70,37 @@ http {
     }
 
 
+    server {
+        listen       8081;
+    	vod_mode local;
+
+        vod_ignore_edit_list on;
+
+        # vod status page
+        location = /vod_status {
+            vod_status;
+            access_log off;
+
+        }
+		vod_metadata_cache metadata_cache 512m;
+		vod_response_cache response_cache 128m;
+        location ~ ^/manifest/(.*) {
+               alias /$1;
+               add_header Access-Control-Allow-Headers '*';
+               add_header Access-Control-Expose-Headers 'Server,range,Content-Length,Content-Range';
+               add_header Access-Control-Allow-Methods 'GET, HEAD, OPTIONS';
+               add_header Access-Control-Allow-Origin '*';
+        }
+
+    	location ~ ^/serve/(.*)/hls/ {
+               alias /$1;
+               vod hls;
+
+               add_header Access-Control-Allow-Headers '*';
+               add_header Access-Control-Expose-Headers 'Server,range,Content-Length,Content-Range';
+               add_header Access-Control-Allow-Methods 'GET, HEAD, OPTIONS';
+               add_header Access-Control-Allow-Origin '*';
+       }
+    }
 
 }
