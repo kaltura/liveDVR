@@ -11,6 +11,7 @@
 		"mediaServer" : {
 		    "wowzaServer": "@HOSTNAME@",
 			"user" : "@WOWZA_ADMIN_USER@",
+			"originMode": "true",
 			"password" : "@WOWZA_ADMIN_PASSWORD@"
 		},
 		"recording" : {

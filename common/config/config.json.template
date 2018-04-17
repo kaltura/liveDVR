@@ -82,6 +82,7 @@
   "mediaServer" : {
       "hostname" : "@HOSTNAME@",
       "applicationName" : "kLive",
+      "originMode": "true",
       "port" : 1935,
       "user" : "",
       "password" : "",
