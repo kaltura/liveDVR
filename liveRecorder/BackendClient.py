@@ -155,7 +155,8 @@ class BackendClient:
         resource.keepOriginalFile = False
         self.set_recorded_content(entry_id, resource, duration, partner_id, recorded_id, flavor_id)
 
-
+    def update_task_entryServerNode_status(self, entry_server_node_id, new_status):
+        return self.handle_request(self.partner_id, 'entryServerNode', 'updateStatus', entry_server_node_id, new_status)
 
 
 

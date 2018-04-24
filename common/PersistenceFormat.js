@@ -42,6 +42,14 @@ class PersistenceFormat {
         return 'playlist.json';
     }
 
+    getStampFileName() {
+        return 'stamp';
+    }
+
+    getDataFileName() {
+        return 'data.json';
+    }
+
     getMP4FileNamefromInfo(chunkPath) {
         return chunkPath.replace('.ts', '.mp4');
     }

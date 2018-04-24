@@ -5,10 +5,11 @@ from Config.config import get_config
 from TaskBase import TaskBase
 from ThreadWorkers import ThreadWorkers
 from KalturaUploadSession import KalturaUploadSession
-from KalturaClient.Plugins.Core import  KalturaEntryReplacementStatus
+from KalturaClient.Plugins.Core import  KalturaEntryReplacementStatus,KalturaEntryServerNodeStatus
 from KalturaClient.Base import KalturaException
 import glob
 import re
+
 
 
 class UploadTask(TaskBase):
@@ -19,8 +20,6 @@ class UploadTask(TaskBase):
 
     def __init__(self, param, logger_info):
         TaskBase.__init__(self, param, logger_info)
-        session_id = self.entry_id + '-' + self.recorded_id
-        self.backend_client = BackendClient(session_id)
         mp4_filename_pattern = param['directory'] + '_f*_out.mp4'
         self.mp4_files_list = glob.glob1(self.recording_path, mp4_filename_pattern)
         self.mp4_filename_pattern = "[0,1]_.+_[0,1]_.+_\d+(.\d+)?_f(?P<flavor_id>\d+)_out[.]mp4"
@@ -95,6 +94,7 @@ class UploadTask(TaskBase):
                                                        str(float(self.duration)/1000), self.recorded_id, flavor_id)
 
     def run(self):
+        self.update_status(KalturaEntryServerNodeStatus.TASK_UPLOADING)
         try:
             mode = get_config('mode')
             is_first_flavor = True
