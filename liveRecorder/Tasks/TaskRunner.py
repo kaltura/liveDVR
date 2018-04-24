@@ -130,7 +130,7 @@ class TaskRunner:
                 except Exception as e:
                         self.logger.error("[%s-%s] Error while try to add task:%s \n %s", param['entry_id'], param['recorded_id'], str(e), traceback.format_exc())
 
-    def move_to_incoming_dir(self, src_dir, dst_dir):
+    def move_to_dir(self, src_dir, dst_dir):
         file_list = os.listdir(src_dir)
 
         for path in file_list:
@@ -219,7 +219,7 @@ class TaskRunner:
     def start(self):
         try:
             self.logger.info("Starting %d workers", self.number_of_processes)
-            self.move_to_incoming_dir(self.working_directory, self.input_directory)
+            self.move_to_dir(self.working_directory, self.input_directory)
             self.add_new_task_handler()
             self.failed_task_handler()
             workers = [Process(target=self.work, args=(i,)) for i in xrange(1, self.number_of_processes+1)]
