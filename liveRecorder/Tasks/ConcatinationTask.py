@@ -116,7 +116,11 @@ class ConcatenationTask(TaskBase):
         flavors_dirs = filter(os.path.isdir, [os.path.join(self.recording_path, f) for f in os.listdir(self.recording_path)])
         if flavors_dirs:
             return flavors_dirs[0].rsplit('/', 1)[-1]
-        return '32'
+        data = self.get_data()
+        if data and data["flavors"]:
+            return data["flavors"].split(',')[0]
+        return None
+
 
     def run(self):
         self.update_status(KalturaEntryServerNodeStatus.TASK_PROCESSING)
@@ -129,6 +133,8 @@ class ConcatenationTask(TaskBase):
         for obj in flavors_list:
             url_postfix = obj.url.rsplit('/', 1)[1]
             flavor_id = self.get_flavor_id(url_postfix)
+            if flavor_id is None:
+                raise ValueError('Could not find flavor ID for {}'.format(obj.url))
             ts_output_filename = self.get_output_filename(flavor_id)
             output_full_path = os.path.join(self.recording_path, ts_output_filename)
             mp4_full_path = output_full_path.replace('.ts', '.mp4')

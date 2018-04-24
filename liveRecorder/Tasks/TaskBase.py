@@ -35,9 +35,10 @@ class TaskBase(object):
             return data
         except:
             self.logger.debug("Error in loading the data.json file")
+        return None
 
     def update_status(self, new_status):
-        data = self.get_data();
+        data = self.get_data()
         if data and data["taskId"]:
             id = data["taskId"]
             self.logger.debug("Updating taskId: [{}] with new status: [{}]".format(id, new_status))
