@@ -121,7 +121,6 @@ class ConcatenationTask(TaskBase):
             return data["flavors"].split(',')[0]
         return None
 
-
     def run(self):
         self.update_status(KalturaEntryServerNodeStatus.TASK_PROCESSING)
         command = self.ts_to_mp4_convertor + ' '
