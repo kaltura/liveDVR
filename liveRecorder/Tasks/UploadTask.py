@@ -129,6 +129,7 @@ class UploadTask(TaskBase):
                     raise err
                 else:
                     self.logger.warn('there were no mp4 files to upload. check {}'.format(self.recording_path))
+            self.update_status(KalturaEntryServerNodeStatus.TASK_FINISHED)
         except KalturaException as e:
             self.logger.error('failed to upload VOD with error {}, exception details: {}'.format(e.code, e.message))
             if e.code == 'KALTURA_RECORDING_DISABLED':
