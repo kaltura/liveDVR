@@ -31,8 +31,9 @@ class TaskBase(object):
 
     def get_data(self):
         try:
-            data = json.load(open(self.data_full_path))
-            return data
+            with open(self.data_full_path) as data_file:
+                data = json.load(data_file)
+                return data
         except:
             self.logger.debug("Error in loading the data.json file")
         return None

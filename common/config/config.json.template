@@ -9,7 +9,7 @@
   "flavorFailPollingInterval" : 10000,
   "backendPollingInterval" : 5000,
   "wowzaPollingInterval" : 5000,
-  "tasksPollingInterval" : 300,
+  "tasksPollingIntervalInSeconds" : 1800,
   "adapterDiagnosticsIntervalInSec" : 20000,
   "defaultDvrWindowInSec" : 7200,
   "minimalDvrWindowInSec" : 900,
