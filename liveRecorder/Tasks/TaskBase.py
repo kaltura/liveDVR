@@ -40,8 +40,8 @@ class TaskBase(object):
 
     def update_status(self, new_status):
         data = self.get_data()
-        if data and data["taskId"]:
-            id = data["taskId"]
+        if data and data.get('taskId',None):
+            id = data.get('taskId',None)
             self.logger.debug("Updating taskId: [{}] with new status: [{}]".format(id, new_status))
             self.backend_client.update_task_entryServerNode_status(id, new_status)
 
