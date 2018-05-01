@@ -24,5 +24,8 @@ else
     cp ./nginx.conf.live.conf.template  ./nginx.conf.live.conf
 fi
 
+ln -sf /dev/stdout /usr/local/nginx/logs/access.log
+ln -sf /dev/stderr /usr/local/nginx/logs/error.log
+
 echo "start process"
 exec /usr/local/nginx/sbin/nginx -g "daemon off;"
