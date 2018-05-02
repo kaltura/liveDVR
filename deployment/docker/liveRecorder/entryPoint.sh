@@ -23,11 +23,15 @@ createFolders() {
 	[ -d ${LOGDIR} ] || mkdir -p ${LOGDIR}
 	[ -d ${RECORDING_FOLDER} ] || mkdir -p ${RECORDING_FOLDER}
 
+	#create recording folders if they are not there
+	mkdir -p ${RECORDING_FOLDER}/{incoming,done,error}
+	mkdir -p ${RECORDING_FOLDER}/recordings/{append,newSession}
+
 	SHARED_APP_DIR=$RECORDING_FOLDER
 	echo "Creating folders in ${SHARED_APP_DIR} for ${HOSTNAME}"
 	if [ -d  ${SHARED_APP_DIR} ] ; then
 		mkdir -p ${SHARED_APP_DIR}/${HOSTNAME}/{UploadTask/{incoming,failed,processing},ConcatenationTask/{failed,processing}}
-		[ -L ${SHARED_APP_DIR}/${HOSTNAME}/ConcatenationTask/incoming ] || ln -s ${SHARED_APP_DIR}/incoming ${SHARED_APP_DIR}/${HOSTNAME}/ConcatenationTask/incoming
+		[ -L ${SHARED_APP_DIR}/${HOSTNAME}/ConcatenationTask/incoming ] || ln -s ${RECORDING_FOLDER}/incoming ${SHARED_APP_DIR}/${HOSTNAME}/ConcatenationTask/incoming
 	else
 		echo "can't find ${SHARED_APP_DIR}, cannot start, check mounts"
 		exit 2
