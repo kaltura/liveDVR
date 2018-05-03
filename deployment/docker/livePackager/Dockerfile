@@ -61,6 +61,6 @@ STOPSIGNAL SIGTERM
 
 WORKDIR /usr/local/nginx
 
-COPY ./deployment/docker/packager/entryPoint.sh   .
+COPY ./deployment/docker/livePackager/entryPoint.sh   .
 
 ENTRYPOINT ["./entryPoint.sh"]
