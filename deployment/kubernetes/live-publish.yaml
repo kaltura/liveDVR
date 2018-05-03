@@ -48,7 +48,6 @@ spec:
         resources:
             requests:
               cpu: "3.5"
-              nvidia.com/gpu: 1
         image: 983882572364.dkr.ecr.eu-west-1.amazonaws.com/media-server:test
         ports:
           - name: rtmp
