@@ -1,5 +1,6 @@
 #!/bin/bash
 
+source initScript.sh
 
 echo applying new configMapping
 
@@ -11,7 +12,7 @@ WOWZA_ADMIN_USER=wowza
 WOWZA_ADMIN_PASSWORD=wowza
 RECORDING_FOLDER=${CONTENT_DIR}/liveRecorder
 WOWZA_HOSTNAME=media-server
-SERVER_NODE_HOST_NAME=`hostname -f`
+
 
 sed -e "s#@LIVE_CONTENT_PATH@#$LIVE_CONTENT_PATH#g" \
     -e "s#@LIVE_ARCHIVE_CONTENT_PATH@#$LIVE_ARCHIVE_CONTENT_PATH#g" \

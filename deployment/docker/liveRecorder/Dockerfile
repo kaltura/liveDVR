@@ -35,6 +35,7 @@ VOLUME /web/content/kLive
 COPY --from=builder /usr/local/lib/python2.7/site-packages /usr/local/lib/python2.7/site-packages
 COPY --from=builder /opt/kaltura/workspace/liveRecorder .
 
+COPY ./deployment/docker/initScript.sh .
 COPY ./deployment/docker/liveRecorder/entryPoint.sh .
 
 

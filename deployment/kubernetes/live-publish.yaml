@@ -45,6 +45,15 @@ spec:
         envFrom:
           - configMapRef:
               name: my-env
+        env:
+          - name: MY_NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: MY_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
         resources:
             requests:
               cpu: "3.5"
@@ -59,6 +68,15 @@ spec:
         envFrom:
           - configMapRef:
               name: my-env
+        env:
+          - name: MY_NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: MY_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
         resources:
             requests:
               cpu: "0.5"
@@ -74,13 +92,22 @@ spec:
         envFrom:
           - configMapRef:
               name: my-env
+        env:
+          - name: MY_NODE_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+          - name: MY_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
         resources:
           requests:
             cpu: "0.5"
         image: 983882572364.dkr.ecr.eu-west-1.amazonaws.com/live-packager:test
         volumeMounts:
           - name: content
-            mountPath: /web/content/kLive
+            mountPath: /web/content/kLiveapp
         ports:
           - name: http
             containerPort: 8080

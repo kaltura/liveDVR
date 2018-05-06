@@ -1,5 +1,7 @@
 #!/bin/bash
 
+source initScript.sh
+
 echo "statrting nginx"
 cd /opt/nginx-vod-module-saas/conf/
 

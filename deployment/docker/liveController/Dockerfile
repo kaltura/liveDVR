@@ -36,7 +36,7 @@ VOLUME $CONF_FOLDER
 VOLUME /web/content/kLive
 
 
+COPY ./deployment/docker/initScript.sh .
+COPY ./deployment/docker/liveController/entryPoint.sh .
 
-COPY ./deployment/docker/liveController/registerNodeAndRun.sh .
-
-ENTRYPOINT ["./registerNodeAndRun.sh"]
+ENTRYPOINT ["./entryPoint.sh"]

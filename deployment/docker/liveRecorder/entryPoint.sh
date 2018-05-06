@@ -1,10 +1,10 @@
 #!/bin/bash
 
+source initScript.sh
 
 LOGDIR=/var/log/liveRecorder
 HOSTNAME=`hostname`
 RECORDING_FOLDER=/web/content/kLive/liveRecorder
-
 
 sed -e "s#@HOSTNAME@#.*#g" \
     -e "s#@RECORDING_FOLDER@#$RECORDING_FOLDER#g" \
