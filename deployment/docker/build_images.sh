@@ -19,9 +19,9 @@ if [[ $@ == *'media-server'* ]] || [[ $@ == *'all'* ]] ; then
     fi
 fi
 
-if [[ $@ == *'liveController'* ]] || [[ $@ == *'all'* ]] ; then
+if [[ $@ == *'live-controller'* ]] || [[ $@ == *'all'* ]] ; then
     echo "Build live-controller"
-    docker build -t  kaltura/live-controller -f ./liveController/Dockerfile ../appla[../
+    docker build -t  kaltura/live-controller -f ./liveController/Dockerfile ../../
     echo "tag live-controller:$tag"
     docker tag kaltura/live-controller 983882572364.dkr.ecr.eu-west-1.amazonaws.com/live-controller:$tag
     if [[ $@ == *'push'* ]]; then
@@ -30,7 +30,7 @@ if [[ $@ == *'liveController'* ]] || [[ $@ == *'all'* ]] ; then
     fi
 fi
 
-if [[ $@ == *'livePackcager'* ]] || [[ $@ == *'all'* ]] ; then
+if [[ $@ == *'live-packager'* ]] || [[ $@ == *'all'* ]] ; then
     echo "Build live-packager"
     docker build -t  kaltura/live-packager -f ./livePackager/Dockerfile ../../
     echo "tag live-packager:$tag"
@@ -41,7 +41,7 @@ if [[ $@ == *'livePackcager'* ]] || [[ $@ == *'all'* ]] ; then
     fi
 fi
 
-if [[ $@ == *'liveRecorder'* ]] || [[ $@ == *'all'* ]] ; then
+if [[ $@ == *'live-recorder'* ]] || [[ $@ == *'all'* ]] ; then
     echo "Build live-recorder"
     docker build -t  kaltura/live-recorder -f ./liveRecorder/Dockerfile ../../
     echo "tag live-recorder:$tag"

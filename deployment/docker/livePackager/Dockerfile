@@ -10,7 +10,7 @@ RUN  apt-get update \
 
 WORKDIR /opt
 
-COPY ./deployment/docker/packager/deploy.sh .
+COPY ./deployment/docker/livePackager/deploy.sh .
 
 RUN ./deploy.sh
 
