@@ -16,6 +16,7 @@ from datetime import datetime
 from KalturaClient.Plugins.Core import  KalturaEntryReplacementStatus,KalturaEntryServerNodeStatus
 
 # todo add timeout, and use m3u8 insted of regex
+NEW_FILE_PERMISSION = 0664
 
 Flavor = collections.namedtuple('Flavor', 'url language')
 
@@ -147,6 +148,8 @@ class ConcatenationTask(TaskBase):
             self.download_chunks_and_concat(chunks, output_full_path)
             self.logger.info("Successfully concat %d files into %s", len(chunks), output_full_path)
         self.convert_ts_to_mp4(command)
+        if os.path.isfile(output_full_path):
+            os.chmod(output_full_path, NEW_FILE_PERMISSION)
 
     def convert_ts_to_mp4(self, command):
 
