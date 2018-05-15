@@ -566,6 +566,12 @@ int main(int argc, char **argv)
     {
         dispose(&conversion[i]);
     }
+
+    for (i=0;i<total_conversions;i++)
+    {
+        char* out_filename = argv[i*3+2];
+        chmod(out_filename, 0666);
+    }
     
     printf("Cleanup done successfully\n");
     
