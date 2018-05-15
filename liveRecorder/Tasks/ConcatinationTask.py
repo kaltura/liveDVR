@@ -129,7 +129,7 @@ class ConcatenationTask(TaskBase):
         self.url_base_entry = self.nginx_url.format(token)
         self.url_master = os.path.join(self.url_base_entry, 'master.m3u8')
         flavors_list = self.extract_flavor_dict()
-
+        mp4_all_paths = []
         for obj in flavors_list:
             url_postfix = obj.url.rsplit('/', 1)[1]
             flavor_id = self.get_flavor_id(url_postfix)
@@ -138,6 +138,7 @@ class ConcatenationTask(TaskBase):
             ts_output_filename = self.get_output_filename(flavor_id)
             output_full_path = os.path.join(self.recording_path, ts_output_filename)
             mp4_full_path = output_full_path.replace('.ts', '.mp4')
+            mp4_all_paths.append(mp4_full_path)
             command = command + ' ' + output_full_path + ' ' + mp4_full_path + ' ' + obj.language
             if os.path.isfile(output_full_path):
                 self.logger.warn("file [%s] already exist", output_full_path)
@@ -148,8 +149,9 @@ class ConcatenationTask(TaskBase):
             self.download_chunks_and_concat(chunks, output_full_path)
             self.logger.info("Successfully concat %d files into %s", len(chunks), output_full_path)
         self.convert_ts_to_mp4(command)
-        if os.path.isfile(output_full_path):
-            os.chmod(output_full_path, NEW_FILE_PERMISSION)
+        for mp4_path in mp4_all_paths:
+            if os.path.isfile(mp4_path):
+                os.chmod(mp4_path, NEW_FILE_PERMISSION)
 
     def convert_ts_to_mp4(self, command):
 
