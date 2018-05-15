@@ -35,7 +35,7 @@ class TaskBase(object):
                 data = json.load(data_file)
                 return data
         except:
-            self.logger.debug("Error in loading the data.json file")
+            self.logger.debug("Could not load the data.json file")
         return None
 
     def update_status(self, new_status):
