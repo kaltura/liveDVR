@@ -289,7 +289,7 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
     
     return true;
 }
-bool dispose(struct FileConversion* conversion)
+bool dispose(struct FileConversion* conversion, char* out_filename)
 {
     int ret=0;
     
@@ -302,12 +302,14 @@ bool dispose(struct FileConversion* conversion)
         avio_closep(&conversion->ofmt_ctx->pb);
     
     avformat_free_context(conversion->ofmt_ctx);
-    
+
+    chmod(out_filename, 0666);
+
     if (ret < 0 && ret != AVERROR_EOF) {
         fprintf(stderr, "Error occurred: %s\n", av_err2str(ret));
         return  false;
     }
-    
+
     return true;
     
 }
@@ -564,15 +566,10 @@ int main(int argc, char **argv)
     //cleanup
     for (i=0;i<total_conversions;i++)
     {
-        dispose(&conversion[i]);
+        char* out_filename = argv[i*3+2];
+        dispose(&conversion[i], out_filename);
     }
 
-    for (i=0;i<total_conversions;i++)
-    {
-        char* out_filename = argv[i*3+2];
-        chmod(out_filename, 0666);
-    }
-    
     printf("Cleanup done successfully\n");
     
     return 0;
