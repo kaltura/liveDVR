@@ -49,4 +49,12 @@ services:
     - media-server
     - liveController
 
+ liveJobs:
+   env_file: .env
+   image: kaltura/live-jobs:${VERSION}
+   networks: ['internal_net']
+   volumes:
+    - "${CONTENT_DIR}:/web/content/kLive"
+   container_name: lj
+
 networks: {internal_net: {}}

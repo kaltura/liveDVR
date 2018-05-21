@@ -52,6 +52,16 @@ if [[ $@ == *'live-recorder'* ]] || [[ $@ == *'all'* ]] ; then
     fi
 fi
 
+if [[ $@ == *'live-jobs'* ]] || [[ $@ == *'all'* ]] ; then
+    echo "Build live-jobs"
+    docker build -t  kaltura/live-jobs -f ./liveJobs/Dockerfile ../../
+    echo "tag live-jobs:$tag"
+    docker tag kaltura/live-jobs 983882572364.dkr.ecr.eu-west-1.amazonaws.com/live-jobs:$tag
+    if [[ $@ == *'push'* ]]; then
+        echo "push live-jobs"
+        docker push 983882572364.dkr.ecr.eu-west-1.amazonaws.com/live-jobs:$tag
+    fi
+fi
 
 
 
