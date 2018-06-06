@@ -11,14 +11,14 @@ vod_dash_profiles urn:mpeg:dash:profile:isoff-live:2011;
 expires off;
 vod_upstream_location "";
 
-location ~ \/(?<live_type>live|recording|live-stg)\/[^\/]+\/p\/(?<partnerId>\d+)\/e\/(?<entryId>[^\/]+(?<entryHash>\w))\/(sd\/(?<segmentDuration>\d+)\/)?(type\/(?<user_type>\w+)\/)?t\/(?<token>[^\/]+)\/ {
+location ~ \/(?<live_type>live|recording|live-stg|clip)\/[^\/]+\/p\/(?<partnerId>\d+)\/e\/(?<entryId>[^\/]+(?<entryHash>\w))\/(sd\/(?<segmentDuration>\d+)\/)?(type\/(?<user_type>\w+)\/)?t\/(?<token>[^\/]+)\/ {
 	#this is for backward compatability to fetch from wowza  
 	location ~ ^/m/(?<mediaServer>[^/]+)/live/legacy/p/\d+/e/[^/]+(/sd/[^/]+)?/t/[^/]+/(?<path>.*) {
 		proxy_pass http://${mediaServer}:1935/kLive/ngrp:${entryId}_1_all/$path$is_args$args;
 	}
 
 	location ~ /live|live-stg/ {
-		vod_media_set_override_json $overrideClipTo;
+		#vod_media_set_override_json $overrideClipTo;
 		location ~ /sd/2000/ {
 			vod_expires_live_time_dependent 1;
 			vod_live_mapping_cache live_mapping_cache_low_latency 256m 1;
@@ -41,14 +41,22 @@ location ~ \/(?<live_type>live|recording|live-stg)\/[^\/]+\/p\/(?<partnerId>\d+)
 		}
 
 	}
-	location ~ /recording/ {
-		#override default caching expiration for to 1m
-		vod_expires_live 1m;
-		vod_expires_live_time_dependent 1m;
+    location ~ /recording/ {
+        #override default caching expiration for to 1m
+        vod_expires_live 1m;
+        vod_expires_live_time_dependent 1m;
 
-		#override to do one continuous recording (no gaps)
-		vod_force_continuous_timestamps on;
-		include nginx.conf.live.protocols;
+    	#override to do one continuous recording (no gaps)
+    	vod_force_continuous_timestamps on;
+    	include nginx.conf.live.protocols;
+    }
+
+    location ~ /clip/ {
+            set $live_type "recording";
+            vod_force_playlist_type_vod on;
+            #override to do one continuous recording (no gaps)
+            vod_force_continuous_timestamps on;
+            vod_expires 1d;
+            include nginx.conf.live.protocols;
 	}
-
 }
