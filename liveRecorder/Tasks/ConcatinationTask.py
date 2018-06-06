@@ -38,7 +38,6 @@ class ConcatenationTask(TaskBase):
         self.iso639_wrapper = Iso639Wrapper(logger_info)
 
     def get_live_type(self):
-        self.logger.debug("In type")
         if self.data and str(self.data.get("taskType",None)) == KalturaEntryServerNodeType.LIVE_CLIPPING_TASK:
                     return "clip"
         return "recording"
