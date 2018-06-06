@@ -52,7 +52,6 @@ location ~ \/(?<live_type>live|recording|live-stg|clip)\/[^\/]+\/p\/(?<partnerId
     }
 
     location ~ /clip/ {
-            set $live_type "recording";
             vod_force_playlist_type_vod on;
             #override to do one continuous recording (no gaps)
             vod_force_continuous_timestamps on;
