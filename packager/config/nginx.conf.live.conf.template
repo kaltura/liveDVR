@@ -18,7 +18,7 @@ location ~ \/(?<live_type>live|recording|live-stg|clip)\/[^\/]+\/p\/(?<partnerId
 	}
 
 	location ~ /live|live-stg/ {
-		#vod_media_set_override_json $overrideClipTo;
+		vod_media_set_override_json $overrideClipTo;
 		location ~ /sd/2000/ {
 			vod_expires_live_time_dependent 1;
 			vod_live_mapping_cache live_mapping_cache_low_latency 256m 1;
@@ -41,14 +41,14 @@ location ~ \/(?<live_type>live|recording|live-stg|clip)\/[^\/]+\/p\/(?<partnerId
 		}
 
 	}
-    location ~ /recording/ {
-        #override default caching expiration for to 1m
-        vod_expires_live 1m;
-        vod_expires_live_time_dependent 1m;
+	location ~ /recording/ {
+	    #override default caching expiration for to 1m
+	    vod_expires_live 1m;
+	    vod_expires_live_time_dependent 1m;
 
-    	#override to do one continuous recording (no gaps)
-    	vod_force_continuous_timestamps on;
-    	include nginx.conf.live.protocols;
+	    #override to do one continuous recording (no gaps)
+	    vod_force_continuous_timestamps on;
+	    include nginx.conf.live.protocols;
     }
 
     location ~ /clip/ {
