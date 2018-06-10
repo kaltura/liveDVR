@@ -1,5 +1,6 @@
 #include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <stdio.h>
 #include <sys/ioctl.h> // For FIONREAD
@@ -62,6 +63,7 @@ struct TrackInfo
 struct FileConversion
 {
     char inputFileName[10240];
+    char outputFileName[10240];
     struct TrackInfo trackInfo[MAX_TRACKS]; //per track
     AVFormatContext *ifmt_ctx;
     AVFormatContext *ofmt_ctx;
@@ -199,6 +201,7 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
     conversion->skipSilenceFilling=false;
     
     strcpy(conversion->inputFileName,in_filename);
+    strcpy(conversion->outputFileName,out_filename);
     
     if ((ret = avformat_open_input(&conversion->ifmt_ctx, in_filename, 0, 0)) < 0) {
         fprintf(stderr, "Could not open input file '%s'", in_filename);
@@ -289,7 +292,7 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
     
     return true;
 }
-bool dispose(struct FileConversion* conversion, char* out_filename)
+bool dispose(struct FileConversion* conversion)
 {
     int ret=0;
     
@@ -302,13 +305,13 @@ bool dispose(struct FileConversion* conversion, char* out_filename)
         avio_closep(&conversion->ofmt_ctx->pb);
     
     avformat_free_context(conversion->ofmt_ctx);
-
-    chmod(out_filename, 0666);
-
     if (ret < 0 && ret != AVERROR_EOF) {
         fprintf(stderr, "Error occurred: %s\n", av_err2str(ret));
         return  false;
     }
+    
+    mode_t mode=0666;
+    chmod(conversion->outputFileName,mode);
 
     return true;
     
@@ -566,8 +569,7 @@ int main(int argc, char **argv)
     //cleanup
     for (i=0;i<total_conversions;i++)
     {
-        char* out_filename = argv[i*3+2];
-        dispose(&conversion[i], out_filename);
+        dispose(&conversion[i]);
     }
 
     printf("Cleanup done successfully\n");
