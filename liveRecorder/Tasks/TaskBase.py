@@ -35,13 +35,12 @@ class TaskBase(object):
                 data = json.load(data_file)
                 return data
         except:
-            self.logger.debug("could not load the data.json file, probably not an error")
+            self.logger.debug("Could not load the data.json file")
         return None
 
     def update_status(self, new_status):
-        data = self.get_data()
-        if data and data.get('taskId',None):
-            id = data.get('taskId',None)
+        if self.data and self.data.get('taskId',None):
+            id = self.data.get('taskId',None)
             self.logger.debug("Updating taskId: [{}] with new status: [{}]".format(id, new_status))
             self.backend_client.update_task_entryServerNode_status(id, new_status)
 
@@ -59,6 +58,7 @@ class TaskBase(object):
                                            self.entry_directory)
         self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
         self.data_full_path = os.path.join(self.recording_path, 'data.json')
+        self.data = self.get_data()
         self.backend_client = BackendClient(self.entry_id + '-' + self.recorded_id)
 
 

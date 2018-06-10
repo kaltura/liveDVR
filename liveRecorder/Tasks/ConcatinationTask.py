@@ -13,7 +13,7 @@ from Config.config import get_config
 from Logger.LoggerDecorator import log_subprocess_output
 from TaskBase import TaskBase
 from datetime import datetime
-from KalturaClient.Plugins.Core import  KalturaEntryReplacementStatus,KalturaEntryServerNodeStatus
+from KalturaClient.Plugins.Core import  KalturaEntryReplacementStatus,KalturaEntryServerNodeStatus,KalturaEntryServerNodeType
 
 # todo add timeout, and use m3u8 insted of regex
 
@@ -24,7 +24,7 @@ class ConcatenationTask(TaskBase):
     nginx_port = get_config('nginx_port')
     nginx_host = get_config('nginx_host')
     secret = get_config('token_key')
-    token_url_template = nginx_host + ":" + nginx_port +"/dc-0/recording/hls/p/0/e/{0}/"
+    token_url_template = nginx_host + ":" + nginx_port +"/dc-0/{0}/hls/p/0/e/{1}/"
     cwd = os.path.dirname(os.path.abspath(__file__))
     ts_to_mp4_convertor = os.path.join(cwd, '../bin/ts_to_mp4_convertor')
 
@@ -32,10 +32,15 @@ class ConcatenationTask(TaskBase):
         TaskBase.__init__(self, param, logger_info)
         concat_task_processing_dir = os.path.join(self.base_directory, self.__class__.__name__, 'processing')
         self.recording_path = os.path.join(concat_task_processing_dir, self.entry_directory)
-        self.token_url = self.token_url_template.format(self.recorded_id)
+        self.token_url = self.token_url_template.format(self.get_live_type(), self.recorded_id)
         self.nginx_url = "http://" + self.token_url + "t/{0}"
         self.flavor_pattern = 'index-s(?P<flavor>\d+)'
         self.iso639_wrapper = Iso639Wrapper(logger_info)
+
+    def get_live_type(self):
+        if self.data and str(self.data.get("taskType",None)) == KalturaEntryServerNodeType.LIVE_CLIPPING_TASK:
+                    return "clip"
+        return "recording"
 
     def tokenize_url(self, url):
 
