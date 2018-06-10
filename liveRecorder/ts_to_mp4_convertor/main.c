@@ -310,8 +310,7 @@ bool dispose(struct FileConversion* conversion)
         return  false;
     }
     
-    mode_t mode=0666;
-    chmod(conversion->outputFileName,mode);
+    chmod(conversion->outputFileName,0666);
 
     return true;
     
