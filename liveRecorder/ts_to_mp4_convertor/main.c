@@ -13,6 +13,8 @@
 #define MAX_TRACKS 10
 #define KEY_FRAME_THRESHOLD 1000
 #define THRESHOLD_IN_SECONDS_FOR_ADDING_SILENCE 5
+#define PROBE_SIZE 20*1000*1000 //20 MB
+#define ANALYZE_DURATION 30*1000*1000  //30 seconds
 
 #ifndef VERSION
 #define VERSION __TIMESTAMP__
@@ -207,6 +209,9 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
         fprintf(stderr, "Could not open input file '%s'", in_filename);
         return false;
     }
+    av_opt_set_int(conversion->ifmt_ctx, "analyzeduration", ANALYZE_DURATION , 0);
+    av_opt_set_int(conversion->ifmt_ctx, "probesize", PROBE_SIZE, 0);
+    
     
     if ((ret = avformat_find_stream_info(conversion->ifmt_ctx, 0)) < 0) {
         fprintf(stderr, "Failed to retrieve stream input stream information");
@@ -220,7 +225,6 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
         ret = AVERROR_UNKNOWN;
         return false;
     }
-    
     AVOutputFormat *ofmt = conversion->ofmt_ctx->oformat;
     
     
