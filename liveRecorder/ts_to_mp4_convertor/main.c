@@ -230,16 +230,14 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
     
     for (j = 0; j < conversion->ifmt_ctx->nb_streams; j++) {
         AVStream *in_stream = conversion->ifmt_ctx->streams[j];
+        AVCodecContext *codec=in_stream->codec;
         
-        
-        if (in_stream->codec->codec_type==AVMEDIA_TYPE_DATA &&
-            in_stream->codec->codec_id==AV_CODEC_ID_NONE) {
-            in_stream->codec->codec_id=AV_CODEC_ID_MOV_TEXT;
+        if ((in_stream->codec->codec_type==AVMEDIA_TYPE_DATA && in_stream->codec->codec_id==AV_CODEC_ID_NONE) ||
+            in_stream->codec->codec_id==AV_CODEC_ID_TIMED_ID3) {
+            //it's going to be leaked!
+            AVCodec *encoder = avcodec_find_encoder(AV_CODEC_ID_MOV_TEXT);
+            codec = avcodec_alloc_context3(encoder);
         }
-        if (in_stream->codec->codec_id==AV_CODEC_ID_TIMED_ID3) {
-            in_stream->codec->codec_id=AV_CODEC_ID_MOV_TEXT;
-        }
-        
         
         AVStream *out_stream = avformat_new_stream(conversion->ofmt_ctx, in_stream->codec->codec);
         if (!out_stream) {
@@ -248,7 +246,7 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
             return false;
         }
         
-        ret = avcodec_copy_context(out_stream->codec, in_stream->codec);
+        ret = avcodec_copy_context(out_stream->codec, codec);
         if (ret < 0) {
             fprintf(stderr, "Failed to copy context from input to output stream codec context\n");
             return false;
@@ -471,25 +469,41 @@ bool convert(struct FileConversion* conversion)
             }
         }
         
-        
-        /*
-         if ( trackInfo->packetCount==1 && in_stream->codec->codec_type==AVMEDIA_TYPE_DATA) {
-         char* data=(char*)pkt.buf->data;
-         char *json="N/A";
-         char* timestr="N/A\n";
-         
-         if (pkt.buf->size>16) {
-         json=data+16;
-         
-         int64_t epoch64=0;
-         sscanf( json, "{\"timestamp\":%lld}", &epoch64 );
-         if (epoch64!=0) {
-         time_t t = epoch64/1000;
-         timestr=ctime(&t);
-         }
-         }
-         printf("ID3: %15s\t%15s\t%s\t%s",av_ts2str(pkt.pts),av_ts2timestr(pkt.pts,&in_stream->time_base),json,timestr);
-         }*/
+        if ( in_stream->codec->codec_type==AVMEDIA_TYPE_DATA &&
+            in_stream->codec->codec_id==AV_CODEC_ID_TIMED_ID3) {
+            
+            char* data=(char*)pkt.buf->data;
+            char *json="N/A";
+            char* timestr="N/A\n";
+
+            if (pkt.buf->size>16) {
+                json=data+16;
+
+                int64_t epoch64=0;
+                sscanf( json, "{\"timestamp\":%lld}", &epoch64 );
+                if (epoch64!=0) {
+                    char buffer [50];
+                    int n=sprintf( buffer, "{\"timestamp\":%lld}", epoch64 );
+                    AVPacket enc_pkt;
+                    av_new_packet(&enc_pkt, n);
+                    enc_pkt.pts=pkt.pts;
+                    enc_pkt.dts=pkt.dts;
+                    enc_pkt.duration=pkt.duration;
+                    enc_pkt.stream_index=pkt.stream_index;
+                    memcpy(enc_pkt.data,buffer,enc_pkt.size);
+                    time_t t = epoch64/1000;
+                    timestr=ctime(&t);
+                    printf("ID3: %15s\t%15s\t%s\t%s",av_ts2str(pkt.pts),av_ts2timestr(pkt.pts,&in_stream->time_base),json,timestr);
+                    //ret = av_interleaved_write_frame(conversion->ofmt_ctx, &enc_pkt);
+                    av_packet_unref(&pkt);
+                    av_copy_packet(&pkt,&enc_pkt);
+                } else {
+                    continue;
+                }
+            } else {
+                continue;
+            }
+        }
         if (!trackInfo->displayedFirstPacket){
             log_packet(conversion->ofmt_ctx, &pkt, "out");
             trackInfo->displayedFirstPacket=true;
