@@ -13,6 +13,7 @@ from Config.config import get_config
 from Logger.LoggerDecorator import log_subprocess_output
 from TaskBase import TaskBase
 from datetime import datetime
+from KalturaClient.Plugins.Core import  KalturaEntryReplacementStatus,KalturaEntryServerNodeStatus,KalturaEntryServerNodeType
 
 # todo add timeout, and use m3u8 insted of regex
 
@@ -23,7 +24,7 @@ class ConcatenationTask(TaskBase):
     nginx_port = get_config('nginx_port')
     nginx_host = get_config('nginx_host')
     secret = get_config('token_key')
-    token_url_template = nginx_host + ":" + nginx_port +"/dc-0/recording/hls/p/0/e/{0}/"
+    token_url_template = nginx_host + ":" + nginx_port +"/dc-0/{0}/hls/p/0/e/{1}/"
     cwd = os.path.dirname(os.path.abspath(__file__))
     ts_to_mp4_convertor = os.path.join(cwd, '../bin/ts_to_mp4_convertor')
 
@@ -31,11 +32,15 @@ class ConcatenationTask(TaskBase):
         TaskBase.__init__(self, param, logger_info)
         concat_task_processing_dir = os.path.join(self.base_directory, self.__class__.__name__, 'processing')
         self.recording_path = os.path.join(concat_task_processing_dir, self.entry_directory)
-        self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
-        self.token_url = self.token_url_template.format(self.recorded_id)
+        self.token_url = self.token_url_template.format(self.get_live_type(), self.recorded_id)
         self.nginx_url = "http://" + self.token_url + "t/{0}"
         self.flavor_pattern = 'index-s(?P<flavor>\d+)'
         self.iso639_wrapper = Iso639Wrapper(logger_info)
+
+    def get_live_type(self):
+        if self.data and str(self.data.get("taskType",None)) == KalturaEntryServerNodeType.LIVE_CLIPPING_TASK:
+                    return "clip"
+        return "recording"
 
     def tokenize_url(self, url):
 
@@ -109,33 +114,31 @@ class ConcatenationTask(TaskBase):
         matches = re.findall(regex, m3u8, re.MULTILINE)
         return matches
 
-    def get_flavor_id(self, url_postfix, single_flavor):
-        if single_flavor:
-            flavors_dirs = filter(os.path.isdir,
-                                  [os.path.join(self.recording_path, f) for f in os.listdir(self.recording_path)])
-            flavor_id = flavors_dirs[0].rsplit('/', 1)[-1]
-        else:
-            result = re.search(self.flavor_pattern, url_postfix)
-            if not result:
-                error = "Error running concat task, failed to parse flavor from url: [%s]", obj.url
-                self.logger.error(error)
-                raise ValueError(error)
-            flavor_id = result.group('flavor')
-
-        return flavor_id
+    def get_flavor_id(self, url_postfix):
+        result = re.search(self.flavor_pattern, url_postfix)
+        if result:
+            return result.group('flavor')
+        flavors_dirs = filter(os.path.isdir, [os.path.join(self.recording_path, f) for f in os.listdir(self.recording_path)])
+        if flavors_dirs:
+            return flavors_dirs[0].rsplit('/', 1)[-1]
+        data = self.get_data()
+        if data and data["flavors"]:
+            return data["flavors"].split(',')[0]
+        return None
 
     def run(self):
-
+        self.update_status(KalturaEntryServerNodeStatus.TASK_PROCESSING)
         command = self.ts_to_mp4_convertor + ' '
         token = self.tokenize_url(self.token_url)
         self.url_base_entry = self.nginx_url.format(token)
         self.url_master = os.path.join(self.url_base_entry, 'master.m3u8')
         flavors_list = self.extract_flavor_dict()
-        single_flavor = len(flavors_list) == 1
 
         for obj in flavors_list:
             url_postfix = obj.url.rsplit('/', 1)[1]
-            flavor_id = self.get_flavor_id(url_postfix, single_flavor)
+            flavor_id = self.get_flavor_id(url_postfix)
+            if flavor_id is None:
+                raise ValueError('Could not find flavor ID for {}'.format(obj.url))
             ts_output_filename = self.get_output_filename(flavor_id)
             output_full_path = os.path.join(self.recording_path, ts_output_filename)
             mp4_full_path = output_full_path.replace('.ts', '.mp4')

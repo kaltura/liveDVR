@@ -4,6 +4,9 @@ from Logger.LoggerDecorator import logger_decorator
 from socket import gethostname
 from Config.config import get_config
 from RecordingException import UnequallStampException
+from BackendClient import *
+from KalturaClient.Plugins.Core import KalturaEntryServerNodeStatus
+
 
 
 class TaskBase(object):
@@ -25,6 +28,23 @@ class TaskBase(object):
                                                                                                             stamp)
                 raise UnequallStampException(msg)
 
+
+    def get_data(self):
+        try:
+            with open(self.data_full_path) as data_file:
+                data = json.load(data_file)
+                return data
+        except:
+            self.logger.debug("Could not load the data.json file")
+        return None
+
+    def update_status(self, new_status):
+        if self.data and self.data.get('taskId',None):
+            id = self.data.get('taskId',None)
+            self.logger.debug("Updating taskId: [{}] with new status: [{}]".format(id, new_status))
+            self.backend_client.update_task_entryServerNode_status(id, new_status)
+
+
     def __init__(self, param, logger_info):
         self.duration = param['duration']
         self.recorded_id = param['recorded_id']
@@ -37,6 +57,9 @@ class TaskBase(object):
         self.recording_path = os.path.join(self.base_directory, self.__class__.__name__, 'processing',
                                            self.entry_directory)
         self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
+        self.data_full_path = os.path.join(self.recording_path, 'data.json')
+        self.data = self.get_data()
+        self.backend_client = BackendClient(self.entry_id + '-' + self.recorded_id)
 
 
     __metaclass__ = abc.ABCMeta

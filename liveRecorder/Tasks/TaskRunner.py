@@ -10,6 +10,7 @@ from socket import gethostname
 import time, threading
 import Queue as Q
 from RecordingException import UnequallStampException
+from KalturaClient.Plugins.Core import KalturaEntryServerNodeStatus
 import schedule
 
 #  Currently not support multiple machine pulling from one incoming dir.
@@ -130,7 +131,7 @@ class TaskRunner:
                 except Exception as e:
                         self.logger.error("[%s-%s] Error while try to add task:%s \n %s", param['entry_id'], param['recorded_id'], str(e), traceback.format_exc())
 
-    def move_to_incoming_dir(self, src_dir, dst_dir):
+    def move_to_dir(self, src_dir, dst_dir):
         file_list = os.listdir(src_dir)
 
         for path in file_list:
@@ -179,6 +180,7 @@ class TaskRunner:
                         self.logger.fatal("[%s] Job %s on entry %s has no more retries or failed to get it, move entry to "
                                       "failed task directory ", logger_info, self.task_name, task_parameter['directory'])
                         self.safe_move(src, self.error_directory)
+                        job.update_status(KalturaEntryServerNodeStatus.ERROR)
                 except Exception as e:
                     self.logger.fatal("[%s]  Failed to handle failure task %s \n %s", logger_info, str(e)
                                     , traceback.format_exc())
@@ -219,7 +221,7 @@ class TaskRunner:
     def start(self):
         try:
             self.logger.info("Starting %d workers", self.number_of_processes)
-            self.move_to_incoming_dir(self.working_directory, self.input_directory)
+            self.move_to_dir(self.working_directory, self.input_directory)
             self.add_new_task_handler()
             self.failed_task_handler()
             workers = [Process(target=self.work, args=(i,)) for i in xrange(1, self.number_of_processes+1)]

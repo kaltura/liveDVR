@@ -346,10 +346,18 @@ class KalturaEntryModerationStatus(object):
 # @package Kaltura
 # @subpackage Client
 class KalturaEntryServerNodeStatus(object):
+    ERROR = -1
     STOPPED = 0
     PLAYABLE = 1
     BROADCASTING = 2
     AUTHENTICATED = 3
+    MARKED_FOR_DELETION = 4
+    TASK_PENDING = 5
+    TASK_QUEUED = 6
+    TASK_PROCESSING = 7
+    TASK_UPLOADING = 8
+    TASK_FINISHED = 9
+
 
     def __init__(self, value):
         self.value = value
@@ -2507,6 +2515,7 @@ class KalturaEntryServerNodeOrderBy(object):
 class KalturaEntryServerNodeType(object):
     LIVE_PRIMARY = "0"
     LIVE_BACKUP = "1"
+    LIVE_CLIPPING_TASK = "2"
 
     def __init__(self, value):
         self.value = value
@@ -36118,6 +36127,41 @@ class KalturaSyncCategoryPrivacyContextJobData(KalturaJobData):
     def setLastUpdatedCategoryCreatedAt(self, newLastUpdatedCategoryCreatedAt):
         self.lastUpdatedCategoryCreatedAt = newLastUpdatedCategoryCreatedAt
 
+# @package Kaltura
+# @subpackage Client
+class KalturaTaskEntryServerNode(KalturaEntryServerNode):
+    def __init__(self,
+                 id=NotImplemented,
+                 entryId=NotImplemented,
+                 serverNodeId=NotImplemented,
+                 partnerId=NotImplemented,
+                 createdAt=NotImplemented,
+                 updatedAt=NotImplemented,
+                 status=NotImplemented,
+                 serverType=NotImplemented):
+        KalturaEntryServerNode.__init__(self,
+                                        id,
+                                        entryId,
+                                        serverNodeId,
+                                        partnerId,
+                                        createdAt,
+                                        updatedAt,
+                                        status,
+                                        serverType)
+
+
+    PROPERTY_LOADERS = {
+    }
+
+    def fromXml(self, node):
+        KalturaEntryServerNode.fromXml(self, node)
+        self.fromXmlImpl(node, KalturaTaskEntryServerNode.PROPERTY_LOADERS)
+
+    def toParams(self):
+        kparams = KalturaEntryServerNode.toParams(self)
+        kparams.put("objectType", "KalturaTaskEntryServerNode")
+        return kparams
+
 
 # @package Kaltura
 # @subpackage Client
@@ -39510,6 +39554,76 @@ class KalturaCategoryEntryBaseFilter(KalturaRelatedFilter):
     def setStatusIn(self, newStatusIn):
         self.statusIn = newStatusIn
 
+# @package Kaltura
+# @subpackage Client
+class KalturaClippingTaskEntryServerNode(KalturaTaskEntryServerNode):
+    def __init__(self,
+                 id=NotImplemented,
+                 entryId=NotImplemented,
+                 serverNodeId=NotImplemented,
+                 partnerId=NotImplemented,
+                 createdAt=NotImplemented,
+                 updatedAt=NotImplemented,
+                 status=NotImplemented,
+                 serverType=NotImplemented,
+                 clipAttributes=NotImplemented,
+                 clippedEntryId=NotImplemented,
+                 liveEntryId=NotImplemented):
+        KalturaTaskEntryServerNode.__init__(self,
+                                            id,
+                                            entryId,
+                                            serverNodeId,
+                                            partnerId,
+                                            createdAt,
+                                            updatedAt,
+                                            status,
+                                            serverType)
+
+        # @var KalturaClipAttributes
+        self.clipAttributes = clipAttributes
+
+        # @var string
+        self.clippedEntryId = clippedEntryId
+
+        # @var string
+        self.liveEntryId = liveEntryId
+
+
+    PROPERTY_LOADERS = {
+        'clipAttributes': (KalturaObjectFactory.create, KalturaClipAttributes),
+        'clippedEntryId': getXmlNodeText,
+        'liveEntryId': getXmlNodeText,
+    }
+
+    def fromXml(self, node):
+        KalturaTaskEntryServerNode.fromXml(self, node)
+        self.fromXmlImpl(node, KalturaClippingTaskEntryServerNode.PROPERTY_LOADERS)
+
+    def toParams(self):
+        kparams = KalturaTaskEntryServerNode.toParams(self)
+        kparams.put("objectType", "KalturaClippingTaskEntryServerNode")
+        kparams.addObjectIfDefined("clipAttributes", self.clipAttributes)
+        kparams.addStringIfDefined("clippedEntryId", self.clippedEntryId)
+        kparams.addStringIfDefined("liveEntryId", self.liveEntryId)
+        return kparams
+
+    def getClipAttributes(self):
+        return self.clipAttributes
+
+    def setClipAttributes(self, newClipAttributes):
+        self.clipAttributes = newClipAttributes
+
+    def getClippedEntryId(self):
+        return self.clippedEntryId
+
+    def setClippedEntryId(self, newClippedEntryId):
+        self.clippedEntryId = newClippedEntryId
+
+    def getLiveEntryId(self):
+        return self.liveEntryId
+
+    def setLiveEntryId(self, newLiveEntryId):
+        self.liveEntryId = newLiveEntryId
 
 # @package Kaltura
 # @subpackage Client
@@ -55287,6 +55401,16 @@ class KalturaEntryServerNodeService(KalturaServiceBase):
         resultNode = self.client.doQueue()
         return KalturaObjectFactory.create(resultNode, KalturaEntryServerNode)
 
+    def updateStatus(self, id, status):
+        kparams = KalturaParams()
+        kparams.addStringIfDefined("id", id)
+        kparams.addIntIfDefined("status", status);
+        self.client.queueServiceActionCall("entryservernode", "updateStatus", KalturaEntryServerNode, kparams)
+        if self.client.isMultiRequest():
+            return self.client.getMultiRequestResult()
+        resultNode = self.client.doQueue()
+        return (KalturaObjectFactory.create(resultNode[0], KalturaEntryServerNode),resultNode[1])
+
     def validateRegisteredEntryServerNode(self, id):
         """Validates server node still registered on entry"""
 
@@ -59330,6 +59454,8 @@ class KalturaCoreClient(KalturaClientPlugin):
             'KalturaStringValue': KalturaStringValue,
             'KalturaEntryReplacementOptions': KalturaEntryReplacementOptions,
             'KalturaEntryServerNode': KalturaEntryServerNode,
+            'KalturaTaskEntryServerNode': KalturaTaskEntryServerNode,
+            'KalturaClippingTaskEntryServerNode': KalturaClippingTaskEntryServerNode,
             'KalturaObjectIdentifier': KalturaObjectIdentifier,
             'KalturaExtendingItemMrssParameter': KalturaExtendingItemMrssParameter,
             'KalturaPlayableEntry': KalturaPlayableEntry,

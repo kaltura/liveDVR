@@ -1,5 +1,6 @@
 #include <libavutil/timestamp.h>
 #include <libavformat/avformat.h>
+#include <sys/stat.h>
 #include <time.h>
 #include <stdio.h>
 #include <sys/ioctl.h> // For FIONREAD
@@ -12,6 +13,8 @@
 #define MAX_TRACKS 10
 #define KEY_FRAME_THRESHOLD 1000
 #define THRESHOLD_IN_SECONDS_FOR_ADDING_SILENCE 5
+#define PROBE_SIZE 20*1000*1000 //20 MB
+#define ANALYZE_DURATION 30*1000*1000  //30 seconds
 
 #ifndef VERSION
 #define VERSION __TIMESTAMP__
@@ -62,6 +65,7 @@ struct TrackInfo
 struct FileConversion
 {
     char inputFileName[10240];
+    char outputFileName[10240];
     struct TrackInfo trackInfo[MAX_TRACKS]; //per track
     AVFormatContext *ifmt_ctx;
     AVFormatContext *ofmt_ctx;
@@ -199,11 +203,15 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
     conversion->skipSilenceFilling=false;
     
     strcpy(conversion->inputFileName,in_filename);
+    strcpy(conversion->outputFileName,out_filename);
     
     if ((ret = avformat_open_input(&conversion->ifmt_ctx, in_filename, 0, 0)) < 0) {
         fprintf(stderr, "Could not open input file '%s'", in_filename);
         return false;
     }
+    av_opt_set_int(conversion->ifmt_ctx, "analyzeduration", ANALYZE_DURATION , 0);
+    av_opt_set_int(conversion->ifmt_ctx, "probesize", PROBE_SIZE, 0);
+    
     
     if ((ret = avformat_find_stream_info(conversion->ifmt_ctx, 0)) < 0) {
         fprintf(stderr, "Failed to retrieve stream input stream information");
@@ -217,7 +225,6 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
         ret = AVERROR_UNKNOWN;
         return false;
     }
-    
     AVOutputFormat *ofmt = conversion->ofmt_ctx->oformat;
     
     
@@ -302,12 +309,13 @@ bool dispose(struct FileConversion* conversion)
         avio_closep(&conversion->ofmt_ctx->pb);
     
     avformat_free_context(conversion->ofmt_ctx);
-    
     if (ret < 0 && ret != AVERROR_EOF) {
         fprintf(stderr, "Error occurred: %s\n", av_err2str(ret));
         return  false;
     }
     
+    chmod(conversion->outputFileName,0666);
+
     return true;
     
 }
@@ -566,7 +574,7 @@ int main(int argc, char **argv)
     {
         dispose(&conversion[i]);
     }
-    
+
     printf("Cleanup done successfully\n");
     
     return 0;
