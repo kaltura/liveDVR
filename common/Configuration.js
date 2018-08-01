@@ -9,12 +9,10 @@ var hostname = require('./utils/hostname');
 
 module.exports = (function(){
 
-    var machineName = hostname.getLocalMachineHostname();
-
+    let machineName = hostname.getLocalMachineHostname();
+    let machineShortName = hostname.getLocalMachineHostname(false);
     var configTemplateContent = fs.readFileSync(path.join(__dirname, './config/config.json.template'), 'utf8');
-    var updatedConfigContent = configTemplateContent.replace('@HOSTNAME@', machineName);
-
-    var configObj = JSON.parse(updatedConfigContent);
+    var configObj = JSON.parse(configTemplateContent);
 
     var mappingFilePath = path.join(__dirname, 'config', 'configMapping.json');
     if (fs.existsSync(mappingFilePath))
@@ -44,8 +42,11 @@ module.exports = (function(){
             }
         }
     }
-    var machineShortName = hostname.getLocalMachineHostname(false);
-    let confString = JSON.stringify(configObj, null, 2).replace(/~/g,hostname.homedir()).replace('@HOSTNAME_SHORT@', machineShortName);
+
+    let confString = JSON.stringify(configObj, null, 2);
+    confString = confString.replace(/~/g,hostname.homedir());
+    confString = confString.replace('@HOSTNAME@', machineName);
+    confString = confString.replace('@HOSTNAME_SHORT@', machineShortName);
     fs.writeFileSync(path.join(__dirname, './config/config.json'), confString);
 
     var nconf = require('nconf');
