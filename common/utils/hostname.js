@@ -26,7 +26,7 @@ function homedir() {
     return home || null;
 }
 
-function getLocalMachineFullHostname(full = true) {
+function getLocalMachineHostname(full = true) {
     let res = "HOSTNAME_PLACEHOLDER";
     if (os.platform() == 'win32' || os.platform() == 'win64')
     {
@@ -41,8 +41,7 @@ function getLocalMachineFullHostname(full = true) {
     {
         // On Linux
         let cmd = "hostname";
-        if (full)
-            cmd += full ? " -f" : " -s";
+        cmd += full ? " -f" : " -s";
         res = child_process.execSync(cmd).toString().trim()
     }
     return res;
@@ -50,5 +49,5 @@ function getLocalMachineFullHostname(full = true) {
 
 module.exports = {
     homedir: homedir,
-    getLocalMachineHostname: getLocalMachineFullHostname
+    getLocalMachineHostname: getLocalMachineHostname
 };
