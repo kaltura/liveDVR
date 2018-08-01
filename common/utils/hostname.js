@@ -42,7 +42,7 @@ function getLocalMachineFullHostname(full = true) {
         // On Linux
         let cmd = "hostname";
         if (full)
-            cmd += full ? " -s" : " -f";
+            cmd += full ? " -f" : " -s";
         res = child_process.execSync(cmd).toString().trim()
     }
     return res;
