@@ -9,7 +9,7 @@ var hostname = require('./utils/hostname');
 
 module.exports = (function(){
 
-    var machineName = hostname.getLocalMachineFullHostname();
+    var machineName = hostname.getLocalMachineHostname();
 
     var configTemplateContent = fs.readFileSync(path.join(__dirname, './config/config.json.template'), 'utf8');
     var updatedConfigContent = configTemplateContent.replace('@HOSTNAME@', machineName);
@@ -28,6 +28,7 @@ module.exports = (function(){
             }
         });
     }
+    
 
     function assignValues(configPropertiesObj, configOutputObj) {
         for (var p in configPropertiesObj) {
@@ -43,8 +44,9 @@ module.exports = (function(){
             }
         }
     }
-
-    fs.writeFileSync(path.join(__dirname, './config/config.json'), JSON.stringify(configObj, null, 2).replace(/~/g,hostname.homedir()));
+    var machineShortName = hostname.getLocalMachineHostname(false);
+    let confString = JSON.stringify(configObj, null, 2).replace(/~/g,hostname.homedir()).replace('@HOSTNAME_SHORT@', machineShortName);
+    fs.writeFileSync(path.join(__dirname, './config/config.json'), confString);
 
     var nconf = require('nconf');
 

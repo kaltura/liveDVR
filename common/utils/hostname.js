@@ -26,13 +26,13 @@ function homedir() {
     return home || null;
 }
 
-function getLocalMachineFullHostname() {
+function getLocalMachineFullHostname(full = true) {
     let res = "HOSTNAME_PLACEHOLDER";
     if (os.platform() == 'win32' || os.platform() == 'win64')
     {
         // On Windows
         res = process.env.COMPUTERNAME;
-        if (process.env.USERDNSDOMAIN && process.env.USERDOMAIN !== "")
+        if (full && process.env.USERDNSDOMAIN && process.env.USERDOMAIN !== "")
         {
             res +=  "." + process.env.USERDNSDOMAIN;
         }
@@ -40,12 +40,15 @@ function getLocalMachineFullHostname() {
     else
     {
         // On Linux
-        res = child_process.execSync('hostname -f').toString().trim()
+        let cmd = "hostname";
+        if (full)
+            cmd += full ? " -s" : " -f";
+        res = child_process.execSync(cmd).toString().trim()
     }
     return res;
 }
 
 module.exports = {
     homedir: homedir,
-    getLocalMachineFullHostname: getLocalMachineFullHostname
+    getLocalMachineHostname: getLocalMachineFullHostname
 };
