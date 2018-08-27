@@ -17,7 +17,7 @@ echo "confDir=${confDir}"
 
 nginxPath="${dirname}/../../bin/nginx"
 
-contentDir=`cat "${dirname}/../../common/config/config.json" | awk '$0 ~ /rootFolderPath/ { printf substr($2,2,length($2)-3) }'`
+contentDir=`cat "${dirname}/../../common/config/config.json" | awk '$0 ~ /rootFolderPath/ { printf substr($2,2,length($2)-8) }'`
 
 if [ -z "${contentDir}" ]
 then
