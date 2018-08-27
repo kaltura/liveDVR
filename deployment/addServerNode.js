@@ -28,5 +28,5 @@ return BackendClient.addServerNode(hostname)
         console.log("Server node [" + apiResult.result.name + "] was successfully enabled");
     })
     .catch((error) => {
-        console.log("Error while adding new ServerNode. Error: " + error.message);
+        console.log("Error while adding new ServerNode. Error: " + ErrorUtils.error2string(error));
     });
