@@ -42,6 +42,7 @@
 		085E1F5F1EA6BA470056B80C /* main.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		086E7ACD1E044C7500206F21 /* ts_to_mp4_convertor */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ts_to_mp4_convertor; sourceTree = BUILT_PRODUCTS_DIR; };
 		086EF1D81E0EE7820038086F /* libswscale.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswscale.a; path = "../../node_addons/FormatConverter/build/ffmpeg-3.0/libswscale/libswscale.a"; sourceTree = "<group>"; };
+		08D748542057B88000522910 /* tests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tests.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,6 +65,7 @@
 		086E7AC41E044C7400206F21 = {
 			isa = PBXGroup;
 			children = (
+				08D748542057B88000522910 /* tests.h */,
 				08516DFA1FA10B7C0077B9F0 /* audio_fillter.c */,
 				08516DFB1FA10B7C0077B9F0 /* audio_filler.h */,
 				08516DF81FA10B5D0077B9F0 /* Makefile */,

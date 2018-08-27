@@ -2,5 +2,5 @@ if ($playlist = '') {
     set $playlist "playlist.json";
 }
 
-alias @CONTENT_DIR@/$entryHash/$entryId/$playlist;
+alias @CONTENT_DIR@/$live_type/$entryHash/$entryId/$playlist;
 include cors.common.conf;
