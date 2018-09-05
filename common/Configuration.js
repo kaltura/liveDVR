@@ -45,8 +45,8 @@ module.exports = (function(){
 
     let confString = JSON.stringify(configObj, null, 2);
     confString = confString.replace(/~/g,hostname.homedir());
-    confString = confString.replace('@HOSTNAME@', machineName);
-    confString = confString.replace('@HOSTNAME_SHORT@', machineShortName);
+    confString = confString.replace(/@HOSTNAME@/g, machineName);
+    confString = confString.replace(/@HOSTNAME_SHORT@/g, machineShortName);
     fs.writeFileSync(path.join(__dirname, './config/config.json'), confString);
 
     var nconf = require('nconf');
