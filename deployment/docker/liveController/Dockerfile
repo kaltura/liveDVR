@@ -28,10 +28,7 @@ WORKDIR /opt/kaltura/liveController/
 
 COPY --from=build /opt/kaltura/liveController/ ./
 
-ARG CONF_FOLDER=/myconfig/
 VOLUME /var/log/liveController/
-#config folder
-VOLUME $CONF_FOLDER
 #content folder
 VOLUME /web/content/kLive
 
