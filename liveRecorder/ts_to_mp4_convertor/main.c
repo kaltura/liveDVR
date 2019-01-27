@@ -79,7 +79,7 @@ struct FileConversion conversion[MAX_CONVERSIONS];
 bool hasVideo(AVFormatContext* ctx)
 {
     for (int i=0;i<ctx->nb_streams;i++) {
-        if (ctx->streams[i]->codec->codec_type==AVMEDIA_TYPE_VIDEO) {
+        if (ctx->streams[i]->codecpar->codec_type==AVMEDIA_TYPE_VIDEO) {
             return true;
         }
     }
@@ -89,7 +89,7 @@ bool hasVideo(AVFormatContext* ctx)
 int getMainTrackIndex(AVFormatContext* ctx)
 {
     for (int i=0;i<ctx->nb_streams;i++) {
-        if (ctx->streams[i]->codec->codec_type==AVMEDIA_TYPE_VIDEO) {
+        if (ctx->streams[i]->codecpar->codec_type==AVMEDIA_TYPE_VIDEO) {
             return i;
         }
     }
@@ -230,55 +230,55 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
     
     for (j = 0; j < conversion->ifmt_ctx->nb_streams; j++) {
         AVStream *in_stream = conversion->ifmt_ctx->streams[j];
-        AVCodecContext *codec=in_stream->codec;
-        
-        if ((in_stream->codec->codec_type==AVMEDIA_TYPE_DATA && in_stream->codec->codec_id==AV_CODEC_ID_NONE) ||
-            in_stream->codec->codec_id==AV_CODEC_ID_TIMED_ID3) {
+        AVCodecParameters *in_codecpar = in_stream->codecpar;
+
+        if ((in_codecpar->codec_type==AVMEDIA_TYPE_DATA && in_codecpar->codec_id==AV_CODEC_ID_NONE) ||
+            in_codecpar->codec_id==AV_CODEC_ID_TIMED_ID3) {
             //it's going to be leaked!
             AVCodec *encoder = avcodec_find_encoder(AV_CODEC_ID_MOV_TEXT);
-            codec = avcodec_alloc_context3(encoder);
+            AVCodecContext* codec = avcodec_alloc_context3(encoder);
+            in_codecpar->codec_tag=codec->codec_tag;
+            in_codecpar->codec_id=codec->codec_id;
         }
         
-        AVStream *out_stream = avformat_new_stream(conversion->ofmt_ctx, in_stream->codec->codec);
+        AVStream *out_stream = avformat_new_stream(conversion->ofmt_ctx, NULL);
         if (!out_stream) {
             fprintf(stderr, "Failed allocating output stream\n");
             ret = AVERROR_UNKNOWN;
             return false;
         }
         
-        ret = avcodec_copy_context(out_stream->codec, codec);
+        ret = avcodec_parameters_copy(out_stream->codecpar, in_codecpar);
         if (ret < 0) {
-            fprintf(stderr, "Failed to copy context from input to output stream codec context\n");
+            fprintf(stderr, "Failed to copy codec parameters\n");
             return false;
         }
-        out_stream->codec->codec_tag = 0;
+        
+        out_stream->codecpar->codec_tag = 0;
         if (conversion->ofmt_ctx->oformat->flags & AVFMT_GLOBALHEADER)
             out_stream->codec->flags |= AV_CODEC_FLAG_GLOBAL_HEADER;
-        
-        out_stream->time_base           = in_stream->time_base;
-        out_stream->sample_aspect_ratio = in_stream->sample_aspect_ratio;
-        out_stream->codec->codec_tag = 0;
+       
         conversion->ofmt_ctx->oformat->flags |= AVFMT_TS_NONSTRICT;
         
-        if(in_stream->codec->codec_id == AV_CODEC_ID_AAC) {
-            int ret=ff_stream_add_bitstream_filter(out_stream, "aac_adtstoasc", NULL);
+        if(false && in_stream->codecpar->codec_id == AV_CODEC_ID_AAC) {
+            ret=ff_stream_add_bitstream_filter(out_stream, "aac_adtstoasc", NULL);
             if (ret<0) {
-                exit(-1);
+                fprintf(stderr,"Cannot add aac_adtstoasc\n");
+                return false;
             }
         }
         
-        if(in_stream->codec->codec_id == AV_CODEC_ID_H264) {
-            int ret=ff_stream_add_bitstream_filter(in_stream, "filter_units", "pass_types=1-5");
+        if(in_stream->codecpar->codec_id == AV_CODEC_ID_H264) {
+            ret=ff_stream_add_bitstream_filter(out_stream, "filter_units", "pass_types=1-5");
             if (ret<0) {
-                exit(-1);
+                fprintf(stderr,"Cannot add filter_units\n");
+                return false;
             }
         }
         
         av_dict_set(&out_stream->metadata, "language", language, 0);
         
-        if (in_stream->codec->codec_type==AVMEDIA_TYPE_AUDIO) {
-            
-            
+        if (in_stream->codecpar->codec_type==AVMEDIA_TYPE_AUDIO) {
             createSilentAudio(in_stream->codec,&conversion->trackInfo[j].silent_packet);
         }
         
@@ -457,7 +457,7 @@ bool convert(struct FileConversion* conversion)
                     // printf("Recieving key frame on track %d at time pts %s\n",pkt.stream_index, av_ts2str(trackInfo->lastPts-offset));
                     trackInfo->waitForKeyFrame=false;
                     //don't allow EDT list since packager doesn't support them, so move first frame to the beginning
-                    if ( in_stream->codec->codec_type==AVMEDIA_TYPE_VIDEO && pkt.pts>0 && resetPtsOnFirstKeyFrame ) {
+                    if ( in_stream->codecpar->codec_type==AVMEDIA_TYPE_VIDEO && pkt.pts>0 && resetPtsOnFirstKeyFrame ) {
                         printf("Corrected first video key frame to 0  on track %d pts = %s (%s)  dts = %s (%s)\n",
                                pkt.stream_index,
                                av_ts2str(pkt.pts),av_ts2timestr(pkt.pts, &out_stream->time_base),
@@ -478,8 +478,8 @@ bool convert(struct FileConversion* conversion)
             }
         }
         
-        if ( in_stream->codec->codec_type==AVMEDIA_TYPE_DATA &&
-            in_stream->codec->codec_id==AV_CODEC_ID_TIMED_ID3) {
+        if ( in_stream->codecpar->codec_type==AVMEDIA_TYPE_DATA &&
+            in_stream->codecpar->codec_id==AV_CODEC_ID_TIMED_ID3) {
             
             char* data=(char*)pkt.buf->data;
             char *json="N/A";
@@ -517,6 +517,7 @@ bool convert(struct FileConversion* conversion)
             log_packet(conversion->ofmt_ctx, &pkt, "out");
             trackInfo->displayedFirstPacket=true;
         }
+
         if (pkt.stream_index==0 && pkt.pts>nextProgressReport) {
             printf("Progress %s (%s)\n",av_ts2str(pkt.pts),av_ts2timestr(pkt.pts,&out_stream->time_base));
             nextProgressReport=pkt.pts + progressReportInterval ;
@@ -555,8 +556,6 @@ int main(int argc, char **argv)
         return -1;
     }
     
-    av_register_all();
-    avcodec_register_all();
     avformat_network_init();
     
     
