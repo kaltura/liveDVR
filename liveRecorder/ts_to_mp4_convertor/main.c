@@ -261,8 +261,17 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
         conversion->ofmt_ctx->oformat->flags |= AVFMT_TS_NONSTRICT;
         
         if(in_stream->codec->codec_id == AV_CODEC_ID_AAC) {
-            ff_stream_add_bitstream_filter(out_stream, "aac_adtstoasc", NULL);
-            
+            int ret=ff_stream_add_bitstream_filter(out_stream, "aac_adtstoasc", NULL);
+            if (ret<0) {
+                exit(-1);
+            }
+        }
+        
+        if(in_stream->codec->codec_id == AV_CODEC_ID_H264) {
+            int ret=ff_stream_add_bitstream_filter(in_stream, "filter_units", "pass_types=1-5");
+            if (ret<0) {
+                exit(-1);
+            }
         }
         
         av_dict_set(&out_stream->metadata, "language", language, 0);
