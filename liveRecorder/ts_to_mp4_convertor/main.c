@@ -237,8 +237,11 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
             //it's going to be leaked!
             AVCodec *encoder = avcodec_find_encoder(AV_CODEC_ID_MOV_TEXT);
             AVCodecContext* codec = avcodec_alloc_context3(encoder);
-            in_codecpar->codec_tag=codec->codec_tag;
-            in_codecpar->codec_id=codec->codec_id;
+            ret=avcodec_parameters_from_context(in_codecpar,codec);
+            if (ret < 0) {
+                fprintf(stderr, "Failed to copy codec parameters\n");
+                return false;
+            }
         }
         
         AVStream *out_stream = avformat_new_stream(conversion->ofmt_ctx, NULL);
