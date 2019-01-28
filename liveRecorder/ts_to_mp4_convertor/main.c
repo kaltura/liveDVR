@@ -482,9 +482,6 @@ bool convert(struct FileConversion* conversion)
                 }
             }
         }
-        if (pkt.stream_index==2) {
-            printf("aa");
-        }
         if ( in_stream->codecpar->codec_type==AVMEDIA_TYPE_DATA &&
             in_stream->codecpar->codec_id==AV_CODEC_ID_TIMED_ID3) {
             
