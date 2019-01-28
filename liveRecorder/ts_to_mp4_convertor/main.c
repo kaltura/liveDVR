@@ -237,11 +237,13 @@ bool initConversion(struct FileConversion* conversion,char* in_filename ,char* o
             //it's going to be leaked!
             AVCodec *encoder = avcodec_find_encoder(AV_CODEC_ID_MOV_TEXT);
             AVCodecContext* codec = avcodec_alloc_context3(encoder);
-            ret=avcodec_parameters_from_context(in_codecpar,codec);
+            AVCodecParameters *codec_params = avcodec_parameters_alloc();
+            ret=avcodec_parameters_from_context(codec_params,codec);
             if (ret < 0) {
                 fprintf(stderr, "Failed to copy codec parameters\n");
                 return false;
             }
+            in_codecpar=codec_params;
         }
         
         AVStream *out_stream = avformat_new_stream(conversion->ofmt_ctx, NULL);
@@ -480,7 +482,9 @@ bool convert(struct FileConversion* conversion)
                 }
             }
         }
-        
+        if (pkt.stream_index==2) {
+            printf("aa");
+        }
         if ( in_stream->codecpar->codec_type==AVMEDIA_TYPE_DATA &&
             in_stream->codecpar->codec_id==AV_CODEC_ID_TIMED_ID3) {
             
