@@ -15,33 +15,34 @@ var logFullPath = path.resolve(config.get('logFileName'));
 logFullPath= logFullPath.replace(/~/g,hostname.homedir());
 mkdirp.sync(path.dirname(logFullPath));
 
-var appenders = [
-    {
+var appenders = {
+    file: {
         "type": "dateFile",
         "filename": logFullPath,
         "pattern": ".yyyy-MM-dd",
         "alwaysIncludePattern": false,
-        "timezoneOffset" : config.get('logTimeZoneOffset') // NYC timezone offset relative to UTC (5 * 60)
+        "timezoneOffset": config.get('logTimeZoneOffset') // NYC timezone offset relative to UTC (5 * 60)
     }
-];
+}
+
 
 if (config.get('logToConsole'))
 {
-    appenders.push({
+    appenders.out={
         "type": "console",
         "layout": {
             "type": "pattern",
             pattern: "%d{ABSOLUTE} %[%-5p%] %c %m"
         }
-    });
+    };
 }
 
 var log4jsConfiguration = {
-    "appenders": appenders,
-    "replaceConsole": false,
-    "levels": {
-        "[all]":config.get('logLevel')
+    appenders: appenders,
+    categories: {
+        default: { appenders: [  'out','file' ], level: config.get('logLevel') }
     }
+
 };
 
 log4js.configure(log4jsConfiguration);
