@@ -44,6 +44,9 @@ fi
 if [ -z "$ffmpeg_lib_path" ]; then
      ffmpeg_lib_path=/home/kaltura-ci/ffmpeg-3.0
 fi
+if [ -z "$ffmpeg4_lib_path" ]; then
+     ffmpeg_lib_path=/home/kaltura-ci/ffmpeg-4.1
+fi
 
 build_path=/home/kaltura-ci/workspace/kLiveController-build-binaries
 echo "product version=$version"
@@ -96,6 +99,18 @@ function build_ffmpeg
     fi
 }
 
+function build_ffmpeg4
+{
+    echo "Building ffmpeg4"
+    if [ "$BUILD_CONF" = "Release" ]; then
+        echo "./build_scripts/build_ffmpeg4.sh $ffmpeg4_build_path"
+        bash ./build_scripts/build_ffmpeg4.sh $ffmpeg4_build_path
+    else
+        echo "./build_scripts/build_ffmpeg4.sh $ffmpeg4_build_path"
+        bash ./build_scripts/build_ffmpeg4.sh $ffmpeg4_build_path
+    fi
+}
+
 function build_nginx
 {
     echo "Building packager"
@@ -117,8 +132,8 @@ function build_ts2mp4_convertor
 {
     echo "Building ts_to_mp4_convertor ffmpeg_path=$ffmpeg_lib_path"
     echo pwd=`pwd`
-    echo "bash ./build_scripts/build_ts2mp4_convertor.sh $product_root_path/liveRecorder $ffmpeg_lib_path"    
-    bash ./build_scripts/build_ts2mp4_convertor.sh $product_root_path/liveRecorder $ffmpeg_lib_path
+    echo "bash ./build_scripts/build_ts2mp4_convertor.sh $product_root_path/liveRecorder $ffmpeg4_lib_path"
+    bash ./build_scripts/build_ts2mp4_convertor.sh $product_root_path/liveRecorder $ffmpeg4_lib_path
     local __error=$?
     if [ "$__error" -eq "0" ] && [ "$version" != "0" ]; then
         echo "cp ./liveRecorder/bin/ts_to_mp4_convertor /home/kaltura-ci/bin/latest/linux/release"
@@ -139,6 +154,10 @@ case "$build_option" in
         build_ffmpeg)
         echo "building ffmpeg (${build_option})"
         build_ffmpeg
+        ;;
+        build_ffmpeg4)
+        echo "building ffmpeg4 (${build_option})"
+        build_ffmpeg4
         ;;
         build_nginx)
         echo "building nginx (${build_option})"
