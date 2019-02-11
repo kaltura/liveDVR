@@ -40,7 +40,7 @@ if (config.get('logToConsole'))
 var log4jsConfiguration = {
     appenders: appenders,
     categories: {
-        default: { appenders: [  'out','file' ], level: config.get('logLevel') }
+        default: { appenders: Object.keys(appenders) , level: config.get('logLevel') }
     }
 
 };
