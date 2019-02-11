@@ -17,6 +17,16 @@ Please refer to [liveRecorder deployment doc](liveRecorder/liveRecorder_deployme
 #### meida_server Deployment
 Please refer to [Media Server deployment doc](https://github.com/kaltura/media-server/blob/4.5.14/deployment.md)
 
+### Docker:
+Build:
+```
+./deployment/docker/build_images.sh live-controller
+```
+
+
+```
+docker-compose   -f ./deployment/docker/docker-compose.yml    --project-directory  ./deployment/docker/  up
+```
 ### Copyright & License
 
 All code in this project is released under the [AGPLv3 license](http://www.gnu.org/licenses/agpl-3.0.html) unless a different license for a particular library is specified in the applicable library path.
