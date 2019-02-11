@@ -48,7 +48,6 @@
 		0867309821EF5904007FE353 /* MediaToolbox.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MediaToolbox.framework; path = System/Library/Frameworks/MediaToolbox.framework; sourceTree = SDKROOT; };
 		0867309A21EF5927007FE353 /* CoreVideo.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreVideo.framework; path = System/Library/Frameworks/CoreVideo.framework; sourceTree = SDKROOT; };
 		0867309C21EF5932007FE353 /* CoreImage.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreImage.framework; path = System/Library/Frameworks/CoreImage.framework; sourceTree = SDKROOT; };
-		0867309E21EF5B0B007FE353 /* install_ffmpeg.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = install_ffmpeg.sh; sourceTree = "<group>"; };
 		086E7ACD1E044C7500206F21 /* ts_to_mp4_convertor */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = ts_to_mp4_convertor; sourceTree = BUILT_PRODUCTS_DIR; };
 		086EF1D81E0EE7820038086F /* libswscale.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswscale.a; path = ./ffmpeg/libswscale/libswscale.a; sourceTree = "<group>"; };
 		08D748542057B88000522910 /* tests.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tests.h; sourceTree = "<group>"; };
@@ -79,7 +78,6 @@
 			isa = PBXGroup;
 			children = (
 				08D748542057B88000522910 /* tests.h */,
-				0867309E21EF5B0B007FE353 /* install_ffmpeg.sh */,
 				08516DFA1FA10B7C0077B9F0 /* audio_fillter.c */,
 				08516DFB1FA10B7C0077B9F0 /* audio_filler.h */,
 				08516DF81FA10B5D0077B9F0 /* Makefile */,
