@@ -35,6 +35,11 @@ fi
 if [ -z "$ffmpeg_build_path" ]; then
 	ffmpeg_build_path=/home/kaltura-ci
 fi
+if [ -z "$ffmpeg4_build_path" ]; then
+	ffmpeg4_build_path=/home/kaltura-ci/ffmpeg-4.1
+fi
+
+
 if [ -z "$product_root_path" ]; then
 	product_root_path=/home/kaltura-ci/workspace/kLiveController-build-binaries
 fi
@@ -45,7 +50,7 @@ if [ -z "$ffmpeg_lib_path" ]; then
      ffmpeg_lib_path=/home/kaltura-ci/ffmpeg-3.0
 fi
 if [ -z "$ffmpeg4_lib_path" ]; then
-     ffmpeg_lib_path=/home/kaltura-ci/ffmpeg-4.1
+     ffmpeg4_lib_path=/home/kaltura-ci/ffmpeg-4.1
 fi
 
 build_path=/home/kaltura-ci/workspace/kLiveController-build-binaries
