@@ -1,7 +1,9 @@
 #docker build -t kaltura/livecontroller:1.26 .
 #docker run -d -v /myconfig/:/myconfig/ -v /var/log/liveController/:/var/log/liveController/ --network=host kaltura/livecontroller:1.26 ubuntudrm
 #docker exec -it
-FROM node:boron AS build
+
+ARG NODE_VERSION=11.9.0
+FROM node:$NODE_VERSION AS build
 
 #RUN apk add --update build-base curl nasm tar bzip2 zlib-dev yasm-dev
 
@@ -21,7 +23,7 @@ COPY ./ ./
 
 RUN rm -rf ./build
 
-FROM node:boron-slim
+FROM node:$NODE_VERSION-slim
 
 
 WORKDIR /opt/kaltura/liveController/

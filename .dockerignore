@@ -3,3 +3,9 @@ build
 bin
 tests
 .git
+build_scripts/ffmpeg
+build_scripts/n3.0
+liveRecorder/ts_to_mp4_convertor/obj
+liveRecorder/ts_to_mp4_convertor/ffmpeg
+streaming_client
+packager/build

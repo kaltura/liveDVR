@@ -50,7 +50,7 @@ namespace converter {
         const unsigned argc = 0;
         Local<Value> argv[argc] = {  };
         Local<Function> cons = Nan::New<Function>(constructor);
-        Local<Object> instance = cons->NewInstance(argc, argv);
+        Local<Object> instance = Nan::NewInstance(cons,argc, argv).ToLocalChecked();
         
         info.GetReturnValue().Set(instance);
     }
