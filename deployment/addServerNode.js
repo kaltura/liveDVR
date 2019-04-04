@@ -6,7 +6,7 @@ const ErrorUtils = require('../lib/utils/error-utils');
 const Hostname = require('../common/utils/hostname');
 
 // If hostname is transferred as a parameter take its value, otherwise get hostname of local machine.
-let hostname = (process.argv[2]) ? process.argv[2] : Hostname.getLocalMachineFullHostname();
+let hostname = (process.argv[2]) ? process.argv[2] : Hostname.getLocalMachineHostname();
 console.log("Adding server node [" + hostname + "]");
 return BackendClient.addServerNode(hostname)
     .then((apiResult) => {

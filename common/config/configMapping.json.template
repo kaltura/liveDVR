@@ -6,10 +6,13 @@
 		"backendClient" : {
 			"serviceUrl" :"@KALTURA_SERVICE_URL@",
 			"adminSecret" :"@KALTURA_PARTNER_ADMIN_SECRET@",
-			"partnerId" : @KALTURA_PARTNER_ID@
+			"partnerId" : "@KALTURA_PARTNER_ID@"
 		},
 		"mediaServer" : {
+		    "hostname": "@HOSTNAME@",
+		    "wowzaServer": "localhost",
 			"user" : "@WOWZA_ADMIN_USER@",
+			"originMode": true,
 			"password" : "@WOWZA_ADMIN_PASSWORD@"
 		},
 		"recording" : {

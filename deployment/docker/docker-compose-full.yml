@@ -1,0 +1,61 @@
+
+#We still need to add more configuration to .env and change the configMapping accordingly, then make sure it's in /myconfig/
+version: '3.1'
+services:
+  media-server:
+    env_file: ./.env
+    image: kaltura/media-server:${VERSION}
+    hostname: ${SERVER_NODE_HOST_NAME}
+    networks:
+      internal_net:
+        aliases:
+        - ${SERVER_NODE_HOST_NAME}
+    volumes:
+    - "${LOGS_DIR}/wowza/:/var/log/wowza/"
+    container_name: ms
+    ports:
+    - "1935:1935"
+  liveController:
+    env_file: .env
+    image: kaltura/live-controller:${VERSION}
+    networks: ['internal_net']
+    hostname: ${SERVER_NODE_HOST_NAME}
+    volumes:
+    - "${LOGS_DIR}/liveController/:/var/log/liveController/"
+    - "${CONTENT_DIR}:/web/content/kLive:"
+    container_name: lc
+    depends_on:
+    - media-server
+  liveRecorder:
+    env_file: .env
+    image: kaltura/live-recorder:${VERSION}
+    hostname: ${SERVER_NODE_HOST_NAME}
+    volumes:
+    - "${LOGS_DIR}/liveRecorder:/var/log/liveRecorder"
+    - "${CONTENT_DIR}:/web/content/kLive"
+    container_name: lr
+  livePackager:
+    env_file: .env
+    image: kaltura/live-packager:${VERSION}
+    networks: ['internal_net']
+    extra_hosts:
+    - "pa-udrm:127.0.0.1"
+    ports:
+    - "8080:8080"
+    volumes:
+    - "${LOGS_DIR}/livePackager/:/usr/local/nginx/logs/"
+    - "${CONTENT_DIR}:/web/content/kLive"
+    container_name: lp
+    depends_on:
+    - media-server
+    - liveController
+
+  liveJobs:
+    env_file: .env
+    image: kaltura/live-jobs:${VERSION}
+    networks: ['internal_net']
+    volumes:
+    - "${CONTENT_DIR}:/web/content/kLive"
+    container_name: lj
+
+networks: {internal_net: {}}

@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: my-env
+data:
+  SERVICE_URL: "http://www.kaltura.com"
+  PARTNER_ID: ""
+  PARTNER_ADMIN_SECRET: ""
+  WSE_LIC: ""
+  PACKAGER_SECURE_TOKEN: ""
+  PACKAGER_PORT: "8080"

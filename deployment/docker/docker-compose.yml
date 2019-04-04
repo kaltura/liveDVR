@@ -1,0 +1,11 @@
+#We still need to add more configuration to .env and change the configMapping accordingly, then make sure it's in /myconfig/
+version: '3.1'
+services:
+  liveController:
+    env_file: .env
+    image: kaltura/live-controller:${VERSION}
+    hostname: ${SERVER_NODE_HOST_NAME}
+    volumes:
+    - "${LOGS_DIR}/liveController/:/var/log/liveController/"
+    - "${CONTENT_DIR}:/web/content/kLive/"
+    container_name: liveController
