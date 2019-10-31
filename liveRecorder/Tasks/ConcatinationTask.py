@@ -7,6 +7,9 @@ import subprocess
 import urllib2
 
 import m3u8
+
+Flavor = collections.namedtuple('Flavor', 'url language bandwidth')
+
 from Iso639Wrapper import Iso639Wrapper
 
 from Config.config import get_config
@@ -17,7 +20,6 @@ from KalturaClient.Plugins.Core import  KalturaEntryReplacementStatus,KalturaEnt
 
 # todo add timeout, and use m3u8 insted of regex
 
-Flavor = collections.namedtuple('Flavor', 'url language')
 
 
 class ConcatenationTask(TaskBase):
@@ -36,6 +38,12 @@ class ConcatenationTask(TaskBase):
         self.nginx_url = "http://" + self.token_url + "t/{0}"
         self.flavor_pattern = 'index-s(?P<flavor>\d+)'
         self.iso639_wrapper = Iso639Wrapper(logger_info)
+        if self.entry_config.get('transcodedConversionProfileId', None):
+            self.only_source = True
+            self.should_convert_to_mp4 = False
+        else:
+            self.only_source = False
+            self.should_convert_to_mp4 = True
 
     def get_live_type(self):
         if self.data and str(self.data.get("taskType",None)) == KalturaEntryServerNodeType.LIVE_CLIPPING_TASK:
@@ -61,6 +69,7 @@ class ConcatenationTask(TaskBase):
         for element in m3u8_obj.playlists:
             flavors_list.append(Flavor(
                 url=element.absolute_uri,
+                bandwidth=element.stream_info.bandwidth,
                 language='und'
             ))
 
@@ -71,6 +80,7 @@ class ConcatenationTask(TaskBase):
                 language = self.iso639_wrapper.convert_language_to_iso639_3(unicode(language))
             flavors_list.append(Flavor(
                 url=element.absolute_uri,
+                bandwidth=element.stream_info.bandwidth,
                 language=language
             ))
         return flavors_list
@@ -133,6 +143,7 @@ class ConcatenationTask(TaskBase):
         self.url_base_entry = self.nginx_url.format(token)
         self.url_master = os.path.join(self.url_base_entry, 'master.m3u8')
         flavors_list = self.extract_flavor_dict()
+        flavors_list.sort(key=lambda flavor: flavor.bandwidth, reverse=True)
 
         for obj in flavors_list:
             url_postfix = obj.url.rsplit('/', 1)[1]
@@ -151,7 +162,11 @@ class ConcatenationTask(TaskBase):
             chunks = m3u8.loads(playlist).files
             self.download_chunks_and_concat(chunks, output_full_path)
             self.logger.info("Successfully concat %d files into %s", len(chunks), output_full_path)
-        self.convert_ts_to_mp4(command)
+            if self.only_source:
+                break
+
+        if self.should_convert_to_mp4:
+            self.convert_ts_to_mp4(command)
 
     def convert_ts_to_mp4(self, command):
 

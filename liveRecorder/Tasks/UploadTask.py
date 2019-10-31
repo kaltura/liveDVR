@@ -18,11 +18,19 @@ class UploadTask(TaskBase):
 
     upload_token_buffer_size = get_config('upload_token_buffer_size_mb', 'int') * 1000000  # buffer is in MB
 
+
     def __init__(self, param, logger_info):
         TaskBase.__init__(self, param, logger_info)
-        mp4_filename_pattern = param['directory'] + '_f*_out.mp4'
+
+        file_extention = "mp4"
+        if self.entry_config.get('transcodedConversionProfileId', None):
+            file_extention = "ts"
+
+        mp4_filename_pattern = param['directory'] + '_f*_out.' + file_extention
+        self.mp4_filename_pattern = "[0,1]_.+_[0,1]_.+_\d+(.\d+)?_f(?P<flavor_id>\d+)_out[.]"+file_extention
+
         self.mp4_files_list = glob.glob1(self.recording_path, mp4_filename_pattern)
-        self.mp4_filename_pattern = "[0,1]_.+_[0,1]_.+_\d+(.\d+)?_f(?P<flavor_id>\d+)_out[.]mp4"
+        self.recorded_obj = self.backend_client.get_recorded_entry(self.live_entry.partnerId, self.recorded_id)
 
 
     def get_chunks_to_upload(self, file_size):
@@ -39,7 +47,8 @@ class UploadTask(TaskBase):
         with io.open(file_name, 'rb') as infile:
 
             upload_session = KalturaUploadSession(file_name, file_size, chunks_to_upload, self.entry_id,
-                                                  self.recorded_id, self.backend_client, self.logger, infile)
+                                                  self.live_entry.partnerId, self.recorded_id, self.backend_client,
+                                                  self.logger, infile)
             if chunks_to_upload > 2:
                 chunk = upload_session.get_next_chunk()
                 if chunk is not None:
@@ -79,17 +88,20 @@ class UploadTask(TaskBase):
 
     def check_replacement_status(self, partner_id):
         self.logger.debug("About to check replacement status for [%s]", self.recorded_id)
-        recorded_obj = self.backend_client.get_recorded_entry(partner_id, self.recorded_id)
-        self.logger.debug("Got replacement Status: %s", recorded_obj.replacementStatus.value)
-        if recorded_obj.replacementStatus.value != KalturaEntryReplacementStatus.NONE:
+        self.logger.debug("Got replacement Status: %s", self.recorded_obj.replacementStatus.value)
+        if self.recorded_obj.replacementStatus.value != KalturaEntryReplacementStatus.NONE:
             self.logger.info("entry %s has replacementStatus %s, calling cancel_replace", self.recorded_id,
-                             recorded_obj.replacementStatus)
+                             self.recorded_obj.replacementStatus)
             self.backend_client.cancel_replace(partner_id, self.recorded_id)
 
     def append_recording_handler(self, file_full_path, flavor_id, is_first_flavor):
-        partner_id = self.backend_client.get_live_entry(self.entry_id).partnerId
+        partner_id = self.live_entry.partnerId
         if is_first_flavor:
             self.check_replacement_status(partner_id)
+
+        if self.entry_config.get('transcodedConversionProfileId', None):
+            flavor_id = None
+
         self.backend_client.set_recorded_content_local(partner_id, self.entry_id, file_full_path,
                                                        str(float(self.duration)/1000), self.recorded_id, flavor_id)
 

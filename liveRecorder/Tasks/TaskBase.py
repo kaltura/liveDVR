@@ -6,7 +6,7 @@ from Config.config import get_config
 from RecordingException import UnequallStampException
 from BackendClient import *
 from KalturaClient.Plugins.Core import KalturaEntryServerNodeStatus
-
+import json
 
 
 class TaskBase(object):
@@ -44,7 +44,6 @@ class TaskBase(object):
             self.logger.debug("Updating taskId: [{}] with new status: [{}]".format(id, new_status))
             self.backend_client.update_task_entryServerNode_status(id, new_status)
 
-
     def __init__(self, param, logger_info):
         self.duration = param['duration']
         self.recorded_id = param['recorded_id']
@@ -60,7 +59,20 @@ class TaskBase(object):
         self.data_full_path = os.path.join(self.recording_path, 'data.json')
         self.data = self.get_data()
         self.backend_client = BackendClient(self.entry_id + '-' + self.recorded_id)
+        self.live_entry = self.backend_client.get_live_entry(self.entry_id)
+        self.entry_config = self.get_entry_config()
 
+    def get_entry_config(self):
+        try:
+            partners_config_str = get_config('partners_config')
+            if partners_config_str:
+                partners_config = json.loads(get_config('partners_config'))
+                if partners_config:
+                    return partners_config.get(self.live_entry.partnerId, {})
+        except Exception as e:
+            self.logger.warn("Exception parsing partner_config {}".format(str(e)))
+
+        return {}
 
     __metaclass__ = abc.ABCMeta
 
