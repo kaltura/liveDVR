@@ -65,11 +65,12 @@ class TaskBase(object):
             "upload_only_source": False,
             "should_convert_to_mp4": False,
         }
+
         if self.live_entry.conversionProfileId != self.recorded_entry.conversionProfileId:
             self.entry_config["upload_only_source"] = True
             self.entry_config["should_convert_to_mp4"] = True
 
-        self.logger.info("Entry config for {}: {}".format(self.entry_id, self.entry_config))
+        self.logger.info("Entry config for {}: {} {} {} {}".format(self.entry_id, self.entry_config,self.live_entry.conversionProfileId, self.recorded_entry.conversionProfileId,self.recorded_id))
 
 
     __metaclass__ = abc.ABCMeta

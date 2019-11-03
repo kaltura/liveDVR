@@ -26,10 +26,10 @@ class UploadTask(TaskBase):
         if not self.entry_config.get('should_convert_to_mp4', True):
             file_extention = "ts"
 
-        mp4_filename_pattern = param['directory'] + '_f*_out.' + file_extention
-        # self.mp4_filename_pattern = "[0,1]_.+_[0,1]_.+_\d+(.\d+)?_f(?P<flavor_id>\d+)_out[.]"+file_extention
+        glob_pattern = param['directory'] + '_f*_out.' + file_extention
+        self.mp4_filename_pattern = "[0,1]_.+_[0,1]_.+_\d+(.\d+)?_f(?P<flavor_id>\d+)_out[.]"+file_extention
 
-        self.mp4_files_list = glob.glob1(self.recording_path, mp4_filename_pattern)
+        self.mp4_files_list = glob.glob1(self.recording_path, glob_pattern)
 
 
     def get_chunks_to_upload(self, file_size):
@@ -87,10 +87,10 @@ class UploadTask(TaskBase):
 
     def check_replacement_status(self, partner_id):
         self.logger.debug("About to check replacement status for [%s]", self.recorded_id)
-        self.logger.debug("Got replacement Status: %s", self.recorded_obj.replacementStatus.value)
-        if self.recorded_obj.replacementStatus.value != KalturaEntryReplacementStatus.NONE:
+        self.logger.debug("Got replacement Status: %s", self.recorded_entry.replacementStatus.value)
+        if self.recorded_entry.replacementStatus.value != KalturaEntryReplacementStatus.NONE:
             self.logger.info("entry %s has replacementStatus %s, calling cancel_replace", self.recorded_id,
-                             self.recorded_obj.replacementStatus)
+                             self.recorded_entry.replacementStatus)
             self.backend_client.cancel_replace(partner_id, self.recorded_id)
 
     def append_recording_handler(self, file_full_path, flavor_id, is_first_flavor):
