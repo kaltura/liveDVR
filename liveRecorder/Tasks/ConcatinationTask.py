@@ -38,7 +38,7 @@ class ConcatenationTask(TaskBase):
         self.nginx_url = "http://" + self.token_url + "t/{0}"
         self.flavor_pattern = 'index-s(?P<flavor>\d+)'
         self.iso639_wrapper = Iso639Wrapper(logger_info)
-        if self.entry_config.get('transcodedConversionProfileId', None):
+        if self.entry_config.get('transcodedConversionProfileId', None) >= 0:
             self.only_source = True
             self.should_convert_to_mp4 = False
         else:
@@ -156,6 +156,10 @@ class ConcatenationTask(TaskBase):
             command = command + ' ' + output_full_path + ' ' + mp4_full_path + ' ' + obj.language
             if os.path.isfile(output_full_path):
                 self.logger.warn("file [%s] already exist", output_full_path)
+
+                if self.only_source:
+                    break
+
                 continue
             playlist = self.download_file(obj.url)
             self.logger.debug("load recording manifest : \n %s ", playlist)

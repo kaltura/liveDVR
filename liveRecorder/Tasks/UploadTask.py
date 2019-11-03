@@ -23,11 +23,13 @@ class UploadTask(TaskBase):
         TaskBase.__init__(self, param, logger_info)
 
         file_extention = "mp4"
-        if self.entry_config.get('transcodedConversionProfileId', None):
+        if self.entry_config.get('transcodedConversionProfileId', None) >= 0:
             file_extention = "ts"
+            self.backend_client.set_recorded_entry_conversion_profile(self.live_entry.partnerId, self.recorded_id, self.entry_config.get('transcodedConversionProfileId') )
+
 
         mp4_filename_pattern = param['directory'] + '_f*_out.' + file_extention
-        self.mp4_filename_pattern = "[0,1]_.+_[0,1]_.+_\d+(.\d+)?_f(?P<flavor_id>\d+)_out[.]"+file_extention
+        # self.mp4_filename_pattern = "[0,1]_.+_[0,1]_.+_\d+(.\d+)?_f(?P<flavor_id>\d+)_out[.]"+file_extention
 
         self.mp4_files_list = glob.glob1(self.recording_path, mp4_filename_pattern)
         self.recorded_obj = self.backend_client.get_recorded_entry(self.live_entry.partnerId, self.recorded_id)
@@ -99,7 +101,7 @@ class UploadTask(TaskBase):
         if is_first_flavor:
             self.check_replacement_status(partner_id)
 
-        if self.entry_config.get('transcodedConversionProfileId', None):
+        if self.entry_config.get('transcodedConversionProfileId', None) >= 0:
             flavor_id = None
 
         self.backend_client.set_recorded_content_local(partner_id, self.entry_id, file_full_path,
@@ -108,6 +110,10 @@ class UploadTask(TaskBase):
     def run(self):
         self.update_status(KalturaEntryServerNodeStatus.TASK_UPLOADING)
         try:
+
+            if self.entry_config.get('transcodedConversionProfileId', None) >= 0:
+                self.backend_client.set_recorded_entry_conversion_profile(self.live_entry.partnerId, self.recorded_id, self.entry_config.get('transcodedConversionProfileId') )
+
             mode = get_config('mode')
             is_first_flavor = True
             count_uploaded_mp4 = 0

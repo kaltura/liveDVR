@@ -61,6 +61,7 @@ class TaskBase(object):
         self.backend_client = BackendClient(self.entry_id + '-' + self.recorded_id)
         self.live_entry = self.backend_client.get_live_entry(self.entry_id)
         self.entry_config = self.get_entry_config()
+        self.logger.info("Entry config for {}: {}".format(self.entry_id, self.entry_config))
 
     def get_entry_config(self):
         try:
