@@ -38,12 +38,6 @@ class ConcatenationTask(TaskBase):
         self.nginx_url = "http://" + self.token_url + "t/{0}"
         self.flavor_pattern = 'index-s(?P<flavor>\d+)'
         self.iso639_wrapper = Iso639Wrapper(logger_info)
-        if self.entry_config.get('transcodedConversionProfileId', None) >= 0:
-            self.only_source = True
-            self.should_convert_to_mp4 = False
-        else:
-            self.only_source = False
-            self.should_convert_to_mp4 = True
 
     def get_live_type(self):
         if self.data and str(self.data.get("taskType",None)) == KalturaEntryServerNodeType.LIVE_CLIPPING_TASK:
@@ -157,7 +151,7 @@ class ConcatenationTask(TaskBase):
             if os.path.isfile(output_full_path):
                 self.logger.warn("file [%s] already exist", output_full_path)
 
-                if self.only_source:
+                if self.entry_config["upload_only_source"]:
                     break
 
                 continue
@@ -166,10 +160,10 @@ class ConcatenationTask(TaskBase):
             chunks = m3u8.loads(playlist).files
             self.download_chunks_and_concat(chunks, output_full_path)
             self.logger.info("Successfully concat %d files into %s", len(chunks), output_full_path)
-            if self.only_source:
+            if self.entry_config["upload_only_source"]:
                 break
 
-        if self.should_convert_to_mp4:
+        if self.entry_config["should_convert_to_mp4"]:
             self.convert_ts_to_mp4(command)
 
     def convert_ts_to_mp4(self, command):

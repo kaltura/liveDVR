@@ -60,20 +60,17 @@ class TaskBase(object):
         self.data = self.get_data()
         self.backend_client = BackendClient(self.entry_id + '-' + self.recorded_id)
         self.live_entry = self.backend_client.get_live_entry(self.entry_id)
-        self.entry_config = self.get_entry_config()
+        self.recorded_entry = self.backend_client.get_recorded_entry(self.live_entry.partnerId, self.recorded_id)
+        self.entry_config = {
+            "upload_only_source": False,
+            "should_convert_to_mp4": False,
+        }
+        if self.live_entry.conversionProfileId != self.recorded_entry.conversionProfileId:
+            self.entry_config["upload_only_source"] = True
+            self.entry_config["should_convert_to_mp4"] = True
+
         self.logger.info("Entry config for {}: {}".format(self.entry_id, self.entry_config))
 
-    def get_entry_config(self):
-        try:
-            partners_config_str = get_config('partners_config')
-            if partners_config_str:
-                partners_config = json.loads(get_config('partners_config'))
-                if partners_config:
-                    return partners_config.get(self.live_entry.partnerId, {})
-        except Exception as e:
-            self.logger.warn("Exception parsing partner_config {}".format(str(e)))
-
-        return {}
 
     __metaclass__ = abc.ABCMeta
 

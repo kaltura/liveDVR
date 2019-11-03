@@ -75,11 +75,6 @@ class BackendClient:
     def get_recorded_entry(self, partner_id, entry_id):
         return self.handle_request(partner_id, 'media', 'get', entry_id)
 
-    def set_recorded_entry_conversion_profile(self, partner_id, entry_id, conversion_profile_id):
-        media_entry = KalturaMediaEntry()
-        media_entry.conversionQuality = conversion_profile_id
-        return self.handle_request(partner_id, 'media', 'update', entry_id, media_entry)
-
     def get_live_entry(self, entry_id):
         self.get_kaltura_session()  # generate KS in case that not existed or expired
         result = self.client.liveStream.get(entry_id)
