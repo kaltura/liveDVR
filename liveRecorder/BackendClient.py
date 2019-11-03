@@ -1,6 +1,6 @@
 from KalturaClient import *
 from KalturaClient.Plugins.Core import KalturaSessionType, KalturaUploadToken, KalturaUploadedFileTokenResource, \
-    KalturaUploadTokenFilter, KalturaServerFileResource, KalturaUploadTokenStatus, KalturaMediaEntry
+    KalturaUploadTokenFilter, KalturaServerFileResource, KalturaUploadTokenStatus
 from Config.config import get_config
 from Logger.LoggerDecorator import logger_decorator
 from threading import Lock

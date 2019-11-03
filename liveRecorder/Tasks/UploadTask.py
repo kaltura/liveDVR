@@ -27,9 +27,9 @@ class UploadTask(TaskBase):
             file_extention = "ts"
 
         glob_pattern = param['directory'] + '_f*_out.' + file_extention
-        self.mp4_filename_pattern = "[0,1]_.+_[0,1]_.+_\d+(.\d+)?_f(?P<flavor_id>\d+)_out[.]"+file_extention
+        self.filename_pattern = "[0,1]_.+_[0,1]_.+_\d+(.\d+)?_f(?P<flavor_id>\d+)_out[.]" + file_extention
 
-        self.mp4_files_list = glob.glob1(self.recording_path, glob_pattern)
+        self.flavors_files_list = glob.glob1(self.recording_path, glob_pattern)
 
 
     def get_chunks_to_upload(self, file_size):
@@ -98,7 +98,7 @@ class UploadTask(TaskBase):
         if is_first_flavor:
             self.check_replacement_status(partner_id)
 
-        if self.entry_config.get('transcodedConversionProfileId', None) >= 0:
+        if not self.entry_config.get('should_convert_to_mp4', True):
             flavor_id = None
 
         self.backend_client.set_recorded_content_local(partner_id, self.entry_id, file_full_path,
@@ -111,15 +111,15 @@ class UploadTask(TaskBase):
             is_first_flavor = True
             count_uploaded_mp4 = 0
             code = ''
-            for mp4 in self.mp4_files_list:
+            for flavor_file_name in self.flavors_files_list:
                 try:
-                    result = re.search(self.mp4_filename_pattern, mp4)
+                    result = re.search(self.filename_pattern, flavor_file_name)
                     if not result or not result.group('flavor_id'):
-                        error = "Error running upload task, failed to parse flavor id from filename: [{0}]".format(mp4)
+                        error = "Error running upload task, failed to parse flavor id from filename: [{0}]".format(flavor_file_name)
                         self.logger.error(error)
                         raise ValueError(error)
                     flavor_id = result.group('flavor_id')
-                    file_full_path = os.path.join(self.recording_path, mp4)
+                    file_full_path = os.path.join(self.recording_path, flavor_file_name)
                     if mode == 'remote':
                         self.upload_file(file_full_path, flavor_id, is_first_flavor)
                     if mode == 'local':
@@ -129,12 +129,12 @@ class UploadTask(TaskBase):
                 except KalturaException as e:
                     code = e.code
                     if e.code == 'FLAVOR_PARAMS_ID_NOT_FOUND':
-                        self.logger.warn('{}, failed to upload {}, flavor id {}'.format(e.message, mp4, flavor_id))
+                        self.logger.warn('{}, failed to upload {}, flavor id {}'.format(e.message, flavor_file_name, flavor_id))
                     else:
                         raise e
             if count_uploaded_mp4 == 0:
-                if len(self.mp4_files_list) > 0:
-                    mp4_files = str(self.mp4_files_list)
+                if len(self.flavors_files_list) > 0:
+                    mp4_files = str(self.flavors_files_list)
                     err = Exception('failed to upload any of {} check log errors'.format(mp4_files))
                     err.code = code
                     raise err
