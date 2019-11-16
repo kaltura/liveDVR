@@ -63,12 +63,12 @@ class TaskBase(object):
         self.recorded_entry = self.backend_client.get_recorded_entry(self.live_entry.partnerId, self.recorded_id)
         self.entry_config = {
             "upload_only_source": False,
-            "should_convert_to_mp4": False,
+            "should_convert_to_mp4": True,
         }
 
         if self.live_entry.conversionProfileId != self.recorded_entry.conversionProfileId:
             self.entry_config["upload_only_source"] = True
-            self.entry_config["should_convert_to_mp4"] = True
+            self.entry_config["should_convert_to_mp4"] = False
 
         self.logger.info("Entry config for {}: {} {} {} {}".format(self.entry_id, self.entry_config,self.live_entry.conversionProfileId, self.recorded_entry.conversionProfileId,self.recorded_id))
 
