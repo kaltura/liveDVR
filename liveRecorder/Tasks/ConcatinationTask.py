@@ -8,7 +8,7 @@ import urllib2
 
 import m3u8
 
-Flavor = collections.namedtuple('Flavor', 'url language bandwidth')
+Flavor = collections.namedtuple('Flavor', 'url language bandwidth audio_language_track')
 
 from Iso639Wrapper import Iso639Wrapper
 
@@ -64,7 +64,8 @@ class ConcatenationTask(TaskBase):
             flavors_list.append(Flavor(
                 url=element.absolute_uri,
                 bandwidth=element.stream_info.bandwidth,
-                language='und'
+                language='und',
+                audio_language_track=False
             ))
 
         for element in m3u8_obj.media:
@@ -74,8 +75,9 @@ class ConcatenationTask(TaskBase):
                 language = self.iso639_wrapper.convert_language_to_iso639_3(unicode(language))
             flavors_list.append(Flavor(
                 url=element.absolute_uri,
-                bandwidth=element.stream_info.bandwidth,
-                language=language
+                bandwidth=10000000, #this is so this track will be first
+                language=language,
+                audio_language_track=True
             ))
         return flavors_list
 
@@ -140,6 +142,9 @@ class ConcatenationTask(TaskBase):
         flavors_list.sort(key=lambda flavor: flavor.bandwidth, reverse=True)
 
         for obj in flavors_list:
+            if obj.audio_language_track and self.entry_config["upload_only_source"]:
+                continue
+
             url_postfix = obj.url.rsplit('/', 1)[1]
             flavor_id = self.get_flavor_id(url_postfix)
             if flavor_id is None:
