@@ -2,13 +2,13 @@ from UploadChunkJob import UploadChunkJob
 from Config.config import get_config
 
 class KalturaUploadSession:
-    def __init__(self, file_name, file_size, chunks_to_upload, entry_id, recorded_id, backend_client, logger, infile):
+    def __init__(self, file_name, file_size, chunks_to_upload, entry_id, parnter_id, recorded_id, backend_client, logger, infile):
         self.infile = infile
         self.file_name = file_name
         self.logger = logger
         self.file_size = file_size
         self.chunks_to_upload = chunks_to_upload
-        self.partner_id = backend_client.get_live_entry(entry_id).partnerId
+        self.partner_id = parnter_id
         self.recorded_id = recorded_id
         self.entry_id = entry_id
         self.backend_client = backend_client
