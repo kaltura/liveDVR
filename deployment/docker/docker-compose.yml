@@ -7,12 +7,12 @@ services:
     hostname: ${SERVER_NODE_HOST_NAME}
     volumes:
     - "${LOGS_DIR}/liveController/:/var/log/liveController/"
-    - "content:/web/content/kLive/"
+    - "content:/web5/content/kLive/"
     container_name: liveController
 volumes:
   content:
     driver: local
     driver_opts:
       type: "nfs"
-      o: "addr=pa-isilon2,nolock,soft,rw"
-      device: ":/ifs/web2/content/kLive"
+      o: "addr=pa-isilon2-front-api,nolock,soft,rw"
+      device: ":/ifs/web5/content/kLive"

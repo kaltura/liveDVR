@@ -4,9 +4,9 @@ source initScript.sh
 
 echo applying new configMapping
 LOG_FILE_NAME=/var/log/liveController/kLiveController.log
-LIVE_CONTENT_PATH=/web/content/kLive/live
-LIVE_ARCHIVE_CONTENT_PATH=/web/content/kLive/archive
-RECORDING_FOLDER=/web/content/kLive/liveRecorder
+LIVE_CONTENT_PATH="${BASE_CONTENT_FOLDER}/live"
+LIVE_ARCHIVE_CONTENT_PATH="${BASE_CONTENT_FOLDER}/archive"
+RECORDING_FOLDER="${BASE_CONTENT_FOLDER}/liveRecorder"
 
 
 jsonFile=$1;
