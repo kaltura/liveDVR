@@ -18,11 +18,18 @@ class UploadTask(TaskBase):
 
     upload_token_buffer_size = get_config('upload_token_buffer_size_mb', 'int') * 1000000  # buffer is in MB
 
+
     def __init__(self, param, logger_info):
         TaskBase.__init__(self, param, logger_info)
-        mp4_filename_pattern = param['directory'] + '_f*_out.mp4'
-        self.mp4_files_list = glob.glob1(self.recording_path, mp4_filename_pattern)
-        self.mp4_filename_pattern = "[0,1]_.+_[0,1]_.+_\d+(.\d+)?_f(?P<flavor_id>\d+)_out[.]mp4"
+
+        file_extention = "mp4"
+        if not self.entry_config.get('should_convert_to_mp4', True):
+            file_extention = "ts"
+
+        glob_pattern = param['directory'] + '_f*_out.' + file_extention
+        self.filename_pattern = "[0,1]_.+_[0,1]_.+_\d+(.\d+)?_f(?P<flavor_id>\d+)_out[.]" + file_extention
+
+        self.flavors_files_list = glob.glob1(self.recording_path, glob_pattern)
 
 
     def get_chunks_to_upload(self, file_size):
@@ -39,7 +46,8 @@ class UploadTask(TaskBase):
         with io.open(file_name, 'rb') as infile:
 
             upload_session = KalturaUploadSession(file_name, file_size, chunks_to_upload, self.entry_id,
-                                                  self.recorded_id, self.backend_client, self.logger, infile)
+                                                  self.live_entry.partnerId, self.recorded_id, self.backend_client,
+                                                  self.logger, infile)
             if chunks_to_upload > 2:
                 chunk = upload_session.get_next_chunk()
                 if chunk is not None:
@@ -79,17 +87,20 @@ class UploadTask(TaskBase):
 
     def check_replacement_status(self, partner_id):
         self.logger.debug("About to check replacement status for [%s]", self.recorded_id)
-        recorded_obj = self.backend_client.get_recorded_entry(partner_id, self.recorded_id)
-        self.logger.debug("Got replacement Status: %s", recorded_obj.replacementStatus.value)
-        if recorded_obj.replacementStatus.value != KalturaEntryReplacementStatus.NONE:
+        self.logger.debug("Got replacement Status: %s", self.recorded_entry.replacementStatus.value)
+        if self.recorded_entry.replacementStatus.value != KalturaEntryReplacementStatus.NONE:
             self.logger.info("entry %s has replacementStatus %s, calling cancel_replace", self.recorded_id,
-                             recorded_obj.replacementStatus)
+                             self.recorded_entry.replacementStatus)
             self.backend_client.cancel_replace(partner_id, self.recorded_id)
 
     def append_recording_handler(self, file_full_path, flavor_id, is_first_flavor):
-        partner_id = self.backend_client.get_live_entry(self.entry_id).partnerId
+        partner_id = self.live_entry.partnerId
         if is_first_flavor:
             self.check_replacement_status(partner_id)
+
+        if not self.entry_config.get('should_convert_to_mp4', True):
+            flavor_id = None
+
         self.backend_client.set_recorded_content_local(partner_id, self.entry_id, file_full_path,
                                                        str(float(self.duration)/1000), self.recorded_id, flavor_id)
 
@@ -100,15 +111,15 @@ class UploadTask(TaskBase):
             is_first_flavor = True
             count_uploaded_mp4 = 0
             code = ''
-            for mp4 in self.mp4_files_list:
+            for flavor_file_name in self.flavors_files_list:
                 try:
-                    result = re.search(self.mp4_filename_pattern, mp4)
+                    result = re.search(self.filename_pattern, flavor_file_name)
                     if not result or not result.group('flavor_id'):
-                        error = "Error running upload task, failed to parse flavor id from filename: [{0}]".format(mp4)
+                        error = "Error running upload task, failed to parse flavor id from filename: [{0}]".format(flavor_file_name)
                         self.logger.error(error)
                         raise ValueError(error)
                     flavor_id = result.group('flavor_id')
-                    file_full_path = os.path.join(self.recording_path, mp4)
+                    file_full_path = os.path.join(self.recording_path, flavor_file_name)
                     if mode == 'remote':
                         self.upload_file(file_full_path, flavor_id, is_first_flavor)
                     if mode == 'local':
@@ -118,12 +129,12 @@ class UploadTask(TaskBase):
                 except KalturaException as e:
                     code = e.code
                     if e.code == 'FLAVOR_PARAMS_ID_NOT_FOUND':
-                        self.logger.warn('{}, failed to upload {}, flavor id {}'.format(e.message, mp4, flavor_id))
+                        self.logger.warn('{}, failed to upload {}, flavor id {}'.format(e.message, flavor_file_name, flavor_id))
                     else:
                         raise e
             if count_uploaded_mp4 == 0:
-                if len(self.mp4_files_list) > 0:
-                    mp4_files = str(self.mp4_files_list)
+                if len(self.flavors_files_list) > 0:
+                    mp4_files = str(self.flavors_files_list)
                     err = Exception('failed to upload any of {} check log errors'.format(mp4_files))
                     err.code = code
                     raise err

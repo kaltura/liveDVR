@@ -6,7 +6,7 @@ from Config.config import get_config
 from RecordingException import UnequallStampException
 from BackendClient import *
 from KalturaClient.Plugins.Core import KalturaEntryServerNodeStatus
-
+import json
 
 
 class TaskBase(object):
@@ -44,7 +44,6 @@ class TaskBase(object):
             self.logger.debug("Updating taskId: [{}] with new status: [{}]".format(id, new_status))
             self.backend_client.update_task_entryServerNode_status(id, new_status)
 
-
     def __init__(self, param, logger_info):
         self.duration = param['duration']
         self.recorded_id = param['recorded_id']
@@ -60,6 +59,18 @@ class TaskBase(object):
         self.data_full_path = os.path.join(self.recording_path, 'data.json')
         self.data = self.get_data()
         self.backend_client = BackendClient(self.entry_id + '-' + self.recorded_id)
+        self.live_entry = self.backend_client.get_live_entry(self.entry_id)
+        self.recorded_entry = self.backend_client.get_recorded_entry(self.live_entry.partnerId, self.recorded_id)
+        self.entry_config = {
+            "upload_only_source": False,
+            "should_convert_to_mp4": True,
+        }
+
+        if self.live_entry.conversionProfileId != self.recorded_entry.conversionProfileId:
+            self.entry_config["upload_only_source"] = True
+            self.entry_config["should_convert_to_mp4"] = False
+
+        self.logger.info("Entry config for {}: {} {} {} {}".format(self.entry_id, self.entry_config,self.live_entry.conversionProfileId, self.recorded_entry.conversionProfileId,self.recorded_id))
 
 
     __metaclass__ = abc.ABCMeta

@@ -7,6 +7,9 @@ import subprocess
 import urllib2
 
 import m3u8
+
+Flavor = collections.namedtuple('Flavor', 'url language bandwidth audio_language_track')
+
 from Iso639Wrapper import Iso639Wrapper
 
 from Config.config import get_config
@@ -17,7 +20,6 @@ from KalturaClient.Plugins.Core import  KalturaEntryReplacementStatus,KalturaEnt
 
 # todo add timeout, and use m3u8 insted of regex
 
-Flavor = collections.namedtuple('Flavor', 'url language')
 
 
 class ConcatenationTask(TaskBase):
@@ -61,7 +63,9 @@ class ConcatenationTask(TaskBase):
         for element in m3u8_obj.playlists:
             flavors_list.append(Flavor(
                 url=element.absolute_uri,
-                language='und'
+                bandwidth=element.stream_info.bandwidth,
+                language='und',
+                audio_language_track=False
             ))
 
         for element in m3u8_obj.media:
@@ -71,7 +75,9 @@ class ConcatenationTask(TaskBase):
                 language = self.iso639_wrapper.convert_language_to_iso639_3(unicode(language))
             flavors_list.append(Flavor(
                 url=element.absolute_uri,
-                language=language
+                bandwidth=10000000, #this is so this track will be first
+                language=language,
+                audio_language_track=True
             ))
         return flavors_list
 
@@ -133,8 +139,12 @@ class ConcatenationTask(TaskBase):
         self.url_base_entry = self.nginx_url.format(token)
         self.url_master = os.path.join(self.url_base_entry, 'master.m3u8')
         flavors_list = self.extract_flavor_dict()
+        flavors_list.sort(key=lambda flavor: flavor.bandwidth, reverse=True)
 
         for obj in flavors_list:
+            if obj.audio_language_track and self.entry_config["upload_only_source"]:
+                continue
+
             url_postfix = obj.url.rsplit('/', 1)[1]
             flavor_id = self.get_flavor_id(url_postfix)
             if flavor_id is None:
@@ -145,13 +155,21 @@ class ConcatenationTask(TaskBase):
             command = command + ' ' + output_full_path + ' ' + mp4_full_path + ' ' + obj.language
             if os.path.isfile(output_full_path):
                 self.logger.warn("file [%s] already exist", output_full_path)
+
+                if self.entry_config["upload_only_source"]:
+                    break
+
                 continue
             playlist = self.download_file(obj.url)
             self.logger.debug("load recording manifest : \n %s ", playlist)
             chunks = m3u8.loads(playlist).files
             self.download_chunks_and_concat(chunks, output_full_path)
             self.logger.info("Successfully concat %d files into %s", len(chunks), output_full_path)
-        self.convert_ts_to_mp4(command)
+            if self.entry_config["upload_only_source"]:
+                break
+
+        if self.entry_config["should_convert_to_mp4"]:
+            self.convert_ts_to_mp4(command)
 
     def convert_ts_to_mp4(self, command):
 
