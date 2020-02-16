@@ -19,7 +19,7 @@ fi
 
 FFMPEG_BUILD_PATH=$1
 
-rm -rf "FFMPEG_BUILD_PATH"
+rm -rf "$FFMPEG_BUILD_PATH"
 git clone -b n4.1 https://git.ffmpeg.org/ffmpeg.git "$FFMPEG_BUILD_PATH" || echo "FFmpeg dir already exists"
 cd "$FFMPEG_BUILD_PATH"
 ./configure --disable-everything --disable-doc --enable-protocol=file --enable-encoder=movtext  --enable-demuxer=mpegts --enable-muxer=rtp_mpegts --enable-parser=h264 --enable-parser=aac --enable-muxer=mp4 --enable-zlib --enable-bsfs --enable-decoder=aac  --enable-encoder=aac --enable-decoder=h264 --enable-muxer=flv --enable-protocol=rtmp --enable-encoder=libmp3lame
