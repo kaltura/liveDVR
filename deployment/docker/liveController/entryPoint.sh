@@ -19,7 +19,6 @@ let config=data[".*"];
 config.rootFolderPath="$LIVE_CONTENT_PATH";
 config.oldContentFolderPath="$LIVE_ARCHIVE_CONTENT_PATH";
 config.logFileName="$LOG_FILE_NAME";
-config.logToConsole = true;
 
 config.backendClient.serviceUrl="$SERVICE_URL";
 config.backendClient.adminSecret="$PARTNER_ADMIN_SECRET";
