@@ -32,8 +32,6 @@ class ConcatenationTask(TaskBase):
 
     def __init__(self, param, logger_info):
         TaskBase.__init__(self, param, logger_info)
-        concat_task_processing_dir = os.path.join(self.base_directory, self.__class__.__name__, 'processing')
-        self.recording_path = os.path.join(concat_task_processing_dir, self.entry_directory)
         self.token_url = self.token_url_template.format(self.get_live_type(), self.recorded_id)
         self.nginx_url = "http://" + self.token_url + "t/{0}"
         self.flavor_pattern = 'index-s(?P<flavor>\d+)'
@@ -141,6 +139,11 @@ class ConcatenationTask(TaskBase):
         flavors_list = self.extract_flavor_dict()
         flavors_list.sort(key=lambda flavor: flavor.bandwidth, reverse=True)
 
+        ts_recording_folder = self.recording_path_target
+        mp4_recording_folder = self.recording_path_target
+        if self.entry_config["should_convert_to_mp4"]:
+            ts_recording_folder = os.path.join(self.recording_path)
+
         for obj in flavors_list:
             if obj.audio_language_track and self.entry_config["upload_only_source"]:
                 continue
@@ -150,8 +153,8 @@ class ConcatenationTask(TaskBase):
             if flavor_id is None:
                 raise ValueError('Could not find flavor ID for {}'.format(obj.url))
             ts_output_filename = self.get_output_filename(flavor_id)
-            output_full_path = os.path.join(self.recording_path, ts_output_filename)
-            mp4_full_path = output_full_path.replace('.ts', '.mp4')
+            output_full_path = os.path.join(ts_recording_folder, ts_output_filename)
+            mp4_full_path = os.path.join(mp4_recording_folder, ts_output_filename).replace('.ts', '.mp4')
             command = command + ' ' + output_full_path + ' ' + mp4_full_path + ' ' + obj.language
             if os.path.isfile(output_full_path):
                 self.logger.warn("file [%s] already exist", output_full_path)
