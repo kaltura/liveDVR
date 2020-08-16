@@ -5,6 +5,7 @@ import os
 import re
 import subprocess
 import urllib2
+import shutil
 
 import m3u8
 
@@ -52,6 +53,9 @@ class ConcatenationTask(TaskBase):
         hash = hashlib.md5(token).digest()
         encoded_hash = base64.urlsafe_b64encode(hash).rstrip('=')
         return encoded_hash
+
+    def check_stamp(self):
+        return self.base_check_stamp(os.path.join(self.recording_path, 'stamp'))
 
     def extract_flavor_dict(self):
         self.logger.debug("About to load master manifest from %s", self.url_master)
@@ -173,6 +177,15 @@ class ConcatenationTask(TaskBase):
 
         if self.entry_config["should_convert_to_mp4"]:
             self.convert_ts_to_mp4(command)
+
+        if self.recording_path != self.recording_path_target:
+            self.copy_stamp()
+
+    def copy_stamp(self):
+        src = os.path.join(self.recording_path, 'stamp')
+        dst = os.path.join(self.recording_path_target, 'stamp')
+        self.logger.debug("copy stamp from [%s] to [%s]", src, dst)
+        return shutil.copyfile(src, dst)
 
     def convert_ts_to_mp4(self, command):
 

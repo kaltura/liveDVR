@@ -53,5 +53,12 @@ def get_config(key, type = 'str'):
         logger.warn("key %s is not configuration list", key)
         return None
 
+
+def get_config_with_default(key, default=None, type='str'):
+    res = get_config(key, type)
+    if res is None:
+        res = default
+    return res
+
 config_section_default()
 config_section_map()

@@ -2,7 +2,7 @@ import os
 import abc
 from Logger.LoggerDecorator import logger_decorator
 from socket import gethostname
-from Config.config import get_config
+from Config.config import get_config, get_config_with_default
 from RecordingException import UnequallStampException
 from BackendClient import *
 from KalturaClient.Plugins.Core import KalturaEntryServerNodeStatus
@@ -13,13 +13,13 @@ class TaskBase(object):
 
     hostname = gethostname()
     base_directory = os.path.join(get_config('recording_base_dir'), hostname)
-    base_directory_target = base_directory
-    recording_target_base_dir = get_config('recording_target_base_dir')
-    if recording_target_base_dir is not None:
-        base_directory_target = os.path.join(recording_target_base_dir, hostname)
+    recording_target_base_dir = get_config_with_default('recording_target_base_dir', get_config('recording_base_dir'))
+    base_directory_target = os.path.join(recording_target_base_dir, hostname)
     cron_jon_stamp = get_config('cron_jon_stamp')
-    def check_stamp(self):
-        with open(self.stamp_full_path, "r") as stamp_file:  # w+ since we truncated the file
+
+    def base_check_stamp(self, path):
+        self.logger.debug("check_stamp on path [%s]", path)
+        with open(path, "r") as stamp_file:  # w+ since we truncated the file
             stamp = stamp_file.read()
             if stamp == self.cron_jon_stamp:
                 self.logger.info("[{}] Entry has no stamp, since it was zombie!".format(self.log_header))
@@ -60,10 +60,9 @@ class TaskBase(object):
         self.recording_path = os.path.join(self.base_directory, self.__class__.__name__, 'processing',
                                            entry_directory)
         self.recording_path_target = os.path.join(self.base_directory_target, self.__class__.__name__,
-                                           'processing', self.entry_directory)
+                                           'processing', entry_directory)
         if not os.path.exists(self.recording_path_target):
             os.makedirs(self.recording_path_target)
-        self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
         self.data_full_path = os.path.join(self.recording_path, 'data.json')
         self.data = self.get_data()
         self.backend_client = BackendClient(self.entry_id + '-' + self.recorded_id)

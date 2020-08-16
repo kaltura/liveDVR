@@ -1,7 +1,7 @@
 from multiprocessing import Process, Queue
 import logging.handlers
 import os, errno
-from Config.config import get_config
+from Config.config import get_config, get_config_with_default
 from threading import Timer
 import shutil
 import re
@@ -37,12 +37,13 @@ class TaskRunner:
 
         return param
 
-    def __init__(self, task, number_of_processes, output_directory, max_task_count, skipped_task_output):
+    def __init__(self, task, number_of_processes, input_directory, output_directory, max_task_count, skipped_task_output):
         self.number_of_processes = number_of_processes
         self.task = task
         self.task_name = task.__name__
         self.polling_interval = get_config('polling_interval_sec', 'int')
         base_directory = get_config('recording_base_dir')
+        recording_target_base_dir = get_config_with_default('recording_target_base_dir', base_directory)
         hostname = gethostname()
         self.failed_tasks_handling_interval = get_config('failed_tasks_handling_interval', 'int')*60  # in minutes
         self.failed_tasks_max_retries = get_config('failed_tasks_max_retries')
@@ -50,8 +51,9 @@ class TaskRunner:
         self.error_directory = os.path.join(base_directory, 'error')
         self.failed_tasks_directory = os.path.join(base_directory, hostname, self.task_name, 'failed')
         self.web_incoming_directory = os.path.join(base_directory, 'incoming')
-        self.input_directory = os.path.join(base_directory, hostname, self.task_name, 'incoming')
+        self.input_directory = os.path.join(input_directory, hostname, self.task_name, 'incoming')
         self.working_directory = os.path.join(base_directory, hostname, self.task_name, 'processing')
+        self.done_working_directory = os.path.join(recording_target_base_dir, hostname, self.task_name, 'processing')
         self.output_directory = output_directory
         self.task_queue_size = max_task_count
         self.task_queue = Queue(max_task_count)
@@ -161,7 +163,9 @@ class TaskRunner:
                 job = self.task(task_parameter, logger_info)  # operate the function task_job, with argument task_parameters
                 job.check_stamp()  # raise error if stamp is not valid
                 job.run()
+                src = os.path.join(self.done_working_directory, task_parameter['directory'])
                 job.check_stamp()
+
                 shutil.move(src, self.output_directory)
                 self.logger.info("[{}] Task {} completed, move {} to {}".format(logger_info, self.task_name, src,
                                  self.output_directory))

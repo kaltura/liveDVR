@@ -1,7 +1,7 @@
 from Tasks.TaskRunner import TaskRunner
 from Tasks.ConcatinationTask import ConcatenationTask
 from Tasks.UploadTask import UploadTask
-from Config.config import get_config
+from Config.config import get_config, get_config_with_default
 from os import path
 from Logger.Logger import init_logger
 import sys
@@ -41,18 +41,19 @@ max_task_count = get_config("max_task_count", 'int')
 concat_processors_count = get_config('concat_processors_count', 'int')
 uploading_processors_count = get_config('uploading_processors_count', 'int')
 base_directory = get_config('recording_base_dir')
-tasks_done_directory = path.join(base_directory, 'done')
-incoming_upload_directory = path.join(base_directory, socket.gethostname(), UploadTask.__name__, 'incoming')
+recording_target_base_dir = get_config_with_default('recording_target_base_dir', base_directory)
+tasks_done_directory = path.join(recording_target_base_dir, 'done')
+incoming_upload_directory = path.join(recording_target_base_dir, socket.gethostname(), UploadTask.__name__, 'incoming')
 
 
 signal.signal(signal.SIGTERM, signal_term_handler)
 signal.signal(signal.SIGINT, signal_term_handler)
 
 
-ConcatenationTaskRunner = TaskRunner(ConcatenationTask, concat_processors_count, incoming_upload_directory,
+ConcatenationTaskRunner = TaskRunner(ConcatenationTask, concat_processors_count, base_directory, incoming_upload_directory,
                                      max_task_count, tasks_done_directory).start()
 
-UploadTaskRunner = TaskRunner(UploadTask, uploading_processors_count, tasks_done_directory, max_task_count, tasks_done_directory).start()
+UploadTaskRunner = TaskRunner(UploadTask, uploading_processors_count, recording_target_base_dir, tasks_done_directory, max_task_count, tasks_done_directory).start()
 
 for p in ConcatenationTaskRunner:
     processes.append(p)

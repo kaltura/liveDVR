@@ -31,6 +31,9 @@ class UploadTask(TaskBase):
 
         self.flavors_files_list = glob.glob1(self.recording_path_target, glob_pattern)
 
+    def check_stamp(self):
+        return self.base_check_stamp(os.path.join(self.recording_path_target, 'stamp'))
+
 
     def get_chunks_to_upload(self, file_size):
         if file_size % self.upload_token_buffer_size == 0:
