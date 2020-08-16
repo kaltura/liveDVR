@@ -163,6 +163,7 @@ class TaskRunner:
                 job = self.task(task_parameter, logger_info)  # operate the function task_job, with argument task_parameters
                 job.check_stamp()  # raise error if stamp is not valid
                 job.run()
+                # TODO if working_directory no as done_working_directory then need to unlink working_directory
                 src = os.path.join(self.done_working_directory, task_parameter['directory'])
                 job.check_stamp()
 
