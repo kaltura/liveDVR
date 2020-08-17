@@ -13,6 +13,7 @@ class TaskBase(object):
 
     hostname = gethostname()
     base_directory = os.path.join(get_config('recording_base_dir'), hostname)
+    recording_target_base_dir = get_config('recording_target_base_dir')
     cron_jon_stamp = get_config('cron_jon_stamp')
     def check_stamp(self):
         with open(self.stamp_full_path, "r") as stamp_file:  # w+ since we truncated the file
@@ -47,14 +48,20 @@ class TaskBase(object):
     def __init__(self, param, logger_info):
         self.duration = param['duration']
         self.recorded_id = param['recorded_id']
-        self.entry_directory = param['directory']
+        entry_directory = param['directory']
         self.entry_id = param['entry_id']
         # set job name as log header
         self.log_header = "{}_{}_{}".format(self.entry_id, self.recorded_id, self.duration)
         self.logger = logger_decorator(self.__class__.__name__, logger_info)
-        self.output_filename = self.entry_directory
-        self.recording_path = os.path.join(self.base_directory, self.__class__.__name__, 'processing',
-                                           self.entry_directory)
+        self.output_filename = entry_directory
+        self.recording_path = os.path.join(self.base_directory, self.__class__.__name__, 'processing', entry_directory)
+
+        self.recording_path_target = self.recording_path
+        if self.recording_target_base_dir is not None:
+            self.recording_path_target = os.path.join(self.recording_target_base_dir, entry_directory)
+            if not os.path.exists(self.recording_path_target):
+                os.makedirs(self.recording_path_target)
+
         self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
         self.data_full_path = os.path.join(self.recording_path, 'data.json')
         self.data = self.get_data()
