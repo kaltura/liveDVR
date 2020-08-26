@@ -29,7 +29,7 @@ class UploadTask(TaskBase):
         glob_pattern = param['directory'] + '_f*_out.' + file_extention
         self.filename_pattern = "[0,1]_.+_[0,1]_.+_\d+(.\d+)?_f(?P<flavor_id>\d+)_out[.]" + file_extention
 
-        self.flavors_files_list = glob.glob1(self.recording_path, glob_pattern)
+        self.flavors_files_list = glob.glob1(self.recording_path_target, glob_pattern)
 
 
     def get_chunks_to_upload(self, file_size):
@@ -101,6 +101,7 @@ class UploadTask(TaskBase):
         if not self.entry_config.get('should_convert_to_mp4', True):
             flavor_id = None
 
+        os.chown(file_full_path, self.local_uid, self.local_gid)
         self.backend_client.set_recorded_content_local(partner_id, self.entry_id, file_full_path,
                                                        str(float(self.duration)/1000), self.recorded_id, flavor_id)
 
@@ -119,7 +120,7 @@ class UploadTask(TaskBase):
                         self.logger.error(error)
                         raise ValueError(error)
                     flavor_id = result.group('flavor_id')
-                    file_full_path = os.path.join(self.recording_path, flavor_file_name)
+                    file_full_path = os.path.join(self.recording_path_target, flavor_file_name)
                     if mode == 'remote':
                         self.upload_file(file_full_path, flavor_id, is_first_flavor)
                     if mode == 'local':
@@ -139,7 +140,8 @@ class UploadTask(TaskBase):
                     err.code = code
                     raise err
                 else:
-                    self.logger.warn('there were no mp4 files to upload. check {}'.format(self.recording_path))
+                    self.logger.warn('there were no mp4 files to upload. check {}'.format(self.recording_path_target))
+            # delete self.recording_path_target folder
             self.update_status(KalturaEntryServerNodeStatus.TASK_FINISHED)
         except KalturaException as e:
             self.logger.error('failed to upload VOD with error {}, exception details: {}'.format(e.code, e.message))
