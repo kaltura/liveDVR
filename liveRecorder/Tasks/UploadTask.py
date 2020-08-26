@@ -101,6 +101,7 @@ class UploadTask(TaskBase):
         if not self.entry_config.get('should_convert_to_mp4', True):
             flavor_id = None
 
+        os.chown(file_full_path, self.local_uid, self.local_gid)
         self.backend_client.set_recorded_content_local(partner_id, self.entry_id, file_full_path,
                                                        str(float(self.duration)/1000), self.recorded_id, flavor_id)
 

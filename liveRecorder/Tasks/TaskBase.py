@@ -14,6 +14,8 @@ class TaskBase(object):
     hostname = gethostname()
     base_directory = os.path.join(get_config('recording_base_dir'), hostname)
     recording_target_base_dir = get_config('recording_target_base_dir')
+    local_uid = int(get_config('local_uid'))
+    local_gid = int(get_config('local_gid'))
     cron_jon_stamp = get_config('cron_jon_stamp')
     def check_stamp(self):
         with open(self.stamp_full_path, "r") as stamp_file:  # w+ since we truncated the file
@@ -61,6 +63,7 @@ class TaskBase(object):
             self.recording_path_target = os.path.join(self.recording_target_base_dir, entry_directory)
             if not os.path.exists(self.recording_path_target):
                 os.makedirs(self.recording_path_target)
+                os.chown(self.recording_path_target, self.local_uid, self.local_gid)
 
         self.stamp_full_path = os.path.join(self.recording_path, 'stamp')
         self.data_full_path = os.path.join(self.recording_path, 'data.json')
